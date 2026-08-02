@@ -13,7 +13,7 @@ const INTENTS = [
   { value: 'otro', icon: 'fas fa-ellipsis-h', label: 'Otro' },
 ];
 
-const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'ciudad'];
+const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'whatsapp', 'ciudad'];
 
 interface AttachedFile {
   name: string;
@@ -133,6 +133,7 @@ export function Contact() {
         body: JSON.stringify({
           name: `${nextValues.nombre} ${nextValues.apellido}`,
           email: nextValues.email,
+          phone: nextValues.whatsapp,
           subject: nextValues.asunto || nextValues.interes || 'Consulta web',
           message: nextValues.mensaje || '',
           website: honeypot,
@@ -307,7 +308,20 @@ export function Contact() {
                       </div>
                       <span className="error-message">Por favor ingresá un correo válido</span>
                     </div>
-                    <div className={groupClass('ciudad')} style={{ animationDelay: '0.25s' }}>
+                    <div className={groupClass('whatsapp')} style={{ animationDelay: '0.25s' }}>
+                      <label>
+                        WhatsApp / Teléfono <span className="required">*</span>
+                      </label>
+                      <div className="input-wrapper">
+                        <i className="fab fa-whatsapp input-icon"></i>
+                        <input type="tel" name="whatsapp" placeholder="+54 9 351 000-0000" required />
+                        <i className="fas fa-check-circle success-check"></i>
+                      </div>
+                      <span className="error-message">Por favor ingresá tu WhatsApp</span>
+                    </div>
+                  </div>
+                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className={groupClass('ciudad')} style={{ animationDelay: '0.2s' }}>
                       <label>
                         Ciudad <span className="required">*</span>
                       </label>
