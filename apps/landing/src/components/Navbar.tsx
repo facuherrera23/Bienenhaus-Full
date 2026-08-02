@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { textOf, useSiteContent } from '../lib/content';
 import { images } from '../lib/images';
+import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
 
 const NAV_ITEMS = [
   { href: '#inicio', label: 'Inicio' },
@@ -18,6 +19,8 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [fav, setFav] = useState(false);
   const { settings } = useSiteContent();
+  const { settings: siteSettings } = useSiteSettings();
+  const whatsappUrl = getNextWhatsAppUrl(siteSettings);
 
   const siteName = textOf(settings.site_name, 'value', 'BIENENHAUS PROPIEDADES');
   const logoUrl = textOf(settings.logo_url, 'value');
@@ -64,7 +67,7 @@ export function Navbar() {
               className="icon-btn"
               id="whatsappBtn"
               aria-label="WhatsApp"
-              onClick={() => window.open('https://wa.me/5493876000000', '_blank')}
+              onClick={() => window.open(whatsappUrl, '_blank')}
             >
               <i className="fab fa-whatsapp"></i>
             </button>

@@ -1,12 +1,15 @@
 import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { useAgents } from '../lib/supabase-data';
+import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
 
 const SPECIALTIES = ['Venta Premium', 'Tasaciones', 'Inversiones'];
 
 export function Team() {
   const rootRef = useReveal<HTMLElement>('.team-card', { threshold: 0.1 });
   const { content } = useSiteContent();
+  const { settings: siteSettings } = useSiteSettings();
+  const whatsappUrl = getNextWhatsAppUrl(siteSettings);
 
   const { data: agents, loading, error } = useAgents();
 
@@ -102,9 +105,9 @@ export function Team() {
                     <button className="social-btn" aria-label="LinkedIn">
                       <i className="fab fa-linkedin-in"></i>
                     </button>
-                    <button className="social-btn" aria-label="WhatsApp">
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="social-btn" aria-label="WhatsApp">
                       <i className="fab fa-whatsapp"></i>
-                    </button>
+                    </a>
                     <button className="social-btn" aria-label="Email">
                       <i className="fas fa-envelope"></i>
                     </button>

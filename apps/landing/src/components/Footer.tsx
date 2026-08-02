@@ -52,13 +52,6 @@ export function Footer() {
     'text',
     'Suscribite para recibir las propiedades más exclusivas antes que nadie.',
   );
-  const contactItems = [
-    { icon: 'fas fa-map-marker-alt', text: textOf(settings.contact_address, 'value', siteSettings.contact.address || 'Córdoba, Argentina') },
-    { icon: 'fas fa-phone', text: textOf(settings.contact_phone, 'value', siteSettings.contact.phone || '+54 387 400-0000') },
-    { icon: 'fas fa-envelope', text: textOf(settings.contact_email, 'value', siteSettings.contact.email || 'info@bienenhaus.com') },
-    { icon: 'fas fa-clock', text: `Lun a Vie ${textOf(settings.contact_hours, 'weekdays', siteSettings.contact.hours?.weekdays || '09:00 - 18:00')}` },
-    { icon: 'fab fa-whatsapp', text: whatsappUrl },
-  ];
 
   // Build social links from site settings
   const socialLinks = [
@@ -168,23 +161,6 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="footer-col" data-delay="300">
-            <h4>Contacto</h4>
-            {contactItems.map((item) => (
-              <div className="footer-contact-item" key={item.text}>
-                <i className={item.icon}></i>
-                <span>{item.text}</span>
-              </div>
-            ))}
-            <div className="footer-mini-map">
-              <div className="map-placeholder">
-                <i className="fas fa-map"></i>
-                <span>Ubicación</span>
-              </div>
-              <div className="mini-pin"></div>
-            </div>
           </div>
 
           <div className="footer-col" data-delay="400">

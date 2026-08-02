@@ -204,18 +204,18 @@ export function Contact() {
               </div>
             </div>
             <div className="contact-social">
-              <button className="social-circle" aria-label="Instagram">
+              <a href={siteSettings.social.instagram} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="Instagram">
                 <i className="fab fa-instagram"></i>
-              </button>
-              <button className="social-circle" aria-label="Facebook">
+              </a>
+              <a href={siteSettings.social.facebook} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="Facebook">
                 <i className="fab fa-facebook-f"></i>
-              </button>
-              <button className="social-circle" aria-label="LinkedIn">
+              </a>
+              <a href={siteSettings.social.linkedin} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="LinkedIn">
                 <i className="fab fa-linkedin-in"></i>
-              </button>
-              <button className="social-circle" aria-label="WhatsApp">
+              </a>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="WhatsApp">
                 <i className="fab fa-whatsapp"></i>
-              </button>
+              </a>
             </div>
             <div className="contact-map">
               <div className="map-placeholder">
