@@ -10,7 +10,6 @@ const INTENTS = [
   { value: 'alquilar', icon: 'fas fa-key', label: 'Quiero alquilar' },
   { value: 'invertir', icon: 'fas fa-chart-line', label: 'Quiero invertir' },
   { value: 'tasar', icon: 'fas fa-calculator', label: 'Quiero tasar' },
-  { value: 'desarrollador', icon: 'fas fa-building', label: 'Soy desarrollador' },
   { value: 'otro', icon: 'fas fa-ellipsis-h', label: 'Otro' },
 ];
 
@@ -260,7 +259,6 @@ export function Contact() {
                   </div>
                 </div>
                 <form id="contactForm" noValidate onSubmit={handleSubmit}>
-                  <span className="form-step-label">¿Cómo podemos ayudarte?</span>
                   <div className="form-pills" id="formPills">
                     {INTENTS.map((intentOption) => (
                       <button
