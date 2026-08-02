@@ -60,12 +60,12 @@ export async function initAuth(): Promise<void> {
       const role = await fetchUserRole(session.user.email);
       authUserRole.value = role;
       if (event === 'SIGNED_IN') {
-        window.location.href = '/admin';
+        window.location.href = '/admin#/';
       }
     } else {
       authUserRole.value = null;
       if (event === 'SIGNED_OUT') {
-        window.location.href = '/login';
+        window.location.href = '/admin#/login';
       }
     }
     setTimeout(cleanAuthHash, 0);

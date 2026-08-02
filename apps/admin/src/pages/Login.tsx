@@ -18,9 +18,6 @@ export function Login() {
         setError('Credenciales incorrectas. Verificá email y contraseña.');
         return;
       }
-      // Debug: log that sign in was successful
-      console.log('Login successful, navigating to /admin');
-      window.location.href = '/admin';
     } catch {
       setError('Error inesperado al iniciar sesión.');
     } finally {

@@ -17,11 +17,22 @@ test.describe('Login', () => {
     // Start at the login page
     await page.goto('/admin/login');
     
+    // Log the URL before login
+    console.log('Initial URL:', await page.url());
+    
     await page.getByLabel('Email').fill(TEST_EMAIL);
     await page.getByLabel('Contraseña').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /entrar/i }).click();
 
-    // Wait for navigation after login
+    // Wait for navigation after login - wait for URL to change from /login
+    // First wait a bit for the login request to complete
+    await page.waitForTimeout(2000);
+    
+    // Check current URL
+    const currentUrl = page.url();
+    console.log('Current URL after login attempt:', currentUrl);
+    
+    // Wait for navigation after login - wait for URL to change from /login
     await page.waitForURL(/\/admin(\/|#\/)?$/, { timeout: 60000 });
     
     // Wait for Dashboard to be visible
