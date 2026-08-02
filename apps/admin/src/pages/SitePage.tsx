@@ -356,6 +356,8 @@ export function SitePage() {
     });
   }, [drafts, settingsQ.data]);
 
+  const settingsMap = useMemo(() => new Map((settingsQ.data ?? []).map(s => [s.key, s])), [settingsQ.data]);
+
   const saveSettings = async () => {
     setSavingGroup('settings');
     try {
@@ -509,57 +511,137 @@ export function SitePage() {
     );
   };
 
-  const renderSettings = () => {
-    const rows = settingsQ.data ?? [];
-    const dirtyCount = settingsDirty.length;
-    return (
-      <section className="card site-section">
-        <div className="site-section-head">
-          <div>
-            <h3>Ajustes del sitio</h3>
-            <p>
-              {dirtyCount > 0
-                ? `${dirtyCount} campo${dirtyCount === 1 ? '' : 's'} sin guardar`
-                : 'Sin cambios pendientes'}
-            </p>
-          </div>
-          <button
-            className="btn btn--primary"
-            onClick={saveSettings}
-            disabled={savingGroup !== null || dirtyCount === 0}
-          >
-            <Save size={15} /> {savingGroup === 'settings' ? 'Guardando…' : 'Guardar'}
-          </button>
+  const SETTINGS_GROUPS = [
+  {
+    id: 'hero-video',
+    label: '🎬 Hero Video',
+    icon: '🎬',
+    keys: ['hero_video_url', 'hero_video_title', 'hero_video_autoplay', 'hero_video_muted', 'hero_video_poster'],
+    description: 'Configuración del video principal del Hero (sección principal de la landing)',
+  },
+  {
+    id: 'hero-images',
+    label: '🖼️ Imágenes del Hero',
+    icon: '🖼️',
+    keys: ['hero_background', 'hero_video_poster'],
+    description: 'Imagen de fondo y poster del video del Hero',
+  },
+  {
+    id: 'contact',
+    label: '📞 Datos de Contacto',
+    icon: '📞',
+    keys: ['contact_whatsapp', 'contact_whatsapp_alt', 'contact_email', 'contact_phone', 'contact_address', 'contact_hours'],
+    description: 'Información de contacto visible en la landing',
+  },
+  {
+    id: 'social',
+    label: '🌐 Redes Sociales',
+    icon: '🌐',
+    keys: ['social'],
+    description: 'Links a redes sociales (Instagram, Facebook, YouTube, TikTok, LinkedIn, WhatsApp)',
+  },
+  {
+    id: 'company',
+    label: '🏢 Empresa',
+    icon: '🏢',
+    keys: ['site_name', 'cri', 'contact_address'],
+    description: 'Datos legales y nombre de la empresa',
+  },
+  {
+    id: 'stats',
+    label: '📊 Estadísticas del Hero',
+    icon: '📊',
+    keys: ['stats'],
+    description: 'Números que se muestran en la barra de estadísticas del Hero',
+  },
+  {
+    id: 'features',
+    label: '⚙️ Funcionalidades',
+    icon: '⚙️',
+    keys: ['ml_enabled', 'contact_whatsapp_alt', 'hero_video_autoplay', 'hero_video_muted'],
+    description: 'Activar/desactivar funcionalidades avanzadas',
+  },
+] as const;
+
+const renderSettings = () => {
+  const dirtyCount = settingsDirty.length;
+  
+  return (
+    <section className="card site-section">
+      <div className="site-section-head">
+        <div>
+          <h3>⚙️ Configuración del Sitio</h3>
+          <p>
+            {dirtyCount > 0
+              ? `${dirtyCount} campo${dirtyCount === 1 ? '' : 's'} sin guardar`
+              : 'Sin cambios pendientes'}
+          </p>
         </div>
-        <div className="site-section-body">
-          {rows.map((s) => {
-            const entry = drafts[`s:${s.id}`] ?? { id: s.id, value: s.value, isActive: true };
-            const fields = settingFieldsFor(s.key) ?? genericFields(s.value);
-            const isImage = s.key in IMAGE_SETTINGS;
-            return (
-              <div className="site-row" key={s.id}>
-                <h4>{s.description ?? s.key}</h4>
-                {isImage ? (
-                  <ImageInput value={entry.value.value} onChange={(url) => setSettingField(s.id)('value', url)} />
-                ) : (
-                  <div className="form-grid">
-                    {fields.map((f) => (
-                      <FieldInput
-                        key={f.key}
-                        field={f}
-                        value={entry.value[f.key]}
-                        onChange={(v) => setSettingField(s.id)(f.key, v)}
-                      />
-                    ))}
+        <button
+          className="btn btn--primary"
+          onClick={saveSettings}
+          disabled={savingGroup !== null || dirtyCount === 0}
+        >
+          <Save size={15} /> {savingGroup === 'settings' ? 'Guardando…' : 'Guardar todos los ajustes'}
+        </button>
+      </div>
+      <div className="site-section-body">
+        {SETTINGS_GROUPS.map((group) => {
+          const groupKeys = group.keys.filter(k => settingsMap.has(k));
+          if (groupKeys.length === 0) return null;
+          
+          const groupDirtyCount = groupKeys.filter(k => settingsDirty.some(s => s.key === k)).length;
+          
+          return (
+            <div key={group.id} className="settings-group">
+              <div className="settings-group-header">
+                <div className="settings-group-title">
+                  <span className="settings-group-icon">{group.icon}</span>
+                  <div>
+                    <h4>{group.label}</h4>
+                    <p className="settings-group-desc">{group.description}</p>
                   </div>
+                </div>
+                {groupDirtyCount > 0 && (
+                  <span className="settings-group-badge">{groupDirtyCount} pendiente{groupDirtyCount > 1 ? 's' : ''}</span>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </section>
-    );
-  };
+              <div className="settings-group-body">
+                {groupKeys.map((key) => {
+                  const s = settingsMap.get(key);
+                  if (!s) return null;
+                  const entry = drafts[`s:${s.id}`] ?? { id: s.id, value: s.value, isActive: true };
+                  const fields = settingFieldsFor(s.key) ?? genericFields(s.value);
+                  const isImage = s.key in IMAGE_SETTINGS;
+                  
+                  return (
+                    <div key={s.id} className="site-row">
+                      <h4>{s.description ?? s.key}</h4>
+                      {isImage ? (
+                        <ImageInput value={entry.value.value} onChange={(url) => setSettingField(s.id)('value', url)} />
+                      ) : (
+                        <div className="form-grid">
+                          {fields.map((f) => (
+                            <FieldInput
+                              key={f.key}
+                              field={f}
+                              value={entry.value[f.key]}
+                              onChange={(v) => setSettingField(s.id)(f.key, v)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
   return (
     <div className={`page${showPreview ? ' has-preview' : ''}`}>

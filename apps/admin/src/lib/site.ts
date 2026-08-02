@@ -68,7 +68,7 @@ export function sortSections(sections: ContentSection[]): ContentSection[] {
 // Metadata de campos por (section, key) para el editor
 // ---------------------------------------------------------------------------
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'image';
+export type FieldType = 'text' | 'textarea' | 'number' | 'image' | 'boolean';
 
 export interface FieldMeta {
   key: string;
@@ -189,6 +189,7 @@ const SETTINGS_FIELD_META: Record<string, FieldMeta[]> = {
   site_name: [{ key: 'value', label: 'Nombre del sitio' }],
   cri: [{ key: 'value', label: 'Matrícula C.R.I.' }],
   contact_whatsapp: [{ key: 'value', label: 'WhatsApp' }],
+  contact_whatsapp_alt: [{ key: 'value', label: 'WhatsApp Alternativo' }],
   contact_email: [{ key: 'value', label: 'Email' }],
   contact_phone: [{ key: 'value', label: 'Teléfono' }],
   contact_address: [{ key: 'value', label: 'Dirección' }],
@@ -210,12 +211,17 @@ const SETTINGS_FIELD_META: Record<string, FieldMeta[]> = {
     { key: 'anios', label: 'Años de trayectoria', type: 'number' },
   ],
   ml_enabled: [{ key: 'value', label: 'Sincronización con Mercado Libre' }],
+  hero_video_url: [{ key: 'value', label: 'URL del video (YouTube/Vimeo)', type: 'text' }],
+  hero_video_title: [{ key: 'value', label: 'Título del video', type: 'text' }],
+  hero_video_autoplay: [{ key: 'value', label: 'Autoplay', type: 'boolean' }],
+  hero_video_muted: [{ key: 'value', label: 'Silenciado (muted)', type: 'boolean' }],
 };
 
 /** Settings cuyo valor es una URL de imagen subida a storage. */
 export const IMAGE_SETTINGS: Record<string, string> = {
   logo_url: 'Logo del sitio',
   hero_background: 'Imagen de fondo del hero',
+  hero_video_poster: 'Poster/Imagen de portada del video',
   favicon_url: 'Favicon',
   og_image: 'Imagen para compartir en redes',
 };
