@@ -194,12 +194,23 @@ function getNextWhatsAppIndex(): 0 | 1 {
   }
 }
 
+function toWhatsAppUrl(raw: string): string {
+  if (!raw) return 'https://wa.me/';
+  // Si ya es URL completa, devolverla
+  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('wa.me')) {
+    return raw.startsWith('wa.me') ? `https://${raw}` : raw;
+  }
+  // Limpiar: solo dígitos
+  const digits = raw.replace(/\D/g, '');
+  return `https://wa.me/${digits}`;
+}
+
 export function getNextWhatsAppUrl(settings: SiteSettings): string {
   const primary = settings.contact.whatsapp;
   const alt = settings.contact.whatsappAlt;
   if (!primary && !alt) return 'https://wa.me/';
-  if (!alt) return primary || 'https://wa.me/';
-  if (!primary) return alt;
+  if (!alt) return toWhatsAppUrl(primary || '');
+  if (!primary) return toWhatsAppUrl(alt);
   const idx = getNextWhatsAppIndex();
-  return idx === 0 ? primary : alt;
+  return idx === 0 ? toWhatsAppUrl(primary) : toWhatsAppUrl(alt);
 }
