@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Mail, Pencil, Phone, Plus } from 'lucide-preact';
 import { Link } from 'wouter-preact';
-import { fetchAgents, type AgentRow } from '../lib/agents';
+import { useAgents, useToggleAgentActive, type AgentRow } from '../lib/agents.api';
 import { queryClient } from '../lib/query/client';
-import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
-import { supabase } from '../lib/supabase';
+
+function getListData<T>(data: unknown): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as T[];
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    return (data as { data: T[] }).data ?? [];
+  }
+  return [];
+}
 
 export function AgentsPage() {
-  const { data, isPending, isError } = useQuery<AgentRow[]>({
-    queryKey: ['agents-full'],
-    queryFn: fetchAgents,
-  });
+  const { data, isPending, isError } = useAgents();
+  const agents = getListData<AgentRow>(data);
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const toggleAgentActive = useToggleAgentActive();
 
   useEffect(() => {
     document.title = 'Agentes · BIENENHAUS';
@@ -25,9 +31,7 @@ export function AgentsPage() {
   const handleToggleActive = async (agent: AgentRow) => {
     setTogglingId(agent.id);
     try {
-      const { error } = await supabase.from('agents').update({ is_active: !agent.is_active }).eq('id', agent.id);
-      if (error) throw new Error(error.message);
-      await queryClient.invalidateQueries({ queryKey: ['agents-full'] });
+      await toggleAgentActive.mutateAsync({ id: agent.id, is_active: !agent.is_active });
       await queryClient.invalidateQueries({ queryKey: ['agents'] });
       pushToast({
         type: 'success',
@@ -58,7 +62,7 @@ export function AgentsPage() {
 
       {!isPending && !isError && (
         <div className="agent-grid">
-          {(data ?? []).map((a) => (
+          {agents.map((a) => (
             <article key={a.id} className={`agent-card${a.is_active ? '' : ' is-inactive'}`}>
               <div className="agent-card-head">
                 <span className="agent-photo" aria-hidden="true">
@@ -117,7 +121,7 @@ export function AgentsPage() {
             </article>
           ))}
 
-          {(data ?? []).length === 0 && (
+          {agents.length === 0 && (
             <div className="card placeholder-card">
               <h3>Todavía no hay agentes</h3>
               <p>Creá el primer agente del equipo.</p>

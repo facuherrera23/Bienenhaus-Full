@@ -1,125 +1,30 @@
-import { supabase } from './supabase';
-import { useList, useItem, useCreate, useUpdate, useDelete, useRpc, useUpload, useExport, queryKeys, type ExportColumn } from './api';
-
-export type PropertyStatus =
-  | 'borrador'
-  | 'en_revision'
-  | 'publicada'
-  | 'pausada'
-  | 'vendida'
-  | 'alquilada'
-  | 'archivada';
-
-export type ListingType =
-  | 'venta'
-  | 'alquiler'
-  | 'venta_alquiler'
-  | 'emprendimiento';
-
-export interface PropertyRow {
-  id: string;
-  code: number;
-  title: string;
-  status: PropertyStatus;
-  listing_type: ListingType;
-  price: number | null;
-  currency: 'USD' | 'ARS';
-  location: string;
-  area_total: number | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  featured: boolean;
-  published_at: string | null;
-  updated_at: string;
-  cover_url: string | null;
-}
-
-export interface PropertyDetail extends PropertyRow {
-  description: string | null;
-  expenses: number | null;
-  address: string | null;
-  neighborhood: string | null;
-  city: string | null;
-  province: string | null;
-  country: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  area_covered: number | null;
-  garages: number | null;
-  floors: number | null;
-  floor_number: number | null;
-  antiquity: number | null;
-  orientation: string | null;
-  condition: 'nuevo' | 'usado' | 'a_refaccionar';
-  video_url: string | null;
-  images: { id: string; url: string; is_cover: boolean; sort_order: number }[];
-  ml_meta: {
-    ml_item_id: number | null;
-    status: string | null;
-    permalink: string | null;
-    price: number | null;
-    last_sync_at: string | null;
-  } | null;
-}
-
-export const STATUS_LABEL: Record<PropertyStatus, string> = {
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  publicada: 'Publicada',
-  pausada: 'Pausada',
-  vendida: 'Vendida',
-  alquilada: 'Alquilada',
-  archivada: 'Archivada',
-};
-
-export const STATUS_TONE: Record<PropertyStatus, string> = {
-  borrador: 'neutral',
-  en_revision: 'warning',
-  publicada: 'success',
-  pausada: 'warning',
-  vendida: 'info',
-  alquilada: 'info',
-  archivada: 'neutral',
-};
-
-// Legacy functions (keeping for backward compatibility)
-export async function fetchProperties(): Promise<PropertyRow[]> {
-  const { data, error } = await supabase
-    .from('properties')
-    .select(
-      'id, code, title, status, listing_type, price, currency, area_total, bedrooms, bathrooms, featured, published_at, updated_at, location:locations(name), images:property_images(url, is_cover)',
-    )
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map((p: any) => {
-    const locName = Array.isArray(p.location) ? p.location[0]?.name : p.location?.name;
-    const cover = p.images?.find((img: any) => img.is_cover);
-    return {
-      id: p.id,
-      code: p.code,
-      title: p.title,
-      status: p.status,
-      listing_type: p.listing_type,
-      price: p.price,
-      currency: p.currency,
-      location: locName ?? 'Sin zona',
-      area_total: p.area_total,
-      bedrooms: p.bedrooms,
-      bathrooms: p.bathrooms,
-      featured: p.featured,
-      published_at: p.published_at,
-      updated_at: p.updated_at,
-      cover_url: cover?.url ?? null,
-    };
-  });
-}
-
-// ==================== NEW API LAYER HOOKS ====================
+import { useList, useItem, useCreate, useUpdate, useDelete, useRpc, useUpload, useExport, useMutation, queryKeys, type ExportColumn } from './api';
+import {
+  duplicateProperty,
+  softDeleteProperty,
+} from './properties';
+import { bulkEnqueueMl } from './ml';
+import type {
+  PropertyStatus,
+  ListingType,
+  PropertyRow,
+  PropertyDetail,
+  PropertyFormValues,
+  PropertyImage,
+  LocationOption,
+  MlMetaRow,
+  MlQueueRow,
+  MlOperation,
+} from '../types';
+import {
+  STATUS_LABEL,
+  STATUS_TONE,
+  LISTING_TYPE_LABEL,
+} from '../types';
 
 const PROPERTIES_PATH = 'properties';
+
+// ==================== QUERY HOOKS ====================
 
 export function useProperties(filters?: {
   status?: PropertyStatus;
@@ -128,8 +33,8 @@ export function useProperties(filters?: {
   page?: number;
   pageSize?: number;
 }) {
-  const apiFilters: Record<string, any> = { deleted_at: 'is.null' };
-  
+  const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
+
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
   if (filters?.listing_type) apiFilters.listing_type = `eq.${filters.listing_type}`;
   if (filters?.search) apiFilters.title = `ilike.*${filters.search}*`;
@@ -185,6 +90,35 @@ export function useDeleteProperty() {
   );
 }
 
+export function useDuplicateProperty() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return duplicateProperty(id);
+    },
+  });
+}
+
+export function useSoftDeleteProperty() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return softDeleteProperty(id);
+    },
+  });
+}
+
+export function useLocations() {
+  return useList<LocationOption>({
+    queryKey: queryKeys.leads([{ locations: true }]),
+    path: 'locations',
+    select: 'id,name,zone',
+    filters: { is_active: 'eq.true' },
+    page: 1,
+    pageSize: 100,
+    orderBy: 'sort_order',
+    ascending: true,
+  });
+}
+
 export function usePropertyImages(_propertyId: string) {
   return useUpload('property-images');
 }
@@ -200,9 +134,18 @@ export function usePublishToML() {
   );
 }
 
-// ML Queue hooks
+export function useBulkEnqueueMl() {
+  return useMutation({
+    mutationFn: async ({ propertyIds, operation }: { propertyIds: string[]; operation: 'publish' | 'update' | 'delete' }) => {
+      return bulkEnqueueMl(propertyIds, operation);
+    },
+  });
+}
+
+// ==================== ML QUEUE HOOKS ====================
+
 export function useMLQueue() {
-  return useList<any>({
+  return useList<unknown>({
     queryKey: queryKeys.mlQueue(),
     path: 'ml_sync_queue',
     select: 'id,property_id,operation,status,attempts,max_attempts,next_attempt_at,ml_item_id,last_error,created_at,property:properties(title,code)',
@@ -215,7 +158,7 @@ export function useMLQueue() {
 }
 
 export function useMLMeta() {
-  return useList<any>({
+  return useList<unknown>({
     queryKey: queryKeys.mlMeta(),
     path: 'property_ml_meta',
     select: 'property_id,ml_item_id,status,permalink,price,last_sync_at,last_sync_status,property:properties(title,code)',
@@ -228,10 +171,45 @@ export function useMLMeta() {
 }
 
 export function useMLOverview() {
-  return useRpc<any, Record<string, never>>('ml_get_connection');
+  return useRpc<unknown, Record<string, never>>('ml_get_connection');
 }
 
-// Export columns for properties
+// ==================== FORM HELPERS ====================
+
+export function toFormValues(property: PropertyDetail): PropertyFormValues {
+  const p = property as any;
+  return {
+    title: property.title ?? '',
+    status: (property.status as PropertyStatus) ?? 'borrador',
+    listing_type: (property.listing_type as ListingType) ?? 'venta',
+    price: property.price ?? null,
+    currency: property.currency ?? 'USD',
+    expenses: property.expenses ?? null,
+    description: property.description ?? '',
+    address: property.address ?? '',
+    location_id: p.location_id ?? null,
+    area_total: property.area_total ?? null,
+    area_covered: property.area_covered ?? null,
+    bedrooms: property.bedrooms ?? null,
+    bathrooms: property.bathrooms ?? null,
+    garages: property.garages ?? null,
+    floors: property.floors ?? null,
+    year_built: p.year_built ?? null,
+    featured: property.featured ?? false,
+    video_url: property.video_url ?? '',
+    latitude: property.latitude ?? null,
+    longitude: property.longitude ?? null,
+  };
+}
+
+export function toNumeric(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  return isNaN(n) ? null : n;
+}
+
+// ==================== EXPORT ====================
+
 export const PROPERTY_EXPORT_COLUMNS: ExportColumn<PropertyRow>[] = [
   { key: 'code', label: 'Código' },
   { key: 'title', label: 'Título' },
@@ -250,8 +228,8 @@ export const PROPERTY_EXPORT_COLUMNS: ExportColumn<PropertyRow>[] = [
 
 export function useExportProperties() {
   const { exportToCSV } = useExport<PropertyRow>();
-  const properties = useProperties({ pageSize: 1000 }); // Fetch all for export
-  
+  const properties = useProperties({ pageSize: 1000 });
+
   return {
     exportToCSV: async (filename = 'propiedades') => {
       if (properties.data?.data) {
@@ -266,5 +244,7 @@ export function useExportProperties() {
   };
 }
 
-// Export query keys for external invalidation
 export { queryKeys };
+export type { PropertyStatus, ListingType, PropertyRow, PropertyDetail, PropertyFormValues, PropertyImage, LocationOption };
+export type { MlMetaRow, MlQueueRow, MlOperation };
+export { STATUS_LABEL, STATUS_TONE, LISTING_TYPE_LABEL };

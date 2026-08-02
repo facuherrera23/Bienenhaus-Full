@@ -1,24 +1,19 @@
-import { useQuery } from '../lib/query/hooks';
 import { ArrowUpRight, Building2, Users, TrendingUp, DollarSign, Activity, Home } from 'lucide-preact';
 import { Link } from 'wouter-preact';
 import { QuickPropertyActions } from '../components/QuickPropertyActions';
 import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
-import { fetchLeads } from '../lib/leads';
-import { fetchProperties } from '../lib/properties';
+import { useProperties } from '../lib/properties.api';
+import { useLeads } from '../lib/leads.api';
 
 export function Dashboard() {
-  const { data: leads, isPending: leadsPending } = useQuery({
-    queryKey: ['leads'],
-    queryFn: fetchLeads,
-  });
-
-  const { data: properties, isPending: propsPending } = useQuery({
-    queryKey: ['properties'],
-    queryFn: fetchProperties,
-  });
+  const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
+  const { data: propertiesResult, isPending: propsPending } = useProperties({ pageSize: 1000 });
 
   const loading = leadsPending || propsPending;
+
+  const leads = leadsResult?.data ?? [];
+  const properties = propertiesResult?.data ?? [];
 
   // Compute real KPIs
   const totalLeads = leads?.length ?? 0;

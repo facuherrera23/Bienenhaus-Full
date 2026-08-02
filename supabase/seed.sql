@@ -3,6 +3,18 @@
 -- ============================================================================
 
 -- ============================================================================
+-- E2E TEST USER (solo para testing local/CI)
+-- ============================================================================
+-- Usuario de prueba dedicado para E2E tests: e2e-test@bienenhaus.local
+-- Password: generado automáticamente en CI via Supabase CLI
+-- NO usar credenciales de producción (admin@bienenhaus.com / Bienenhaus2026!)
+-- 
+-- En CI: se crea después de `supabase db reset` via:
+--   supabase auth signup --email e2e-test@bienenhaus.local --password '$E2E_TEST_PASSWORD'
+--   supabase db execute "insert into public.admin_users (id, email, full_name, role) values ('<uuid>', 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin') on conflict (email) do nothing;"
+-- En local: supabase auth signup --email e2e-test@bienenhaus.local --password 'e2e-test-password-123'
+
+-- ============================================================================
 -- Configuración del Hero Video
 -- ============================================================================
 

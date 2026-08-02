@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const url = import.meta.env.VITE_SUPABASE_URL;
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabaseUrl = url ?? 'http://127.0.0.1:54321';
+if (!url) {
+  throw new Error('VITE_SUPABASE_URL is not set. Check your environment variables.');
+}
+if (!anonKey) {
+  throw new Error('VITE_SUPABASE_ANON_KEY is not set. Check your environment variables.');
+}
 
-export const supabase = createClient(
-  supabaseUrl,
-  anonKey ?? 'placeholder-anon-key',
-);
+export const supabaseUrl = url;
+
+export const supabase = createClient(supabaseUrl, anonKey);

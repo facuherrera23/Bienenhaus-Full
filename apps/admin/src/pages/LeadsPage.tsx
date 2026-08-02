@@ -1,29 +1,19 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Download, Loader2, Plus, Search, Trash2, UserPlus, ChevronDown, Upload, Kanban, List, X, AlertTriangle } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { downloadCsv, toCsv, todayStamp } from '../lib/csv';
-import {
-  LEAD_INTENT_LABEL,
-  LEAD_SOURCE_LABEL,
-  LEAD_STATUS_LABEL,
-  LEAD_STATUS_TONE,
-  bulkAutoAssignLeads,
-  fetchLeads,
-  softDeleteLead,
-  updateLeadStatus,
-  bulkRecalculateScores,
-  addLeadTag,
-  removeLeadTag,
-  type LeadIntent,
-  type LeadSource,
-  type LeadRow,
-  type LeadStatus,
-} from '../lib/leads';
+import { useLeads, useBulkAutoAssignLeads, useBulkRecalculateScores, useAddLeadTag, useRemoveLeadTag, useImportLeads, useParseLeadsCsv, useExportLeads, useSoftDeleteLead, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, LEAD_STATUS_LABEL, LEAD_STATUS_TONE, STATUS_ORDER, type LeadIntent, type LeadRow, type LeadStatus, type CsvLeadRow } from '../lib/leads.api';
 import { queryClient } from '../lib/query/client';
-import { useQuery, useMutation } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { supabase } from '../lib/supabase';
 
-const STATUS_ORDER: LeadStatus[] = ['nuevo', 'contactado', 'calificado', 'en_proceso', 'cerrado_ganado', 'cerrado_perdido'];
+function getListData<T>(data: unknown): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as T[];
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    return (data as { data: T[] }).data ?? [];
+  }
+  return [];
+}
 
 export function LeadsPage() {
   const [, setLocation] = useLocation();
@@ -36,24 +26,26 @@ export function LeadsPage() {
   const [bulkOp, setBulkOp] = useState<'assign' | 'trash' | 'recalc' | 'tags' | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [, setImportFile] = useState<File | null>(null);
-  const [importPreview, setImportPreview] = useState<{ valid: any[]; errors: any[] } | null>(null);
+  const [importPreview, setImportPreview] = useState<{ valid: CsvLeadRow[]; errors: { row: number; message: string }[] } | null>(null);
   const [importing, setImporting] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState<string | null>(null);
 
-  const { data, isPending, isError } = useQuery<LeadRow[]>({
-    queryKey: ['leads'],
-    queryFn: fetchLeads,
+  const { data, isPending, isError } = useLeads({
+    search,
+    status: statusFilter === 'todos' ? undefined : statusFilter,
+    intent: intentFilter === 'todos' ? undefined : intentFilter,
   });
+  const leads = getListData<LeadRow>(data);
 
-  const recalcMutation = useMutation({
-    mutationFn: bulkRecalculateScores,
-    onSuccess: (updated) => {
-      pushToast({ type: 'success', title: 'Scores recalculados', description: `${updated} leads actualizados` });
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-    },
-    onError: () => pushToast({ type: 'error', title: 'Error recalculando scores' }),
-  });
+  const bulkAutoAssignLeads = useBulkAutoAssignLeads();
+  const bulkRecalculateScores = useBulkRecalculateScores();
+  const addLeadTag = useAddLeadTag();
+  const removeLeadTag = useRemoveLeadTag();
+  const importLeads = useImportLeads();
+  const parseLeadsCsv = useParseLeadsCsv();
+  const exportLeads = useExportLeads();
+  const softDeleteLead = useSoftDeleteLead();
 
   useEffect(() => {
     document.title = 'Leads · BIENENHAUS';
@@ -61,9 +53,8 @@ export function LeadsPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!data) return [];
     const q = search.trim().toLowerCase();
-    return data.filter((l) => {
+    return leads.filter((l: LeadRow) => {
       const matchesSearch = q === '' ||
         `${l.name} ${l.last_name}`.toLowerCase().includes(q) ||
         l.email.toLowerCase().includes(q) ||
@@ -72,14 +63,14 @@ export function LeadsPage() {
       const matchesIntent = intentFilter === 'todos' || l.intent === intentFilter;
       return matchesSearch && matchesStatus && matchesIntent;
     });
-  }, [data, search, statusFilter, intentFilter]);
+  }, [leads, search, statusFilter, intentFilter]);
 
-  const allSelected = filtered.length > 0 && filtered.every((l) => selectedIds.has(l.id));
+  const allSelected = filtered.length > 0 && filtered.every((l: LeadRow) => selectedIds.has(l.id));
   const someSelected = selectedIds.size > 0;
 
   const toggleAll = () => {
     if (allSelected) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filtered.map((l) => l.id)));
+    else setSelectedIds(new Set(filtered.map((l: LeadRow) => l.id)));
   };
 
   const toggleOne = (id: string) => {
@@ -91,7 +82,7 @@ export function LeadsPage() {
   const runBulkAutoAssign = async () => {
     setBulkBusy(true);
     try {
-      const res = await bulkAutoAssignLeads(Array.from(selectedIds));
+      const res = await bulkAutoAssignLeads.mutateAsync(Array.from(selectedIds));
       clearSelection();
       pushToast({ type: 'success', title: 'Auto-asignación completada', description: `${res.assigned} lead${res.assigned === 1 ? '' : 's'} asignado${res.assigned === 1 ? '' : 's'}${res.skipped ? `, ${res.skipped} sin agente` : ''}` });
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -102,7 +93,7 @@ export function LeadsPage() {
   const runBulkTrash = async () => {
     setBulkBusy(true);
     try {
-      for (const id of selectedIds) await softDeleteLead(id);
+      for (const id of selectedIds) await softDeleteLead.mutateAsync(id);
       clearSelection();
       pushToast({ type: 'success', title: 'Leads movidos a papelera', description: `${selectedIds.size} lead${selectedIds.size === 1 ? '' : 's'}` });
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -110,12 +101,12 @@ export function LeadsPage() {
     finally { setBulkBusy(false); }
   };
 
-  const runBulkRecalc = () => { recalcMutation.mutate(Array.from(selectedIds)); clearSelection(); };
+  const runBulkRecalc = () => { bulkRecalculateScores.mutate(Array.from(selectedIds)); clearSelection(); };
 
   const handleTagAction = async (leadId: string, tag: string, action: 'add' | 'remove') => {
     try {
-      if (action === 'add') await addLeadTag(leadId, tag);
-      else await removeLeadTag(leadId, tag);
+      if (action === 'add') await addLeadTag.mutateAsync({ leadId, tag });
+      else await removeLeadTag.mutateAsync({ leadId, tag });
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       pushToast({ type: 'success', title: action === 'add' ? 'Tag agregado' : 'Tag removido' });
     } catch { pushToast({ type: 'error', title: 'Error actualizando tag' }); }
@@ -127,8 +118,7 @@ export function LeadsPage() {
     setImportFile(file);
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const { parseLeadsCsv } = await import('../lib/leads');
-      const result = await parseLeadsCsv(e.target?.result as string);
+      const result = await parseLeadsCsv.mutateAsync(e.target?.result as string);
       setImportPreview(result);
       setShowImport(true);
     };
@@ -139,8 +129,7 @@ export function LeadsPage() {
     if (!importPreview || importing) return;
     setImporting(true);
     try {
-      const { bulkImportLeads } = await import('../lib/leads');
-      const res = await bulkImportLeads(importPreview.valid);
+      const res = await importLeads.mutateAsync(importPreview.valid);
       pushToast({ type: 'success', title: 'Importación completada', description: `${res.created} leads creados${res.errors.length ? `, ${res.errors.length} errores` : ''}` });
       setShowImport(false);
       setImportPreview(null);
@@ -152,30 +141,28 @@ export function LeadsPage() {
 
   const handleExport = () => {
     if (filtered.length === 0) return;
-    downloadCsv(`leads-${todayStamp()}.csv`, toCsv(
-      ['Nombre', 'Apellido', 'Email', 'Teléfono', 'Ciudad', 'Intención', 'Origen', 'Estado', 'Score', 'Tags', 'Asignado', 'Recibido'],
-      filtered.map((l) => [
-        l.name, l.last_name, l.email, l.phone ?? '', l.city ?? '',
-        LEAD_INTENT_LABEL[l.intent], LEAD_SOURCE_LABEL[l.source], LEAD_STATUS_LABEL[l.status],
-        l.score ?? 0, (l.tags ?? []).join('; '), l.agent ?? '', new Date(l.created_at).toLocaleDateString('es-AR'),
-      ]),
-    ));
+    exportLeads.exportToCSV(`leads-${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   const handleStatusChange = async (lead: LeadRow, status: LeadStatus) => {
     try {
-      await updateLeadStatus(lead.id, status);
+      const { error } = await supabase.from('leads').update({ status }).eq('id', lead.id);
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       pushToast({ type: 'success', title: 'Estado actualizado', description: `${lead.name} → ${LEAD_STATUS_LABEL[status]}` });
     } catch { pushToast({ type: 'error', title: 'No se pudo actualizar' }); }
   };
 
-  const getKanbanColumns = () => STATUS_ORDER.map(status => ({
+  const getKanbanColumns = () => STATUS_ORDER.map((status: LeadStatus) => ({
     status,
-    leads: filtered.filter(l => l.status === status),
+    leads: filtered.filter((l: LeadRow) => l.status === status),
   }));
 
   const getScoreColor = (score: number) => score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger';
+
+  const labelMap = LEAD_INTENT_LABEL as Record<string, string>;
+  const sourceMap = LEAD_SOURCE_LABEL as Record<string, string>;
+  const statusMap = LEAD_STATUS_LABEL as Record<string, string>;
 
   return (
     <div className="page">
@@ -233,14 +220,14 @@ export function LeadsPage() {
       )}
 
       <div className="toolbar">
-        <div className="toolbar-search"><Search size={15} /><input type="text" placeholder="Buscar por nombre, email o teléfono…" value={search} onInput={e => setSearch(e.currentTarget.value)} /></div>
+        <div className="toolbar-search"><Search size={15} /><input type="text" placeholder="Buscar por nombre, email o teléfono…" value={search} onInput={e => setSearch((e.currentTarget as HTMLInputElement).value)} /></div>
         <select className="select" value={statusFilter} onChange={e => setStatusFilter(e.currentTarget.value as 'todos' | LeadStatus)}>
           <option value="todos">Todos los estados</option>
-          {(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map(s => <option key={s} value={s}>{LEAD_STATUS_LABEL[s]}</option>)}
+          {(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map((s: LeadStatus) => <option key={s} value={s}>{LEAD_STATUS_LABEL[s]}</option>)}
         </select>
         <select className="select" value={intentFilter} onChange={e => setIntentFilter(e.currentTarget.value as 'todos' | LeadIntent)}>
           <option value="todos">Toda intención</option>
-          {(Object.keys(LEAD_INTENT_LABEL) as LeadIntent[]).map(i => <option key={i} value={i}>{LEAD_INTENT_LABEL[i]}</option>)}
+          {(Object.keys(LEAD_INTENT_LABEL) as LeadIntent[]).map((i: LeadIntent) => <option key={i} value={i}>{LEAD_INTENT_LABEL[i]}</option>)}
         </select>
       </div>
 
@@ -255,7 +242,7 @@ export function LeadsPage() {
               <th>Contacto</th><th>Intención</th><th>Teléfono</th><th>Origen</th><th>Estado</th><th>Score</th><th>Tags</th><th>Asignado</th><th>Recibido</th>
             </tr></thead>
             <tbody>
-              {filtered.map(l => {
+              {filtered.map((l: LeadRow) => {
                 const isSelected = selectedIds.has(l.id);
                 return <tr key={l.id} className={`row-click${isSelected ? ' selected' : ''}`} onClick={e => { if ((e.target as HTMLElement).closest('input,button,a,.icon-btn,select,.tag')) return; setLocation(`/leads/${l.id}`); }}>
                   <td><input type="checkbox" checked={isSelected} onChange={() => toggleOne(l.id)} onClick={e => e.stopPropagation()} aria-label={`Seleccionar ${l.name}`} /></td>
@@ -263,10 +250,10 @@ export function LeadsPage() {
                   <td>{LEAD_INTENT_LABEL[l.intent]}</td>
                   <td className="muted">{l.phone ?? '—'}</td>
                   <td className="cap">{LEAD_SOURCE_LABEL[l.source]}</td>
-                  <td onClick={e => e.stopPropagation()}><select className={`select select--sm badge-select badge--${LEAD_STATUS_TONE[l.status]}`} value={l.status} onChange={e => handleStatusChange(l, e.currentTarget.value as LeadStatus)}>{(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map(s => <option key={s} value={s}>{LEAD_STATUS_LABEL[s]}</option>)}</select></td>
+                  <td onClick={e => e.stopPropagation()}><select className={`select select--sm badge-select badge--${LEAD_STATUS_TONE[l.status]}`} value={l.status} onChange={e => handleStatusChange(l, e.currentTarget.value as LeadStatus)}>{(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map((s: LeadStatus) => <option key={s} value={s}>{LEAD_STATUS_LABEL[s]}</option>)}</select></td>
                   <td><span className={`badge badge--${getScoreColor(l.score ?? 0)}`}>{l.score ?? 0}</span></td>
                   <td style={{maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
-                    {(l.tags ?? []).slice(0, 3).map(t => <span key={t} className="tag badge badge--neutral" style={{marginRight: '4px', fontSize: '11px'}}>{t}</span>)}
+                    {(l.tags ?? []).slice(0, 3).map((t: string) => <span key={t} className="tag badge badge--neutral" style={{marginRight: '4px', fontSize: '11px'}}>{t}</span>)}
                     {(l.tags ?? []).length > 3 && <span className="badge badge--neutral" style={{fontSize: '11px'}}>+{(l.tags ?? []).length - 3}</span>}
                   </td>
                   <td className="muted">{l.agent ?? '—'}</td>
@@ -281,24 +268,24 @@ export function LeadsPage() {
 
       {!isPending && !isError && view === 'kanban' && (
         <div className="kanban-board">
-          {getKanbanColumns().map(col => (
+          {getKanbanColumns().map((col: { status: LeadStatus; leads: LeadRow[] }) => (
             <div key={col.status} className="kanban-column">
-              <div className="kanban-column-header badge badge--{LEAD_STATUS_TONE[col.status]}" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px 8px 0 0', minWidth: '280px' }}>
+              <div className={`kanban-column-header badge badge--${LEAD_STATUS_TONE[col.status]}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px 8px 0 0', minWidth: '280px' }}>
                 <span>{LEAD_STATUS_LABEL[col.status]}</span>
                 <span className="kanban-count" style={{background: 'rgba(0,0,0,0.1)', padding: '2px 8px', borderRadius: '999px', fontSize: '12px'}}>{col.leads.length}</span>
               </div>
               <div className="kanban-column-body" style={{minHeight: '400px', minWidth: '280px', padding: '8px', background: 'var(--bh-bg-hover)', borderRadius: '0 0 8px 8px'}}>
                 {col.leads.length === 0 && <div className="kanban-empty" style={{textAlign: 'center', color: 'var(--bh-text-tertiary)', padding: '24px'}}>Sin leads</div>}
-                {col.leads.map(l => (
+                {col.leads.map((l: LeadRow) => (
                   <div key={l.id} className="kanban-card" style={{background: 'var(--bh-bg-card)', border: '1px solid var(--bh-border)', borderRadius: '8px', padding: '12px', marginBottom: '8px', boxShadow: 'var(--bh-shadow-sm)', cursor: 'pointer'}} onClick={e => { if ((e.target as HTMLElement).closest('button,.tag,.tag-input')) return; setLocation(`/leads/${l.id}`); }}>
                     <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                      <span className="badge badge--{LEAD_STATUS_TONE[l.status]}" style={{fontSize: '11px'}}>{LEAD_STATUS_LABEL[l.status]}</span>
+                      <span className={`badge badge--${LEAD_STATUS_TONE[l.status]}`} style={{fontSize: '11px'}}>{LEAD_STATUS_LABEL[l.status]}</span>
                       <span className={`badge badge--${getScoreColor(l.score ?? 0)}`} style={{fontSize: '11px'}}>{l.score ?? 0}</span>
                     </div>
                     <strong style={{display: 'block', marginBottom: '4px'}}>{l.name} {l.last_name}</strong>
                     <span className="muted" style={{fontSize: '12px', display: 'block', marginBottom: '4px'}}>{l.email}</span>
                     {l.phone && <span className="muted" style={{fontSize: '12px', display: 'block', marginBottom: '4px'}}>📞 {l.phone}</span>}
-                    {l.tags?.length && <div style={{display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px'}}>{l.tags.map(t => <span key={t} className="tag badge badge--neutral" style={{fontSize: '10px', cursor: 'pointer'}} onClick={e => { e.stopPropagation(); setShowTagInput(l.id); setTagInput(t); }}>{t} <X size={10} /></span>)}</div>}
+                    {l.tags && l.tags.length > 0 && <div style={{display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px'}}>{l.tags.map((t: string) => <span key={t} className="tag badge badge--neutral" style={{fontSize: '10px', cursor: 'pointer'}} onClick={e => { e.stopPropagation(); setShowTagInput(l.id); setTagInput(t); }}>{t} <X size={10} /></span>)}</div>}
                     {(l.score ?? 0) < 30 && <div style={{marginTop: '8px', padding: '6px', background: 'var(--bh-danger-soft)', borderRadius: '6px', fontSize: '11px', color: 'var(--bh-danger)'}}><AlertTriangle size={12} /> Score bajo: priorizar contacto</div>}
                     <div style={{display: 'flex', gap: '4px', marginTop: '8px'}}>
                       <button className="btn btn--ghost btn--sm" style={{flex: 1}} onClick={e => { e.stopPropagation(); handleStatusChange(l, STATUS_ORDER[Math.min(STATUS_ORDER.indexOf(l.status) + 1, STATUS_ORDER.length - 1)]); }}><ChevronDown size={12} /> Avanzar</button>
@@ -311,7 +298,6 @@ export function LeadsPage() {
         </div>
       )}
 
-      {/* Import Modal */}
       {showImport && (
         <div className="modal-backdrop" onClick={() => { setShowImport(false); setImportPreview(null); }}>
           <div className="modal-card modal--large" onClick={e => e.stopPropagation()}>
@@ -326,13 +312,13 @@ export function LeadsPage() {
                   {importPreview.errors.length > 0 && (
                     <details style={{marginBottom: '16px'}}><summary style={{cursor: 'pointer', color: 'var(--bh-danger)'}}>Ver errores ({importPreview.errors.length})</summary>
                     <ul style={{maxHeight: '200px', overflow: 'auto', marginTop: '8px', fontSize: '12px', color: 'var(--bh-danger)'}}>
-                      {importPreview.errors.slice(0, 20).map((err, i) => <li key={i}>Fila {err.row}: {err.message}</li>)}
+                      {importPreview.errors.slice(0, 20).map((err: { row: number; message: string }, i: number) => <li key={i}>Fila {err.row}: {err.message}</li>)}
                     </ul></details>
                   )}
                   <div style={{maxHeight: '300px', overflow: 'auto', marginBottom: '16px', fontSize: '12px'}}>
                     <table className="table" style={{fontSize: '11px'}}>
                       <thead><tr><th>Nombre</th><th>Apellido</th><th>Email</th><th>Intención</th><th>Origen</th><th>Estado</th></tr></thead>
-                      <tbody>{importPreview.valid.slice(0, 20).map((row: any, i: number) => <tr key={i}><td>{row.name}</td><td>{row.last_name}</td><td>{row.email}</td><td>{LEAD_INTENT_LABEL[row.intent as LeadIntent]}</td><td>{LEAD_SOURCE_LABEL[row.source as LeadSource]}</td><td>{LEAD_STATUS_LABEL[(row.status || 'nuevo') as LeadStatus]}</td></tr>)}</tbody>
+                      <tbody>{importPreview.valid.slice(0, 20).map((row: CsvLeadRow, i: number) => <tr key={i}><td>{row.name}</td><td>{row.last_name}</td><td>{row.email}</td><td>{labelMap[row.intent]}</td><td>{sourceMap[row.source]}</td><td>{statusMap[(row.status || 'nuevo')]}</td></tr>)}</tbody>
                     </table>
                     {importPreview.valid.length > 20 && <p className="muted" style={{marginTop: '8px'}}>... y {importPreview.valid.length - 20} más</p>}
                   </div>
@@ -355,7 +341,6 @@ export function LeadsPage() {
         </div>
       )}
 
-      {/* Tag input popover */}
       {showTagInput && (
         <div className="tag-popover" style={{position: 'fixed', zIndex: 1000, background: 'var(--bh-bg-card)', border: '1px solid var(--bh-border)', borderRadius: '8px', padding: '8px', boxShadow: 'var(--bh-shadow-lg)'}}>
           <input type="text" value={tagInput} onChange={e => setTagInput(e.currentTarget.value)} placeholder="Nuevo tag..." style={{width: '200px', marginBottom: '8px'}} />

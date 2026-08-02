@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Eye, EyeOff, Globe, ImagePlus, Save, Trash2 } from 'lucide-preact';
 import {
   CONTENT_KEY_LABELS,
   IMAGE_SETTINGS,
-  LOCALES,
   SECTION_KEYS,
   SECTION_LABELS,
   contentFieldsFor,
@@ -14,7 +12,6 @@ import {
   isListField,
   listMetaFor,
   settingFieldsFor,
-  sortSections,
   updateSiteSetting,
   uploadSiteImage,
   upsertSiteContent,
@@ -27,8 +24,6 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
-
-const PREVIEW_URL = 'http://localhost:5173/?preview=1';
 
 interface DraftEntry {
   id: string | null;
@@ -56,23 +51,39 @@ function FieldInput({
   const raw = fieldInputValue(value);
   if (field.type === 'textarea') {
     return (
-      <label className="field">
-        <span>{field.label}</span>
+      <label className="field field--textarea">
+        <span className="field__label">{field.label}</span>
         <textarea
-          rows={2}
+          rows={3}
           value={raw}
           onInput={(e) => onChange((e.currentTarget as HTMLTextAreaElement).value)}
+          className="field__input field__input--textarea"
         />
+      </label>
+    );
+  }
+  if (field.type === 'boolean') {
+    const checked = raw === 'true';
+    return (
+      <label className="field field--boolean">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.currentTarget.checked ? 'true' : 'false')}
+          className="field__input field__input--checkbox"
+        />
+        <span className="field__label">{field.label}</span>
       </label>
     );
   }
   return (
     <label className="field">
-      <span>{field.label}</span>
+      <span className="field__label">{field.label}</span>
       <input
         type={field.type === 'number' ? 'number' : 'text'}
         value={raw}
         onInput={(e) => onChange((e.currentTarget as HTMLInputElement).value)}
+        className="field__input"
       />
     </label>
   );
@@ -80,13 +91,15 @@ function FieldInput({
 
 function ActiveToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <input
-      type="checkbox"
-      className="switch"
-      checked={checked}
-      aria-label="Campo activo"
-      onChange={(e) => onChange((e.currentTarget as HTMLInputElement).checked)}
-    />
+    <label className="switch">
+      <input
+        type="checkbox"
+        className="switch__input"
+        checked={checked}
+        onChange={(e) => onChange((e.currentTarget as HTMLInputElement).checked)}
+      />
+      <span className="switch__slider"></span>
+    </label>
   );
 }
 
@@ -121,7 +134,9 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
               void deleteSiteImage(url);
             }}
           >
-            <Trash2 size={13} /> Quitar
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg> Quitar
           </button>
         </div>
       ) : (
@@ -131,7 +146,9 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
         >
-          <ImagePlus size={14} /> {uploading ? 'Subiendo…' : 'Subir imagen'}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg> {uploading ? 'Subiendo…' : 'Subir imagen'}
         </button>
       )}
       <input
@@ -190,10 +207,10 @@ function ListEditor({
             </span>
             <div className="site-list-item-actions">
               <button type="button" className="icon-btn" title="Subir" onClick={() => moveItem(i, -1)}>
-                ↑
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg>
               </button>
               <button type="button" className="icon-btn" title="Bajar" onClick={() => moveItem(i, 1)}>
-                ↓
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
               </button>
               <button
                 type="button"
@@ -201,7 +218,9 @@ function ListEditor({
                 title="Eliminar"
                 onClick={() => removeItem(i)}
               >
-                <Trash2 size={13} />
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
               </button>
             </div>
           </div>
@@ -218,7 +237,8 @@ function ListEditor({
         </div>
       ))}
       <button type="button" className="btn btn--secondary btn--sm" onClick={() => onChange([...list, {}])}>
-        + Agregar {meta.itemLabel.toLowerCase()}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+        Agregar {meta.itemLabel.toLowerCase()}
       </button>
     </div>
   );
@@ -258,10 +278,10 @@ function ContentRowEditor({
 }
 
 export function SitePage() {
+  const locale = 'es';
   const contentQ = useQuery<SiteContentRow[]>({ queryKey: ['site-content'], queryFn: fetchSiteContent });
   const settingsQ = useQuery<SiteSettingRow[]>({ queryKey: ['site-settings'], queryFn: fetchSiteSettings });
 
-  const [locale, setLocale] = useState('es');
   const [drafts, setDrafts] = useState<Record<DraftKey, DraftEntry>>({});
   const [baseline, setBaseline] = useState<Record<DraftKey, DraftEntry>>({});
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
@@ -275,7 +295,6 @@ export function SitePage() {
     };
   }, []);
 
-  // Construye baseline + drafts cuando cargan los datos.
   useEffect(() => {
     if (!contentQ.data) return;
     const normalizeValue = (v: Record<string, unknown>) =>
@@ -385,10 +404,6 @@ export function SitePage() {
     });
   };
 
-  // -------------------------------------------------------------------------
-  // Vista previa en vivo
-  // -------------------------------------------------------------------------
-
   const buildPreviewPayload = () => {
     const content: Record<string, Record<string, Record<string, unknown>>> = {};
     for (const [dk, entry] of Object.entries(drafts)) {
@@ -418,7 +433,7 @@ export function SitePage() {
     if (!showPreview) return;
     const t = setTimeout(sendPreview, 150);
     return () => clearTimeout(t);
-  });
+  }, [showPreview]);
 
   useEffect(() => {
     const iframe = previewRef.current;
@@ -426,12 +441,7 @@ export function SitePage() {
     const onLoad = () => setTimeout(sendPreview, 100);
     iframe.addEventListener('load', onLoad);
     return () => iframe.removeEventListener('load', onLoad);
-  });
-
-  const sections = useMemo(() => sortSections(SECTION_KEYS ? (Object.keys(SECTION_KEYS) as ContentSection[]) : []), []);
-
-  const isPending = contentQ.isPending || settingsQ.isPending;
-  const isError = contentQ.isError || settingsQ.isError;
+  }, [showPreview]);
 
   const sectionDirtyCount = (section: ContentSection) => {
     let count = 0;
@@ -442,7 +452,7 @@ export function SitePage() {
     return count;
   };
 
-  const renderSection = (section: ContentSection) => {
+  const renderSectionContent = (section: ContentSection) => {
     const rows = SECTION_KEYS[section] ?? [];
     const dirtyCount = sectionDirtyCount(section);
     return (
@@ -461,7 +471,8 @@ export function SitePage() {
             onClick={() => saveSection(section)}
             disabled={savingGroup !== null || dirtyCount === 0}
           >
-            <Save size={15} /> {savingGroup === `c-${section}` ? 'Guardando…' : 'Guardar'}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/></svg>
+            {savingGroup === `c-${section}` ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
         <div className="site-section-body">
@@ -512,186 +523,184 @@ export function SitePage() {
   };
 
   const SETTINGS_GROUPS = [
-  {
-    id: 'hero-video',
-    label: '🎬 Hero Video',
-    icon: '🎬',
-    keys: ['hero_video_url', 'hero_video_title', 'hero_video_autoplay', 'hero_video_muted', 'hero_video_poster'],
-    description: 'Configuración del video principal del Hero (sección principal de la landing)',
-  },
-  {
-    id: 'hero-images',
-    label: '🖼️ Imágenes del Hero',
-    icon: '🖼️',
-    keys: ['hero_background', 'hero_video_poster'],
-    description: 'Imagen de fondo y poster del video del Hero',
-  },
-  {
-    id: 'contact',
-    label: '📞 Datos de Contacto',
-    icon: '📞',
-    keys: ['contact_whatsapp', 'contact_whatsapp_alt', 'contact_email', 'contact_phone', 'contact_address', 'contact_hours'],
-    description: 'Información de contacto visible en la landing',
-  },
-  {
-    id: 'social',
-    label: '🌐 Redes Sociales',
-    icon: '🌐',
-    keys: ['social'],
-    description: 'Links a redes sociales (Instagram, Facebook, YouTube, TikTok, LinkedIn, WhatsApp)',
-  },
-  {
-    id: 'company',
-    label: '🏢 Empresa',
-    icon: '🏢',
-    keys: ['site_name', 'cri', 'contact_address'],
-    description: 'Datos legales y nombre de la empresa',
-  },
-  {
-    id: 'stats',
-    label: '📊 Estadísticas del Hero',
-    icon: '📊',
-    keys: ['stats'],
-    description: 'Números que se muestran en la barra de estadísticas del Hero',
-  },
-  {
-    id: 'features',
-    label: '⚙️ Funcionalidades',
-    icon: '⚙️',
-    keys: ['ml_enabled', 'contact_whatsapp_alt', 'hero_video_autoplay', 'hero_video_muted'],
-    description: 'Activar/desactivar funcionalidades avanzadas',
-  },
-] as const;
+    {
+      id: 'hero-video',
+      label: '🎬 Hero Video',
+      icon: '🎬',
+      description: 'Configuración del video principal del Hero (sección principal de la landing)',
+      keys: ['hero_video_url', 'hero_video_title', 'hero_video_autoplay', 'hero_video_muted', 'hero_video_poster'],
+    },
+    {
+      id: 'hero-images',
+      label: 'Imágenes del Hero',
+      icon: '🖼️',
+      description: 'Imagen de fondo y poster del video del Hero',
+      keys: ['hero_background', 'hero_video_poster'],
+    },
+    {
+      id: 'contact',
+      label: 'Datos de Contacto',
+      icon: '📞',
+      description: 'Información de contacto visible en la landing',
+      keys: ['contact_whatsapp', 'contact_whatsapp_alt', 'contact_email', 'contact_phone', 'contact_address', 'contact_hours'],
+    },
+    {
+      id: 'social',
+      label: 'Redes Sociales',
+      icon: '🌐',
+      description: 'Links a redes sociales (Instagram, Facebook, YouTube, TikTok, LinkedIn, WhatsApp)',
+      keys: ['social'],
+    },
+    {
+      id: 'company',
+      label: 'Empresa',
+      icon: '🏢',
+      description: 'Datos legales y nombre de la empresa',
+      keys: ['site_name', 'cri', 'contact_address'],
+    },
+    {
+      id: 'stats',
+      label: 'Estadísticas del Hero',
+      icon: '📊',
+      description: 'Números que se muestran en la barra de estadísticas del Hero',
+      keys: ['stats'],
+    },
+    {
+      id: 'features',
+      label: 'Funcionalidades',
+      icon: '⚙️',
+      description: 'Activar/desactivar funcionalidades avanzadas',
+      keys: ['ml_enabled', 'contact_whatsapp_alt', 'hero_video_autoplay', 'hero_video_muted'],
+    },
+  ] as const;
 
-const renderSettings = () => {
-  const dirtyCount = settingsDirty.length;
-  
-  return (
-    <section className="card site-section">
-      <div className="site-section-head">
-        <div>
-          <h3>⚙️ Configuración del Sitio</h3>
-          <p>
-            {dirtyCount > 0
-              ? `${dirtyCount} campo${dirtyCount === 1 ? '' : 's'} sin guardar`
-              : 'Sin cambios pendientes'}
-          </p>
+  const renderSettingsContent = () => {
+    const dirtyCount = settingsDirty.length;
+
+    return (
+      <section className="card site-section settings-section">
+        <div className="site-section-head">
+          <div>
+            <h3>⚙️ Configuración del Sitio</h3>
+            <p>
+              {dirtyCount > 0
+                ? `${dirtyCount} campo${dirtyCount === 1 ? '' : 's'} sin guardar`
+                : 'Sin cambios pendientes'}
+            </p>
+          </div>
+          <button
+            className="btn btn--primary"
+            onClick={saveSettings}
+            disabled={savingGroup !== null || dirtyCount === 0}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/></svg>
+            {savingGroup === 'settings' ? 'Guardando…' : 'Guardar todos los ajustes'}
+          </button>
         </div>
-        <button
-          className="btn btn--primary"
-          onClick={saveSettings}
-          disabled={savingGroup !== null || dirtyCount === 0}
-        >
-          <Save size={15} /> {savingGroup === 'settings' ? 'Guardando…' : 'Guardar todos los ajustes'}
-        </button>
-      </div>
-      <div className="site-section-body">
-        {SETTINGS_GROUPS.map((group) => {
-          const groupKeys = group.keys.filter(k => settingsMap.has(k));
-          if (groupKeys.length === 0) return null;
-          
-          const groupDirtyCount = groupKeys.filter(k => settingsDirty.some(s => s.key === k)).length;
-          
-          return (
-            <div key={group.id} className="settings-group">
-              <div className="settings-group-header">
-                <div className="settings-group-title">
-                  <span className="settings-group-icon">{group.icon}</span>
-                  <div>
-                    <h4>{group.label}</h4>
-                    <p className="settings-group-desc">{group.description}</p>
-                  </div>
-                </div>
-                {groupDirtyCount > 0 && (
-                  <span className="settings-group-badge">{groupDirtyCount} pendiente{groupDirtyCount > 1 ? 's' : ''}</span>
-                )}
-              </div>
-              <div className="settings-group-body">
-                {groupKeys.map((key) => {
-                  const s = settingsMap.get(key);
-                  if (!s) return null;
-                  const entry = drafts[`s:${s.id}`] ?? { id: s.id, value: s.value, isActive: true };
-                  const fields = settingFieldsFor(s.key) ?? genericFields(s.value);
-                  const isImage = s.key in IMAGE_SETTINGS;
-                  
-                  return (
-                    <div key={s.id} className="site-row">
-                      <h4>{s.description ?? s.key}</h4>
-                      {isImage ? (
-                        <ImageInput value={entry.value.value} onChange={(url) => setSettingField(s.id)('value', url)} />
-                      ) : (
-                        <div className="form-grid">
-                          {fields.map((f) => (
-                            <FieldInput
-                              key={f.key}
-                              field={f}
-                              value={entry.value[f.key]}
-                              onChange={(v) => setSettingField(s.id)(f.key, v)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-};
+        <div className="site-section-body settings-body">
+          {SETTINGS_GROUPS.map((group) => {
+            const groupKeys = group.keys.filter(k => settingsMap.has(k));
+            if (groupKeys.length === 0) return null;
 
+            const groupDirtyCount = groupKeys.filter(k => settingsDirty.some(s => s.key === k)).length;
+
+            return (
+              <details key={group.id} className="settings-group" open>
+                <summary className="settings-group-header">
+                  <div className="settings-group-title">
+                    <span className="settings-group-icon" aria-hidden="true">{group.icon}</span>
+                    <div>
+                      <h4>{group.label}</h4>
+                      <p className="settings-group-desc">{group.description}</p>
+                    </div>
+                  </div>
+                  {groupDirtyCount > 0 && (
+                    <span className="settings-group-badge">{groupDirtyCount} pendiente{groupDirtyCount > 1 ? 's' : ''}</span>
+                  )}
+                </summary>
+                <div className="settings-group-body">
+                  {groupKeys.map((key) => {
+                    const s = settingsMap.get(key);
+                    if (!s) return null;
+                    const entry = drafts[`s:${s.id}`] ?? { id: s.id, value: s.value, isActive: true };
+                    const fields = settingFieldsFor(s.key) ?? genericFields(s.value);
+                    const isImage = s.key in IMAGE_SETTINGS;
+
+                    return (
+                      <div key={s.id} className="site-row">
+                        <div className="site-row-label">
+                          <h4>{s.description ?? s.key}</h4>
+                        </div>
+                        <div className="site-row-field">
+                          {isImage ? (
+                            <ImageInput value={entry.value.value} onChange={(url) => setSettingField(s.id)('value', url)} />
+                          ) : (
+                            <div className="form-grid">
+                              {fields.map((f) => (
+                                <FieldInput
+                                  key={f.key}
+                                  field={f}
+                                  value={entry.value[f.key]}
+                                  onChange={(v) => setSettingField(s.id)(f.key, v)}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  // ===== RETURN JSX =====
   return (
-    <div className={`page${showPreview ? ' has-preview' : ''}`}>
+    <div className="site-page">
       <div className="page-head">
         <div>
           <h2 className="page-title">Sitio Web</h2>
-          <p className="page-subtitle">
-            Textos, listas e imágenes de la landing. Cada sección se guarda por separado.
-          </p>
+          <p className="page-subtitle">Gestioná el contenido y la configuración de la landing.</p>
         </div>
-        <div className="page-head-actions">
-          <div className="locale-tabs">
-            {LOCALES.map((l) => (
-              <button
-                key={l.code}
-                className={`locale-tab${locale === l.code ? ' is-active' : ''}`}
-                onClick={() => setLocale(l.code)}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <button
-            className={`btn ${showPreview ? 'btn--primary' : 'btn--secondary'}`}
-            onClick={() => setShowPreview((v) => !v)}
-          >
-            {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
-            {showPreview ? 'Ocultar vista previa' : 'Vista previa en vivo'}
-          </button>
-          <a href="/" className="btn btn--secondary" target="_blank" rel="noreferrer">
-            <Globe size={16} /> Ver landing
-          </a>
-        </div>
+        <button
+          type="button"
+          className="btn btn--secondary"
+          onClick={() => setShowPreview(true)}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg> Vista previa
+        </button>
       </div>
 
-      {isPending && <div className="card placeholder-card">Cargando contenido…</div>}
-      {isError && <div className="card placeholder-card">No se pudo cargar el contenido del sitio.</div>}
+      {(Object.keys(SECTION_KEYS) as ContentSection[]).map((section) => renderSectionContent(section))}
+      {renderSettingsContent()}
 
-      {!isPending && !isError && (
-        <div className="site-layout">
-          <div className="site-editor">{sections.map(renderSection)}{renderSettings()}</div>
-          {showPreview && (
-            <div className="site-preview">
+      {showPreview && (
+        <div className="modal-backdrop" onClick={() => setShowPreview(false)}>
+          <div className="modal-card modal--large" onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Vista previa</h3>
+              <button className="icon-btn" onClick={() => setShowPreview(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: 0 }}>
               <iframe
                 ref={previewRef}
-                src={PREVIEW_URL}
-                title="Vista previa de la landing"
+                src="/"
+                title="Vista previa"
+                style={{ width: '100%', height: '600px', border: 'none' }}
               />
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

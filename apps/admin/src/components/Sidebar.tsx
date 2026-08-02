@@ -14,22 +14,47 @@ import {
   FileText,
 } from 'lucide-preact';
 import { Link } from 'wouter-preact';
-import { mobileMenuOpen, sidebarCollapsed } from '../store/app';
+import { mobileMenuOpen, sidebarCollapsed, authUserRole } from '../store/app';
+import type { AdminRole } from '../types/admin';
 
-const NAV = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof Building2;
+  roles?: AdminRole[];
+}
+
+const NAV: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/propiedades', label: 'Propiedades', icon: Building2 },
   { href: '/leads', label: 'Leads', icon: Users },
-  { href: '/agentes', label: 'Agentes', icon: UserRound },
+  { href: '/agentes', label: 'Agentes', icon: UserRound, roles: ['super_admin', 'admin', 'staff'] },
   { href: '/visitas', label: 'Visitas', icon: Calendar },
   { href: '/chat', label: 'Chat', icon: MessageSquare },
-  { href: '/sitio', label: 'Sitio Web', icon: Globe },
-  { href: '/mercadolibre', label: 'Mercado Libre', icon: ShoppingBag },
-  { href: '/newsletter', label: 'Newsletter', icon: Mail },
+  { href: '/sitio', label: 'Sitio Web', icon: Globe, roles: ['super_admin', 'admin'] },
+  { href: '/mercadolibre', label: 'Mercado Libre', icon: ShoppingBag, roles: ['super_admin', 'admin', 'staff'] },
+  { href: '/newsletter', label: 'Newsletter', icon: Mail, roles: ['super_admin', 'admin'] },
 ];
+
+const ADMIN_ONLY_NAV: NavItem[] = [
+  { href: '/auditoria', label: 'Auditoría', icon: FileText, roles: ['super_admin', 'admin'] },
+  { href: '/usuarios', label: 'Usuarios', icon: Shield, roles: ['super_admin'] },
+  { href: '/papelera', label: 'Papelera', icon: Trash2, roles: ['super_admin', 'admin', 'staff'] },
+];
+
+const SETTINGS_NAV: NavItem = {
+  href: '/configuracion',
+  label: 'Configuración',
+  icon: Settings,
+  roles: ['super_admin', 'admin'],
+};
 
 export function Sidebar() {
   const collapsed = sidebarCollapsed.value;
+  const role = authUserRole.value;
+
+  const filterByRole = (items: NavItem[]) =>
+    items.filter((item) => !item.roles || item.roles.includes(role ?? 'viewer'));
 
   return (
     <aside
@@ -48,31 +73,27 @@ export function Sidebar() {
       </div>
 
       <nav className="sidebar-nav" aria-label="Navegación del panel">
-        {NAV.map(({ href, label, icon: Icon }) => (
+        {filterByRole(NAV).map(({ href, label, icon: Icon }) => (
           <Link href={href} key={href} className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
             <Icon size={18} strokeWidth={1.8} />
             {!collapsed && <span>{label}</span>}
           </Link>
         ))}
-        <Link href="/auditoria" className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
-          <FileText size={18} strokeWidth={1.8} />
-          {!collapsed && <span>Auditoría</span>}
-        </Link>
-        <Link href="/usuarios" className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
-          <Shield size={18} strokeWidth={1.8} />
-          {!collapsed && <span>Usuarios</span>}
-        </Link>
-        <Link href="/papelera" className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
-          <Trash2 size={18} strokeWidth={1.8} />
-          {!collapsed && <span>Papelera</span>}
-        </Link>
+        {filterByRole(ADMIN_ONLY_NAV).map(({ href, label, icon: Icon }) => (
+          <Link href={href} key={href} className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
+            <Icon size={18} strokeWidth={1.8} />
+            {!collapsed && <span>{label}</span>}
+          </Link>
+        ))}
       </nav>
 
       <div className="sidebar-footer">
-        <Link href="/configuracion" className="sidebar-link">
-          <Settings size={18} strokeWidth={1.8} />
-          {!collapsed && <span>Configuración</span>}
-        </Link>
+        {(!SETTINGS_NAV.roles || SETTINGS_NAV.roles.includes(role ?? 'viewer')) && (
+          <Link href={SETTINGS_NAV.href} className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
+            <Settings size={18} strokeWidth={1.8} />
+            {!collapsed && <span>{SETTINGS_NAV.label}</span>}
+          </Link>
+        )}
       </div>
     </aside>
   );

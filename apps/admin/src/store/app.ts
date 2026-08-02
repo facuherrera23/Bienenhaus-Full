@@ -2,38 +2,79 @@ import { signal } from '@preact/signals';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
-// ---------------------------------------------------------------------------
-// Sesión
-// ---------------------------------------------------------------------------
 export const authSession = signal<Session | null>(null);
 export const authLoading = signal(true);
+export const authUserRole = signal<'super_admin' | 'admin' | 'staff' | 'viewer' | null>(null);
+
+function cleanAuthHash(): void {
+  const hash = window.location.hash;
+  if (!hash) return;
+
+  const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+  const authParams = ['access_token', 'refresh_token', 'type', 'code', 'error', 'error_description'];
+  let hasAuthParam = false;
+  for (const p of authParams) {
+    if (params.has(p)) {
+      hasAuthParam = true;
+      break;
+    }
+  }
+
+  if (hasAuthParam) {
+    const routeMatch = hash.match(/^(#\/[^?#]*)/);
+    const newHash = routeMatch ? routeMatch[1] : '';
+    const newUrl = window.location.pathname + window.location.search + newHash;
+    window.history.replaceState(null, '', newUrl);
+  }
+}
+
+async function fetchUserRole(email: string): Promise<'super_admin' | 'admin' | 'staff' | 'viewer' | null> {
+  try {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('email', email)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data.role as 'super_admin' | 'admin' | 'staff' | 'viewer';
+  } catch {
+    return null;
+  }
+}
 
 export async function initAuth(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   authSession.value = data.session;
   authLoading.value = false;
 
-  // Si el hash trae un callback de auth (access_token, type=recovery, etc.)
-  // y no es una ruta de la app (#/...), lo limpiamos para evitar NotFound.
-  const hash = window.location.hash;
-  if (hash && !hash.startsWith('#/')) {
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  if (data.session?.user?.email) {
+    const role = await fetchUserRole(data.session.user.email);
+    authUserRole.value = role;
   }
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  cleanAuthHash();
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
     authSession.value = session;
+    if (session?.user?.email) {
+      const role = await fetchUserRole(session.user.email);
+      authUserRole.value = role;
+      if (event === 'SIGNED_IN') {
+        window.location.href = '/admin';
+      }
+    } else {
+      authUserRole.value = null;
+      if (event === 'SIGNED_OUT') {
+        window.location.href = '/login';
+      }
+    }
+    setTimeout(cleanAuthHash, 0);
   });
 }
 
-// ---------------------------------------------------------------------------
-// UI state
-// ---------------------------------------------------------------------------
 export const sidebarCollapsed = signal(false);
 export const mobileMenuOpen = signal(false);
 
-// ---------------------------------------------------------------------------
-// Toasts
-// ---------------------------------------------------------------------------
 export interface ToastItem {
   id: number;
   type: 'success' | 'error' | 'info' | 'warning';

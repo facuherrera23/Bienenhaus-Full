@@ -3,26 +3,33 @@ import { ArrowLeft, Save, Trash2, Copy, MapPin, Eye, Loader2, X } from 'lucide-p
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import 'leaflet/dist/leaflet.css';
 import {
+  useProperty,
+  useCreateProperty,
+  useUpdateProperty,
+  useDuplicateProperty,
+  useSoftDeleteProperty,
+  useLocations,
   STATUS_LABEL,
-  createProperty,
-  duplicateProperty,
-  fetchLocations,
-  fetchProperty,
   toFormValues,
   toNumeric,
-  updateProperty,
-  softDeleteProperty,
-  type LocationOption,
   type ListingType,
   type PropertyFormValues,
   type PropertyStatus,
-} from '../lib/properties';
-import { useQuery } from '../lib/query/hooks';
+} from '../lib/properties.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 
 const STORAGE_KEY = 'property-form-draft';
 const AUTOSAVE_DELAY = 2000;
+
+function getListData<T>(data: unknown): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as T[];
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    return (data as { data: T[] }).data ?? [];
+  }
+  return [];
+}
 
 const EMPTY: PropertyFormValues = {
   title: '',
@@ -43,6 +50,8 @@ const EMPTY: PropertyFormValues = {
   year_built: null,
   featured: false,
   video_url: '',
+  latitude: null,
+  longitude: null,
 };
 
 const LISTING_OPTIONS: { value: ListingType; label: string }[] = [
@@ -57,19 +66,23 @@ function NumField({
   value,
   onInput,
   placeholder,
+  step,
+  min,
 }: {
   label: string;
   value: number | null;
   onInput: (n: number | null) => void;
   placeholder?: string;
+  step?: string;
+  min?: number;
 }) {
   return (
     <label className="field">
       <span>{label}</span>
       <input
         type="number"
-        min={0}
-        step="any"
+        min={min ?? 0}
+        step={step ?? "any"}
         placeholder={placeholder}
         value={value ?? ''}
         onInput={(e) => onInput(toNumeric((e.currentTarget as HTMLInputElement).value))}
@@ -93,17 +106,52 @@ export function PropertyFormPage() {
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showMap, setShowMap] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showMap && leafletMapRef.current) {
+      leafletMapRef.current.remove();
+      leafletMapRef.current = null;
+    }
+  }, [showMap]);
+
+  const { data: locations } = useLocations();
+  const property = useProperty(editId);
+  const createProperty = useCreateProperty();
+  const updateProperty = useUpdateProperty();
+  const duplicateProperty = useDuplicateProperty();
+  const softDeleteProperty = useSoftDeleteProperty();
 
   const set = <K extends keyof PropertyFormValues>(key: K, value: PropertyFormValues[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
   };
 
-  const { data: locations } = useQuery<LocationOption[]>({
-    queryKey: ['locations'],
-    queryFn: fetchLocations,
-  });
+  useEffect(() => {
+    if (!editId) {
+      setLoaded(true);
+      return;
+    }
+    if (property.isSuccess && property.data) {
+      setValues(toFormValues(property.data));
+      if (property.data.latitude && property.data.longitude) {
+        setMapCoords({ lat: property.data.latitude, lng: property.data.longitude });
+      }
+      setLoaded(true);
+    } else if (property.isError) {
+      setLoadError(property.error?.message ?? 'No se pudo cargar la propiedad.');
+      setLoaded(true);
+    }
+  }, [editId, property.data, property.isSuccess, property.isError]);
 
-  // Load draft from localStorage on mount
   useEffect(() => {
     if (isNew) {
       const draft = localStorage.getItem(STORAGE_KEY);
@@ -115,86 +163,56 @@ export function PropertyFormPage() {
           localStorage.removeItem(STORAGE_KEY);
         }
       }
+      setLoaded(true);
     }
-    setLoaded(true);
   }, [isNew]);
 
-  // Auto-save draft to localStorage
   useEffect(() => {
     if (!isNew || !loaded) return;
-    
+
     if (autosaveTimer) clearTimeout(autosaveTimer);
-    
+
     const timer = setTimeout(() => {
       const draft: Partial<PropertyFormValues> = { ...values };
-      delete draft.title; // Don't save title to avoid confusion
+      delete (draft as Record<string, unknown>).title;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-      console.log('Draft saved');
     }, AUTOSAVE_DELAY);
-    
+
     setAutosaveTimer(timer);
     return () => clearTimeout(timer);
-  }, [values, loaded]);
+  }, [values, loaded, isNew]);
 
-  // Clear draft on successful submit
   const clearDraft = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // Load property for editing
-  useEffect(() => {
-    if (!editId) {
-      setLoaded(true);
-      return;
-    }
-    let alive = true;
-    fetchProperty(editId)
-      .then((p) => {
-        if (!alive) return;
-        setValues(toFormValues(p));
-        // Load coords if available
-        if (p.latitude && p.longitude) {
-          setMapCoords({ lat: p.latitude, lng: p.longitude });
-        }
-        setLoaded(true);
-      })
-      .catch((e: unknown) => {
-        if (!alive) return;
-        setLoadError(e instanceof Error ? e.message : 'No se pudo cargar la propiedad.');
-        setLoaded(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [editId]);
-
-  // Open map picker
   const openMapPicker = () => {
     setShowMap(true);
-    // Load Leaflet dynamically
     if (!mapRef.current?.querySelector('.leaflet-container')) {
       import('leaflet').then((L) => {
         if (!mapRef.current) return;
         const map = L.map(mapRef.current, {
-          center: mapCoords ? [mapCoords.lat, mapCoords.lng] : [-34.6037, -58.3816], // Buenos Aires default
+          center: mapCoords ? [mapCoords.lat, mapCoords.lng] : [-34.6037, -58.3816],
           zoom: 13,
         });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
-        
-        let marker: L.Marker | null = null;
-        const updateMarker = (latlng: L.LatLng) => {
+
+        leafletMapRef.current = map;
+
+        let marker: any = null;
+        const updateMarker = (latlng: any) => {
           if (marker) marker.remove();
           marker = L.marker(latlng).addTo(map);
           setMapCoords({ lat: latlng.lat, lng: latlng.lng });
         };
-        
+
         if (mapCoords) {
           updateMarker(L.latLng(mapCoords.lat, mapCoords.lng));
         }
-        
-        map.on('click', (e) => updateMarker(e.latlng));
+
+        map.on('click', (e: any) => updateMarker(e.latlng));
       });
     }
   };
@@ -208,31 +226,6 @@ export function PropertyFormPage() {
     };
   }, [isNew]);
 
-  useEffect(() => {
-    if (!editId) {
-      setLoaded(true);
-      return;
-    }
-    let alive = true;
-    fetchProperty(editId)
-      .then((p) => {
-        if (!alive) return;
-        setValues(toFormValues(p));
-        if (p.latitude && p.longitude) {
-          setMapCoords({ lat: p.latitude, lng: p.longitude });
-        }
-        setLoaded(true);
-      })
-      .catch((e: unknown) => {
-        if (!alive) return;
-        setLoadError(e instanceof Error ? e.message : 'No se pudo cargar la propiedad.');
-        setLoaded(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [editId]);
-
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (!values.title.trim()) {
@@ -242,10 +235,10 @@ export function PropertyFormPage() {
     setSaving(true);
     try {
       if (isNew) {
-        await createProperty(values);
+        await createProperty.mutateAsync(values);
         pushToast({ type: 'success', title: 'Propiedad creada', description: values.title });
       } else if (editId) {
-        await updateProperty(editId, values);
+        await updateProperty.mutateAsync({ id: editId, body: values });
         pushToast({ type: 'success', title: 'Cambios guardados', description: values.title });
       }
       await queryClient.invalidateQueries({ queryKey: ['properties'] });
@@ -266,7 +259,7 @@ export function PropertyFormPage() {
     if (!editId) return;
     try {
       setSaving(true);
-      const duplicated = await duplicateProperty(editId);
+      const duplicated = await duplicateProperty.mutateAsync(editId);
       pushToast({ type: 'success', title: 'Propiedad duplicada', description: duplicated.title });
       await queryClient.invalidateQueries({ queryKey: ['properties'] });
       setLocation(`/propiedades/${duplicated.id}`);
@@ -285,7 +278,7 @@ export function PropertyFormPage() {
     if (!editId) return;
     if (!window.confirm(`¿Mover "${values.title}" a la papelera?`)) return;
     try {
-      await softDeleteProperty(editId);
+      await softDeleteProperty.mutateAsync(editId);
       pushToast({ type: 'success', title: 'Propiedad movida a papelera' });
       await queryClient.invalidateQueries({ queryKey: ['properties'] });
       setLocation('/propiedades');
@@ -465,7 +458,7 @@ export function PropertyFormPage() {
                   }
                 >
                   <option value="">Sin zona</option>
-                  {(locations ?? []).map((l) => (
+                  {getListData<{ id: string; name: string }>(locations?.data).map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name}
                     </option>
@@ -481,6 +474,8 @@ export function PropertyFormPage() {
                   onInput={(e) => set('address', (e.currentTarget as HTMLInputElement).value)}
                 />
               </label>
+              <NumField label="Latitud" value={values.latitude} onInput={(n) => set('latitude', n)} placeholder="Ej: -34.6037" step="0.000001" />
+              <NumField label="Longitud" value={values.longitude} onInput={(n) => set('longitude', n)} placeholder="Ej: -58.3816" step="0.000001" />
             </div>
           </section>
 
@@ -531,73 +526,71 @@ export function PropertyFormPage() {
               {saving ? ' Guardando…' : ' Guardar'}
             </button>
           </div>
-          </form>
-       )}
-       
-       {/* ML Preview Modal */}
-       {showMLPreview && !isNew && (
-         <div className="modal-backdrop" onClick={() => setShowMLPreview(false)}>
-           <div className="modal-card modal--large" onClick={e => e.stopPropagation()}>
-             <div className="modal-head">
-               <h3>Vista previa Mercado Libre</h3>
-               <button className="icon-btn" onClick={() => setShowMLPreview(false)}><X size={20} /></button>
-             </div>
-             <div className="modal-body" style={{ padding: '24px' }}>
-               <div style={{ border: '1px solid var(--bh-border)', borderRadius: '8px', overflow: 'hidden', background: 'white' }}>
-                 <div style={{ background: '#f5f5f5', padding: '16px', borderBottom: '1px solid var(--bh-border)' }}>
-                   <h4 style={{ margin: 0, fontSize: '18px', color: '#333' }}>{values.title}</h4>
-                   <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
-                     <span className="badge badge--info">{values.listing_type === 'venta' ? 'Venta' : values.listing_type === 'alquiler' ? 'Alquiler' : values.listing_type}</span>
-                     <span className="badge badge--success" style={{ fontSize: '14px' }}>{values.price ? `${values.currency} ${values.price.toLocaleString('es-AR')}` : 'Precio no definido'}</span>
-                     <span className="badge badge--neutral">{values.currency}</span>
-                   </div>
-                 </div>
-                 <div style={{ padding: '16px' }}>
-                   <h5 style={{ margin: '0 0 12px', fontSize: '14px' }}>Descripción</h5>
-                   <p style={{ margin: 0, lineHeight: '1.6', color: '#333' }}>{values.description || '<i style="color: var(--bh-text-tertiary)">Sin descripción</i>'}</p>
-                   <div style={{ marginTop: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--bh-text-secondary)' }}>
-                     {values.area_total && <span><strong>Sup. total:</strong> {values.area_total} m²</span>}
-                     {values.area_covered && <span><strong>Sup. cubierta:</strong> {values.area_covered} m²</span>}
-                     {values.bedrooms && <span><strong>Dormitorios:</strong> {values.bedrooms}</span>}
-                     {values.bathrooms && <span><strong>Baños:</strong> {values.bathrooms}</span>}
-                     {values.garages && <span><strong>Cocheras:</strong> {values.garages}</span>}
-                     {values.address && <span><strong>Dirección:</strong> {values.address}</span>}
-                   </div>
-                 </div>
-               </div>
-               <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bh-bg-hover)', borderRadius: '8px', fontSize: '12px', color: 'var(--bh-text-tertiary)' }}>
-                 <strong>Nota:</strong> Esta es una vista previa aproximada. La publicación final en Mercado Libre puede variar según la configuración de la cuenta y las políticas de la plataforma.
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
-       
-       {/* Map Picker Modal */}
-       {showMap && (
-         <div className="modal-backdrop" onClick={() => setShowMap(false)}>
-           <div className="modal-card modal--large" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
-             <div className="modal-head">
-               <h3>Seleccionar coordenadas en el mapa</h3>
-               <button className="icon-btn" onClick={() => setShowMap(false)}><X size={20} /></button>
-             </div>
-             <div className="modal-body" style={{ padding: 0 }}>
-               <div ref={mapRef} style={{ width: '100%', height: '500px' }} />
-               <div style={{ padding: '16px', display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--bh-border)' }}>
-                 <span style={{ alignSelf: 'center', fontSize: '13px', color: 'var(--bh-text-tertiary)' }}>
-                   Coordenadas: <strong>{mapCoords?.lat.toFixed(6)}</strong>, <strong>{mapCoords?.lng.toFixed(6)}</strong>
-                 </span>
-                 <button className="btn btn--secondary" onClick={() => { setValues(v => ({ ...v, latitude: mapCoords?.lat ?? 0, longitude: mapCoords?.lng ?? 0 })); setShowMap(false); }} disabled={!mapCoords}>
-                   <MapPin size={14} /> Usar estas coordenadas
-                 </button>
-                 <button className="btn btn--ghost" onClick={() => setShowMap(false)}>
-                   Cancelar
-                 </button>
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
-     </div>
-   );
- }
+        </form>
+      )}
+
+      {showMLPreview && !isNew && (
+        <div className="modal-backdrop" onClick={() => setShowMLPreview(false)}>
+          <div className="modal-card modal--large" onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Vista previa Mercado Libre</h3>
+              <button className="icon-btn" onClick={() => setShowMLPreview(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: '24px' }}>
+              <div style={{ border: '1px solid var(--bh-border)', borderRadius: '8px', overflow: 'hidden', background: 'white' }}>
+                <div style={{ background: '#f5f5f5', padding: '16px', borderBottom: '1px solid var(--bh-border)' }}>
+                  <h4 style={{ margin: 0, fontSize: '18px', color: '#333' }}>{values.title}</h4>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    <span className="badge badge--info">{values.listing_type === 'venta' ? 'Venta' : values.listing_type === 'alquiler' ? 'Alquiler' : values.listing_type}</span>
+                    <span className="badge badge--success" style={{ fontSize: '14px' }}>{values.price ? `${values.currency} ${values.price.toLocaleString('es-AR')}` : 'Precio no definido'}</span>
+                    <span className="badge badge--neutral">{values.currency}</span>
+                  </div>
+                </div>
+                <div style={{ padding: '16px' }}>
+                  <h5 style={{ margin: '0 0 12px', fontSize: '14px' }}>Descripción</h5>
+                  <p style={{ margin: 0, lineHeight: '1.6', color: '#333' }}>{values.description || 'Sin descripción'}</p>
+                  <div style={{ marginTop: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--bh-text-secondary)' }}>
+                    {values.area_total && <span><strong>Sup. total:</strong> {values.area_total} m²</span>}
+                    {values.area_covered && <span><strong>Sup. cubierta:</strong> {values.area_covered} m²</span>}
+                    {values.bedrooms && <span><strong>Dormitorios:</strong> {values.bedrooms}</span>}
+                    {values.bathrooms && <span><strong>Baños:</strong> {values.bathrooms}</span>}
+                    {values.garages && <span><strong>Cocheras:</strong> {values.garages}</span>}
+                    {values.address && <span><strong>Dirección:</strong> {values.address}</span>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bh-bg-hover)', borderRadius: '8px', fontSize: '12px', color: 'var(--bh-text-tertiary)' }}>
+                <strong>Nota:</strong> Esta es una vista previa aproximada. La publicación final en Mercado Libre puede variar según la configuración de la cuenta y las políticas de la plataforma.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMap && (
+        <div className="modal-backdrop" onClick={() => setShowMap(false)}>
+          <div className="modal-card modal--large" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <div className="modal-head">
+              <h3>Seleccionar coordenadas en el mapa</h3>
+              <button className="icon-btn" onClick={() => setShowMap(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: 0 }}>
+              <div ref={mapRef} style={{ width: '100%', height: '500px' }} />
+              <div style={{ padding: '16px', display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--bh-border)' }}>
+                <span style={{ alignSelf: 'center', fontSize: '13px', color: 'var(--bh-text-tertiary)' }}>
+                  Coordenadas: <strong>{mapCoords?.lat.toFixed(6)}</strong>, <strong>{mapCoords?.lng.toFixed(6)}</strong>
+                </span>
+                <button className="btn btn--secondary" onClick={() => { setValues(v => ({ ...v, latitude: mapCoords?.lat ?? null, longitude: mapCoords?.lng ?? null })); setShowMap(false); }} disabled={!mapCoords}>
+                  <MapPin size={14} /> Usar estas coordenadas
+                </button>
+                <button className="btn btn--ghost" onClick={() => setShowMap(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

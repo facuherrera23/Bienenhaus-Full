@@ -1,6 +1,5 @@
-import { useQuery } from '../lib/query/hooks';
-import { fetchLeads } from '../lib/leads';
-import { fetchProperties } from '../lib/properties';
+import { useProperties } from '../lib/properties.api';
+import { useLeads } from '../lib/leads.api';
 import {
   BarChart,
   Bar,
@@ -52,15 +51,11 @@ function formatMonth(dateStr: string): string {
 }
 
 export function DashboardCharts() {
-  const { data: leads, isPending: leadsPending } = useQuery({
-    queryKey: ['leads'],
-    queryFn: fetchLeads,
-  });
+  const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
+  const { data: propertiesResult, isPending: propsPending } = useProperties({ pageSize: 1000 });
 
-  const { data: properties, isPending: propsPending } = useQuery({
-    queryKey: ['properties'],
-    queryFn: fetchProperties,
-  });
+  const leads = leadsResult?.data ?? [];
+  const properties = propertiesResult?.data ?? [];
 
   // Leads by status
   const leadsByStatus = leads?.reduce((acc, l) => {

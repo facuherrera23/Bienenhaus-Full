@@ -483,16 +483,27 @@ export async function markAsRead(messageId: string, agentId: string): Promise<vo
 }
 
 export async function markChannelAsRead(channelId: string, agentId: string): Promise<void> {
-  // Get all unread message IDs for this channel
-  const { data: unreadMessages } = await supabase
+  // Get all unread message IDs for this channel using a safe approach
+  // First, get the read message IDs for this agent
+  const { data: readMessages } = await supabase
+    .from('chat_message_reads')
+    .select('message_id')
+    .eq('agent_id', agentId);
+
+  const readMessageIds = readMessages?.map(m => m.message_id) ?? [];
+
+  // Get unread messages for this channel (not deleted, not already read by this agent)
+  let query = supabase
     .from('chat_messages')
     .select('id')
     .eq('channel_id', channelId)
-    .is('deleted_at', null)
-    .not('id', 'in', `(
-      SELECT message_id FROM chat_message_reads
-      WHERE agent_id = '${agentId}'
-    )`);
+    .is('deleted_at', null);
+
+  if (readMessageIds.length > 0) {
+    query = query.not('id', 'in', `(${readMessageIds.join(',')})`);
+  }
+
+  const { data: unreadMessages } = await query;
 
   if (unreadMessages?.length) {
     const reads = unreadMessages.map(m => ({

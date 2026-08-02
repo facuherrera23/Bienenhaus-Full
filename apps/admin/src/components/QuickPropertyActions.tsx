@@ -1,34 +1,29 @@
 import { Building2 } from 'lucide-preact';
 import { Link } from 'wouter-preact';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   STATUS_LABEL,
   STATUS_TONE,
-  fetchProperties,
-  updatePropertyStatus,
+  useProperties,
+  useUpdateProperty,
   type PropertyRow,
   type PropertyStatus,
-} from '../lib/properties';
-import { queryClient } from '../lib/query/client';
-import { useQuery } from '../lib/query/hooks';
+} from '../lib/properties.api';
 import { pushToast } from '../store/app';
 
 const STATUSES = Object.keys(STATUS_LABEL) as PropertyStatus[];
 
 export function QuickPropertyActions() {
-  const { data, isPending, isError } = useQuery<PropertyRow[]>({
-    queryKey: ['properties'],
-    queryFn: fetchProperties,
-  });
+  const { data, isPending, isError } = useProperties({ pageSize: 6 });
+  const recent = data?.data ?? [];
 
-  const recent = (data ?? []).slice(0, 6);
+  const updateProperty = useUpdateProperty();
+  const queryClient = useQueryClient();
 
   const handleStatus = async (p: PropertyRow, status: PropertyStatus) => {
     try {
-      await updatePropertyStatus(p.id, status);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['properties'] }),
-        queryClient.invalidateQueries({ queryKey: ['recent-activity'] }),
-      ]);
+      await updateProperty.mutateAsync({ id: p.id, body: { status } });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
       pushToast({
         type: 'success',
         title: 'Estado actualizado',

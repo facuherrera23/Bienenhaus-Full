@@ -242,6 +242,8 @@ export type PropertyFormValues = {
   year_built: number | null;
   featured: boolean;
   video_url: string;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 function toNumeric(v: string | null | undefined): number | null {
@@ -282,6 +284,8 @@ export async function createProperty(values: PropertyFormValues): Promise<Proper
     year_built: values.year_built,
     featured: values.featured,
     video_url: values.video_url || null,
+    latitude: values.latitude,
+    longitude: values.longitude,
     published_at: values.status === 'publicada' ? new Date().toISOString() : null,
   };
 
@@ -321,6 +325,8 @@ export async function updateProperty(id: string, values: PropertyFormValues): Pr
     year_built: values.year_built,
     featured: values.featured,
     video_url: values.video_url || null,
+    latitude: values.latitude,
+    longitude: values.longitude,
   };
 
   if (values.status === 'publicada' && !detail.published_at) {
@@ -354,6 +360,8 @@ export function toFormValues(p: PropertyDetail): PropertyFormValues {
     year_built: p.year_built,
     featured: p.featured,
     video_url: p.video_url ?? '',
+    latitude: p.latitude,
+    longitude: p.longitude,
   };
 }
 
@@ -513,7 +521,9 @@ function convertToWebP(file: File, quality = 0.85): Promise<File> {
       return;
     }
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
@@ -538,8 +548,11 @@ function convertToWebP(file: File, quality = 0.85): Promise<File> {
         quality
       );
     };
-    img.onerror = () => resolve(file);
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -606,6 +619,8 @@ export async function duplicateProperty(id: string): Promise<PropertyDetail> {
     year_built: original.year_built,
     featured: false,
     video_url: original.video_url || '',
+    latitude: original.latitude,
+    longitude: original.longitude,
   };
 
   return createProperty(duplicateValues);

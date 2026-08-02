@@ -1,6 +1,10 @@
+import { useEffect, useRef, useCallback } from 'preact/hooks';
 import { useQuery, useMutation, useQueryClient, QueryKey } from '@tanstack/react-query';
 import { api, rpcCall, ApiResponse, ApiError } from './client';
 import { supabase } from '../supabase';
+
+// Re-export useMutation for convenience
+export { useMutation } from '@tanstack/react-query';
 
 // Type helpers
 export type { ApiResponse, ApiError };
@@ -70,18 +74,19 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-export function useList<T>({
-  queryKey,
-  path,
-  select = '*',
-  filters = {},
-  page = 1,
-  pageSize = 20,
-  orderBy = 'created_at',
-  ascending = false,
-  enabled = true,
-  staleTime = 30_000,
-}: ListOptions<T>) {
+export function useList<T>(options: ListOptions<T>) {
+  const {
+    queryKey,
+    path,
+    select = '*',
+    filters = {},
+    page = 1,
+    pageSize = 20,
+    orderBy = 'created_at',
+    ascending = false,
+    enabled = true,
+    staleTime = 30_000,
+  } = options;
   const from = (page - 1) * pageSize;
 
   const queryParams: Record<string, any> = {
@@ -254,15 +259,107 @@ export function useUpload(bucket: string) {
   });
 }
 
-// Real-time subscription hook (placeholder)
-export function useRealtime<T>(
-  _table: string,
-  _filter: string,
-  _callback: (payload: { new: T; old: T; eventType: 'INSERT' | 'UPDATE' | 'DELETE' }) => void,
-  _enabled = true
-) {
-  // This would need the realtime client setup - placeholder for now
-  // Implementation would use supabase.channel().on().subscribe()
-  
-  return { subscribe: () => {}, unsubscribe: () => {} };
+// Real-time subscription hook
+export interface RealtimePayload<T> {
+  new: T | null;
+  old: T | null;
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+}
+
+export interface UseRealtimeOptions<T> {
+  table: string;
+  filter?: string;
+  onInsert?: (payload: T) => void;
+  onUpdate?: (payload: T) => void;
+  onDelete?: (payload: T) => void;
+  onChange?: (payload: RealtimePayload<T>) => void;
+  enabled?: boolean;
+}
+
+export function useRealtime<T extends Record<string, any>>({
+  table,
+  filter,
+  onInsert,
+  onUpdate,
+  onDelete,
+  onChange,
+  enabled = true,
+}: UseRealtimeOptions<T>) {
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const callbacksRef = useRef({ onInsert, onUpdate, onDelete, onChange });
+
+  // Keep callbacks updated without re-creating subscription
+  useEffect(() => {
+    callbacksRef.current = { onInsert, onUpdate, onDelete, onChange };
+  }, [onInsert, onUpdate, onDelete, onChange]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const channelName = `realtime:${table}${filter ? `:${filter}` : ''}`;
+    const channel = supabase.channel(channelName);
+
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table,
+          filter,
+        },
+        (payload) => {
+          const { onInsert, onUpdate, onDelete, onChange } = callbacksRef.current;
+          const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
+          const newRecord = payload.new as T | null;
+          const oldRecord = payload.old as T | null;
+
+          const realtimePayload: RealtimePayload<T> = { new: newRecord, old: oldRecord, eventType };
+
+          if (onChange) onChange(realtimePayload);
+
+          switch (eventType) {
+            case 'INSERT':
+              if (newRecord && onInsert) onInsert(newRecord);
+              break;
+            case 'UPDATE':
+              if (newRecord && onUpdate) onUpdate(newRecord);
+              break;
+            case 'DELETE':
+              if (oldRecord && onDelete) onDelete(oldRecord);
+              break;
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[Realtime] Subscribed to ${table}`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`[Realtime] Channel error for ${table}`);
+        }
+      });
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [table, filter, enabled]);
+
+  const subscribe = useCallback(() => {
+    if (channelRef.current) {
+      channelRef.current.subscribe();
+    }
+  }, []);
+
+  const unsubscribe = useCallback(() => {
+    if (channelRef.current) {
+      channelRef.current.unsubscribe();
+    }
+  }, []);
+
+  return { subscribe, unsubscribe };
 }

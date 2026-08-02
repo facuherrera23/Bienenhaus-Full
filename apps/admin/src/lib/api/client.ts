@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase, supabaseUrl } from '../supabase';
 
 export interface ApiError {
   code: string;
@@ -20,8 +20,7 @@ export interface RequestOptions extends RequestInit {
 }
 
 function buildUrl(path: string, params?: Record<string, any>): string {
-  const base = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
-  const url = new URL(`${base}/rest/v1${path}`);
+  const url = new URL(`${supabaseUrl}/rest/v1${path}`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -42,7 +41,7 @@ export async function apiRequest<T>(
   options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const { params, requireAuth = true, headers, ...fetchOptions } = options;
-  
+
   const url = buildUrl(path, params);
   const requestHeaders: HeadersInit = {
     'Content-Type': 'application/json',
@@ -59,9 +58,10 @@ export async function apiRequest<T>(
   }
 
   const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (apikey) {
-    (requestHeaders as Record<string, string>)['apikey'] = apikey;
+  if (!apikey) {
+    throw new Error('VITE_SUPABASE_ANON_KEY is not set. Cannot make API requests.');
   }
+  (requestHeaders as Record<string, string>)['apikey'] = apikey;
 
   const response = await fetch(url, {
     ...fetchOptions,
@@ -99,16 +99,16 @@ export async function apiRequest<T>(
 
 // Helpers comunes
 export const api = {
-  get: <T>(path: string, options?: RequestOptions) => 
+  get: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'GET' }),
-  
-  post: <T>(path: string, body: unknown, options?: RequestOptions) => 
+
+  post: <T>(path: string, body: unknown, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'POST', body: JSON.stringify(body) }),
-  
-  patch: <T>(path: string, body: unknown, options?: RequestOptions) => 
+
+  patch: <T>(path: string, body: unknown, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
-  
-  delete: <T>(path: string, options?: RequestOptions) => 
+
+  delete: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'DELETE' }),
 };
 
@@ -120,21 +120,24 @@ export async function rpcCall<T>(
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const base = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
 
-  const response = await fetch(`${base}/rest/v1/rpc/${functionName}`, {
+  if (!apikey) {
+    throw new Error('VITE_SUPABASE_ANON_KEY is not set. Cannot make RPC calls.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `Bearer ${token}`,
-      'apikey': apikey ?? '',
+      'apikey': apikey,
     },
     body: JSON.stringify(params),
   });
 
   const json = await response.json().catch(() => null);
-  
+
   if (!response.ok) {
     return {
       data: null,
@@ -161,9 +164,12 @@ export const queryKeys = {
   agents: (filters?: Record<string, any>) => ['agents', filters] as const,
   agent: (id: string) => ['agent', id] as const,
   visits: (filters?: Record<string, any>) => ['visits', filters] as const,
-  mlQueue: () => ['ml-queue'] as const,
-  mlMeta: () => ['ml-meta'] as const,
+  mlQueue: (filters?: Record<string, any>) => ['ml-queue', filters] as const,
+  mlMeta: (filters?: Record<string, any>) => ['ml-meta', filters] as const,
   mlOverview: () => ['ml-overview'] as const,
+  mlQuestions: (filters?: Record<string, any>) => ['ml-questions', filters] as const,
+  mlOrders: (filters?: Record<string, any>) => ['ml-orders', filters] as const,
+  mlTemplates: () => ['ml-templates'] as const,
   siteSettings: (key?: string) => ['site-settings', key] as const,
   siteContent: (section?: string, locale?: string) => ['site-content', section, locale] as const,
 };

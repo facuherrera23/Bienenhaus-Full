@@ -1,29 +1,45 @@
-📘 MÓDULO DE PROPIETARIOS — ESPECIFICACIÓN TÉCNICA COMPLETA
-Proyecto: BIENENHAUS PROPIEDADES
-Versión: 1.0
-Contexto: Módulo nuevo a agregar al sistema existente (Landing + Admin + Supabase)
-1. CONTEXTO DEL SISTEMA EXISTENTE
+# 📘 MÓDULO DE PROPIETARIOS — ESPECIFICACIÓN TÉCNICA COMPLETA
+
+**Proyecto:** BIENENHAUS PROPIEDADES  
+**Versión:** 1.0  
+**Contexto:** Módulo nuevo a agregar al sistema existente (Landing + Admin + Supabase)
+
+---
+
+## 1. CONTEXTO DEL SISTEMA EXISTENTE
+
 BIENENHAUS es una plataforma full-stack para inmobiliarias con:
-Landing pública (Preact + Vite): catálogo de propiedades, filtros, newsletter, SEO/PWA.
-Panel Admin (Preact + Vite + Supabase): CRM completo con dashboard, CRUD de propiedades, leads, agentes, usuarios admin, Mercado Libre, calendario de visitas, chat interno en tiempo real, papelera universal con soft delete, y CMS de la landing.
-Backend: Supabase (PostgreSQL 17, Auth, Realtime, Storage, Edge Functions Deno 2).
-Estado: preact-signals (global), TanStack Query (server state).
-Estilos: Design tokens en CSS, CSS Modules.
-Base de datos: 21 migraciones. Tablas clave: properties, leads, agents, admin_users, visits, chat_channels, chat_messages, newsletter_subscribers, + tablas ML.
-Soft delete: patrón universal con columna deleted_at en todas las tablas principales.
-RLS: políticas por rol (super_admin, admin, staff, viewer).
-Auditoría: activity_log, properties_history con triggers.
-2. OBJETIVO DEL MÓDULO
-Crear un sistema de gestión de cartera de propietarios que permita:
-Registrar y gestionar propietarios (personas físicas/jurídicas) y asociarlos a propiedades.
-Analizar el precio de mercado de cada propiedad para determinar si está bien, barata o cara.
-Crear planes de acción con tareas concretas para mejorar la comercialización.
-Mantener un historial de comunicaciones con cada propietario (llamadas, WhatsApp, emails, reuniones).
-Generar y enviar reportes automáticos al propietario con el estado de su propiedad.
-(Futuro) Darle al propietario un portal privado para ver el estado de su inmueble.
-3. MODELO DE DATOS (MIGRACIÓN SQL)
-Crear archivo: supabase/migrations/0022_owners_module.sql
-sql
+
+- **Landing pública** (Preact + Vite): catálogo de propiedades, filtros, newsletter, SEO/PWA.
+- **Panel Admin** (Preact + Vite + Supabase): CRM completo con dashboard, CRUD de propiedades, leads, agentes, usuarios admin, Mercado Libre, calendario de visitas, chat interno en tiempo real, papelera universal con soft delete, y CMS de la landing.
+- **Backend:** Supabase (PostgreSQL 17, Auth, Realtime, Storage, Edge Functions Deno 2).
+- **Estado:** `preact-signals` (global), TanStack Query (server state).
+- **Estilos:** Design tokens en CSS, CSS Modules.
+- **Base de datos:** 21 migraciones. Tablas clave: `properties`, `leads`, `agents`, `admin_users`, `visits`, `chat_channels`, `chat_messages`, `newsletter_subscribers`, + tablas ML.
+- **Soft delete:** patrón universal con columna `deleted_at` en todas las tablas principales.
+- **RLS:** políticas por rol (`super_admin`, `admin`, `staff`, `viewer`).
+- **Auditoría:** `activity_log`, `properties_history` con triggers.
+
+---
+
+## 2. OBJETIVO DEL MÓDULO
+
+Crear un sistema de **gestión de cartera de propietarios** que permita:
+
+1. **Registrar y gestionar propietarios** (personas físicas/jurídicas) y asociarlos a propiedades.
+2. **Analizar el precio de mercado** de cada propiedad para determinar si está bien, barata o cara.
+3. **Crear planes de acción** con tareas concretas para mejorar la comercialización.
+4. **Mantener un historial de comunicaciones** con cada propietario (llamadas, WhatsApp, emails, reuniones).
+5. **Generar y enviar reportes automáticos** al propietario con el estado de su propiedad.
+6. (Futuro) Darle al propietario un **portal privado** para ver el estado de su inmueble.
+
+---
+
+## 3. MODELO DE DATOS (MIGRACIÓN SQL)
+
+Crear archivo: `supabase/migrations/0022_owners_module.sql`
+
+```sql
 -- ============================================================
 -- 0022_owners_module.sql
 -- Módulo de Propietarios, Análisis de Precio, Planes de Acción
@@ -50,7 +66,7 @@ create table owners (
   dni_cuit text unique,
   address text,
   owner_type owner_type default 'persona_fisica',
-  company_name text, -- solo si es persona_juridica
+  company_name text,
   notes text,
   preferred_contact owner_preferred_contact default 'whatsapp',
   created_by uuid references admin_users(id),
@@ -66,12 +82,11 @@ create table property_owners (
   owner_id uuid not null references owners(id) on delete cascade,
   ownership_percentage numeric(5,2) default 100 check (ownership_percentage > 0 and ownership_percentage <= 100),
   is_primary_contact boolean default false,
-  role text default 'propietario', -- 'propietario', 'copropietario', 'apoderado', 'representante'
+  role text default 'propietario',
   created_at timestamptz default now(),
   unique(property_id, owner_id)
 );
 
--- Índice para buscar propiedades de un propietario rápido
 create index idx_property_owners_owner_id on property_owners(owner_id);
 create index idx_property_owners_property_id on property_owners(property_id);
 
@@ -202,12 +217,15 @@ create policy "viewer_read_action_plans" on property_action_plans for select to 
 create policy "viewer_read_action_tasks" on action_plan_tasks for select to authenticated using (is_viewer());
 create policy "viewer_read_communications" on owner_communications for select to authenticated using (is_viewer());
 create policy "viewer_read_reports" on owner_reports for select to authenticated using (is_viewer());
+```
 
--- Soft delete: las vistas públicas (si las hay) solo ven deleted_at IS NULL
--- En el admin, el staff puede ver todo (incluyendo papelera) por las policies de arriba
-4. ESQUEMAS ZOD (VALIDACIÓN)
-En apps/admin/src/lib/owners/schemas.ts (o similar):
-TypeScript
+---
+
+## 4. ESQUEMAS ZOD (VALIDACIÓN)
+
+En `apps/admin/src/lib/owners/schemas.ts`:
+
+```typescript
 import { z } from 'zod';
 
 export const ownerSchema = z.object({
@@ -275,10 +293,17 @@ export const communicationSchema = z.object({
   subject: z.string().optional().or(z.literal('')),
   content: z.string().optional().or(z.literal('')),
 });
-5. API / FUNCIONES DE SUPABASE (CLIENTE JS)
-En apps/admin/src/lib/owners/ crear archivos:
-owners.ts — CRUD de propietarios
-TypeScript
+```
+
+---
+
+## 5. API / FUNCIONES DE SUPABASE (CLIENTE JS)
+
+En `apps/admin/src/lib/owners/`:
+
+### `owners.ts` — CRUD de propietarios
+
+```typescript
 import { supabase } from '../supabase';
 import type { Owner, PropertyOwnerLink } from './types';
 
@@ -293,7 +318,7 @@ export async function fetchOwners(search?: string) {
 export async function fetchOwnerById(id: string) {
   const { data, error } = await supabase
     .from('owners')
-    .select('*, property_owners(property_id, ownership_percentage, is_primary_contact, role, properties:property_id(title, address, price, status))')
+    .select(`*, property_owners(property_id, ownership_percentage, is_primary_contact, role, properties:property_id(title, address, price, status))`)
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -317,7 +342,6 @@ export async function softDeleteOwner(id: string) {
   if (error) throw error;
 }
 
-// Vincular propietario a propiedad
 export async function linkOwnerToProperty(link: PropertyOwnerLink) {
   const { data, error } = await supabase.from('property_owners').insert(link).select().single();
   if (error) throw error;
@@ -328,8 +352,11 @@ export async function unlinkOwnerFromProperty(propertyId: string, ownerId: strin
   const { error } = await supabase.from('property_owners').delete().eq('property_id', propertyId).eq('owner_id', ownerId);
   if (error) throw error;
 }
-price-analysis.ts — Análisis de precio
-TypeScript
+```
+
+### `price-analysis.ts` — Análisis de precio
+
+```typescript
 export async function fetchPriceAnalysis(propertyId: string) {
   const { data, error } = await supabase
     .from('property_price_analyses')
@@ -343,7 +370,6 @@ export async function fetchPriceAnalysis(propertyId: string) {
 }
 
 export async function createPriceAnalysis(analysis: any) {
-  // Calcular price_status automáticamente antes de enviar
   const diff = ((analysis.our_listing_price - analysis.estimated_market_price) / analysis.estimated_market_price) * 100;
   let status = 'fair';
   if (diff < -20) status = 'way_below';
@@ -360,10 +386,15 @@ export async function createPriceAnalysis(analysis: any) {
   if (error) throw error;
   return data;
 }
-action-plans.ts — Planes de acción
-TypeScript
+```
+
+### `action-plans.ts` — Planes de acción
+
+```typescript
 export async function fetchActionPlans(filters?: { property_id?: string; assigned_to?: string; status?: string }) {
-  let q = supabase.from('property_action_plans').select('*, property:properties(title), owner:owners(full_name), assignee:admin_users(full_name)').is('deleted_at', null);
+  let q = supabase.from('property_action_plans')
+    .select('*, property:properties(title), owner:owners(full_name), assignee:admin_users(full_name)')
+    .is('deleted_at', null);
   if (filters?.property_id) q = q.eq('property_id', filters.property_id);
   if (filters?.assigned_to) q = q.eq('assigned_to', filters.assigned_to);
   if (filters?.status) q = q.eq('status', filters.status);
@@ -397,8 +428,11 @@ export async function completePlan(planId: string) {
     .eq('id', planId);
   if (error) throw error;
 }
-communications.ts — Comunicaciones
-TypeScript
+```
+
+### `communications.ts` — Comunicaciones
+
+```typescript
 export async function fetchCommunications(ownerId: string) {
   const { data, error } = await supabase
     .from('owner_communications')
@@ -418,127 +452,136 @@ export async function sendCommunication(comm: any) {
   if (error) throw error;
   return data;
 }
-6. PÁGINAS Y COMPONENTES DEL ADMIN
-Nuevas rutas en el router (apps/admin/src/pages/)
-Table
-Ruta	Componente	Descripción
-/owners	OwnersPage	Lista de propietarios con búsqueda, filtros, contador de propiedades.
-/owners/new	OwnerFormPage	Formulario de alta/edición de propietario.
-/owners/:id	OwnerDetailPage	Perfil completo: datos, propiedades, timeline de comunicaciones, reportes.
-/properties/:id/owners	(tab en PropertyDetail)	Asignar/desasignar propietarios, ver porcentajes.
-/properties/:id/analysis	PriceAnalysisPage	Formulario de análisis de precio, historial, gauge visual.
-/properties/:id/plans	ActionPlansPage	Lista de planes de acción de la propiedad.
-/action-plans	ActionPlansDashboard	Todos los planes del equipo, filtrables (Kanban o tabla).
-/action-plans/:id	ActionPlanDetailPage	Detalle del plan con tareas, progreso, asignaciones.
-/communications	CommunicationsPage	Centro de comunicaciones con propietarios.
-/reports	ReportsPage	Generador de reportes para enviar a propietarios.
-Componentes compartidos nuevos (apps/admin/src/components/)
-Table
-Componente	Props	Función
-OwnerCard	owner, propertyCount	Card resumen para listas.
-OwnerForm	owner?, onSubmit	Formulario reutilizable (alta/edición).
-PropertyOwnerManager	propertyId	Asignar/quitar propietarios de una propiedad.
-PriceAnalysisGauge	analysis	Gauge visual (verde/amarillo/rojo) del estado de precio.
-ComparablePropertyInput	value[], onChange	Formulario para agregar comparables.
-ActionPlanCard	plan, tasks[]	Card de plan con progreso de tareas.
-ActionPlanTaskList	tasks[], onToggle	Lista de tareas con checkboxes.
-CommunicationTimeline	communications[]	Timeline vertical de comunicaciones.
-OwnerReportGenerator	propertyId, ownerId	Wizard para generar reporte.
-OwnerReportPreview	report	Preview del reporte antes de enviar.
-7. FLUJOS DE USUARIO DETALLADOS
-FLUJO A: Alta de un propietario y vinculación a propiedad
-El admin va a Propietarios → Nuevo o desde la ficha de una propiedad → Agregar propietario.
-Completa el formulario (OwnerForm): nombre, email, teléfono, DNI/CUIT, dirección, tipo, notas, contacto preferido.
-Guarda. El sistema crea el registro en owners.
-Desde la ficha de la propiedad (pestaña "Propietarios"), busca el propietario por nombre/DNI.
-Lo selecciona, define:
-Porcentaje de propiedad (default 100%).
-Si es contacto principal.
-Rol (propietario, copropietario, apoderado).
-Guarda la relación en property_owners.
-El propietario aparece en la ficha de la propiedad y la propiedad aparece en el perfil del propietario.
-FLUJO B: Análisis de precio de una propiedad
-El admin va a Propiedad → Análisis de Precio.
-Ve el último análisis (si existe) y su fecha de validez.
-Clic en "Nuevo análisis".
-Completa:
-Precio estimado de mercado: basado en comparables, tasaciones, conocimiento del agente.
-Precio por m² del mercado: opcional.
-Precio de publicación actual: se carga automáticamente desde properties.price.
-Comparables: array de propiedades similares (dirección, precio, m², fecha, fuente).
-Tendencia del mercado: subiendo, estable, bajando.
-Notas y recomendación: texto libre.
-El sistema calcula automáticamente:
-price_difference_pct = ((our - market) / market) * 100
-price_status según rangos:
-< -20% → way_below (muy por debajo)
--20% a -10% → below (por debajo)
--10% a +5% → fair (justo)
-+5% a +10% → premium (premium)
-+10% a +20% → above (por encima)
-> +20% → way_above (muy por encima)
-Se muestra un gauge visual con colores:
-🟢 Verde: fair, below, way_below
-🟡 Amarillo: premium
-🔴 Rojo: above, way_above
-Se guarda en property_price_analyses. Se muestra historial de análisis previos.
-FLUJO C: Crear un plan de acción
-Desde el análisis de precio (si el precio está mal) o manualmente desde Propiedad → Planes de Acción.
-Clic en "Nuevo plan".
-Completa:
-Título: ej. "Ajustar precio y renovar fotos"
-Descripción
-Categoría: pricing, marketing, condition, legal, other
-Prioridad: low, medium, high, urgent
-Fecha límite
-Asignado a: agente responsable
-Propietario relacionado (opcional)
-Guarda. El plan aparece en estado pending.
-Dentro del plan, se agregan tareas:
-"Bajar precio a $X"
-"Sacar nuevas fotos del living"
-"Publicar en Instagram"
-Cada tarea tiene su propio responsable y fecha.
-El agente marca tareas como completadas. Cuando todas las tareas están completed, el plan puede marcarse como completed.
-Los planes pending o in_progress con due_date vencida aparecen en el dashboard como alerta.
-FLUJO D: Comunicación con el propietario
-Desde el perfil del propietario o de la propiedad, clic en "Nueva comunicación".
-Selecciona tipo: WhatsApp, llamada, reunión, nota interna, email, reporte.
-Si es llamada/reunión/nota: se guarda como registro histórico.
-Si es WhatsApp: se genera un link https://wa.me/<phone>?text=<mensaje> y se guarda el registro como sent.
-Si es reporte: se usa el generador de reportes (ver Flujo E).
-Todas las comunicaciones aparecen en un timeline en el perfil del propietario, ordenadas cronológicamente.
-FLUJO E: Generar y enviar un reporte al propietario
-Desde el perfil del propietario o la propiedad, clic en "Generar reporte".
-Selecciona tipo:
-Análisis de precio: incluye precio publicado vs. mercado, gauge, comparables, recomendación.
-Resumen de visitas: cuántas visitas tuvo, fechas, feedback.
-Estado general: combinación de precio + visitas + leads + planes de acción activos.
-El sistema arma automáticamente el contenido (content_json) con datos reales de la base:
-Datos de la propiedad.
-Último análisis de precio.
-Conteo de visitas (de visits).
-Conteo de leads (de leads).
-Planes de acción activos.
-El admin puede editar el contenido antes de enviar.
-Genera el reporte. Se guarda en owner_reports con status draft.
-El admin clic en "Enviar por WhatsApp" o "Enviar por email" (cuando haya SMTP).
-Se actualiza a sent y se registra una comunicación en owner_communications.
-8. INTEGRACIONES CON MÓDULOS EXISTENTES
-Table
-Módulo existente	Integración
-properties	Cada propiedad tiene pestaña "Propietarios" y "Análisis". El precio de properties.price se usa en el análisis.
-leads	En reportes al propietario se incluye: "X leads interesados". Se puede ver desde el perfil del propietario cuántos leads tiene su propiedad.
-visits	Las visitas agendadas se muestran en reportes. Se puede notificar al propietario automáticamente cuando se agenda una visita (vía trigger o edge function futura).
-agents	Los planes de acción se asignan a agentes (assigned_to). Cada propietario puede tener un agente referente (a definir en property_owners o owners).
-chat	Se puede crear automáticamente un canal de chat interno tipo property cuando se vincula un propietario, para que el equipo comente sobre esa propiedad/cartera.
-Mercado Libre	En el análisis de precio se puede incluir el estado de publicación en ML. En planes de acción puede haber tareas del tipo " republicar en ML".
-Dashboard	Nuevos KPIs: propiedades sobrevaloradas, planes pendientes, propietarios sin contacto reciente, tareas vencidas.
-Papelera	owners, property_action_plans y action_plan_tasks deben integrarse al sistema de papelera universal (soft delete + restore + purge).
-activity_log	Agregar triggers de auditoría para cambios en owners, property_action_plans, etc.
-9. NUEVOS KPIs PARA EL DASHBOARD
-Agregar widgets en DashboardCharts o DashboardPage:
-TypeScript
+```
+
+---
+
+## 6. PÁGINAS Y COMPONENTES DEL ADMIN
+
+### Nuevas rutas en el router
+
+| Ruta | Componente | Descripción |
+|------|------------|-------------|
+| `/owners` | `OwnersPage` | Lista de propietarios con búsqueda, filtros, contador de propiedades. |
+| `/owners/new` | `OwnerFormPage` | Formulario de alta/edición de propietario. |
+| `/owners/:id` | `OwnerDetailPage` | Perfil completo: datos, propiedades, timeline de comunicaciones, reportes. |
+| `/properties/:id/owners` | (tab en PropertyDetail) | Asignar/desasignar propietarios a esta propiedad. |
+| `/properties/:id/analysis` | `PriceAnalysisPage` | Análisis de precio de la propiedad, comparables, gauge visual. |
+| `/properties/:id/plans` | `ActionPlansPage` | Lista de planes de acción de la propiedad. |
+| `/action-plans` | `ActionPlansDashboard` | Todos los planes del equipo, filtrables (Kanban o tabla). |
+| `/action-plans/:id` | `ActionPlanDetailPage` | Detalle del plan con tareas, progreso, asignaciones. |
+| `/communications` | `CommunicationsPage` | Centro de comunicaciones con propietarios. |
+| `/reports` | `ReportsPage` | Generador de reportes para enviar a propietarios. |
+
+### Componentes compartidos nuevos
+
+| Componente | Props | Función |
+|------------|-------|---------|
+| `OwnerCard` | `owner, propertyCount` | Card resumen para listas. |
+| `OwnerForm` | `owner?, onSubmit` | Formulario reutilizable (alta/edición). |
+| `PropertyOwnerManager` | `propertyId` | Asignar/quitar propietarios de una propiedad. |
+| `PriceAnalysisGauge` | `analysis` | Gauge visual (verde/amarillo/rojo) del estado de precio. |
+| `ComparablePropertyInput` | `value[], onChange` | Formulario para agregar comparables. |
+| `ActionPlanCard` | `plan, tasks[]` | Card de plan con progreso de tareas. |
+| `ActionPlanTaskList` | `tasks[], onToggle` | Lista de tareas con checkboxes. |
+| `CommunicationTimeline` | `communications[]` | Timeline vertical de comunicaciones. |
+| `OwnerReportGenerator` | `propertyId, ownerId` | Wizard para generar reporte. |
+| `OwnerReportPreview` | `report` | Preview del reporte antes de enviar. |
+
+---
+
+## 7. FLUJOS DE USUARIO DETALLADOS
+
+### FLUJO A: Alta de propietario y vinculación
+
+1. Admin va a **Propietarios → Nuevo** o desde ficha de propiedad **→ Agregar propietario**.
+2. Completa formulario (`OwnerForm`): nombre, email, teléfono, DNI/CUIT, dirección, tipo, notas, contacto preferido.
+3. Guarda. Sistema crea registro en `owners`.
+4. Desde ficha de propiedad (pestaña "Propietarios"), busca propietario por nombre/DNI.
+5. Selecciona, define: porcentaje de propiedad, si es contacto principal, rol.
+6. Guarda relación en `property_owners`.
+7. Propietario aparece en ficha de propiedad y propiedad en perfil del propietario.
+
+### FLUJO B: Análisis de precio
+
+1. Admin va a **Propiedad → Análisis de Precio**.
+2. Ve último análisis (si existe) y fecha de validez.
+3. Clic en **"Nuevo análisis"**.
+4. Completa:
+   - Precio estimado de mercado
+   - Precio por m² del mercado (opcional)
+   - Precio de publicación actual (auto desde `properties.price`)
+   - Comparables: array de propiedades similares
+   - Tendencia del mercado
+   - Notas y recomendación
+5. Sistema calcula automáticamente:
+   - `price_difference_pct = ((our - market) / market) * 100`
+   - `price_status` según rangos:
+     - `< -20%` → `way_below`
+     - `-20% a -10%` → `below`
+     - `-10% a +5%` → `fair`
+     - `+5% a +10%` → `premium`
+     - `+10% a +20%` → `above`
+     - `> +20%` → `way_above`
+6. Muestra **gauge visual**:
+   - 🟢 Verde: `fair`, `below`, `way_below`
+   - 🟡 Amarillo: `premium`
+   - 🔴 Rojo: `above`, `way_above`
+7. Guarda en `property_price_analyses`. Muestra historial.
+
+### FLUJO C: Crear plan de acción
+
+1. Desde análisis de precio (si precio está mal) o manualmente desde **Propiedad → Planes de Acción**.
+2. Clic en **"Nuevo plan"**.
+3. Completa: título, descripción, categoría, prioridad, fecha límite, asignado a, propietario relacionado.
+4. Guarda. Plan aparece en estado `pending`.
+5. Dentro del plan, se agregan **tareas** con responsable y fecha.
+6. Agente marca tareas como completadas. Cuando todas están `completed`, el plan puede marcarse `completed`.
+7. Planes `pending`/`in_progress` con `due_date` vencida aparecen en dashboard como alerta.
+
+### FLUJO D: Comunicación con propietario
+
+1. Desde perfil de propietario o propiedad, clic en **"Nueva comunicación"**.
+2. Selecciona tipo: WhatsApp, llamada, reunión, nota interna, email, reporte.
+3. Llamada/reunión/nota: se guarda como registro histórico.
+4. WhatsApp: genera link `https://wa.me/<phone>?text=<mensaje>` y guarda registro como `sent`.
+5. Reporte: usa generador de reportes (Flujo E).
+6. Comunicaciones aparecen en **timeline** en perfil del propietario.
+
+### FLUJO E: Generar y enviar reporte
+
+1. Desde perfil de propietario o propiedad, clic en **"Generar reporte"**.
+2. Selecciona tipo:
+   - **Análisis de precio**: precio publicado vs. mercado, gauge, comparables, recomendación.
+   - **Resumen de visitas**: cuántas visitas tuvo, fechas, feedback.
+   - **Estado general**: combinación de precio + visitas + leads + planes activos.
+3. Sistema arma `content_json` automáticamente con datos reales.
+4. Admin puede editar contenido antes de enviar.
+5. Genera reporte. Guarda en `owner_reports` con status `draft`.
+6. Admin clic en **"Enviar por WhatsApp"** o **"Enviar por email"**.
+7. Actualiza a `sent` y registra comunicación en `owner_communications`.
+
+---
+
+## 8. INTEGRACIONES CON MÓDULOS EXISTENTES
+
+| Módulo existente | Integración |
+|------------------|-------------|
+| **`properties`** | Pestaña "Propietarios" y "Análisis". Precio de `properties.price` usado en análisis. |
+| **`leads`** | En reportes: "X leads interesados". Desde perfil de propietario se ven leads de sus propiedades. |
+| **`visits`** | Visitas agendadas en reportes. Notificación automática al propietario cuando se agenda visita (trigger futuro). |
+| **`agents`** | Planes de acción asignados a agentes. Propietario puede tener agente referente. |
+| **`chat`** | Canal de chat interno tipo `property` automático al vincular propietario. |
+| **`Mercado Libre`** | Estado de publicación ML en análisis de precio. Tareas tipo "republicar en ML". |
+| **`Dashboard`** | Nuevos KPIs: propiedades sobrevaloradas, planes pendientes, propietarios sin contacto reciente. |
+| **`Papelera`** | `owners` y `property_action_plans` integrados al sistema de papelera universal. |
+| **`activity_log`** | Triggers de auditoría para cambios en `owners`, `property_action_plans`, etc. |
+
+---
+
+## 9. NUEVOS KPIs PARA EL DASHBOARD
+
+```typescript
 const newKPIs = [
   { label: 'Propiedades sobrevaloradas', value: countWhere(price_status in ('above', 'way_above')) },
   { label: 'Planes de acción pendientes', value: countWhere(status = 'pending' or status = 'in_progress') },
@@ -547,69 +590,93 @@ const newKPIs = [
   { label: 'Análisis de precio vencidos', value: countWhere(valid_until < now()) },
   { label: 'Propietarios totales', value: count(owners) },
 ];
-10. CONSIDERACIONES TÉCNICAS
-Soft Delete
-Todas las tablas nuevas (owners, property_action_plans) deben usar el patrón de deleted_at. Las queries por defecto deben filtrar .is('deleted_at', null) a menos que se esté en la página de Papelera.
-Papelera Universal
-Agregar owners y property_action_plans (y sus tareas en cascada) al sistema de papelera existente (TrashPage). Al restaurar un plan, restaurar también sus tareas.
-Triggers de auditoría
-Agregar a activity_log cuando:
-Se crea/edita/elimina un propietario.
-Se crea/edita un análisis de precio.
-Se crea/completa un plan de acción.
-Se envía una comunicación.
-Performance
-property_owners necesita índices en owner_id y property_id.
-Las queries de dashboard deben usar count() eficiente o vistas materializadas si el volumen crece.
-Realtime (opcional pero recomendado)
-Suscribirse a cambios en property_action_plans para que el dashboard se actualice en tiempo real cuando un agente completa una tarea.
-Edge Function futura (no prioridad inicial)
-generate-owner-report: Edge Function que genere un PDF a partir del content_json usando una librería de PDF (ej. pdfmake o puppeteer en Deno).
-11. ROADMAP DE IMPLEMENTACIÓN (PARA EL ASISTENTE IA)
-Fase 1: Fundación (días 1–3)
-[ ] Crear migración 0022_owners_module.sql con todas las tablas, enums, triggers, RLS.
-[ ] Crear tipos TypeScript en apps/admin/src/lib/owners/types.ts.
-[ ] Crear esquemas Zod en apps/admin/src/lib/owners/schemas.ts.
-[ ] Crear funciones de API: owners.ts, property-owners.ts.
-Fase 2: CRUD de Propietarios (días 4–6)
-[ ] Página OwnersPage: tabla con búsqueda, filtros, contador de propiedades.
-[ ] Página OwnerFormPage: formulario de alta/edición con validación Zod.
-[ ] Página OwnerDetailPage: perfil, propiedades asociadas, timeline de comunicaciones.
-[ ] Componente OwnerCard, OwnerForm.
-[ ] Integrar con Papelera (soft delete + restore).
-Fase 3: Vinculación Propiedad-Propietario (días 7–8)
-[ ] Pestaña "Propietarios" en la ficha de propiedad (PropertyOwnerManager).
-[ ] Buscador de propietarios existentes + creación inline.
-[ ] Tabla de propietarios vinculados con %, rol, contacto principal.
-[ ] Botón para desvincular.
-Fase 4: Análisis de Precio (días 9–12)
-[ ] Página PriceAnalysisPage en la ficha de propiedad.
-[ ] Formulario con comparables dinámicos (ComparablePropertyInput).
-[ ] Cálculo automático de price_difference_pct y price_status.
-[ ] Componente PriceAnalysisGauge (SVG o CSS).
-[ ] Historial de análisis previos.
-Fase 5: Planes de Acción (días 13–17)
-[ ] CRUD de planes (property_action_plans).
-[ ] CRUD de tareas (action_plan_tasks).
-[ ] Página ActionPlansPage por propiedad.
-[ ] Página ActionPlansDashboard global (tabla o Kanban).
-[ ] Página ActionPlanDetailPage con lista de tareas y progreso.
-[ ] Marcado de tareas/planes como completados.
-Fase 6: Comunicaciones y Reportes (días 18–21)
-[ ] Tabla owner_communications + CRUD.
-[ ] Componente CommunicationTimeline.
-[ ] Generador de reportes (OwnerReportGenerator).
-[ ] Preview de reporte (OwnerReportPreview).
-[ ] Envío por WhatsApp (link wa.me).
-[ ] Página CommunicationsPage y ReportsPage.
-Fase 7: Dashboard + Polish (días 22–24)
-[ ] Agregar KPIs nuevos al dashboard.
-[ ] Integrar con activity_log (auditoría).
-[ ] Integrar con sistema de papelera existente.
-[ ] Tests manuales de flujos completos.
-[ ] Revisar RLS y permisos por rol.
-12. EJEMPLOS DE QUERIES ÚTILES
-sql
+```
+
+---
+
+## 10. CONSIDERACIONES TÉCNICAS
+
+### Soft Delete
+Todas las tablas nuevas (`owners`, `property_action_plans`) usan `deleted_at`. Queries por defecto filtran `.is('deleted_at', null)` salvo en Papelera.
+
+### Papelera Universal
+Agregar `owners` y `property_action_plans` (y tareas en cascada) al sistema de papelera existente (`TrashPage`). Al restaurar un plan, restaurar también sus tareas.
+
+### Triggers de auditoría
+Agregar a `activity_log` cuando:
+- Se crea/edita/elimina un propietario.
+- Se crea/edita un análisis de precio.
+- Se crea/completa un plan de acción.
+- Se envía una comunicación.
+
+### Performance
+- `property_owners` necesita índices en `owner_id` y `property_id`.
+- Queries de dashboard deben usar `count()` eficiente o vistas materializadas si el volumen crece.
+
+### Realtime (opcional)
+- Suscribirse a cambios en `property_action_plans` para actualizar dashboard en tiempo real cuando un agente completa una tarea.
+
+### Edge Function futura
+- `generate-owner-report`: Edge Function que genere PDF a partir de `content_json`.
+
+---
+
+## 11. ROADMAP DE IMPLEMENTACIÓN
+
+**Fase 1: Fundación (días 1–3)**
+- [ ] Crear migración `0022_owners_module.sql` con tablas, enums, triggers, RLS.
+- [ ] Crear tipos TypeScript en `apps/admin/src/lib/owners/types.ts`.
+- [ ] Crear esquemas Zod en `apps/admin/src/lib/owners/schemas.ts`.
+- [ ] Crear funciones de API: `owners.ts`, `property-owners.ts`.
+
+**Fase 2: CRUD de Propietarios (días 4–6)**
+- [ ] Página `OwnersPage`: tabla con búsqueda, filtros, contador de propiedades.
+- [ ] Página `OwnerFormPage`: formulario alta/edición con validación Zod.
+- [ ] Página `OwnerDetailPage`: perfil, propiedades, timeline, reportes.
+- [ ] Componentes `OwnerCard`, `OwnerForm`.
+- [ ] Integrar con Papelera (soft delete + restore).
+
+**Fase 3: Vinculación Propiedad-Propietario (días 7–8)**
+- [ ] Pestaña "Propietarios" en ficha de propiedad (`PropertyOwnerManager`).
+- [ ] Buscador de propietarios existentes + creación inline.
+- [ ] Tabla de propietarios vinculados con %, rol, contacto principal.
+- [ ] Botón para desvincular.
+
+**Fase 4: Análisis de Precio (días 9–12)**
+- [ ] Página `PriceAnalysisPage` en ficha de propiedad.
+- [ ] Formulario con comparables dinámicos (`ComparablePropertyInput`).
+- [ ] Cálculo automático de `price_difference_pct` y `price_status`.
+- [ ] Componente `PriceAnalysisGauge` (SVG o CSS).
+- [ ] Historial de análisis previos.
+
+**Fase 5: Planes de Acción (días 13–17)**
+- [ ] CRUD de planes (`property_action_plans`).
+- [ ] CRUD de tareas (`action_plan_tasks`).
+- [ ] Página `ActionPlansPage` por propiedad.
+- [ ] Página `ActionPlansDashboard` global (tabla o Kanban).
+- [ ] Página `ActionPlanDetailPage` con tareas y progreso.
+- [ ] Marcado de tareas/planes como completados.
+
+**Fase 6: Comunicaciones y Reportes (días 18–21)**
+- [ ] Tabla `owner_communications` + CRUD.
+- [ ] Componente `CommunicationTimeline`.
+- [ ] Generador de reportes (`OwnerReportGenerator`).
+- [ ] Preview de reporte (`OwnerReportPreview`).
+- [ ] Envío por WhatsApp (link wa.me).
+- [ ] Páginas `CommunicationsPage` y `ReportsPage`.
+
+**Fase 7: Dashboard + Polish (días 22–24)**
+- [ ] Agregar KPIs nuevos al dashboard.
+- [ ] Integrar con `activity_log` (auditoría).
+- [ ] Integrar con sistema de papelera existente.
+- [ ] Tests manuales de flujos completos.
+- [ ] Revisar RLS y permisos por rol.
+
+---
+
+## 12. QUERIES ÚTILES
+
+```sql
 -- Propietarios con cantidad de propiedades
 select o.*, count(po.property_id) as property_count
 from owners o
@@ -633,3 +700,9 @@ join properties p on pap.property_id = p.id
 left join admin_users au on pap.assigned_to = au.id
 where pap.status in ('pending', 'in_progress')
 and (pap.due_date < now() or pap.priority = 'urgent');
+```
+
+---
+
+**Autor:** Facundo Herrera  
+**Proyecto:** BIENENHAUS PROPIEDADES

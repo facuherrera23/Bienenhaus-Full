@@ -59,10 +59,76 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [typecheck, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @bienenhaus/admin exec playwright install --with-deps chromium
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local
+        run: supabase start
+        working-directory: ./supabase
+
+      - name: Reset DB with seed
+        run: supabase db reset
+        working-directory: ./supabase
+
+      - name: Create E2E test user
+        run: |
+          supabase auth signup --email e2e-test@bienenhaus.local --password "$E2E_TEST_PASSWORD"
+          supabase db execute "insert into public.admin_users (id, email, full_name, role) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin' from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do nothing;"
+        env:
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_LOCAL_ANON_KEY }}
+          E2E_TEST_EMAIL: e2e-test@bienenhaus.local
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/admin/playwright-report/
+          retention-days: 14
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+        working-directory: ./supabase
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [typecheck, test]
+    needs: [typecheck, test, e2e]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

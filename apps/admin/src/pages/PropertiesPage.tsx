@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { ChevronDown, Download, ExternalLink, Loader2, Plus, RefreshCw, Search, ShoppingBag, Trash2, X } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { downloadCsv, toCsv, todayStamp } from '../lib/csv';
-import { fetchProperties, STATUS_LABEL, STATUS_TONE, type PropertyRow, type PropertyStatus } from '../lib/properties';
-import { enqueueMl, fetchMlMeta, fetchMlQueue, type MlMetaRow, type MlOperation, type MlQueueRow } from '../lib/ml';
-import { useQuery } from '../lib/query/hooks';
+import { useProperties, useMLMeta, useMLQueue, usePublishToML, useBulkEnqueueMl, STATUS_LABEL, STATUS_TONE, type PropertyRow, type PropertyStatus, type MlMetaRow, type MlQueueRow, type MlOperation } from '../lib/properties.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 
@@ -15,6 +12,39 @@ function StatusBadge({ status }: { status: PropertyStatus }) {
 function formatPrice(row: PropertyRow): string {
   if (row.price === null) return '—';
   return `${row.currency} ${row.price.toLocaleString('es-AR')}`;
+}
+
+function getListData<T>(data: unknown): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as T[];
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    return (data as { data: T[] }).data ?? [];
+  }
+  return [];
+}
+
+function todayStamp(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function toCsv(header: string[], rows: (string | number)[][]): string {
+  const escape = (v: string | number) => {
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+  return [header.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+}
+
+function downloadCsv(filename: string, content: string) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function MlActionCell({
@@ -28,6 +58,7 @@ function MlActionCell({
 }) {
   const [busy, setBusy] = useState(false);
   const [current, setCurrent] = useState<MlOperation | null>(null);
+  const publishToML = usePublishToML();
 
   const active = queue.find((q) => q.status === 'pending' || q.status === 'processing');
 
@@ -41,7 +72,7 @@ function MlActionCell({
     setBusy(true);
     setCurrent(op);
     try {
-      await enqueueMl(property.id, op);
+      await publishToML.mutateAsync({ p_property_id: property.id, p_operation: op });
       pushToast({
         type: 'success',
         title: op === 'publish' ? 'Publicación encolada' : op === 'update' ? 'Actualización encolada' : 'Baja encolada',
@@ -128,21 +159,26 @@ export function PropertiesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | PropertyStatus>('todos');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkOp, setBulkOp] = useState<MlOperation | null>(null);
+  const [bulkOp, setBulkOp] = useState<'publish' | 'update' | 'delete' | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  const { data, isPending, isError } = useQuery<PropertyRow[]>({
-    queryKey: ['properties'],
-    queryFn: fetchProperties,
+  const { data, isPending, isError } = useProperties({
+    search,
+    status: statusFilter === 'todos' ? undefined : statusFilter,
   });
+  const properties = getListData<PropertyRow>(data);
 
-  const { data: mlMeta } = useQuery<MlMetaRow[]>({ queryKey: ['ml-meta'], queryFn: fetchMlMeta });
-  const { data: mlQueue } = useQuery<MlQueueRow[]>({ queryKey: ['ml-queue'], queryFn: fetchMlQueue });
+  const { data: mlMetaRaw } = useMLMeta();
+  const { data: mlQueueRaw } = useMLQueue();
+  const bulkEnqueueMl = useBulkEnqueueMl();
 
-  const metaByProp = useMemo(() => new Map((mlMeta ?? []).map((m) => [m.property_id, m])), [mlMeta]);
+  const mlMeta = getListData<MlMetaRow>(mlMetaRaw);
+  const mlQueue = getListData<MlQueueRow>(mlQueueRaw);
+
+  const metaByProp = useMemo(() => new Map(mlMeta.map((m) => [m.property_id, m])), [mlMeta]);
   const queueByProp = useMemo(() => {
     const map = new Map<string, MlQueueRow[]>();
-    for (const q of mlQueue ?? []) {
+    for (const q of mlQueue) {
       const list = map.get(q.property_id) ?? [];
       list.push(q);
       map.set(q.property_id, list);
@@ -158,9 +194,8 @@ export function PropertiesPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!data) return [];
     const q = search.trim().toLowerCase();
-    return data.filter((p) => {
+    return properties.filter((p) => {
       const matchesSearch =
         q === '' ||
         p.title.toLowerCase().includes(q) ||
@@ -168,7 +203,7 @@ export function PropertiesPage() {
       const matchesStatus = statusFilter === 'todos' || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [data, search, statusFilter]);
+  }, [properties, search, statusFilter]);
 
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
   const someSelected = selectedIds.size > 0;
@@ -193,22 +228,15 @@ export function PropertiesPage() {
   const clearSelection = () => setSelectedIds(new Set());
 
   const handleExport = () => {
-    if (!data || data.length === 0) return;
-    const metaMap = new Map((mlMeta ?? []).map((m) => [m.property_id, m]));
-    const queueMap = new Map<string, MlQueueRow[]>();
-    for (const q of mlQueue ?? []) {
-      const list = queueMap.get(q.property_id) ?? [];
-      list.push(q);
-      queueMap.set(q.property_id, list);
-    }
+    if (properties.length === 0) return;
 
     const header = [
       'Título', 'Código', 'Estado', 'Operación', 'Precio', 'Moneda', 'Zona',
       'Sup. Total', 'Dorm.', 'Baños', 'Destacada', 'Actualizada',
       'En ML', 'Item ML', 'Estado ML', 'Precio ML', 'Última Sync', 'Link ML'
     ];
-    const rows = data.map((p) => {
-      const meta = metaMap.get(p.id);
+    const rows = properties.map((p) => {
+      const meta = metaByProp.get(p.id);
       return [
         p.title,
         p.code,
@@ -233,13 +261,11 @@ export function PropertiesPage() {
     downloadCsv(`propiedades-${todayStamp()}.csv`, toCsv(header, rows));
   };
 
-  const runBulk = async (op: MlOperation) => {
+  const runBulk = async (op: 'publish' | 'update' | 'delete') => {
     setBulkBusy(true);
     setBulkOp(op);
     try {
-      for (const id of selectedIds) {
-        await enqueueMl(id, op);
-      }
+      await bulkEnqueueMl.mutateAsync({ propertyIds: Array.from(selectedIds), operation: op });
       pushToast({
         type: 'success',
         title: `${op === 'publish' ? 'Publicaciones' : op === 'update' ? 'Actualizaciones' : 'Bajas'} encoladas`,
@@ -270,7 +296,7 @@ export function PropertiesPage() {
           <p className="page-subtitle">Gestioná el catálogo completo de tu inmobiliaria.</p>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button type="button" className="btn btn--secondary" onClick={handleExport} disabled={!data || data.length === 0}>
+          <button type="button" className="btn btn--secondary" onClick={handleExport} disabled={properties.length === 0}>
             <Download size={15} /> Exportar CSV
           </button>
           <Link href="/propiedades/nueva" className="btn btn--primary">
@@ -375,7 +401,7 @@ export function PropertiesPage() {
                 <th>Mercado Libre</th>
               </tr>
             </thead>
-<tbody>
+            <tbody>
               {filtered.map((p) => {
                 const isSelected = selectedIds.has(p.id);
                 return (
