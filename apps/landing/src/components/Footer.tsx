@@ -3,6 +3,7 @@ import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { subscribeNewsletter } from '../lib/newsletter';
 import { images } from '../lib/images';
+import { useSiteSettings } from '../lib/site-settings';
 
 const NAV_LINKS = [
   ['#inicio', 'Inicio'],
@@ -27,8 +28,6 @@ const SERVICE_LINKS = [
   ['#', 'Asesoramiento Legal'],
 ];
 
-const SOCIALS = ['fa-instagram', 'fa-facebook-f', 'fa-linkedin-in', 'fa-whatsapp', 'fa-youtube'];
-
 export function Footer() {
   const rootRef = useReveal<HTMLElement>('.footer-hero, .footer-col, .footer-bottom', {
     threshold: 0.1,
@@ -38,9 +37,10 @@ export function Footer() {
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const { content, settings } = useSiteContent();
+  const { settings: siteSettings } = useSiteSettings();
 
   const section = content.footer ?? {};
-  const siteName = textOf(settings.site_name, 'value', 'BIENENHAUS PROPIEDADES');
+  const siteName = textOf(settings.site_name, 'value', siteSettings.company.name || 'BIENENHAUS PROPIEDADES');
   const footerTitle = textOf(
     section.title,
     'text',
@@ -52,12 +52,22 @@ export function Footer() {
     'Suscribite para recibir las propiedades más exclusivas antes que nadie.',
   );
   const contactItems = [
-    { icon: 'fas fa-map-marker-alt', text: textOf(settings.contact_address, 'value', 'Av. Figueroa Alcorta 1234, Córdoba') },
-    { icon: 'fas fa-phone', text: textOf(settings.contact_phone, 'value', '+54 387 400-0000') },
-    { icon: 'fas fa-envelope', text: textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
-    { icon: 'fas fa-clock', text: `Lun a Vie ${textOf(settings.contact_hours, 'weekdays', '09:00 - 18:00')}` },
-    { icon: 'fab fa-whatsapp', text: textOf(settings.contact_whatsapp, 'value', '+54 9 387 600-0000') },
+    { icon: 'fas fa-map-marker-alt', text: textOf(settings.contact_address, 'value', siteSettings.contact.address || 'Córdoba, Argentina') },
+    { icon: 'fas fa-phone', text: textOf(settings.contact_phone, 'value', siteSettings.contact.phone || '+54 387 400-0000') },
+    { icon: 'fas fa-envelope', text: textOf(settings.contact_email, 'value', siteSettings.contact.email || 'info@bienenhaus.com') },
+    { icon: 'fas fa-clock', text: `Lun a Vie ${textOf(settings.contact_hours, 'weekdays', siteSettings.contact.hours?.weekdays || '09:00 - 18:00')}` },
+    { icon: 'fab fa-whatsapp', text: textOf(settings.contact_whatsapp, 'value', siteSettings.contact.whatsapp || '+54 9 387 600-0000') },
   ];
+
+  // Build social links from site settings
+  const socialLinks = [
+    { icon: 'fa-instagram', url: siteSettings.social.instagram },
+    { icon: 'fa-facebook-f', url: siteSettings.social.facebook },
+    { icon: 'fa-youtube', url: siteSettings.social.youtube },
+    { icon: 'fa-tiktok', url: siteSettings.social.tiktok },
+    { icon: 'fa-whatsapp', url: siteSettings.social.whatsapp },
+    { icon: 'fa-linkedin-in', url: siteSettings.social.linkedin },
+  ].filter(s => s.url && s.url !== '#');
 
   const handleNewsletter = async (e: Event) => {
     e.preventDefault();
@@ -129,10 +139,10 @@ export function Footer() {
               experiencia premium y personalizada.
             </p>
             <div className="footer-social">
-              {SOCIALS.map((icon) => (
-                <button className="social-btn" key={icon} aria-label={icon}>
-                  <i className={`fab ${icon}`}></i>
-                </button>
+              {socialLinks.map((s) => (
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="social-btn" key={s.icon} aria-label={s.icon}>
+                  <i className={`fab ${s.icon}`}></i>
+                </a>
               ))}
             </div>
           </div>
@@ -210,8 +220,8 @@ export function Footer() {
 
         <div className="footer-bottom" id="footerBottom">
           <div className="footer-bottom-left">
-            &copy; 2026 <span className="highlight">BIENENHAUS PROPIEDADES</span> — Todos los
-            derechos reservados.
+            &copy; {new Date().getFullYear()} <span className="highlight">{siteSettings.company.name || 'BIENENHAUS PROPIEDADES'}</span> — Todos los
+            derechos reservados. {siteSettings.company.matricula && <span> | Matrícula: {siteSettings.company.matricula}</span>}
           </div>
           <div className="footer-bottom-center">
             <a href="#">Política de Privacidad</a>

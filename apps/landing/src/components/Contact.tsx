@@ -1,7 +1,8 @@
 import { useRef, useState } from 'preact/hooks';
 import { contactFieldConfigs } from '../data/contactFieldConfigs';
 import { useReveal } from '../hooks/useReveal';
-import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
+import { textOf, useSiteContent } from '../lib/content';
+import { useSiteSettings } from '../lib/site-settings';
 
 const INTENTS = [
   { value: 'comprar', icon: 'fas fa-home', label: 'Quiero comprar' },
@@ -33,6 +34,7 @@ export function Contact() {
     rootMargin: '0px',
   });
   const { content, settings } = useSiteContent();
+  const { settings: siteSettings } = useSiteSettings();
 
   const section = content.contacto ?? {};
   const label = textOf(section.label, 'text', 'Contacto');
@@ -43,11 +45,13 @@ export function Contact() {
     'Ya sea para vender, alquilar, tasar o encontrar una propiedad, nuestro equipo está listo para acompañarte.',
   );
 
-  const contactInfo = listOf(section.info).map((item) => ({
-    icon: faIcon(textOf(item, 'icon')),
-    label: textOf(item, 'label'),
-    value: textOf(item, 'value'),
-  }));
+  const contactInfo = [
+    { icon: 'fas fa-map-marker-alt', label: 'Ubicación', value: siteSettings.contact.address || textOf(settings.contact_address, 'value', 'Córdoba, Argentina') },
+    { icon: 'fas fa-phone', label: 'Teléfono', value: siteSettings.contact.phone || textOf(settings.contact_phone, 'value', '+54 387 400-0000') },
+    { icon: 'fas fa-envelope', label: 'Email', value: siteSettings.contact.email || textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
+    { icon: 'fas fa-clock', label: 'Horarios', value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}` },
+    { icon: 'fab fa-whatsapp', label: 'WhatsApp', value: siteSettings.contact.whatsapp || textOf(settings.contact_whatsapp, 'value', '+54 9 387 600-0000') },
+  ];
 
   const hours = settings.contact_hours ?? {};
 
