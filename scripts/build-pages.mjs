@@ -22,12 +22,9 @@ const ROOT = resolve(__dirname, '..');
 const OUT = join(ROOT, 'out');
 
 function runBuild(app) {
-  const cwd = join(ROOT, 'apps', app);
-  const bin = process.platform === 'win32'
-    ? join(ROOT, 'node_modules', '.bin', 'vite.cmd')
-    : join(ROOT, 'node_modules', '.bin', 'vite');
+  const filter = app === 'landing' ? '@bienenhaus/landing' : '@bienenhaus/admin';
   console.log(`[build-pages] building ${app}...`);
-  execSync(`"${bin}" build`, { cwd, stdio: 'inherit' });
+  execSync(`pnpm --filter ${filter} build`, { cwd: ROOT, stdio: 'inherit' });
 }
 
 console.log('[build-pages] root:', ROOT);
