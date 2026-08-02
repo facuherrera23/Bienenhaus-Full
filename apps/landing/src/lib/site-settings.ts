@@ -2,7 +2,7 @@
  * Site settings hook - fetches public site_settings with realtime updates.
  * Editable in Admin → Configuración.
  */
-import { useEffect, useState, useCallback } from 'preact/hooks';
+import { useEffect, useState, useCallback, useRef } from 'preact/hooks';
 import { supabase } from './supabase-data';
 
 export interface SocialLinks {
@@ -90,11 +90,51 @@ function mapSettings(rows: any[]): SiteSettings {
   return settings;
 }
 
+// --- Singleton realtime manager ---
+let realtimeChannel: any = null;
+let realtimeSubscribers = new Set<() => void>();
+
+function ensureRealtimeChannel() {
+  if (typeof window === 'undefined') return;
+  if (realtimeChannel) return realtimeChannel;
+
+  realtimeChannel = supabase
+    .channel('site_settings_changes_global')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'site_settings', filter: 'is_public=eq.true' },
+      () => {
+        realtimeSubscribers.forEach(cb => cb());
+      }
+    )
+    .subscribe((status) => {
+      if (status !== 'SUBSCRIBED') {
+        console.warn('Realtime subscription status:', status);
+      }
+    });
+
+  return realtimeChannel;
+}
+
+function subscribeToRealtime(cb: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  ensureRealtimeChannel();
+  realtimeSubscribers.add(cb);
+  return () => {
+    realtimeSubscribers.delete(cb);
+    if (realtimeSubscribers.size === 0 && realtimeChannel) {
+      supabase.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+  };
+}
+
+// --- Hook ---
 export function useSiteSettings() {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const mounted = { current: true };
+  const mounted = useRef(true);
 
   const fetchData = useCallback(async () => {
     try {
@@ -127,18 +167,11 @@ export function useSiteSettings() {
     mounted.current = true;
     fetchData();
 
-    const channel = supabase
-      .channel('site_settings_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'site_settings', filter: 'is_public=eq.true' },
-        () => fetchData()
-      )
-      .subscribe();
+    const unsubscribe = subscribeToRealtime(fetchData);
 
     return () => {
       mounted.current = false;
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [fetchData]);
 
