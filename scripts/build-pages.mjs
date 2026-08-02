@@ -28,14 +28,8 @@ function runBuild(app) {
   execSync(`${pnpmCmd} --filter ${filter} build`, { cwd: ROOT, stdio: 'inherit' });
 }
 
-function runFetchData() {
-  console.log('[build-pages] fetching data from Supabase...');
-  execSync(`node scripts/fetch-data.mjs`, { cwd: ROOT, stdio: 'inherit' });
-}
-
 console.log('[build-pages] root:', ROOT);
 
-runFetchData();
 runBuild('landing');
 runBuild('admin');
 

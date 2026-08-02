@@ -1,14 +1,14 @@
 import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
-import type { GeneratedAgent } from '../data/generated';
-import generatedAgents from '../data/generated/agents.json';
+import { useAgents } from '../lib/supabase-data';
 
-const agents: GeneratedAgent[] = generatedAgents as GeneratedAgent[];
 const SPECIALTIES = ['Venta Premium', 'Tasaciones', 'Inversiones'];
 
 export function Team() {
   const rootRef = useReveal<HTMLElement>('.team-card', { threshold: 0.1 });
   const { content } = useSiteContent();
+
+  const { data: agents, loading, error } = useAgents();
 
   const section = content.equipo ?? {};
   const label = textOf(section.label, 'text', 'Conocé al equipo');
@@ -22,6 +22,46 @@ export function Team() {
     'text',
     'Cada operación comienza con una conversación. Nuestro equipo combina experiencia, cercanía y conocimiento del mercado para acompañarte en cada decisión con transparencia y compromiso.',
   );
+
+  if (loading) {
+    return (
+      <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
+        <div className="container">
+          <header className="team-header">
+            <div className="team-header-left">
+              <span className="team-label">{label}</span>
+              <h2 className="team-title">{title}</h2>
+              <p className="team-desc">{description}</p>
+            </div>
+          </header>
+          <div className="team-loading">
+            <div className="spinner-large"></div>
+            <p>Cargando agentes...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
+        <div className="container">
+          <header className="team-header">
+            <div className="team-header-left">
+              <span className="team-label">{label}</span>
+              <h2 className="team-title">{title}</h2>
+              <p className="team-desc">{description}</p>
+            </div>
+          </header>
+          <div className="team-error">
+            <i className="fas fa-exclamation-triangle"></i>
+            <p>Error cargando agentes: {error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>

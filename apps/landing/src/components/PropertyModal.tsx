@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Property } from '../data/properties';
+import type { PropertyCardData } from '../lib/supabase-data';
 
 function getYouTubeId(url: string): string | null {
   const patterns = [
@@ -24,7 +24,7 @@ export function PropertyModal({
   property,
   onClose,
 }: {
-  property: Property | null;
+  property: PropertyCardData | null;
   onClose: () => void;
 }) {
   if (!property) return null;
@@ -39,7 +39,7 @@ export function PropertyModal({
     : [property.image];
 
   const features = FEATURE_CONFIG
-    .map((f) => ({ ...f, value: property[f.key as keyof Property] as number }))
+    .map((f) => ({ ...f, value: property[f.key] as number }))
     .filter((f) => (f.value as number) > 0);
 
   const videoId = property.video_url ? getYouTubeId(property.video_url) : null;

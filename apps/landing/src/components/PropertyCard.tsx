@@ -1,11 +1,11 @@
 import { useState } from 'preact/hooks';
-import type { Property } from '../data/properties';
+import type { PropertyCardData } from '../lib/supabase-data';
 
 export function PropertyCard({
   property,
   index,
   onClick,
-}: { property: Property; index: number; onClick?: () => void }) {
+}: { property: PropertyCardData; index: number; onClick?: () => void }) {
   const [liked, setLiked] = useState(false);
   const [bounce, setBounce] = useState(false);
 
