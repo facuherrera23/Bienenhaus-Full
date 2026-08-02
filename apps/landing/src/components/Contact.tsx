@@ -2,6 +2,7 @@ import { useRef, useState } from 'preact/hooks';
 import { contactFieldConfigs } from '../data/contactFieldConfigs';
 import { useReveal } from '../hooks/useReveal';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
+import { createClient } from '@supabase/supabase-js';
 
 const INTENTS = [
   { value: 'comprar', icon: 'fas fa-home', label: 'Quiero comprar' },
@@ -26,6 +27,11 @@ function fileIcon(type: string): string {
   if (type.includes('image')) return 'fa-file-image';
   return 'fa-file';
 }
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
+);
 
 export function Contact() {
   const rootRef = useReveal<HTMLElement>('.contact-info, .contact-form-wrapper', {
@@ -89,7 +95,7 @@ export function Contact() {
 
   const removeFile = (name: string) => setFiles((prev) => prev.filter((f) => f.name !== name));
 
-  const handleSubmit = (e: Event) => {
+  const handleSubmit = async (e: Event) => {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
@@ -116,11 +122,42 @@ export function Contact() {
       return;
     }
 
+    // Honeypot field
+    const honeypot = nextValues['website'] || '';
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          name: `${nextValues.nombre} ${nextValues.apellido}`,
+          email: nextValues.email,
+          phone: nextValues.telefono,
+          subject: nextValues.asunto || nextValues.interes || 'Consulta web',
+          message: nextValues.mensaje || '',
+          website: honeypot,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error(data.error || 'Demasiados intentos. Intente en 1 hora.');
+        }
+        throw new Error(data.error || 'Error enviando la consulta');
+      }
+
       setLoading(false);
       setSubmitted(true);
-    }, 2000);
+    } catch (err: any) {
+      setLoading(false);
+      alert(err.message || 'Error de conexión. Intente nuevamente.');
+    }
   };
 
   return (
@@ -404,8 +441,11 @@ export function Contact() {
                     </label>
                   </div>
 
+                  {/* Honeypot - invisible to humans */}
+                  <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
                   <button type="submit" className={`btn-submit${loading ? ' loading' : ''}`} id="submitBtn" disabled={loading}>
-                    <span className="btn-text">ENVIAR CONSULTA</span>
+                    <span className="btn-text">{loading ? 'ENVIANDO...' : 'ENVIAR CONSULTA'}</span>
                     <i className="fas fa-arrow-right"></i>
                     <span className="spinner"></span>
                   </button>
