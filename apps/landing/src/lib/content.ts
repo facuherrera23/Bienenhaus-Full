@@ -112,7 +112,6 @@ const DEFAULT_CONTENT: Record<string, SectionContent> = {
       items: [
         { icon: 'fa-whatsapp', label: 'WhatsApp', value: '+54 9 3516 37-9651' },
         { icon: 'fa-envelope', label: 'Correo electrónico', value: 'info@bienenhaus.com' },
-        { icon: 'fa-phone', label: 'Teléfono', value: '+54 9 3516 37-9651' },
         { icon: 'fa-map-marker-alt', label: 'Dirección', value: 'Córdoba, Argentina' },
       ],
     },
@@ -136,7 +135,6 @@ const DEFAULT_SETTINGS: Record<string, ContentValue> = {
   cri: { value: 'C.R.I. 183944' },
   contact_whatsapp: { value: '+54 9 3516 37-9651' },
   contact_email: { value: 'info@bienenhaus.com' },
-  contact_phone: { value: '+54 9 3516 37-9651' },
   contact_address: { value: 'Córdoba, Argentina' },
   contact_hours: { weekdays: '09:00 - 18:00', saturdays: '09:00 - 13:00' },
   social: { instagram: '#', facebook: '#', linkedin: '#', whatsapp: '#', youtube: '#' },

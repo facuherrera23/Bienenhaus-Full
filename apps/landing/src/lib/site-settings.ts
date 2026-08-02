@@ -16,7 +16,6 @@ export interface SocialLinks {
 
 export interface ContactInfo {
   email?: string;
-  phone?: string;
   whatsapp?: string;
   whatsappAlt?: string;
   address?: string;
@@ -54,9 +53,6 @@ function mapSettings(rows: any[]): SiteSettings {
         break;
       case 'contact_email':
         settings.contact.email = v?.value ?? v;
-        break;
-      case 'contact_phone':
-        settings.contact.phone = v?.value ?? v;
         break;
       case 'contact_whatsapp':
         settings.contact.whatsapp = v?.value ?? v;
@@ -140,7 +136,7 @@ export function useSiteSettings() {
     try {
       setLoading(true);
       const keys = [
-        'social', 'contact_email', 'contact_phone', 'contact_whatsapp',
+        'social', 'contact_email', 'contact_whatsapp',
         'contact_whatsapp_alt', 'contact_address', 'contact_hours', 'site_name', 'empresa',
         'cri', 'matricula', 'ubicacion', 'stats'
       ];

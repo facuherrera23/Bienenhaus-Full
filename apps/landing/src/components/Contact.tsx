@@ -13,7 +13,7 @@ const INTENTS = [
   { value: 'otro', icon: 'fas fa-ellipsis-h', label: 'Otro' },
 ];
 
-const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'telefono', 'ciudad'];
+const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'ciudad'];
 
 interface AttachedFile {
   name: string;
@@ -47,7 +47,6 @@ export function Contact() {
 
   const contactInfo = [
     { icon: 'fas fa-map-marker-alt', label: 'Ubicación', value: siteSettings.contact.address || textOf(settings.contact_address, 'value', 'Córdoba, Argentina') },
-    { icon: 'fas fa-phone', label: 'Teléfono', value: siteSettings.contact.phone || textOf(settings.contact_phone, 'value', '+54 9 3516 37-9651') },
     { icon: 'fas fa-envelope', label: 'Email', value: siteSettings.contact.email || textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
     { icon: 'fas fa-clock', label: 'Horarios', value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}` },
     { icon: 'fab fa-whatsapp', label: 'WhatsApp', value: whatsappUrl },
@@ -134,7 +133,6 @@ export function Contact() {
         body: JSON.stringify({
           name: `${nextValues.nombre} ${nextValues.apellido}`,
           email: nextValues.email,
-          phone: nextValues.telefono,
           subject: nextValues.asunto || nextValues.interes || 'Consulta web',
           message: nextValues.mensaje || '',
           website: honeypot,
@@ -297,7 +295,7 @@ export function Contact() {
                       <span className="error-message">Por favor ingresá tu apellido</span>
                     </div>
                   </div>
-                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+<div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={groupClass('email')} style={{ animationDelay: '0.2s' }}>
                       <label>
                         Correo electrónico <span className="required">*</span>
@@ -309,28 +307,17 @@ export function Contact() {
                       </div>
                       <span className="error-message">Por favor ingresá un correo válido</span>
                     </div>
-                    <div className={groupClass('telefono')} style={{ animationDelay: '0.25s' }}>
+                    <div className={groupClass('ciudad')} style={{ animationDelay: '0.25s' }}>
                       <label>
-                        Teléfono <span className="required">*</span>
+                        Ciudad <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
-                        <i className="fas fa-phone input-icon"></i>
-                        <input type="tel" name="telefono" placeholder="+54 9 387 000-0000" required />
+                        <i className="fas fa-map-marker-alt input-icon"></i>
+                        <input type="text" name="ciudad" placeholder="¿En qué ciudad estás?" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
-                      <span className="error-message">Por favor ingresá tu teléfono</span>
+                      <span className="error-message">Por favor ingresá tu ciudad</span>
                     </div>
-                  </div>
-                  <div className={groupClass('ciudad')} style={{ animationDelay: '0.3s' }}>
-                    <label>
-                      Ciudad <span className="required">*</span>
-                    </label>
-                    <div className="input-wrapper">
-                      <i className="fas fa-map-marker-alt input-icon"></i>
-                      <input type="text" name="ciudad" placeholder="¿En qué ciudad estás?" required />
-                      <i className="fas fa-check-circle success-check"></i>
-                    </div>
-                    <span className="error-message">Por favor ingresá tu ciudad</span>
                   </div>
 
                   <div id="dynamicFields">

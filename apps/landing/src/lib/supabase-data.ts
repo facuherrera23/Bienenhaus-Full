@@ -63,7 +63,6 @@ export interface Agent {
   id: string;
   name: string;
   email: string;
-  phone: string | null;
   matricula: string | null;
   role: string | null;
   photo_url: string | null;
@@ -236,7 +235,7 @@ export function useAgents() {
       setLoading(true);
       const { data: agents, error } = await supabase
         .from('agents')
-        .select('id, name, email, phone, matricula, role, photo_url, bio, sort_order, is_active')
+        .select('id, name, email, matricula, role, photo_url, bio, sort_order, is_active')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
