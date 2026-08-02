@@ -47,7 +47,7 @@ export function Contact() {
 
   const contactInfo = [
     { icon: 'fas fa-map-marker-alt', label: 'Ubicación', value: siteSettings.contact.address || textOf(settings.contact_address, 'value', 'Córdoba, Argentina') },
-    { icon: 'fas fa-phone', label: 'Teléfono', value: siteSettings.contact.phone || textOf(settings.contact_phone, 'value', '+54 387 400-0000') },
+    { icon: 'fas fa-phone', label: 'Teléfono', value: siteSettings.contact.phone || textOf(settings.contact_phone, 'value', '+54 9 3516 37-9651') },
     { icon: 'fas fa-envelope', label: 'Email', value: siteSettings.contact.email || textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
     { icon: 'fas fa-clock', label: 'Horarios', value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}` },
     { icon: 'fab fa-whatsapp', label: 'WhatsApp', value: whatsappUrl },
