@@ -2,7 +2,6 @@ import { useRef, useState } from 'preact/hooks';
 import { contactFieldConfigs } from '../data/contactFieldConfigs';
 import { useReveal } from '../hooks/useReveal';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
-import { createClient } from '@supabase/supabase-js';
 
 const INTENTS = [
   { value: 'comprar', icon: 'fas fa-home', label: 'Quiero comprar' },
@@ -27,11 +26,6 @@ function fileIcon(type: string): string {
   if (type.includes('image')) return 'fa-file-image';
   return 'fa-file';
 }
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
 
 export function Contact() {
   const rootRef = useReveal<HTMLElement>('.contact-info, .contact-form-wrapper', {

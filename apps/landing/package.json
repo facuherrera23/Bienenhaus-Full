@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "preact": "^10.26.0"
+    "preact": "^10.26.0",
+    "@supabase/supabase-js": "^2.49.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
