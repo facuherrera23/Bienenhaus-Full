@@ -9,6 +9,7 @@ import { Services } from './components/Services';
 import { Stats } from './components/Stats';
 import { Team } from './components/Team';
 import { TransitionStrip } from './components/TransitionStrip';
+import { WebSiteSchema, OrganizationSchema, RealEstateAgencySchema } from './components/JsonLd';
 
 export function App() {
   const spotlightRef = useSpotlight<HTMLDivElement>(
@@ -17,6 +18,9 @@ export function App() {
 
   return (
     <div ref={spotlightRef}>
+      <WebSiteSchema />
+      <OrganizationSchema />
+      <RealEstateAgencySchema />
       <a href="#inicio" className="skip-link">
         Saltar al contenido principal
       </a>
