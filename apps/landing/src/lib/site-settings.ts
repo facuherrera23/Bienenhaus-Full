@@ -18,6 +18,7 @@ export interface ContactInfo {
   email?: string;
   phone?: string;
   whatsapp?: string;
+  whatsappAlt?: string;
   address?: string;
   hours?: { weekdays: string; saturdays: string };
 }
@@ -60,6 +61,9 @@ function mapSettings(rows: any[]): SiteSettings {
       case 'contact_whatsapp':
         settings.contact.whatsapp = v?.value ?? v;
         break;
+      case 'contact_whatsapp_alt':
+        settings.contact.whatsappAlt = v?.value ?? v;
+        break;
       case 'contact_address':
         settings.contact.address = v?.value ?? v;
         break;
@@ -97,7 +101,7 @@ export function useSiteSettings() {
       setLoading(true);
       const keys = [
         'social', 'contact_email', 'contact_phone', 'contact_whatsapp',
-        'contact_address', 'contact_hours', 'site_name', 'empresa',
+        'contact_whatsapp_alt', 'contact_address', 'contact_hours', 'site_name', 'empresa',
         'cri', 'matricula', 'ubicacion', 'stats'
       ];
       
@@ -139,4 +143,30 @@ export function useSiteSettings() {
   }, [fetchData]);
 
   return { settings, loading, error, refetch: fetchData };
+}
+
+// Alternancia aleatoria persistida entre dos números de WhatsApp
+const WHATSAPP_ALT_KEY = 'bh:whatsapp:altIndex';
+
+function getNextWhatsAppIndex(): 0 | 1 {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const stored = localStorage.getItem(WHATSAPP_ALT_KEY);
+    const idx = stored ? parseInt(stored, 10) : 0;
+    const next = idx === 0 ? 1 : 0;
+    localStorage.setItem(WHATSAPP_ALT_KEY, String(next));
+    return next;
+  } catch {
+    return Math.random() < 0.5 ? 0 : 1;
+  }
+}
+
+export function getNextWhatsAppUrl(settings: SiteSettings): string {
+  const primary = settings.contact.whatsapp;
+  const alt = settings.contact.whatsappAlt;
+  if (!primary && !alt) return 'https://wa.me/';
+  if (!alt) return primary || 'https://wa.me/';
+  if (!primary) return alt;
+  const idx = getNextWhatsAppIndex();
+  return idx === 0 ? primary : alt;
 }

@@ -3,7 +3,7 @@ import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { subscribeNewsletter } from '../lib/newsletter';
 import { images } from '../lib/images';
-import { useSiteSettings } from '../lib/site-settings';
+import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
 
 const NAV_LINKS = [
   ['#inicio', 'Inicio'],
@@ -38,6 +38,7 @@ export function Footer() {
   const [feedback, setFeedback] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const { content, settings } = useSiteContent();
   const { settings: siteSettings } = useSiteSettings();
+  const whatsappUrl = getNextWhatsAppUrl(siteSettings);
 
   const section = content.footer ?? {};
   const siteName = textOf(settings.site_name, 'value', siteSettings.company.name || 'BIENENHAUS PROPIEDADES');
@@ -56,7 +57,7 @@ export function Footer() {
     { icon: 'fas fa-phone', text: textOf(settings.contact_phone, 'value', siteSettings.contact.phone || '+54 387 400-0000') },
     { icon: 'fas fa-envelope', text: textOf(settings.contact_email, 'value', siteSettings.contact.email || 'info@bienenhaus.com') },
     { icon: 'fas fa-clock', text: `Lun a Vie ${textOf(settings.contact_hours, 'weekdays', siteSettings.contact.hours?.weekdays || '09:00 - 18:00')}` },
-    { icon: 'fab fa-whatsapp', text: textOf(settings.contact_whatsapp, 'value', siteSettings.contact.whatsapp || '+54 9 387 600-0000') },
+    { icon: 'fab fa-whatsapp', text: whatsappUrl },
   ];
 
   // Build social links from site settings
@@ -65,7 +66,7 @@ export function Footer() {
     { icon: 'fa-facebook-f', url: siteSettings.social.facebook },
     { icon: 'fa-youtube', url: siteSettings.social.youtube },
     { icon: 'fa-tiktok', url: siteSettings.social.tiktok },
-    { icon: 'fa-whatsapp', url: siteSettings.social.whatsapp },
+    { icon: 'fa-whatsapp', url: whatsappUrl },
     { icon: 'fa-linkedin-in', url: siteSettings.social.linkedin },
   ].filter(s => s.url && s.url !== '#');
 
