@@ -75,7 +75,6 @@ function mapSettings(rows: any[]): SiteSettings {
         settings.company.matricula = v?.value ?? v;
         break;
       case 'ubicacion':
-      case 'contact_address':
         settings.company.ubicacion = v?.value ?? v;
         break;
       case 'stats':

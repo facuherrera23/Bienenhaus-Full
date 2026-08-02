@@ -1,10 +1,8 @@
 import { useState } from 'preact/hooks';
-import { useLocation } from 'wouter-preact';
 import { supabase } from '../lib/supabase';
 import { authSession } from '../store/app';
 
 export function Login() {
-  const [, setLocation] = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
