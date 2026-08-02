@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contáctanos · BIENENHAUS Propiedades</title>
+<meta name="description" content="Escribinos y coordinemos una reunión para entender tus objetivos. Comprá, vendé, alquilá o tasá con el asesoramiento premium de Bienenhaus."/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="Contáctanos · BIENENHAUS Propiedades"/>
+<meta property="og:description" content="Escribinos y coordinemos una reunión para entender tus objetivos. Respuesta en menos de 24 horas hábiles."/>
+<meta property="og:locale" content="es_AR"/>
+<meta name="theme-color" content="#20b8ab"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0d0d'/%3E%3Cpath d='M32 12l16 9v22l-16 9-16-9V21z' fill='none' stroke='%2320b8ab' stroke-width='4'/%3E%3Cpath d='M32 26l8 4.5V41l-8 4.5L24 41v-10.5z' fill='%2320b8ab'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+<style>
+/* ==========================================================================
+   BIENENHAUS · Contáctanos
+   Diseño único (pixel-perfect): modelo de referencia desktop XL (1440px).
+   El comportamiento por ancho de viewport se define en una sola escalera de
+   breakpoints: >=1200px XL · 992-1199 tablet XL-sm · <992px MD (apilado).
+   ========================================================================== */
+
+:root{
+  --bg:#000000;
+  --surface-1:#080808;
+  --surface-2:#0d0d0d;
+  --surface-3:#141414;
+  --surface-4:#1c1c1c;
+  --accent:#20b8ab;
+  --accent-dark:#178c81;
+  --accent-glow:rgba(32,184,171,.22);
+  --text:#ffffff;
+  --text-2:#9a9a9a;
+  --text-3:#8ab8b8;
+  --border:rgba(255,255,255,.06);
+  --border-2:rgba(255,255,255,.12);
+  --border-3:rgba(255,255,255,.22);
+  --error:#cc3535;
+  --success:#3aaa55;
+  --wa:#25d366;
+  --font-body:'Poppins',sans-serif;
+  --font-title:'Anton',Impact,sans-serif;
+  --radius:16px;
+  --radius-sm:8px;
+  --radius-pill:9999px;
+  --track-label:.14em;
+  --shadow-md:0 8px 32px rgba(0,0,0,.55);
+  --shadow-card:0 2px 6px rgba(0,0,0,.35),0 12px 40px rgba(0,0,0,.5);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img{max-width:100%;display:block}
+::selection{background:var(--accent);color:#000}
+
+.container{width:100%;max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* ---------- Botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  font-weight:600;font-size:14px;letter-spacing:.04em;
+  border-radius:var(--radius-pill);padding:14px 26px;
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s,border-color .25s,color .25s;
+  white-space:nowrap;
+}
+.btn i{font-size:15px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#2fd0c2;transform:translateY(-2px);box-shadow:0 10px 30px var(--accent-glow)}
+.btn-ghost{border:1px solid var(--border-3);color:var(--text);background:rgba(255,255,255,.02)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-wa:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.btn-sm{padding:9px 16px;font-size:12.5px}
+.btn-block{width:100%}
+
+/* ---------- Header ---------- */
+.nav{
+  position:sticky;top:0;z-index:60;
+  background:rgba(0,0,0,.72);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-title);font-size:19px;letter-spacing:.08em}
+.logo-mark{width:34px;height:34px;flex:0 0 auto}
+.logo-mark svg{width:100%;height:100%}
+.logo b{color:var(--accent);font-weight:400}
+.nav-links{display:none;align-items:center;gap:34px}
+.nav-links a{font-size:13px;letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-2);transition:color .2s;position:relative}
+.nav-links a:hover{color:var(--text)}
+.nav-links a.active{color:var(--accent)}
+.nav-cta{display:none}
+.nav-toggle{display:flex;flex-direction:column;gap:5px;padding:10px}
+.nav-toggle span{width:22px;height:2px;background:var(--text);border-radius:2px;transition:transform .3s var(--ease),opacity .2s}
+.nav-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0}
+.nav-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-menu{
+  display:none;flex-direction:column;gap:4px;padding:12px 24px 20px;
+  background:var(--surface-1);border-bottom:1px solid var(--border);
+}
+.mobile-menu.open{display:flex}
+.mobile-menu a{padding:12px 4px;font-size:13px;letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-2);border-bottom:1px solid var(--border)}
+.mobile-menu a.active{color:var(--accent)}
+.mobile-menu .btn{margin-top:12px}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 420px at 85% -10%,rgba(32,184,171,.16),transparent 60%),
+    radial-gradient(700px 380px at -10% 110%,rgba(32,184,171,.10),transparent 55%),
+    linear-gradient(180deg,#050505 0%,#000 100%);
+}
+#particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:72px 0 96px;min-height:calc(100svh - 68px);justify-content:center;gap:26px;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);
+  border:1px solid var(--accent-glow);background:rgba(32,184,171,.08);
+  padding:8px 18px;border-radius:var(--radius-pill);
+}
+.hero-eyebrow i{font-size:11px}
+.hero h1{
+  font-family:var(--font-title);font-weight:400;line-height:.98;letter-spacing:.01em;
+  font-size:clamp(44px,12vw,84px);text-transform:uppercase;max-width:15ch;
+}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{
+  color:var(--text-2);max-width:560px;font-size:clamp(15px,2.4vw,17px);font-weight:300;
+}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-2);
+  border:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius-pill);padding:8px 16px;
+}
+.hero-chip i{color:var(--accent);font-size:12px}
+.scroll-hint{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-3);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+}
+.scroll-hint i{font-size:14px;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* ---------- Sección contacto ---------- */
+.contact{
+  position:relative;
+  background:
+    radial-gradient(600px 300px at 100% 0%,rgba(32,184,171,.08),transparent 55%),
+    var(--surface-1);
+  padding:80px 0;
+}
+.section-head{text-align:center;max-width:620px;margin:0 auto 56px}
+.section-label{
+  display:inline-block;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);
+  margin-bottom:14px;
+}
+.section-title{font-family:var(--font-title);font-weight:400;font-size:clamp(32px,7vw,52px);text-transform:uppercase;line-height:1.02}
+.section-sub{color:var(--text-2);margin-top:14px;font-weight:300;font-size:15px}
+
+.contact-grid{display:grid;gap:28px;grid-template-columns:1fr}
+.contact-card{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:30px 26px;box-shadow:var(--shadow-card);
+}
+.card-title{
+  display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text);margin-bottom:22px;
+}
+.card-title i{color:var(--accent);font-size:15px}
+.info-list{display:grid;gap:2px}
+.info-item{display:flex;align-items:flex-start;gap:16px;padding:13px 0;border-bottom:1px solid var(--border)}
+.info-item:last-child{border-bottom:none}
+.info-icon{
+  width:42px;height:42px;flex:0 0 auto;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:rgba(32,184,171,.1);color:var(--accent);border:1px solid var(--accent-glow);font-size:16px;
+}
+.info-item .content{display:flex;flex-direction:column;gap:1px;min-width:0}
+.info-item .label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+.info-item .value{font-size:14px;color:var(--text);word-break:break-word}
+.info-item a.value:hover{color:var(--accent)}
+.response-block{
+  margin-top:22px;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;
+}
+.response-block .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px}
+.response-block .row span:first-child{color:var(--text-2)}
+.response-block .row span:last-child{color:var(--text)}
+.social-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.social-circle{
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border-2);color:var(--text-2);font-size:15px;transition:.2s;
+}
+.social-circle:hover{color:#000;background:var(--accent);border-color:var(--accent)}
+.online-note{
+  margin-top:22px;display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--text-2);
+  background:var(--surface-3);border:1px solid var(--border);border-radius:10px;padding:13px 15px;
+}
+.online-note i{color:var(--accent);font-size:15px;flex:0 0 auto}
+
+/* ---------- Formulario ---------- */
+.form-card{position:relative;overflow:hidden}
+.form-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),transparent 70%);
+}
+.form-indicators{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.form-indicator{
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);
+  border:1px solid var(--border);border-radius:var(--radius-pill);padding:7px 14px;background:var(--surface-1);
+}
+.form-indicator i{color:var(--accent);font-size:11px}
+.form-step-label{display:block;font-size:13px;letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-3);margin-bottom:14px}
+.form-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.form-pill{
+  display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;
+  border:1px solid var(--border-2);border-radius:var(--radius-pill);padding:9px 15px;color:var(--text-2);
+  transition:.2s;
+}
+.form-pill:hover{border-color:var(--accent);color:var(--text)}
+.form-pill.active{background:var(--accent);border-color:var(--accent);color:#000}
+.form-pill i{font-size:11px}
+.form-row{display:grid;grid-template-columns:1fr;gap:14px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:7px;letter-spacing:.02em}
+.form-group label .required{color:var(--accent)}
+.input-wrapper{position:relative}
+.input-wrapper > i.input-icon{
+  position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13.5px;pointer-events:none;
+}
+.input-wrapper .success-check{display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--success);font-size:15px}
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="email"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea{
+  width:100%;background:var(--surface-1);border:1px solid var(--border-2);border-radius:10px;
+  color:var(--text);font-family:inherit;font-size:14px;padding:13px 16px;padding-left:42px;
+  transition:border-color .2s,box-shadow .2s;outline:none;
+}
+.form-group textarea{padding-left:42px;resize:vertical;min-height:92px}
+.form-group select{padding-left:42px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9a9a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.form-group select option{background:var(--surface-3);color:var(--text)}
+.form-group input::placeholder,.form-group textarea::placeholder{color:#555}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);
+}
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea{border-color:var(--error)}
+.form-group.error .success-check{display:none}
+.form-group.success .success-check{display:block}
+.error-message{display:none;font-size:12px;color:var(--error);margin-top:6px}
+.form-group.error .error-message{display:block}
+
+.drop-zone{
+  border:1.5px dashed var(--border-3);border-radius:10px;padding:24px 16px;text-align:center;
+  color:var(--text-2);transition:.2s;cursor:pointer;
+}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(32,184,171,.06)}
+.drop-zone .drop-icon{font-size:20px;color:var(--accent);margin-bottom:8px}
+.drop-zone .drop-text{font-size:13px}
+.drop-zone .drop-hint{font-size:11px;color:var(--text-3);margin-top:4px}
+.file-list{display:grid;gap:6px;margin-top:10px}
+.file-item{
+  display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-2);
+  background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:8px 12px;
+}
+.file-item i:first-child{color:var(--accent)}
+.file-item .remove-file{margin-left:auto;cursor:pointer;color:var(--text-3)}
+.file-item .remove-file:hover{color:var(--error)}
+
+.checkbox-group{display:flex;align-items:flex-start;gap:10px;margin:6px 0 20px}
+.checkbox-group input[type="checkbox"]{margin-top:3px;accent-color:var(--accent);width:16px;height:16px}
+.checkbox-group label{font-size:12.5px;color:var(--text-2);cursor:pointer;margin:0}
+.checkbox-group a{color:var(--accent)}
+.checkbox-group a:hover{text-decoration:underline}
+.checkbox-group.error label{color:var(--error)}
+.privacy-error{display:none;font-size:12px;color:var(--error);margin-top:-10px;margin-bottom:14px}
+.checkbox-group.error ~ .privacy-error{display:block}
+
+.btn-submit{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  background:var(--accent);color:#000;font-weight:600;font-size:14px;letter-spacing:.08em;
+  border-radius:var(--radius-pill);padding:16px 24px;transition:.25s;
+}
+.btn-submit:hover{background:#2fd0c2;box-shadow:0 10px 30px var(--accent-glow)}
+.btn-submit.loading{opacity:.7;pointer-events:none}
+.btn-submit .spinner{display:none;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
+.btn-submit.loading .spinner{display:block}
+.btn-submit.loading .btn-text,.btn-submit.loading i{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.submit-success{text-align:center;padding:40px 10px}
+.success-icon{
+  width:74px;height:74px;margin:0 auto 22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(58,170,85,.14);border:1px solid rgba(58,170,85,.4);color:var(--success);font-size:30px;
+  animation:pop .5s var(--ease);
+}
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.submit-success h3{font-family:var(--font-title);font-weight:400;font-size:26px;text-transform:uppercase;letter-spacing:.02em}
+.submit-success p{color:var(--text-2);font-size:14px;margin-top:10px;max-width:360px;margin-left:auto;margin-right:auto}
+.submit-actions{display:grid;gap:12px;max-width:340px;margin:26px auto 0}
+.device-note{
+  margin-top:20px;font-size:11.5px;color:var(--text-3);
+  background:var(--surface-1);border:1px dashed var(--border-2);border-radius:8px;padding:8px 12px;
+}
+.device-note b{color:var(--accent);font-weight:600}
+.hidden-input{display:none}
+
+/* ---------- CTA strip ---------- */
+.cta-strip{
+  position:relative;overflow:hidden;text-align:center;padding:84px 24px;
+  background:
+    radial-gradient(700px 300px at 50% 120%,rgba(32,184,171,.14),transparent 60%),
+    var(--bg);
+}
+.cta-strip h2{font-family:var(--font-title);font-weight:400;font-size:clamp(30px,6vw,46px);text-transform:uppercase;line-height:1.05}
+.cta-strip p{color:var(--text-2);margin:14px auto 26px;max-width:480px;font-weight:300}
+.cta-strip .hero-actions{justify-content:center}
+
+/* ---------- Footer ---------- */
+.footer{border-top:1px solid var(--border);background:var(--surface-1);padding:40px 0}
+.footer-inner{display:flex;flex-direction:column;gap:22px;align-items:center;text-align:center}
+.footer-links{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
+.footer-links a{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2)}
+.footer-links a:hover{color:var(--accent)}
+.footer-meta{font-size:12px;color:var(--text-3)}
+.footer-meta b{color:var(--text-2);font-weight:600}
+
+/* ---------- FABs (WhatsApp + IA) ---------- */
+.fabs{position:fixed;right:18px;bottom:18px;z-index:90;display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+.fab{
+  width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .25s var(--ease);position:relative;
+}
+.fab:hover{transform:translateY(-3px) scale(1.05)}
+.fab i{font-size:24px;color:#fff}
+.fab-wa{background:var(--wa)}
+.fab-wa::after{
+  content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--wa);animation:ping 1.8s var(--ease) infinite;
+}
+@keyframes ping{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+.fab-ai{background:linear-gradient(135deg,var(--accent),#0d6b63)}
+.fab-ai .ai-dot{
+  position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;
+  background:var(--success);border:2px solid #000;
+}
+.fab-label{
+  position:absolute;right:68px;top:50%;transform:translateY(-50%);
+  background:var(--surface-3);border:1px solid var(--border-2);border-radius:8px;
+  font-size:11.5px;padding:6px 10px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.fab:hover .fab-label{opacity:1}
+
+/* ---------- Chat IA ---------- */
+.chat{
+  position:fixed;z-index:100;right:0;left:0;bottom:0;
+  height:min(78svh,620px);
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:20px 20px 0 0;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -10px 50px rgba(0,0,0,.6);
+  transform:translateY(105%);
+  visibility:hidden;pointer-events:none;
+  transition:transform .35s var(--ease),visibility 0s linear .35s;
+}
+.chat.open{
+  transform:translateY(0);
+  visibility:visible;pointer-events:auto;
+  transition:transform .35s var(--ease),visibility 0s;
+}
+.chat-head{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;
+  background:linear-gradient(120deg,var(--accent),#0d6b63);
+}
+.chat-avatar{
+  width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:16px;flex:0 0 auto;
+}
+.chat-head .who{flex:1;min-width:0}
+.chat-head .who b{font-size:14px;display:block;color:#fff}
+.chat-head .who span{font-size:11px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px}
+.chat-head .who .dot{width:7px;height:7px;border-radius:50%;background:#8dffb0;display:inline-block}
+.chat-close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;background:rgba(0,0,0,.2)}
+.chat-close:hover{background:rgba(0,0,0,.4)}
+.chat-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:var(--surface-1)}
+.chat-msg{max-width:82%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;animation:msgIn .25s var(--ease);word-break:break-word}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.chat-msg.bot{background:var(--surface-3);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text)}
+.chat-msg.user{background:var(--accent);color:#000;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg .time{display:block;font-size:10px;opacity:.55;margin-top:4px}
+.chat-typing{display:none;align-self:flex-start;gap:4px;background:var(--surface-3);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;padding:12px 16px}
+.chat-typing.show{display:inline-flex}
+.chat-typing span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.2s infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}
+.chat-typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+.chat-quick{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 6px}
+.chat-quick button{
+  font-size:12px;color:var(--accent);border:1px solid var(--accent-glow);background:rgba(32,184,171,.08);
+  border-radius:var(--radius-pill);padding:6px 12px;transition:.2s;
+}
+.chat-quick button:hover{background:var(--accent);color:#000}
+.chat-input{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+.chat-input input{
+  flex:1;background:var(--surface-1);border:1px solid var(--border-2);border-radius:var(--radius-pill);
+  color:var(--text);font-family:inherit;font-size:13.5px;padding:11px 18px;outline:none;transition:border-color .2s;
+}
+.chat-input input:focus{border-color:var(--accent)}
+.chat-send{
+  width:42px;height:42px;border-radius:50%;background:var(--accent);color:#000;display:flex;align-items:center;justify-content:center;font-size:15px;transition:.2s;
+}
+.chat-send:hover{background:#2fd0c2}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;z-index:120;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:var(--surface-3);border:1px solid var(--border-2);border-left:3px solid var(--accent);
+  border-radius:10px;padding:12px 18px;font-size:13px;box-shadow:var(--shadow-md);
+  opacity:0;pointer-events:none;transition:.3s var(--ease);max-width:calc(100vw - 48px);text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Media queries (un único diseño) ---------- */
+@media (min-width:640px){
+  .form-row{grid-template-columns:1fr 1fr}
+  .fabs{right:24px;bottom:24px}
+}
+@media (min-width:992px){
+  .nav-links{display:flex}
+  .nav-cta{display:inline-flex}
+  .nav-toggle{display:none}
+  .mobile-menu{display:none !important}
+  .hero h1{font-size:84px}
+  .contact-grid{grid-template-columns:400px 1fr;align-items:start}
+  .chat{right:24px;left:auto;bottom:96px;width:380px;border-radius:20px;transform:translateY(calc(100% + 40px))}
+  .footer-inner{flex-direction:row;justify-content:space-between;text-align:left}
+}
+@media (min-width:1200px){
+  .hero-inner{padding:96px 0 120px}
+  .contact{padding:96px 0}
+  .chat{width:400px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#inicio" class="logo" aria-label="Bienenhaus Propiedades">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#141414"/><path d="M32 12l16 9v22l-16 9-16-9V21z" fill="none" stroke="#20b8ab" stroke-width="4"/><path d="M32 26l8 4.5V41l-8 4.5L24 41v-10.5z" fill="#20b8ab"/></svg>
+      </span>
+      <span>BIENEN<b>HAUS</b></span>
+    </a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#inicio">Inicio</a>
+      <a href="#contacto" class="active">Contacto</a>
+      <a href="https://wa.me/5493514110000" target="_blank" rel="noopener">WhatsApp</a>
+    </nav>
+    <a href="https://wa.me/5493514110000" target="_blank" rel="noopener" class="btn btn-primary btn-sm nav-cta">
+      <i class="fa-brands fa-whatsapp"></i> Escribinos
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#inicio">Inicio</a>
+    <a href="#contacto" class="active">Contacto</a>
+    <a href="https://wa.me/5493514110000" target="_blank" rel="noopener" class="btn btn-primary"><i class="fa-brands fa-whatsapp"></i> Escribinos por WhatsApp</a>
+  </div>
+</header>
+
+<main id="inicio">
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <canvas id="particles" aria-hidden="true"></canvas>
+    <div class="container hero-inner">
+      <span class="hero-eyebrow"><i class="fa-solid fa-circle-info"></i> Contacto · Bienenhaus</span>
+      <h1>Hablemos sobre tu <em>próxima</em> propiedad</h1>
+      <p>Escribinos y coordinemos una reunión para entender tus objetivos. Asesoramiento premium para comprar, vender, alquilar o tasar.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="heroAiBtn"><i class="fa-solid fa-robot"></i> Iniciar conversación IA</button>
+        <a href="#contacto" class="btn btn-ghost" data-scroll="contacto"><i class="fa-solid fa-envelope"></i> Completar formulario</a>
+      </div>
+      <div class="hero-chips">
+        <span class="hero-chip"><i class="fa-solid fa-star"></i> Atención personalizada</span>
+        <span class="hero-chip"><i class="fa-solid fa-clock"></i> Respuesta en 24h</span>
+        <span class="hero-chip"><i class="fa-solid fa-check-circle"></i> Asesoramiento 100% profesional</span>
+      </div>
+    </div>
+    <div class="scroll-hint"><span>Deslizá</span><i class="fa-solid fa-chevron-down"></i></div>
+  </section>
+
+  <!-- ============ CONTACTO ============ -->
+  <section class="contact" id="contacto">
+    <div class="container">
+      <header class="section-head">
+        <span class="section-label">Contáctanos</span>
+        <h2 class="section-title">Estamos para ayudarte</h2>
+        <p class="section-sub">Completá el formulario y un asesor se comunicará con vos en menos de 24 horas hábiles.</p>
+      </header>
+
+      <div class="contact-grid">
+        <!-- Info -->
+        <aside class="contact-card">
+          <div class="card-title"><i class="fa-solid fa-address-book"></i> Contacto directo</div>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
+              <div class="content">
+                <span class="label">Teléfono</span>
+                <a class="value" href="tel:+543514110000">+54 9 351 411-0000</a>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon"><i class="fa-solid fa-envelope"></i></span>
+              <div class="content">
+                <span class="label">Correo electrónico</span>
+                <a class="value" href="mailto:info@bienenhaus.com">info@bienenhaus.com</a>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon"><i class="fa-brands fa-whatsapp"></i></span>
+              <div class="content">
+                <span class="label">WhatsApp</span>
+                <a class="value" href="https://wa.me/5493514110000" target="_blank" rel="noopener" id="infoWaLink">+54 9 351 411-0000</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="online-note">
+            <i class="fa-solid fa-video"></i>
+            <span>Operamos de manera 100% virtual: coordinamos todo por WhatsApp, teléfono o videollamada, donde estés.</span>
+          </div>
+
+          <div class="response-block">
+            <div class="row"><span>Lunes a Viernes</span><span>09:00 - 18:00</span></div>
+            <div class="row"><span>Sábados</span><span>09:00 - 13:00</span></div>
+          </div>
+
+          <div class="social-row">
+            <a class="social-circle" href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a class="social-circle" href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a class="social-circle" href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a class="social-circle" href="https://wa.me/5493514110000" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+          </div>
+        </aside>
+
+        <!-- Formulario -->
+        <div class="contact-card form-card">
+          <div class="form-indicators">
+            <span class="form-indicator"><i class="fa-solid fa-star"></i> Atención personalizada</span>
+            <span class="form-indicator"><i class="fa-solid fa-clock"></i> Respuesta en 24h</span>
+          </div>
+
+          <form id="contactForm" novalidate>
+            <span class="form-step-label">¿Cómo podemos ayudarte?</span>
+            <div class="form-pills" id="formPills" role="group" aria-label="Motivo de consulta"></div>
+
+            <div class="form-row">
+              <div class="form-group" id="g-nombre">
+                <label for="f-nombre">Nombre <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-user input-icon"></i>
+                  <input type="text" id="f-nombre" name="nombre" placeholder="Tu nombre" autocomplete="given-name"/>
+                  <i class="fa-solid fa-check-circle success-check"></i>
+                </div>
+                <span class="error-message">Por favor ingresá tu nombre</span>
+              </div>
+              <div class="form-group" id="g-apellido">
+                <label for="f-apellido">Apellido <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-user input-icon"></i>
+                  <input type="text" id="f-apellido" name="apellido" placeholder="Tu apellido" autocomplete="family-name"/>
+                  <i class="fa-solid fa-check-circle success-check"></i>
+                </div>
+                <span class="error-message">Por favor ingresá tu apellido</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" id="g-email">
+                <label for="f-email">Correo electrónico <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-envelope input-icon"></i>
+                  <input type="email" id="f-email" name="email" placeholder="tu@email.com" autocomplete="email"/>
+                  <i class="fa-solid fa-check-circle success-check"></i>
+                </div>
+                <span class="error-message">Por favor ingresá un correo válido</span>
+              </div>
+              <div class="form-group" id="g-telefono">
+                <label for="f-telefono">Teléfono <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-phone input-icon"></i>
+                  <input type="tel" id="f-telefono" name="telefono" placeholder="+54 9 351 000-0000" autocomplete="tel"/>
+                  <i class="fa-solid fa-check-circle success-check"></i>
+                </div>
+                <span class="error-message">Por favor ingresá tu teléfono</span>
+              </div>
+            </div>
+
+            <div class="form-group" id="g-ciudad">
+              <label for="f-ciudad">Ciudad <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-map-marker-alt input-icon"></i>
+                <input type="text" id="f-ciudad" name="ciudad" placeholder="¿En qué ciudad estás?" autocomplete="address-level2"/>
+                <i class="fa-solid fa-check-circle success-check"></i>
+              </div>
+              <span class="error-message">Por favor ingresá tu ciudad</span>
+            </div>
+
+            <div id="dynamicFields"></div>
+
+            <div class="form-group">
+              <label for="f-mensaje">Mensaje</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-comment input-icon"></i>
+                <textarea id="f-mensaje" name="mensaje" placeholder="Contanos un poco más sobre lo que necesitás..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Adjuntar archivos</label>
+              <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Adjuntar archivos">
+                <div class="drop-icon"><i class="fa-solid fa-cloud-upload-alt"></i></div>
+                <div class="drop-text">Arrastrá archivos aquí o hacé clic para seleccionarlos</div>
+                <div class="drop-hint">PDF, JPG, PNG · Máximo 10MB</div>
+                <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none" aria-hidden="true"/>
+              </div>
+              <div class="file-list" id="fileList"></div>
+            </div>
+
+            <div class="checkbox-group" id="g-privacy">
+              <input type="checkbox" id="privacy" name="privacy"/>
+              <label for="privacy">Acepto la <a href="#" id="privacyLink">Política de Privacidad</a> <span class="required">*</span></label>
+            </div>
+            <div class="privacy-error">Debés aceptar la Política de Privacidad para continuar</div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <span class="btn-text">ENVIAR CONSULTA</span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span class="spinner"></span>
+            </button>
+
+            <!-- Datos técnicos capturados (ancho/alto de pantalla y viewport) -->
+            <input type="hidden" name="screen_w" id="h-screen-w"/>
+            <input type="hidden" name="screen_h" id="h-screen-h"/>
+            <input type="hidden" name="viewport_w" id="h-viewport-w"/>
+            <input type="hidden" name="viewport_h" id="h-viewport-h"/>
+            <input type="hidden" name="device" id="h-device"/>
+            <input type="hidden" name="ts" id="h-ts"/>
+            <input type="hidden" name="ref" id="h-ref"/>
+            <input type="hidden" name="utm_source" id="h-utm-source"/>
+            <input type="hidden" name="utm_medium" id="h-utm-medium"/>
+            <input type="hidden" name="utm_campaign" id="h-utm-campaign"/>
+          </form>
+
+          <div class="submit-success" id="submitSuccess" hidden>
+            <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+            <h3>¡Consulta lista!</h3>
+            <p>Tu consulta quedó registrada. Elegí cómo querés enviárnosla:</p>
+            <div class="submit-actions">
+              <a class="btn btn-wa btn-block" id="sendWaBtn" href="#" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Enviar por WhatsApp</a>
+              <button class="btn btn-ghost btn-block" id="copyLinkBtn"><i class="fa-solid fa-link"></i> Copiar enlace con mis datos</button>
+            </div>
+            <div class="device-note" id="deviceNote"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="cta-strip">
+    <h2>¿Preferís hablar directo?</h2>
+    <p>Respondemos todas las consultas en menos de 24 horas hábiles.</p>
+    <div class="hero-actions">
+      <a href="https://wa.me/5493514110000" target="_blank" rel="noopener" class="btn btn-wa" id="stripWaBtn"><i class="fa-brands fa-whatsapp"></i> Escrbir por WhatsApp</a>
+      <button class="btn btn-ghost" id="ctaAiBtn"><i class="fa-solid fa-robot"></i> Conversar con IA</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <a href="#inicio" class="logo" aria-label="Bienenhaus Propiedades">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#141414"/><path d="M32 12l16 9v22l-16 9-16-9V21z" fill="none" stroke="#20b8ab" stroke-width="4"/><path d="M32 26l8 4.5V41l-8 4.5L24 41v-10.5z" fill="#20b8ab"/></svg>
+      </span>
+      <span>BIENEN<b>HAUS</b></span>
+    </a>
+    <nav class="footer-links" aria-label="Legal">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos y condiciones</a>
+      <a href="#">Defensa del consumidor</a>
+    </nav>
+    <div class="footer-meta">© 2026 <b>Bienenhaus Propiedades</b> · C.R.I. 183944</div>
+  </div>
+</footer>
+
+<!-- ============ FABs ============ -->
+<div class="fabs">
+  <a class="fab fab-wa" id="fabWa" href="https://wa.me/5493514110000?text=Hola%20Bienenhaus%2C%20quisiera%20hacer%20una%20consulta." target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
+    <span class="fab-label">WhatsApp</span>
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+  <button class="fab fab-ai" id="fabAi" aria-label="Abrir conversación con IA">
+    <span class="ai-dot"></span>
+    <span class="fab-label">Asistente IA</span>
+    <i class="fa-solid fa-robot" id="fabAiIcon"></i>
+  </button>
+</div>
+
+<!-- ============ CHAT IA ============ -->
+<div class="chat" id="chat" role="dialog" aria-label="Asistente virtual Bienenhaus" aria-hidden="true">
+  <div class="chat-head">
+    <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
+    <div class="who">
+      <b>Asistente virtual</b>
+      <span><span class="dot"></span> En línea · respuestas inmediatas</span>
+    </div>
+    <button class="chat-close" id="chatClose" aria-label="Cerrar conversación"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-quick" id="chatQuick"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Escribí tu consulta..." aria-label="Escribí tu consulta"/>
+    <button class="chat-send" id="chatSend" aria-label="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ==========================================================================
+   BIENENHAUS · Contáctanos — lógica
+   - Partículas (canvas, adaptable a MD/XL y a prefers-reduced-motion)
+   - Formulario capturando ancho/alto de pantalla y viewport
+   - Botón de conversación IA (asistente con reglas + continuar por WhatsApp)
+   - Botón WhatsApp flotante con mensaje pre-cargado
+   - localStorage <-> query params bidireccional (importa y exporta el estado)
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var WA_NUMBER = '5493514110000';
+  var LS_KEY = 'bienenhaus_contacto:v1';
+  var LS_SUBMISSIONS = 'bienenhaus_contacto:submissions';
+  var LS_CHAT = 'bienenhaus_contacto:chat';
+
+  /* ------------------------------------------------------------------
+     Supabase: guarda el lead en la tabla `leads` (CRM) vía la función
+     RPC `submit_contact` (segura, sin abrir RLS a anon).
+     La ANON key es pública por diseño (solo sirve para insertar).
+     Config local (Docker). Para producción, reemplazar por la URL y
+     ANON key del proyecto remoto. Se puede sobrescribir con los query
+     params ?supabase_url= y ?sb_anon= para pruebas.
+     ------------------------------------------------------------------ */
+  var SUPABASE_URL = 'http://127.0.0.1:54321';
+  var SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+  (function () {
+    try {
+      var qp = new URLSearchParams(window.location.search);
+      if (qp.get('supabase_url')) SUPABASE_URL = qp.get('supabase_url');
+      if (qp.get('sb_anon')) SUPABASE_ANON_KEY = qp.get('sb_anon');
+      else if (location.port === '5173') SUPABASE_URL = location.origin;
+    } catch (e) {}
+  })();
+
+  /* ---------- Helpers ---------- */
+  function $(s, c) { return (c || document).querySelector(s); }
+  function $$(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
+  function storeGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function storeSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  function storeRemove(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); resolve(); } catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+
+  /* ---------- Estado ---------- */
+  var INTENTS = [
+    { value: 'comprar', icon: 'fa-solid fa-house', label: 'Quiero comprar' },
+    { value: 'vender', icon: 'fa-solid fa-hand-holding-dollar', label: 'Quiero vender' },
+    { value: 'alquilar', icon: 'fa-solid fa-key', label: 'Quiero alquilar' },
+    { value: 'invertir', icon: 'fa-solid fa-chart-line', label: 'Quiero invertir' },
+    { value: 'tasar', icon: 'fa-solid fa-calculator', label: 'Quiero tasar' },
+    { value: 'otro', icon: 'fa-solid fa-ellipsis', label: 'Otro' },
+  ];
+  var INTENT_FIELDS = {
+    comprar: [
+      { key: 'presupuesto', label: 'Presupuesto aproximado', type: 'number', icon: 'fa-solid fa-dollar-sign', ph: 'USD 120.000' },
+      { key: 'zona', label: 'Zona que te interesa', type: 'text', icon: 'fa-solid fa-map-location-dot', ph: 'Ej: Cerro de las Rosas' },
+      { key: 'tipo', label: 'Tipo de propiedad', type: 'select', icon: 'fa-solid fa-house', options: ['Casa', 'Departamento', 'PH', 'Terreno', 'Comercio'] },
+    ],
+    vender: [
+      { key: 'tipo', label: 'Tipo de propiedad', type: 'select', icon: 'fa-solid fa-house', options: ['Casa', 'Departamento', 'PH', 'Terreno', 'Comercio'] },
+      { key: 'zona', label: 'Zona de la propiedad', type: 'text', icon: 'fa-solid fa-map-location-dot', ph: '¿En qué barrio está?' },
+      { key: 'tiempo', label: '¿Para cuándo querés vender?', type: 'select', icon: 'fa-solid fa-clock', options: ['Ya', 'En 1 a 3 meses', 'En 3 a 6 meses', 'Más adelante'] },
+    ],
+    alquilar: [
+      { key: 'presupuesto', label: 'Presupuesto mensual', type: 'number', icon: 'fa-solid fa-dollar-sign', ph: 'USD 800' },
+      { key: 'zona', label: 'Zona que te interesa', type: 'text', icon: 'fa-solid fa-map-location-dot', ph: 'Ej: Nueva Córdoba' },
+      { key: 'tipo', label: 'Tipo de propiedad', type: 'select', icon: 'fa-solid fa-building', options: ['Casa', 'Departamento', 'PH', 'Oficina', 'Local'] },
+    ],
+    invertir: [
+      { key: 'presupuesto', label: 'Presupuesto de inversión', type: 'number', icon: 'fa-solid fa-dollar-sign', ph: 'USD 90.000' },
+      { key: 'zona', label: 'Zona que te interesa', type: 'text', icon: 'fa-solid fa-map-location-dot', ph: 'Ej: Centro' },
+    ],
+    tasar: [
+      { key: 'tipo', label: 'Tipo de propiedad', type: 'select', icon: 'fa-solid fa-house', options: ['Casa', 'Departamento', 'PH', 'Terreno', 'Comercio'] },
+      { key: 'zona', label: 'Barrio o zona', type: 'text', icon: 'fa-solid fa-map-location-dot', ph: 'Ej: Cerro de las Rosas' },
+    ],
+    otro: [],
+  };
+  var DEFAULT_STATE = {
+    nombre: '', apellido: '', email: '', telefono: '', ciudad: '', intent: 'comprar',
+    presupuesto: '', zona: '', tipo: '', tiempo: '', mensaje: '',
+  };
+
+  function loadState() {
+    var s = {};
+    try { s = JSON.parse(storeGet(LS_KEY) || '{}'); } catch (e) { s = {}; }
+    return Object.assign({}, DEFAULT_STATE, s);
+  }
+  var state = loadState();
+
+  function saveState() {
+    storeSet(LS_KEY, JSON.stringify(state));
+    buildWhatsAppLinks();
+  }
+
+  /* ---------- Query params <-> estado (bidireccional) ---------- */
+  // Parámetros entrantes reconocidos. name = nombre del query param, key = campo del estado.
+  var PARAM_MAP = [
+    { name: 'nombre', key: 'nombre' }, { name: 'apellido', key: 'apellido' },
+    { name: 'email', key: 'email' }, { name: 'telefono', key: 'telefono' },
+    { name: 'ciudad', key: 'ciudad' }, { name: 'mensaje', key: 'mensaje' },
+    { name: 'intent', key: 'intent' }, { name: 'motivo', key: 'intent' },
+    { name: 'presupuesto', key: 'presupuesto' }, { name: 'zona', key: 'zona' },
+    { name: 'tipo', key: 'tipo' }, { name: 'tiempo', key: 'tiempo' },
+    { name: 'utm_source', key: 'utm_source' }, { name: 'utm_medium', key: 'utm_medium' },
+    { name: 'utm_campaign', key: 'utm_campaign' }, { name: 'ref', key: 'ref' }, { name: 'ga', key: 'ga' },
+  ];
+
+  // Importa query params -> localStorage -> UI
+  function applyIncoming() {
+    var params = new URLSearchParams(window.location.search);
+    var fromQuery = false;
+    PARAM_MAP.forEach(function (p) {
+      var v = params.get(p.name);
+      if (v != null && v !== '') { state[p.key] = v; fromQuery = true; }
+    });
+    if (fromQuery) {
+      saveState();
+      syncInputs();
+      toast('Datos recibidos por enlace');
+    } else if (storeGet(LS_KEY)) {
+      syncInputs();
+    }
+  }
+
+  // Exporta estado -> query params -> localStorage (enlace compartible)
+  function buildShareUrl() {
+    var params = new URLSearchParams();
+    Object.keys(state).forEach(function (k) {
+      if (state[k]) params.set(k, String(state[k]));
+    });
+    return window.location.origin + window.location.pathname + '?' + params.toString();
+  }
+
+  // Sincronización entre pestañas: localStorage -> UI
+  window.addEventListener('storage', function (e) {
+    if (e.key === LS_KEY && e.newValue) {
+      try { state = Object.assign({}, DEFAULT_STATE, JSON.parse(e.newValue)); } catch (err) { return; }
+      syncInputs();
+    }
+  });
+
+  /* ---------- Datos técnicos del dispositivo ---------- */
+  function captureScreen() {
+    var s = { width: 0, height: 0 }, v = { width: 0, height: 0 };
+    if (typeof screen !== 'undefined') { s = { width: screen.width || 0, height: screen.height || 0 }; }
+    v = { width: window.innerWidth || 0, height: window.innerHeight || 0 };
+    var device = 'desktop';
+    if (window.matchMedia('(max-width: 991px)').matches) device = 'tablet';
+    if (window.matchMedia('(max-width: 767px)').matches) device = 'mobile';
+    var fields = {
+      '#h-screen-w': s.width, '#h-screen-h': s.height,
+      '#h-viewport-w': v.width, '#h-viewport-h': v.height,
+      '#h-device': device, '#h-ts': new Date().toISOString(),
+    };
+    Object.keys(fields).forEach(function (sel) {
+      var el = $(sel);
+      if (el) el.value = fields[sel];
+    });
+    var note = $('#deviceNote');
+    if (note) {
+      note.innerHTML = 'Capturado automáticamente: <b>' + device + '</b> · pantalla <b>' + s.width +
+        '×' + s.height + '</b> · viewport <b>' + v.width + '×' + v.height + '</b>';
+    }
+  }
+
+  /* ---------- Formulario ---------- */
+  var form = $('#contactForm');
+
+  function renderPills() {
+    var wrap = $('#formPills');
+    wrap.innerHTML = INTENTS.map(function (it) {
+      return '<button type="button" class="form-pill' + (it.value === state.intent ? ' active' : '') +
+        '" data-intent="' + it.value + '" aria-pressed="' + (it.value === state.intent) + '">' +
+        '<i class="' + it.icon + '"></i>' + esc(it.label) + '</button>';
+    }).join('');
+  }
+
+  function renderDynamic() {
+    var wrap = $('#dynamicFields');
+    var fields = INTENT_FIELDS[state.intent] || [];
+    wrap.innerHTML = fields.map(function (f, i) {
+      var val = state[f.key] || '';
+      var inner;
+      if (f.type === 'select') {
+        inner = '<select name="' + f.key + '" id="f-' + f.key + '" data-key="' + f.key + '">' +
+          f.options.map(function (o) {
+            return '<option value="' + esc(o) + '"' + (val === o ? ' selected' : '') + '>' + esc(o) + '</option>';
+          }).join('') + '</select>';
+      } else {
+        inner = '<input type="' + f.type + '" name="' + f.key + '" id="f-' + f.key + '" data-key="' + f.key +
+          '" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"' + (f.type === 'number' ? ' inputmode="decimal"' : '') + '/>';
+      }
+      return '<div class="form-group" style="animation-delay:' + (0.05 * i) + 's">' +
+        '<label for="f-' + f.key + '">' + esc(f.label) + '</label>' +
+        '<div class="input-wrapper"><i class="' + f.icon + ' input-icon"></i>' + inner +
+        '<i class="fa-solid fa-check-circle success-check"></i></div></div>';
+    }).join('');
+  }
+
+  function syncInputs() {
+    ['nombre', 'apellido', 'email', 'telefono', 'ciudad', 'mensaje'].forEach(function (k) {
+      var el = $('#f-' + k);
+      if (el) el.value = state[k] || '';
+    });
+    renderPills();
+    renderDynamic();
+  }
+
+  function setIntent(v) {
+    if (state.intent !== v) {
+      state.intent = v;
+      renderPills();
+      renderDynamic();
+      saveState();
+    }
+  }
+
+  form.addEventListener('click', function (e) {
+    var pill = e.target.closest('.form-pill');
+    if (pill) setIntent(pill.getAttribute('data-intent'));
+  });
+
+  var saveTimer = null;
+  form.addEventListener('input', function (e) {
+    var el = e.target;
+    var key = el.getAttribute('data-key') || el.name;
+    if (!key) return;
+    state[key] = el.value;
+    var group = el.closest('.form-group');
+    if (group && el.value.trim()) group.classList.add('success'); else if (group) group.classList.remove('success');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveState, 350);
+  });
+
+  // Archivos adjuntos
+  var files = [];
+  function addFiles(list) {
+    Array.prototype.forEach.call(list || [], function (file) {
+      if (file.size > 10 * 1024 * 1024) { toast('El archivo excede los 10MB'); return; }
+      if (!/pdf|image\/jpeg|image\/png/.test(file.type)) { toast('Solo PDF, JPG o PNG'); return; }
+      files.push({ name: file.name, size: file.size, type: file.type });
+    });
+    renderFiles();
+  }
+  function renderFiles() {
+    var wrap = $('#fileList');
+    wrap.innerHTML = files.map(function (f) {
+      var icon = f.type === 'application/pdf' ? 'fa-solid fa-file-pdf' :
+        f.type.indexOf('image') === 0 ? 'fa-solid fa-file-image' : 'fa-solid fa-file';
+      return '<div class="file-item"><i class="' + icon + '"></i><span>' + esc(f.name) + '</span>' +
+        '<span style="font-size:11px;color:var(--text-3)">' + (f.size / 1024).toFixed(0) + 'KB</span>' +
+        '<span class="remove-file" data-file="' + esc(f.name) + '"><i class="fa-solid fa-xmark"></i></span></div>';
+    }).join('');
+  }
+  var dropZone = $('#dropZone');
+  dropZone.addEventListener('click', function () { $('#fileInput').click(); });
+  dropZone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#fileInput').click(); }
+  });
+  $('#fileInput').addEventListener('change', function (e) { addFiles(e.target.files); e.target.value = ''; });
+  ['dragover', 'dragenter'].forEach(function (ev) {
+    dropZone.addEventListener(ev, function (e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dropZone.addEventListener(ev, function (e) { e.preventDefault(); dropZone.classList.remove('dragover'); });
+  });
+  dropZone.addEventListener('drop', function (e) { if (e.dataTransfer) addFiles(e.dataTransfer.files); });
+  $('#fileList').addEventListener('click', function (e) {
+    var rm = e.target.closest('.remove-file');
+    if (!rm) return;
+    var name = rm.getAttribute('data-file');
+    files = files.filter(function (f) { return f.name !== name; });
+    renderFiles();
+  });
+
+  // Validación
+  var REQUIRED = ['nombre', 'apellido', 'email', 'telefono', 'ciudad'];
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  function markError(key, hasError) {
+    var group = $('#g-' + key);
+    if (!group) return;
+    group.classList.toggle('error', hasError);
+    if (!hasError && state[key] && state[key].trim()) group.classList.add('success');
+  }
+
+  function buildWaMessage() {
+    var lines = ['Hola Bienenhaus, me gustaría hacer una consulta.'];
+    var intentLabel = INTENTS.filter(function (i) { return i.value === state.intent; })[0];
+    if (intentLabel) lines.push('Motivo: ' + intentLabel.label);
+    if (state.nombre || state.apellido) lines.push('Nombre: ' + [state.nombre, state.apellido].filter(Boolean).join(' '));
+    if (state.email) lines.push('Email: ' + state.email);
+    if (state.telefono) lines.push('Teléfono: ' + state.telefono);
+    if (state.ciudad) lines.push('Ciudad: ' + state.ciudad);
+    ['presupuesto', 'zona', 'tipo', 'tiempo'].forEach(function (k) {
+      if (state[k]) lines.push(INTENT_FIELDS[state.intent] ? cap(k) + ': ' + state[k] : state[k]);
+    });
+    if (state.mensaje) lines.push('Mensaje: ' + state.mensaje);
+    if (files.length) lines.push('Adjuntos: ' + files.map(function (f) { return f.name; }).join(', '));
+    var d = $('#h-device').value, sw = $('#h-screen-w').value, sh = $('#h-screen-h').value,
+      vw = $('#h-viewport-w').value, vh = $('#h-viewport-h').value;
+    if (d) lines.push('Desde: ' + d + ' (pantalla ' + sw + 'x' + sh + ', viewport ' + vw + 'x' + vh + ')');
+    if (state.utm_source || state.ref || state.ga) {
+      lines.push('Origen: ' + [state.utm_source, state.utm_medium, state.utm_campaign, state.ref, state.ga].filter(Boolean).join(' / '));
+    }
+    return lines.join('\n');
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function waUrl(text) {
+    return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+  }
+
+  /* Envía el lead al CRM (Supabase) mediante RPC. Devuelve un boolean. */
+  function submitToBackend() {
+    captureScreen();
+    var data = {};
+    ['presupuesto', 'zona', 'tipo', 'tiempo'].forEach(function (k) {
+      if (state[k]) data[k] = state[k];
+    });
+    ['utm_source', 'utm_medium', 'utm_campaign', 'ref', 'ga'].forEach(function (k) {
+      if (state[k]) data[k] = state[k];
+    });
+    data.device = $('#h-device').value;
+    data.screen = $('#h-screen-w').value + 'x' + $('#h-screen-h').value;
+    data.viewport = $('#h-viewport-w').value + 'x' + $('#h-viewport-h').value;
+    data.url = window.location.href;
+    data.submitted_at = new Date().toISOString();
+
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/submit_contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        p_name: state.nombre,
+        p_last_name: state.apellido,
+        p_email: state.email,
+        p_phone: state.telefono || null,
+        p_city: state.ciudad || null,
+        p_intent: state.intent,
+        p_message: state.mensaje || null,
+        p_data: data,
+        p_files: files.map(function (f) { return f.name; }),
+      }),
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return true;
+    });
+  }
+
+  // Enlaces de WhatsApp siempre apuntan al estado actual (botón flotante, hero, strip, info).
+  function buildWhatsAppLinks() {
+    var base = 'Hola Bienenhaus, quisiera hacer una consulta.';
+    var intentLabel = INTENTS.filter(function (i) { return i.value === state.intent; })[0];
+    var text = base + (intentLabel ? ' Motivo: ' + intentLabel.label : '');
+    if (state.nombre) text += ' Soy ' + state.nombre + '.';
+    var url = waUrl(text);
+    $('#fabWa').href = url;
+    var info = $('#infoWaLink');
+    if (info) info.href = url;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var valid = true;
+    var firstError = null;
+    REQUIRED.forEach(function (k) {
+      var bad = !(state[k] || '').trim();
+      markError(k, bad);
+      if (bad) { valid = false; if (!firstError) firstError = $('#g-' + k); }
+    });
+    if (!EMAIL_RE.test((state.email || '').trim())) {
+      markError('email', true); valid = false; if (!firstError) firstError = $('#g-email');
+    }
+    var privacy = $('#privacy').checked;
+    $('#g-privacy').classList.toggle('error', !privacy);
+    if (!privacy) { valid = false; if (!firstError) firstError = $('#g-privacy'); }
+    if (!valid) {
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    var btn = $('#submitBtn');
+    btn.classList.add('loading');
+    submitToBackend()
+      .catch(function (err) {
+        console.warn('submit_contact falló:', err && err.message);
+        return false;
+      })
+      .then(function (saved) {
+        btn.classList.remove('loading');
+        captureScreen();
+        // Guardar envío en localStorage (historial)
+        var payload = Object.assign({}, state, {
+          files: files.map(function (f) { return f.name; }),
+          device: $('#h-device').value,
+          screen: $('#h-screen-w').value + 'x' + $('#h-screen-h').value,
+          viewport: $('#h-viewport-w').value + 'x' + $('#h-viewport-h').value,
+          submitted_at: new Date().toISOString(),
+          url: window.location.href,
+        });
+        var list = [];
+        try { list = JSON.parse(storeGet(LS_SUBMISSIONS) || '[]'); } catch (err) { list = []; }
+        list.unshift(payload);
+        storeSet(LS_SUBMISSIONS, JSON.stringify(list.slice(0, 20)));
+
+        $('#contactForm').hidden = true;
+        $('#submitSuccess').hidden = false;
+        $('#sendWaBtn').href = waUrl(buildWaMessage());
+        $('#deviceNote').innerHTML = 'Capturado automáticamente: <b>' + $('#h-device').value +
+          '</b> · pantalla <b>' + $('#h-screen-w').value + '×' + $('#h-screen-h').value +
+          '</b> · viewport <b>' + $('#h-viewport-w').value + '×' + $('#h-viewport-h').value + '</b>';
+        if (!saved) {
+          toast('No se pudo guardar en el servidor. Enviá tu consulta por WhatsApp.');
+        }
+      });
+  });
+
+  $('#copyLinkBtn').addEventListener('click', function () {
+    copyText(buildShareUrl()).then(function () {
+      toast('Enlace con tus datos copiado');
+    }).catch(function () { toast('No se pudo copiar el enlace'); });
+  });
+
+  /* ---------- Partículas ---------- */
+  function initParticles() {
+    var canvas = $('#particles');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var particles = [];
+    var W = 0, H = 0, running = true;
+
+    function size() {
+      W = canvas.width = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+    }
+    function count() {
+      var n = Math.round((W * H) / 14000);
+      return Math.max(24, Math.min(110, n));
+    }
+    function makeParticle() {
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.8 + 0.6,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        a: Math.random() * 0.5 + 0.15,
+        tw: Math.random() * Math.PI * 2,
+      };
+    }
+    function build() {
+      particles = [];
+      for (var i = 0; i < count(); i++) particles.push(makeParticle());
+    }
+    function step() {
+      ctx.clearRect(0, 0, W, H);
+      var linkDist = 130;
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        p.tw += 0.02;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+        if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+        ctx.globalAlpha = p.a * (0.6 + 0.4 * Math.sin(p.tw));
+        ctx.fillStyle = '#20b8ab';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(32,184,171,0.16)';
+      ctx.lineWidth = 0.7;
+      for (i = 0; i < particles.length; i++) {
+        for (var j = i + 1; j < particles.length; j++) {
+          var dx = particles[i].x - particles[j].x;
+          var dy = particles[i].y - particles[j].y;
+          var d2 = dx * dx + dy * dy;
+          if (d2 < linkDist * linkDist) {
+            ctx.globalAlpha = 0.16 * (1 - Math.sqrt(d2) / linkDist);
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      if (running) requestAnimationFrame(step);
+    }
+
+    function start() {
+      if (reduced) {
+        // Con motion-reduce dibujamos un frame estático (sin bucle).
+        step();
+        return;
+      }
+      running = true;
+      requestAnimationFrame(step);
+    }
+    function stop() { running = false; }
+
+    size(); build(); start();
+    window.addEventListener('resize', function () {
+      size(); build();
+      if (reduced) step();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else if (!reduced) start();
+    });
+  }
+
+  /* ---------- Chat IA ---------- */
+  var chatEl = $('#chat');
+  var chatBody = $('#chatBody');
+  var chatInput = $('#chatInput');
+  var chatQuick = $('#chatQuick');
+  var chatOpen = false;
+  var chatLog = [];
+  try { chatLog = JSON.parse(storeGet(LS_CHAT) || '[]'); } catch (e) { chatLog = []; }
+
+  var QUICK = [
+    { label: 'Quiero comprar', reply: 'comprar' },
+    { label: 'Quiero vender', reply: 'vender' },
+    { label: 'Quiero tasar', reply: 'tasar' },
+    { label: 'Hablar con un asesor', reply: 'asesor' },
+  ];
+
+  var BOT_RULES = [
+    { test: /comprar|busco .*propiedad|estoy buscando/, out: 'Para comprar, nuestro equipo te asesora sobre las mejores zonas según tu presupuesto. ¿Ya completaste el formulario o preferís que un asesor te contacte?' },
+    { test: /vender|poner .*venta|tasaci/, out: 'Para vender o tasar realizamos una tasación profesional sin cargo y armamos una estrategia de difusión premium. ¿Qué tipo de propiedad es?' },
+    { test: /alquil|alquiler/, out: 'Contamos con propiedades en alquiler en las mejores zonas. ¿Qué presupuesto mensual tenés en mente?' },
+    { test: /invertir|inversi/, out: 'Tenemos opciones de inversión con alta rentabilidad. Un asesor puede armarte un análisis según tu perfil. ¿Te interesa centro o zonas premium?' },
+    { test: /horario|atienden|abierto/, out: 'Atendemos de lunes a viernes de 09:00 a 18:00 y los sábados de 09:00 a 13:00. También podés escribirnos por WhatsApp fuera de ese horario.' },
+    { test: /direccion|ubicad|dónde est|donde est|oficina|sede/, out: 'Somos 100% virtuales: coordinamos todo por WhatsApp, teléfono o videollamada, sin necesidad de que te acerques a una oficina. ¿En qué zona buscás?' },
+    { test: /asesor|humano|persona|agente|real/, out: 'Un asesor te va a contactar a la brevedad. Mientras tanto, podés dejar tu consulta en el formulario o escribirnos por WhatsApp.' },
+    { test: /precio|tarifa|costo|cuánto cuesta|cuanto cuesta|honorario/, out: 'El asesoramiento inicial es sin cargo. Cada operación se coordina según el tipo de servicio: compra, venta, alquiler o tasación.' },
+    { test: /whatsapp|ws|wp/, out: 'Nuestro WhatsApp es +54 9 351 411-0000. Te dejo el botón para ir directo.' },
+    { test: /hola|buenas|holi|hi|hello|saludos/, out: 'Hola, soy el asistente virtual de Bienenhaus. Puedo ayudarte con comprar, vender, alquilar, tasar o invertir. ¿Qué necesitás?' },
+  ];
+  var FALLBACK = 'Gracias por tu consulta. Para darte una respuesta precisa, un asesor la va a revisar. ¿Querés continuar por WhatsApp o completar el formulario?';
+
+  function addMsg(text, who) {
+    var d = document.createElement('div');
+    d.className = 'chat-msg ' + who;
+    d.innerHTML = esc(text);
+    var t = document.createElement('span');
+    t.className = 'time';
+    t.textContent = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    d.appendChild(t);
+    chatBody.appendChild(d);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    chatLog.push({ who: who, text: text, ts: new Date().toISOString() });
+    if (chatLog.length > 40) chatLog = chatLog.slice(-40);
+    storeSet(LS_CHAT, JSON.stringify(chatLog));
+  }
+
+  function typing(cb) {
+    var el = document.createElement('div');
+    el.className = 'chat-typing show';
+    el.innerHTML = '<span></span><span></span><span></span>';
+    chatBody.appendChild(el);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    setTimeout(function () {
+      el.remove();
+      cb();
+    }, 750 + Math.random() * 500);
+  }
+
+  function botReply(input) {
+    var t = (input || '').toLowerCase();
+    for (var i = 0; i < BOT_RULES.length; i++) {
+      if (BOT_RULES[i].test.test(t)) return BOT_RULES[i].out;
+    }
+    return FALLBACK;
+  }
+
+  function sendUser(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    addMsg(text, 'user');
+    chatInput.value = '';
+    typing(function () {
+      var out = botReply(text);
+      addMsg(out, 'bot');
+      if (/whatsapp/i.test(out)) {
+        var link = document.createElement('a');
+        link.className = 'btn btn-wa btn-sm';
+        link.style.marginTop = '4px';
+        link.href = waUrl('Hola Bienenhaus, vengo del chat de la página. Quisiera hacer una consulta.');
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Ir a WhatsApp';
+        chatBody.appendChild(link);
+      }
+    });
+  }
+
+  function renderQuick() {
+    chatQuick.innerHTML = QUICK.map(function (q) {
+      return '<button type="button" data-r="' + q.reply + '">' + esc(q.label) + '</button>';
+    }).join('');
+  }
+  chatQuick.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    var q = QUICK.filter(function (x) { return x.reply === b.getAttribute('data-r'); })[0];
+    if (q) sendUser(q.label);
+  });
+
+  function openChat() {
+    chatOpen = true;
+    chatEl.classList.add('open');
+    chatEl.setAttribute('aria-hidden', 'false');
+    $('#fabAiIcon').className = 'fa-solid fa-xmark';
+    if (!chatLog.length) {
+      typing(function () {
+        addMsg('Hola, soy el asistente virtual de Bienenhaus. Puedo orientarte sobre comprar, vender, alquilar, tasar o invertir. ¿Qué necesitás?', 'bot');
+      });
+    } else {
+      chatBody.innerHTML = '';
+      chatLog.forEach(function (m) { addMsg(m.text, m.who); });
+    }
+    setTimeout(function () { chatInput.focus(); }, 300);
+  }
+  function closeChat() {
+    chatOpen = false;
+    chatEl.classList.remove('open');
+    chatEl.setAttribute('aria-hidden', 'true');
+    $('#fabAiIcon').className = 'fa-solid fa-robot';
+  }
+
+  $('#fabAi').addEventListener('click', function () { chatOpen ? closeChat() : openChat(); });
+  $('#ctaAiBtn').addEventListener('click', openChat);
+  $('#heroAiBtn').addEventListener('click', openChat);
+  $('#chatClose').addEventListener('click', closeChat);
+  $('#chatSend').addEventListener('click', function () { sendUser(chatInput.value); });
+  chatInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendUser(chatInput.value); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && chatOpen) closeChat(); });
+
+  /* ---------- Nav / misc ---------- */
+  var navToggle = $('#navToggle');
+  var mobileMenu = $('#mobileMenu');
+  navToggle.addEventListener('click', function () {
+    var open = mobileMenu.classList.toggle('open');
+    navToggle.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+  });
+  $$('#mobileMenu a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      mobileMenu.classList.remove('open');
+      navToggle.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+  $$('a[data-scroll]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var href = a.getAttribute('href');
+      if (href && href.charAt(0) === '#') {
+        e.preventDefault();
+        var target = $(href);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  /* ---------- Init ---------- */
+  window.addEventListener('resize', captureScreen);
+  renderPills();
+  renderDynamic();
+  syncInputs();
+  captureScreen();
+  buildWhatsAppLinks();
+  renderQuick();
+  initParticles();
+  applyIncoming();
+})();
+</script>
+</body>
+</html>

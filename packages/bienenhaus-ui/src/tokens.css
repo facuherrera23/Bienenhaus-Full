@@ -1,0 +1,98 @@
+/**
+ * Tokens de diseño del Panel Administrativo BIENENHAUS.
+ *
+ * Paleta Enterprise (Linear/Stripe) sobre la misma identidad de la marca:
+ * los acentos derivan del teal de la landing (#1FC8C3 → #20B8AB).
+ * Estos tokens son la única fuente de verdad para apps/admin.
+ */
+:root {
+  /* Superficies */
+  --bh-bg-app: #08090b;
+  --bh-bg-sidebar: #0d1014;
+  --bh-bg-card: #171b20;
+  --bh-bg-raised: #1d2229;
+  --bh-bg-overlay: rgba(4, 5, 6, 0.72);
+  --bh-bg-input: #12161b;
+  --bh-bg-hover: rgba(255, 255, 255, 0.04);
+  --bh-bg-active: rgba(255, 255, 255, 0.07);
+
+  /* Bordes */
+  --bh-border: rgba(255, 255, 255, 0.06);
+  --bh-border-strong: rgba(255, 255, 255, 0.12);
+  --bh-border-focus: rgba(32, 184, 171, 0.6);
+
+  /* Acentos */
+  --bh-accent: #20b8ab;
+  --bh-accent-hover: #2ccdbf;
+  --bh-accent-soft: rgba(32, 184, 171, 0.12);
+  --bh-accent-glow: #56e7de;
+
+  /* Texto */
+  --bh-text-primary: #f2f4f6;
+  --bh-text-secondary: #bfc6cc;
+  --bh-text-tertiary: #8a949c;
+  --bh-text-disabled: #5b646b;
+
+  /* Estados */
+  --bh-success: #4ade80;
+  --bh-success-soft: rgba(74, 222, 128, 0.12);
+  --bh-warning: #facc15;
+  --bh-warning-soft: rgba(250, 204, 21, 0.12);
+  --bh-danger: #f87171;
+  --bh-danger-soft: rgba(248, 113, 113, 0.12);
+  --bh-info: #60a5fa;
+  --bh-info-soft: rgba(96, 165, 250, 0.12);
+
+  /* Tipografía */
+  --bh-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bh-font-display: 'Playfair Display', 'Georgia', serif;
+  --bh-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --bh-text-xs: 12px;
+  --bh-text-sm: 13px;
+  --bh-text-md: 14px;
+  --bh-text-lg: 16px;
+  --bh-text-xl: 20px;
+  --bh-text-2xl: 24px;
+
+  /* Espaciado */
+  --bh-space-1: 4px;
+  --bh-space-2: 8px;
+  --bh-space-3: 12px;
+  --bh-space-4: 16px;
+  --bh-space-5: 20px;
+  --bh-space-6: 24px;
+  --bh-space-8: 32px;
+  --bh-space-10: 40px;
+  --bh-space-12: 48px;
+
+  /* Radios */
+  --bh-radius-sm: 6px;
+  --bh-radius-md: 10px;
+  --bh-radius-lg: 14px;
+  --bh-radius-xl: 20px;
+  --bh-radius-full: 999px;
+
+  /* Sombras */
+  --bh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --bh-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --bh-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --bh-shadow-glow: 0 0 24px rgba(32, 184, 171, 0.25);
+
+  /* Medidas de layout */
+  --bh-sidebar-w: 248px;
+  --bh-topbar-h: 56px;
+
+  /* Motion */
+  --bh-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --bh-dur-fast: 140ms;
+  --bh-dur-med: 240ms;
+  --bh-dur-slow: 400ms;
+
+  /* Z-index */
+  --bh-z-sidebar: 40;
+  --bh-z-topbar: 50;
+  --bh-z-modal: 100;
+  --bh-z-toast: 200;
+  --bh-z-command: 150;
+}
