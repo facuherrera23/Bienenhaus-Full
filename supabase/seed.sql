@@ -1,58 +1,19 @@
 -- ============================================================================
--- seed.sql — Primer acceso al panel
--- Crea el usuario admin en auth.users con una password TEMPORAL.
--- must_change_password = true obliga a cambiarla en el primer login.
---
--- Ejecutar con:  supabase db seed
--- Credenciales por defecto:  admin@bienenhaus.com / Bienenhaus2026!
--- (Cambiar la password antes de ir a producción.)
+-- seed.sql — Datos de ejemplo para el panel
 -- ============================================================================
 
-do $$
-begin
-  if not exists (select 1 from auth.users where email = 'admin@bienenhaus.com') then
-    insert into auth.users (
-      instance_id,
-      id,
-      aud,
-      role,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      confirmation_token,
-      recovery_token,
-      email_change_token_new,
-      email_change,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at
-    )
-    values (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(),
-      'authenticated',
-      'authenticated',
-      'admin@bienenhaus.com',
-      crypt('Bienenhaus2026!', gen_salt('bf')),
-      now(),
-      '',
-      '',
-      '',
-      '',
-      '{"provider":"email","providers":["email"]}',
-      '{"full_name":"Administrador"}',
-      now(),
-      now()
-    );
-  end if;
-end $$;
+-- ============================================================================
+-- Configuración del Hero Video
+-- ============================================================================
 
-insert into public.admin_users (id, email, full_name, role, is_active, must_change_password)
-select id, email, 'Administrador', 'super_admin', true, true
-from auth.users
-where email = 'admin@bienenhaus.com'
-on conflict (email) do nothing;
+insert into public.site_settings (key, value, value_type, is_public, description)
+values
+  ('hero_video_url', '{"value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'::jsonb, 'json', true, 'URL del video principal del Hero (YouTube o Vimeo)'),
+  ('hero_video_title', '{"value": "BIENENHAUS - Tour Virtual"}'::jsonb, 'json', true, 'Titulo del video del Hero'),
+  ('hero_video_autoplay', '{"value": true}'::jsonb, 'json', true, 'Autoplay del video del Hero'),
+  ('hero_video_muted', '{"value": true}'::jsonb, 'json', true, 'Silenciado (muted) del video del Hero'),
+  ('hero_video_poster', '{"value": ""}'::jsonb, 'json', true, 'Poster/Imagen de portada del video del Hero')
+on conflict (key) do update set value = excluded.value, updated_at = now();
 
 -- ============================================================================
 -- Propiedades de ejemplo para validar el listado del panel.
@@ -109,6 +70,19 @@ from (
 join public.locations l on l.name = v.zone
 where p.slug = v.slug
   and p.location_id is null;
+
+-- ============================================================================
+-- Configuración del Hero Video
+-- ============================================================================
+
+insert into public.site_settings (key, value, value_type, is_public, description)
+values
+  ('hero_video_url', '{"value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'::jsonb, 'json', true, 'URL del video principal del Hero (YouTube o Vimeo)'),
+  ('hero_video_title', '{"value": "BIENENHAUS - Tour Virtual"}'::jsonb, 'json', true, 'Titulo del video del Hero'),
+  ('hero_video_autoplay', '{"value": true}'::jsonb, 'json', true, 'Autoplay del video del Hero'),
+  ('hero_video_muted', '{"value": true}'::jsonb, 'json', true, 'Silenciado (muted) del video del Hero'),
+  ('hero_video_poster', '{"value": ""}'::jsonb, 'json', true, 'Poster/Imagen de portada del video del Hero')
+on conflict (key) do update set value = excluded.value, updated_at = now();
 
 -- ============================================================================
 -- Agente y leads de ejemplo para el CRM.
