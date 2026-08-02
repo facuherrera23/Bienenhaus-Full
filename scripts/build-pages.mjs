@@ -23,8 +23,9 @@ const OUT = join(ROOT, 'out');
 
 function runBuild(app) {
   const filter = app === 'landing' ? '@bienenhaus/landing' : '@bienenhaus/admin';
+  const pnpmCmd = process.platform === 'win32' ? 'corepack pnpm' : 'pnpm';
   console.log(`[build-pages] building ${app}...`);
-  execSync(`pnpm --filter ${filter} build`, { cwd: ROOT, stdio: 'inherit' });
+  execSync(`${pnpmCmd} --filter ${filter} build`, { cwd: ROOT, stdio: 'inherit' });
 }
 
 console.log('[build-pages] root:', ROOT);
