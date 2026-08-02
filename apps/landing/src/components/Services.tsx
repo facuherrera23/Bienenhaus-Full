@@ -33,9 +33,9 @@ export function Services() {
           <span className="services-label">{label}</span>
           <h2 className="services-title">{title}</h2>
           <p className="services-desc">{description}</p>
-          <button className="btn-outline">
+          <a href="#contacto" className="btn-outline">
             Hablar con un asesor <i className="fas fa-arrow-right"></i>
-          </button>
+          </a>
         </header>
         <div className="services-grid" id="servicesGrid">
           {services.map((service, i) => (
@@ -45,9 +45,9 @@ export function Services() {
               </div>
               <h3>{service.title}</h3>
               <p>{service.desc}</p>
-              <button className="service-link">
+              <a href="#catalogo" className="service-link">
                 VER MÁS <i className="fas fa-arrow-right"></i>
-              </button>
+              </a>
             </article>
           ))}
         </div>

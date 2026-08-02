@@ -12,12 +12,12 @@ export function Process() {
   const { content } = useSiteContent();
 
   const section = content.proceso ?? {};
-  const label = textOf(section.label, 'text', 'Cómo trabajamos');
+  const label = textOf(section.label, 'text', 'Como trabajamos');
   const title = textOf(section.title, 'text', 'Un proceso simple. Resultados extraordinarios.');
   const description = textOf(
     section.description,
     'text',
-    'Acompañamos cada operación con un método claro y personalizado para que vender, comprar o invertir sea una experiencia segura, transparente y eficiente.',
+    'Acompanamos cada operacion con un metodo claro y personalizado para que vender, comprar o invertir sea una experiencia segura, transparente y eficiente.'
   );
 
   const steps: Step[] = listOf(section.steps).map((s) => ({
@@ -62,16 +62,16 @@ export function Process() {
   }, []);
 
   return (
-    <section className="process" id="proceso" aria-label="Cómo trabajamos" ref={rootRef}>
+    <section className="process" id="proceso" aria-label="Como trabajamos" ref={rootRef}>
       <div className="container">
         <header className="process-header">
           <div className="process-header-left">
             <span className="process-label">{label}</span>
             <h2 className="process-title">{title}</h2>
             <p className="process-desc">{description}</p>
-            <button className="btn-process">
+            <a href="#contacto" className="btn-process">
               HABLAR CON UN ASESOR <i className="fas fa-arrow-right"></i>
-            </button>
+            </a>
           </div>
           <div className="process-header-right"></div>
         </header>
@@ -103,8 +103,8 @@ export function Process() {
             <span>Nuestro compromiso</span>
           </div>
           <div className="commitment-text">
-            Transparencia, dedicación y excelencia en cada etapa del proceso. Tu tranquilidad es
-            nuestra prioridad, tu éxito nuestro compromiso.
+            Transparencia, dedicacion y excelencia en cada etapa del proceso. Tu tranquilidad es
+            nuestra prioridad, tu exito nuestro compromiso.
           </div>
           <div className="commitment-signature">Bienenhaus</div>
         </div>

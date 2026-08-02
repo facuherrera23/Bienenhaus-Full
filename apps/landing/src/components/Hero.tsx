@@ -1,6 +1,7 @@
-import { useRef } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
 import { images } from '../lib/images';
+import { VideoModal } from './VideoModal';
 
 interface HeroStat {
   icon: string;
@@ -18,6 +19,7 @@ interface HeroFeature {
 export function Hero() {
   const featureBarRef = useRef<HTMLDivElement>(null);
   const { content, settings } = useSiteContent();
+  const [showVideo, setShowVideo] = useState(false);
 
   const hero = content.hero ?? {};
   const eyebrow = textOf(hero.eyebrow, 'text', 'Encontrá tu lugar');
@@ -42,6 +44,8 @@ export function Hero() {
   }));
 
   const heroBg = textOf(settings.hero_background, 'value') || images.heroBg;
+  const videoUrl = textOf(settings.hero_video_url, 'value', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  const videoTitle = textOf(settings.hero_video_title, 'value', 'BIENENHAUS PROPIEDADES');
 
   return (
     <section className="hero" id="inicio" aria-label="Presentación principal">
@@ -74,7 +78,7 @@ export function Hero() {
               Ver propiedades
               <i className="fas fa-arrow-right"></i>
             </a>
-            <button className="btn-video" id="videoBtn">
+            <button className="btn-video" id="videoBtn" onClick={() => setShowVideo(true)}>
               <span className="play-circle" aria-hidden="true">
                 <i className="fas fa-play"></i>
               </span>
@@ -103,7 +107,7 @@ export function Hero() {
                 <i className="fas fa-shield-alt"></i>
               </span>
               <div>
-                <p className="trust-title">Confianza &amp; Seguridad</p>
+                <p className="trust-title">Confianza & Seguridad</p>
                 <p className="trust-desc">
                   Transacciones seguras y asesoramiento profesional durante todo el proceso.
                 </p>
@@ -137,6 +141,13 @@ export function Hero() {
           </div>
         ))}
       </div>
+
+      <VideoModal
+        isOpen={showVideo}
+        onClose={() => setShowVideo(false)}
+        videoUrl={videoUrl}
+        title={videoTitle}
+      />
     </section>
   );
 }
