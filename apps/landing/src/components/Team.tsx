@@ -1,26 +1,9 @@
 import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
-import { images } from '../lib/images';
+import type { GeneratedAgent } from '../data/generated';
+import generatedAgents from '../data/generated/agents.json';
 
-const TEAM = [
-  {
-    name: 'María López',
-    photo: images.team.maria,
-    alt: 'María López',
-    role: 'BROKER SENIOR',
-    experience: '12 años de experiencia',
-    bio: 'Especialista en propiedades premium y negociación de alto valor.',
-  },
-  {
-    name: 'Juan Pérez',
-    photo: images.team.juan,
-    alt: 'Juan Pérez',
-    role: 'ASESOR COMERCIAL',
-    experience: '8 años de experiencia',
-    bio: 'Asesoramiento estratégico en compra, venta e inversión inmobiliaria.',
-  },
-];
-
+const agents: GeneratedAgent[] = generatedAgents as GeneratedAgent[];
 const SPECIALTIES = ['Venta Premium', 'Tasaciones', 'Inversiones'];
 
 export function Team() {
@@ -56,38 +39,45 @@ export function Team() {
           </div>
         </header>
         <div className="team-grid" id="teamGrid">
-          {TEAM.map((member, i) => (
-            <article className="team-card" data-delay={i * 120} key={member.name}>
-              <div className="team-image-wrapper">
-                <img src={member.photo} alt={member.alt} loading="lazy" />
-                <div className="team-image-overlay"></div>
-              </div>
-              <div className="team-body">
-                <h3 className="team-name">{member.name}</h3>
-                <p className="team-role">{member.role}</p>
-                <p className="team-experience">{member.experience}</p>
-                <p className="team-bio">{member.bio}</p>
-                <div className="team-specialties">
-                  {SPECIALTIES.map((pill) => (
-                    <span className="team-pill" key={pill}>
-                      {pill}
-                    </span>
-                  ))}
+          {agents.length > 0 ? (
+            agents.map((member, i) => (
+              <article className="team-card" data-delay={i * 120} key={member.name}>
+                <div className="team-image-wrapper">
+                  <img src={member.photo} alt={member.alt} loading="lazy" />
+                  <div className="team-image-overlay"></div>
                 </div>
-                <div className="team-social">
-                  <button className="social-btn" aria-label="LinkedIn">
-                    <i className="fab fa-linkedin-in"></i>
-                  </button>
-                  <button className="social-btn" aria-label="WhatsApp">
-                    <i className="fab fa-whatsapp"></i>
-                  </button>
-                  <button className="social-btn" aria-label="Email">
-                    <i className="fas fa-envelope"></i>
-                  </button>
+                <div className="team-body">
+                  <h3 className="team-name">{member.name}</h3>
+                  <p className="team-role">{member.role}</p>
+                  {member.experience && <p className="team-experience">{member.experience}</p>}
+                  <p className="team-bio">{member.bio || 'Asesor inmobiliario con experiencia en el mercado local.'}</p>
+                  <div className="team-specialties">
+                    {SPECIALTIES.map((pill) => (
+                      <span className="team-pill" key={pill}>
+                        {pill}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="team-social">
+                    <button className="social-btn" aria-label="LinkedIn">
+                      <i className="fab fa-linkedin-in"></i>
+                    </button>
+                    <button className="social-btn" aria-label="WhatsApp">
+                      <i className="fab fa-whatsapp"></i>
+                    </button>
+                    <button className="social-btn" aria-label="Email">
+                      <i className="fas fa-envelope"></i>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          ) : (
+            <div className="team-empty">
+              <i className="fas fa-users"></i>
+              <p>No hay agentes disponibles.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

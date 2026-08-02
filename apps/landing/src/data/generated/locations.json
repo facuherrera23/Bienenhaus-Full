@@ -1,0 +1,27 @@
+[
+  {
+    "id": "38831115-128b-40a4-a93d-af0d90c0d9c7",
+    "name": "Centro",
+    "zone": "Centro"
+  },
+  {
+    "id": "b02e3f01-8ff9-4b1d-aaf4-ee4b09cf76d9",
+    "name": "Nueva Córdoba",
+    "zone": "Centro"
+  },
+  {
+    "id": "fb13f33f-08d6-42a7-85af-dfc0592a48ba",
+    "name": "General Paz",
+    "zone": "Norte"
+  },
+  {
+    "id": "c8d0f40a-3bcf-4a0c-8e06-34c091dfe55f",
+    "name": "Villa Belgrano",
+    "zone": "Noroeste"
+  },
+  {
+    "id": "d4c1852f-b133-4edd-a844-83c9922789d5",
+    "name": "Country Los Pinos",
+    "zone": "Noroeste"
+  }
+]

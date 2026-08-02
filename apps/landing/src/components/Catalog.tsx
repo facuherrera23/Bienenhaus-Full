@@ -1,27 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { properties, type Property } from '../data/properties';
 import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { PropertyCard } from './PropertyCard';
 import { PropertyModal } from './PropertyModal';
+import type { Property } from '../data/properties';
+
+// Import generated data (build-time fetched from Supabase)
+import generatedProperties from '../data/generated/properties.json';
+
+const properties: Property[] = generatedProperties as Property[];
 
 type ViewMode = 'grid' | 'list' | 'map';
-
-const FILTERS: { label: string; value: string }[] = [
-  { label: 'Todas', value: '' },
-  { label: 'Casas', value: 'casa' },
-  { label: 'Departamentos', value: 'depto' },
-  { label: 'Oficinas', value: 'oficina' },
-  { label: 'Terrenos', value: 'terreno' },
-  { label: 'Countries', value: 'country' },
-];
 
 const SORT_OPTIONS = ['Más recientes', 'Mayor precio', 'Menor precio', 'Mayor superficie', 'Destacadas'];
 
 const PAGE_SIZE = 6;
 
-const LOCATIONS = ['Todas', ...Array.from(new Set(properties.map((p) => p.location)))];
+// Derive unique locations from generated properties
+const LOCATIONS = ['Todas', ...Array.from(new Set(properties.map((p) => p.location).filter(Boolean)))];
 
 const PRICE_RANGES: { value: string; label: string; min: number; max: number }[] = [
   { value: '', label: 'Cualquier precio', min: 0, max: Number.POSITIVE_INFINITY },
@@ -31,8 +28,8 @@ const PRICE_RANGES: { value: string; label: string; min: number; max: number }[]
   { value: 'gt500', label: 'USD 500.000+', min: 500_000, max: Number.POSITIVE_INFINITY },
 ];
 
-function priceOf(p: Property): number {
-  return Number(p.price.replace(/[^0-9]/g, '')) || 0;
+function priceOf(p: any): number {
+  return Number(String(p.price).replace(/[^0-9]/g, '')) || 0;
 }
 
 function gridTemplateColumns(view: ViewMode, w: number): string {
@@ -41,6 +38,8 @@ function gridTemplateColumns(view: ViewMode, w: number): string {
   if (w <= 1024) return 'repeat(2, 1fr)';
   return 'repeat(3, 1fr)';
 }
+
+const FILTERS = ['Todas', ...Array.from(new Set(properties.map((p) => p.type).filter(Boolean)))];
 
 export function Catalog() {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -69,10 +68,10 @@ export function Catalog() {
   const [sortOpen, setSortOpen] = useState(false);
   const [sortLabel, setSortLabel] = useState(SORT_OPTIONS[0]);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const openModal = (p: Property) => setSelectedProperty(p);
+  const openModal = (p: any) => setSelectedProperty(p);
   const closeModal = () => setSelectedProperty(null);
 
   useEffect(() => {
@@ -249,13 +248,13 @@ export function Catalog() {
 
         <div className="filters-section">
           <div className="filters-pills">
-            {FILTERS.map(({ label: pillLabel, value }) => (
+            {FILTERS.map((value) => (
               <button
                 key={value}
                 className={`filter-pill${typeFilter === value ? ' active' : ''}`}
                 onClick={() => setTypeFilter((v) => (v === value ? '' : value))}
               >
-                {pillLabel}
+                {value.charAt(0).toUpperCase() + value.slice(1)}
               </button>
             ))}
           </div>
