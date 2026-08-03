@@ -2,10 +2,13 @@
 -- Fix: audit_trigger() crasheaba con "record new has no field title" en
 -- tablas sin columnas title/name (admin_users, agents, leads, visits).
 -- Se usa to_jsonb + ->> que no falla por columnas inexistentes.
+-- Fix adicional: alias en jsonb_each_text para evitar "column reference key is ambiguous"
+-- Fix: SECURITY DEFINER para bypass RLS en activity_log
 
 create or replace function public.audit_trigger()
 returns trigger
 language plpgsql
+security definer
 as $$
 declare
   v_action text;
@@ -22,7 +25,7 @@ begin
     v_old := to_jsonb(OLD);
     v_new := to_jsonb(NEW);
     v_changed := array(
-      select key from jsonb_each_text(to_jsonb(NEW)) n
+      select n.key from jsonb_each_text(to_jsonb(NEW)) n
       full join jsonb_each_text(to_jsonb(OLD)) o on n.key = o.key
       where n.value is distinct from o.value
         and n.key not in ('created_at', 'updated_at', 'deleted_at')

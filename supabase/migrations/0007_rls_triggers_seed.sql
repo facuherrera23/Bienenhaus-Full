@@ -1,6 +1,7 @@
 -- ============================================================================
 -- 0007_rls_triggers_seed.sql
--- BIENENHAUS — Row Level Security, triggers de auditoría, índices y seeds.
+-- BIENENHAUS — Row Level Security, triggers de auditoría, índices y funciones helper.
+-- Los seeds de datos (taxonomías, site_settings, site_content) están en seed.sql
 -- ============================================================================
 
 -- ============================================================================
@@ -106,6 +107,23 @@ $$;
 create trigger properties_audit_create
   after insert on public.properties
   for each row execute function public.audit_property_create();
+
+-- ============================================================================
+-- TRIGGER: Actualizar last_login_at en admin_users al hacer login
+-- ============================================================================
+-- Se llama desde la app tras login exitoso
+create or replace function public.update_admin_last_login(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.admin_users
+  set last_login_at = now(), updated_at = now()
+  where id = p_user_id;
+end;
+$$;
 
 -- ============================================================================
 -- HABILITAR RLS
@@ -291,94 +309,10 @@ create index ml_sync_queue_due_idx
 create index ml_sync_queue_property_idx on public.ml_sync_queue (property_id);
 
 -- ============================================================================
--- SEEDS — TAXONOMÍAS
+-- GRANTS PARA FUNCIONES HELPER
 -- ============================================================================
-
-insert into public.categories (name, slug, sort_order) values
-  ('Venta', 'venta', 1),
-  ('Alquiler', 'alquiler', 2),
-  ('Emprendimientos', 'emprendimientos', 3)
-on conflict (slug) do nothing;
-
-insert into public.property_types (name, slug, sort_order) values
-  ('Casa', 'casa', 1),
-  ('Departamento', 'departamento', 2),
-  ('PH', 'ph', 3),
-  ('Country', 'country', 4),
-  ('Terreno', 'terreno', 5),
-  ('Local', 'local', 6),
-  ('Oficina', 'oficina', 7)
-on conflict (slug) do nothing;
-
-insert into public.locations (name, slug, zone, sort_order) values
-  ('Centro', 'centro', 'Centro', 1),
-  ('Nueva Córdoba', 'nueva-cordoba', 'Centro', 2),
-  ('General Paz', 'general-paz', 'Norte', 3),
-  ('Villa Belgrano', 'villa-belgrano', 'Noroeste', 4),
-  ('Country Los Pinos', 'country-los-pinos', 'Noroeste', 5)
-on conflict (slug) do nothing;
-
-insert into public.features (name, slug, icon, sort_order) values
-  ('Pileta', 'pileta', 'fa-solid fa-person-swimming', 1),
-  ('Cochera', 'cochera', 'fa-solid fa-car', 2),
-  ('Jardín', 'jardin', 'fa-solid fa-tree', 3),
-  ('Balcón', 'balcon', 'fa-solid fa-building', 4),
-  ('Terraza', 'terraza', 'fa-solid fa-sun', 5),
-  ('Seguridad 24h', 'seguridad-24h', 'fa-solid fa-shield-halved', 6),
-  ('Parrilla', 'parrilla', 'fa-solid fa-fire', 7),
-  ('Piso de porcelanato', 'porcelanato', 'fa-solid fa-border-all', 8),
-  ('Amoblad o', 'amoblado', 'fa-solid fa-couch', 9),
-  ('Apto profesional', 'apto-profesional', 'fa-solid fa-briefcase', 10)
-on conflict (slug) do nothing;
-
-insert into public.tags (name, slug) values
-  ('Destacada', 'destacada'),
-  ('Oportunidad', 'oportunidad'),
-  ('Inversión', 'inversion'),
-  ('Estreno', 'estreno'),
-  ('Con vistas', 'con-vistas')
-on conflict (slug) do nothing;
-
--- ============================================================================
--- SEEDS — SITE SETTINGS
--- ============================================================================
-
-insert into public.site_settings (key, value, value_type, is_public, description) values
-  ('site_name', '{"value": "BIENENHAUS PROPIEDADES"}', 'json', true, 'Nombre del sitio'),
-  ('cri', '{"value": "C.R.I. 183944"}', 'json', true, 'Matrícula C.R.I.'),
-  ('contact_whatsapp', '{"value": "+54 9 387 600-0000"}', 'json', true, 'WhatsApp de contacto'),
-  ('contact_email', '{"value": "info@bienenhaus.com"}', 'json', true, 'Email de contacto'),
-  ('contact_phone', '{"value": "+54 387 400-0000"}', 'json', true, 'Teléfono de contacto'),
-  ('contact_address', '{"value": "Av. Figueroa Alcorta 1234, Córdoba"}', 'json', true, 'Dirección'),
-  ('contact_hours', '{"weekdays": "09:00 - 18:00", "saturdays": "09:00 - 13:00"}', 'json', true, 'Horarios'),
-  ('social', '{"instagram": "#", "facebook": "#", "linkedin": "#", "whatsapp": "#", "youtube": "#"}', 'json', true, 'Redes sociales'),
-  ('stats', '{"comercializadas": 320, "clientes": 1850, "exito": 98, "anios": 15}', 'json', true, 'Estadísticas del hero'),
-  ('ml_enabled', '{"value": false}', 'json', false, 'Habilita sincronización con Mercado Libre')
-on conflict (key) do nothing;
-
--- ============================================================================
--- SEEDS — SITE CONTENT (contenido editable de la landing)
--- ============================================================================
-
-insert into public.site_content (section, key, value) values
-  ('hero', 'eyebrow', '{"text": "Encontrá tu lugar"}'),
-  ('hero', 'title', '{"line1": "Propiedades exclusivas.", "line2": "Experiencias extraordinarias."}'),
-  ('hero', 'description', '{"text": "Selección premium en las mejores zonas. Asesoramiento personalizado en cada paso."}'),
-  ('catalogo', 'label', '{"text": "Encontrá tu próximo hogar"}'),
-  ('catalogo', 'title', '{"text": "Propiedades seleccionadas para vos."}'),
-  ('catalogo', 'description', '{"text": "Explorá una selección exclusiva de propiedades cuidadosamente elegidas en las mejores zonas."}'),
-  ('servicios', 'label', '{"text": "Nuestros servicios"}'),
-  ('servicios', 'title', '{"text": "Mucho más que una inmobiliaria."}'),
-  ('equipo', 'label', '{"text": "Conocé al equipo"}'),
-  ('equipo', 'title', '{"text": "Expertos que convierten propiedades en oportunidades."}'),
-  ('estadisticas', 'label', '{"text": "Nuestra trayectoria"}'),
-  ('estadisticas', 'title', '{"text": "Los números hablan por nosotros."}'),
-  ('proceso', 'label', '{"text": "Cómo trabajamos"}'),
-  ('proceso', 'title', '{"text": "Un proceso simple. Resultados extraordinarios."}'),
-  ('contacto', 'label', '{"text": "Contacto"}'),
-  ('contacto', 'title', '{"text": "Hablemos sobre tu próxima propiedad."}'),
-  ('footer', 'title', '{"text": "Encontrá el lugar donde comienza tu próxima historia."}'),
-  ('footer', 'newsletter', '{"text": "Suscribite para recibir las propiedades más exclusivas antes que nadie."}'),
-  ('meta', 'og_title', '{"value": "BIENENHAUS PROPIEDADES | Propiedades exclusivas"}'),
-  ('meta', 'og_description', '{"value": "Selección premium en las mejores zonas. Asesoramiento personalizado en cada paso."}')
-on conflict (section, key, locale) do nothing;
+grant execute on function public.is_admin() to anon, authenticated, service_role;
+grant execute on function public.is_staff() to anon, authenticated, service_role;
+grant execute on function public.has_role(admin_role) to anon, authenticated, service_role;
+grant execute on function public.create_admin_user(uuid, text, text, admin_role) to service_role;
+grant execute on function public.update_admin_last_login(uuid) to service_role, authenticated;

@@ -39,3 +39,49 @@ create table public.activity_log (
 
 create index activity_log_actor_idx on public.activity_log (actor_id, created_at desc);
 create index activity_log_entity_idx on public.activity_log (entity_type, entity_id);
+
+-- ============================================================================
+-- HELPER: Función para crear admin_user desde Edge Function / Service Role
+-- ============================================================================
+-- Esta función debe ser llamada con service_role key (bypassa RLS)
+create or replace function public.create_admin_user(
+  p_user_id uuid,
+  p_email text,
+  p_full_name text,
+  p_role admin_role default 'staff'
+) returns public.admin_users
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_result public.admin_users;
+begin
+  insert into public.admin_users (id, email, full_name, role, is_active, must_change_password)
+  values (p_user_id, p_email, p_full_name, p_role, true, true)
+  on conflict (id) do update set
+    email = excluded.email,
+    full_name = excluded.full_name,
+    role = excluded.role,
+    is_active = true,
+    updated_at = now()
+  returning * into v_result;
+  return v_result;
+end;
+$$;
+
+-- ============================================================================
+-- HELPER: Función para actualizar último login
+-- ============================================================================
+create or replace function public.update_admin_last_login(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.admin_users
+  set last_login_at = now(), updated_at = now()
+  where id = p_user_id;
+end;
+$$;

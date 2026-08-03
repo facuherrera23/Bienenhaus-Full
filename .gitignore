@@ -37,3 +37,9 @@ Thumbs.db
 coverage/
 .playwright/
 test-results/
+
+# Supabase CLI temp
+supabase/.temp/
+
+# Scratch / backups
+Fix/

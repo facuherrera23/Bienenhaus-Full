@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getMlAccessToken, sendQuestionAnswer } from '../_shared/auto_reply.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
 
 const supabase = createClient(
   SUPABASE_URL,
@@ -27,7 +27,7 @@ async function isAuthorized(req: Request): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? '';
   if (!auth.startsWith('Bearer ')) return false;
   const token = auth.slice(7);
-  if (token && token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) return true;
+  if (token && token === Deno.env.get('SERVICE_ROLE_KEY')) return true;
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) return false;

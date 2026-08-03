@@ -1,5 +1,10 @@
 -- ============================================================================
--- seed.sql — Datos de ejemplo para el panel
+-- seed.sql — Datos de ejemplo para desarrollo y testing local
+-- ============================================================================
+-- NOTA: Este seed NO crea usuarios en auth.users.
+-- Para crear el admin en producción, usar:
+--   1. Supabase Dashboard → Authentication → Users → Add user
+--   2. O Edge Function: supabase functions invoke admin-user-invite --body '{"action":"invite","email":"admin@bienenhaus.com","full_name":"Admin","role":"super_admin"}'
 -- ============================================================================
 
 -- ============================================================================
@@ -11,24 +16,110 @@
 -- 
 -- En CI: se crea después de `supabase db reset` via:
 --   supabase auth signup --email e2e-test@bienenhaus.local --password '$E2E_TEST_PASSWORD'
---   supabase db execute "insert into public.admin_users (id, email, full_name, role) values ('<uuid>', 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin') on conflict (email) do nothing;"
+--   supabase db execute "insert into public.admin_users (id, email, full_name, role) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin' from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do nothing;"
 -- En local: supabase auth signup --email e2e-test@bienenhaus.local --password 'e2e-test-password-123'
 
 -- ============================================================================
--- Configuración del Hero Video
+-- TAXONOMÍAS (idempotente - se pueden re-ejecutar)
 -- ============================================================================
 
-insert into public.site_settings (key, value, value_type, is_public, description)
-values
-  ('hero_video_url', '{"value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'::jsonb, 'json', true, 'URL del video principal del Hero (YouTube o Vimeo)'),
-  ('hero_video_title', '{"value": "BIENENHAUS - Tour Virtual"}'::jsonb, 'json', true, 'Titulo del video del Hero'),
-  ('hero_video_autoplay', '{"value": true}'::jsonb, 'json', true, 'Autoplay del video del Hero'),
-  ('hero_video_muted', '{"value": true}'::jsonb, 'json', true, 'Silenciado (muted) del video del Hero'),
-  ('hero_video_poster', '{"value": ""}'::jsonb, 'json', true, 'Poster/Imagen de portada del video del Hero')
+insert into public.categories (name, slug, sort_order) values
+  ('Venta', 'venta', 1),
+  ('Alquiler', 'alquiler', 2),
+  ('Emprendimientos', 'emprendimientos', 3)
+on conflict (slug) do nothing;
+
+insert into public.property_types (name, slug, sort_order) values
+  ('Casa', 'casa', 1),
+  ('Departamento', 'departamento', 2),
+  ('PH', 'ph', 3),
+  ('Country', 'country', 4),
+  ('Terreno', 'terreno', 5),
+  ('Local', 'local', 6),
+  ('Oficina', 'oficina', 7)
+on conflict (slug) do nothing;
+
+insert into public.locations (name, slug, zone, sort_order) values
+  ('Centro', 'centro', 'Centro', 1),
+  ('Nueva Córdoba', 'nueva-cordoba', 'Centro', 2),
+  ('General Paz', 'general-paz', 'Norte', 3),
+  ('Villa Belgrano', 'villa-belgrano', 'Noroeste', 4),
+  ('Country Los Pinos', 'country-los-pinos', 'Noroeste', 5)
+on conflict (slug) do nothing;
+
+insert into public.features (name, slug, icon, sort_order) values
+  ('Pileta', 'pileta', 'fa-solid fa-person-swimming', 1),
+  ('Cochera', 'cochera', 'fa-solid fa-car', 2),
+  ('Jardín', 'jardin', 'fa-solid fa-tree', 3),
+  ('Balcón', 'balcon', 'fa-solid fa-building', 4),
+  ('Terraza', 'terraza', 'fa-solid fa-sun', 5),
+  ('Seguridad 24h', 'seguridad-24h', 'fa-solid fa-shield-halved', 6),
+  ('Parrilla', 'parrilla', 'fa-solid fa-fire', 7),
+  ('Piso de porcelanato', 'porcelanato', 'fa-solid fa-border-all', 8),
+  ('Amoblado', 'amoblado', 'fa-solid fa-couch', 9),
+  ('Apto profesional', 'apto-profesional', 'fa-solid fa-briefcase', 10)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug) values
+  ('Destacada', 'destacada'),
+  ('Oportunidad', 'oportunidad'),
+  ('Inversión', 'inversion'),
+  ('Estreno', 'estreno'),
+  ('Con vistas', 'con-vistas')
+on conflict (slug) do nothing;
+
+-- ============================================================================
+-- SITE SETTINGS (configuración global)
+-- ============================================================================
+
+insert into public.site_settings (key, value, value_type, is_public, description) values
+  ('site_name', '{"value": "BIENENHAUS PROPIEDADES"}', 'json', true, 'Nombre del sitio'),
+  ('cri', '{"value": "C.R.I. 183944"}', 'json', true, 'Matrícula C.R.I.'),
+  ('contact_whatsapp', '{"value": "+54 9 387 600-0000"}', 'json', true, 'WhatsApp de contacto'),
+  ('contact_email', '{"value": "info@bienenhaus.com"}', 'json', true, 'Email de contacto'),
+  ('contact_phone', '{"value": "+54 387 400-0000"}', 'json', true, 'Teléfono de contacto'),
+  ('contact_address', '{"value": "Av. Figueroa Alcorta 1234, Córdoba"}', 'json', true, 'Dirección'),
+  ('contact_hours', '{"weekdays": "09:00 - 18:00", "saturdays": "09:00 - 13:00"}', 'json', true, 'Horarios'),
+  ('social', '{"instagram": "#", "facebook": "#", "linkedin": "#", "whatsapp": "#", "youtube": "#"}', 'json', true, 'Redes sociales'),
+  ('stats', '{"comercializadas": 320, "clientes": 1850, "exito": 98, "anios": 15}', 'json', true, 'Estadísticas del hero'),
+  ('ml_enabled', '{"value": false}', 'json', false, 'Habilita sincronización con Mercado Libre'),
+  -- Hero Video settings
+  ('hero_video_url', '{"value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}', 'json', true, 'URL del video principal del Hero (YouTube o Vimeo)'),
+  ('hero_video_title', '{"value": "BIENENHAUS - Tour Virtual"}', 'json', true, 'Título del video del Hero'),
+  ('hero_video_autoplay', '{"value": true}', 'json', true, 'Autoplay del video del Hero'),
+  ('hero_video_muted', '{"value": true}', 'json', true, 'Silenciado (muted) del video del Hero'),
+  ('hero_video_poster', '{"value": ""}', 'json', true, 'Poster/Imagen de portada del video del Hero')
 on conflict (key) do update set value = excluded.value, updated_at = now();
 
 -- ============================================================================
--- Propiedades de ejemplo para validar el listado del panel.
+-- SITE CONTENT (contenido editable de la landing)
+-- ============================================================================
+
+insert into public.site_content (section, key, value) values
+  ('hero', 'eyebrow', '{"text": "Encontrá tu lugar"}'),
+  ('hero', 'title', '{"line1": "Propiedades exclusivas.", "line2": "Experiencias extraordinarias."}'),
+  ('hero', 'description', '{"text": "Selección premium en las mejores zonas. Asesoramiento personalizado en cada paso."}'),
+  ('catalogo', 'label', '{"text": "Encontrá tu próximo hogar"}'),
+  ('catalogo', 'title', '{"text": "Propiedades seleccionadas para vos."}'),
+  ('catalogo', 'description', '{"text": "Explorá una selección exclusiva de propiedades cuidadosamente elegidas en las mejores zonas."}'),
+  ('servicios', 'label', '{"text": "Nuestros servicios"}'),
+  ('servicios', 'title', '{"text": "Mucho más que una inmobiliaria."}'),
+  ('equipo', 'label', '{"text": "Conocé al equipo"}'),
+  ('equipo', 'title', '{"text": "Expertos que convierten propiedades en oportunidades."}'),
+  ('estadisticas', 'label', '{"text": "Nuestra trayectoria"}'),
+  ('estadisticas', 'title', '{"text": "Los números hablan por nosotros."}'),
+  ('proceso', 'label', '{"text": "Cómo trabajamos"}'),
+  ('proceso', 'title', '{"text": "Un proceso simple. Resultados extraordinarios."}'),
+  ('contacto', 'label', '{"text": "Contacto"}'),
+  ('contacto', 'title', '{"text": "Hablemos sobre tu próxima propiedad."}'),
+  ('footer', 'title', '{"text": "Encontrá el lugar donde comienza tu próxima historia."}'),
+  ('footer', 'newsletter', '{"text": "Suscribite para recibir las propiedades más exclusivas antes que nadie."}'),
+  ('meta', 'og_title', '{"value": "BIENENHAUS PROPIEDADES | Propiedades exclusivas"}'),
+  ('meta', 'og_description', '{"value": "Selección premium en las mejores zonas. Asesoramiento personalizado en cada paso."}')
+on conflict (section, key, locale) do nothing;
+
+-- ============================================================================
+-- PROPIEDADES DE EJEMPLO
 -- ============================================================================
 
 insert into public.properties (
@@ -69,35 +160,8 @@ where not exists (
   where pi.property_id = p.id and pi.position = 0
 );
 
--- Backfill: si las propiedades de ejemplo quedaron sin zona (seed anterior),
--- asignarles la ubicación correspondiente.
-update public.properties p
-set location_id = l.id
-from (
-  values
-    ('casa-moderna-en-country', 'Villa Belgrano'),
-    ('penthouse-con-terraza', 'Nueva Córdoba'),
-    ('villa-de-lujo-en-country', 'Country Los Pinos')
-) as v(slug, zone)
-join public.locations l on l.name = v.zone
-where p.slug = v.slug
-  and p.location_id is null;
-
 -- ============================================================================
--- Configuración del Hero Video
--- ============================================================================
-
-insert into public.site_settings (key, value, value_type, is_public, description)
-values
-  ('hero_video_url', '{"value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'::jsonb, 'json', true, 'URL del video principal del Hero (YouTube o Vimeo)'),
-  ('hero_video_title', '{"value": "BIENENHAUS - Tour Virtual"}'::jsonb, 'json', true, 'Titulo del video del Hero'),
-  ('hero_video_autoplay', '{"value": true}'::jsonb, 'json', true, 'Autoplay del video del Hero'),
-  ('hero_video_muted', '{"value": true}'::jsonb, 'json', true, 'Silenciado (muted) del video del Hero'),
-  ('hero_video_poster', '{"value": ""}'::jsonb, 'json', true, 'Poster/Imagen de portada del video del Hero')
-on conflict (key) do update set value = excluded.value, updated_at = now();
-
--- ============================================================================
--- Agente y leads de ejemplo para el CRM.
+-- AGENTES Y LEADS DE EJEMPLO
 -- ============================================================================
 
 insert into public.agents (name, email, phone, matricula, role, is_active, sort_order)
