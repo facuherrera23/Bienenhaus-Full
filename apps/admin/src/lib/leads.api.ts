@@ -27,9 +27,50 @@ import {
   parseLeadsCsv,
   softDeleteLead,
   restoreLead,
+  embedName,
 } from './leads';
 
 const LEADS_PATH = 'leads';
+
+// PostgREST row shape for the list query: `agent` arrives as the embedded
+// object(s) from `agent:agents(name)`, never as a plain string column.
+interface LeadApiRow {
+  id: string;
+  name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  intent: LeadIntent;
+  message: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  created_at: string;
+  updated_at: string;
+  agent: { name: string } | { name: string }[] | null;
+  tags?: string[] | null;
+  score?: number | null;
+}
+
+function toLeadRow(l: LeadApiRow): LeadRow {
+  return {
+    id: l.id,
+    name: l.name,
+    last_name: l.last_name,
+    email: l.email,
+    phone: l.phone,
+    city: l.city,
+    intent: l.intent,
+    message: l.message,
+    source: l.source,
+    status: l.status,
+    agent: embedName(l.agent),
+    created_at: l.created_at,
+    updated_at: l.updated_at,
+    tags: l.tags ?? [],
+    score: l.score ?? 0,
+  };
+}
 
 export function useLeads(filters?: {
   status?: LeadStatus;
@@ -46,7 +87,7 @@ export function useLeads(filters?: {
   if (filters?.source) apiFilters.source = `eq.${filters.source}`;
   if (filters?.search) apiFilters.or = `(name.ilike.*${filters.search}*,last_name.ilike.*${filters.search}*,email.ilike.*${filters.search}*,phone.ilike.*${filters.search}*)`;
 
-  return useList<LeadRow>({
+  return useList<LeadRow, LeadApiRow>({
     queryKey: queryKeys.leads(filters),
     path: LEADS_PATH,
     select: 'id,name,last_name,email,phone,city,intent,message,source,status,created_at,updated_at,agent:agents(name),tags,score',
@@ -55,6 +96,7 @@ export function useLeads(filters?: {
     pageSize: filters?.pageSize ?? 20,
     orderBy: 'created_at',
     ascending: false,
+    transform: toLeadRow,
   });
 }
 

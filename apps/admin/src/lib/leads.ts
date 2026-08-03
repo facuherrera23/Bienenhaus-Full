@@ -98,7 +98,7 @@ interface LeadApiRow {
   agent: { name: string } | { name: string }[] | null;
 }
 
-function embedName(v: Record<string, string> | Record<string, string>[] | null): string | null {
+export function embedName(v: Record<string, string> | Record<string, string>[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.name ?? null : v.name;
 }
