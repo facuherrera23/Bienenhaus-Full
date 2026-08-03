@@ -32,20 +32,16 @@ Deno.serve(async (req) => {
   }
 
   const url = new URL(req.url);
-  const isCallback = url.pathname.endsWith('/callback');
+  const code = url.searchParams.get('code');
+  const stateRaw = url.searchParams.get('state');
 
-  if (!isCallback) {
+  // El redirect_uri registrado en la app de ML puede ser /ml-oauth o
+  // /ml-oauth/callback; en ambos casos ML redirige con code + state.
+  if (!code || !stateRaw) {
     return respond(200, {
       message:
         'Endpoint OAuth de BIENENHAUS. Usá /callback con ?code= y ?state= para completar la conexión con Mercado Libre.',
     });
-  }
-
-  const code = url.searchParams.get('code');
-  const stateRaw = url.searchParams.get('state');
-
-  if (!code || !stateRaw) {
-    return respond(400, { error: 'Faltan los parámetros code o state' });
   }
 
   let state: OauthState = {};
