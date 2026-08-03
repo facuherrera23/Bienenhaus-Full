@@ -2,9 +2,11 @@ import { render } from 'preact';
 import { Router } from 'wouter-preact';
 import { useHashLocation } from 'wouter-preact/use-hash-location';
 import { Component } from 'preact';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import { initAuth } from './store/app';
 import { initSentry } from './lib/sentry';
+import { queryClient } from './lib/query/client';
 import '@bienenhaus/ui/tokens.css';
 import './styles.css';
 
@@ -41,10 +43,12 @@ class SentryErrorBoundary extends Component<{ children: any }, ErrorBoundaryStat
 }
 
 render(
-  <SentryErrorBoundary>
-    <Router hook={useHashLocation}>
-      <App />
-    </Router>
-  </SentryErrorBoundary>,
+  <QueryClientProvider client={queryClient}>
+    <SentryErrorBoundary>
+      <Router hook={useHashLocation}>
+        <App />
+      </Router>
+    </SentryErrorBoundary>
+  </QueryClientProvider>,
   document.getElementById('app')!,
 );

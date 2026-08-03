@@ -32,10 +32,10 @@ test.describe('Login', () => {
     const currentUrl = page.url();
     console.log('Current URL after login attempt:', currentUrl);
     
-    // Wait for navigation after login - wait for URL to change from /login
-    await page.waitForURL(/\/admin(\/|#\/)?$/, { timeout: 60000 });
+    // Wait for navigation after login - the app redirects to the base URL ('/admin/') + '#/'
+    await page.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 60000 });
     
-    // Wait for Dashboard to be visible
-    await expect(page.getByText('Dashboard')).toBeVisible({ timeout: 30000 });
+    // Page heading is the h2 — the topbar also renders an h1 "Dashboard", so scope by level
+    await expect(page.getByRole('heading', { name: 'Dashboard', level: 2 })).toBeVisible({ timeout: 30000 });
   });
 });
