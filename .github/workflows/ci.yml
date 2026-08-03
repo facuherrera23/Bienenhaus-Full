@@ -98,25 +98,27 @@ jobs:
         working-directory: ./supabase
 
       - name: Create E2E test user
-        # El stack local de Supabase usa un demo anon key determinista (constante pública)
-        # cuando config.toml no define jwt_secret. Evita parsear la salida del CLI, que
-        # varía según la versión (rompía el signup con HTTP 401/422).
+        # El stack local de Supabase usa demo keys deterministas (constantes públicas)
+        # cuando config.toml no define jwt_secret. El signup público falla con HTTP 400
+        # captcha_failed (auth.captcha.enabled = true en config.toml), así que se crea el
+        # usuario vía GoTrue Admin API (service_role), que no requiere captcha ni confirmación.
         run: |
-          DEMO_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+          DEMO_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
           echo "SUPABASE_LOCAL_ANON_KEY=$DEMO_ANON_KEY" >> "$GITHUB_ENV"
           E2E_TEST_PASSWORD="e2e-test-pass-2026x"
           echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
 
-          HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/signup" \
-            -H "apikey: $DEMO_ANON_KEY" \
+          HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/admin/users" \
+            -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
-            -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\"}")
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "signup ok (HTTP 200)"
-          elif [ "$HTTP_CODE" = "422" ]; then
-            echo "user already existed (HTTP 422) — continuing"
+            -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"E2E Test User\"}}")
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+            echo "admin create user ok (HTTP $HTTP_CODE)"
+          elif [ "$HTTP_CODE" = "422" ] || [ "$HTTP_CODE" = "409" ]; then
+            echo "user already existed (HTTP $HTTP_CODE) — continuing"
           else
-            echo "signup failed with HTTP $HTTP_CODE"
+            echo "admin create user failed with HTTP $HTTP_CODE"
             cat /tmp/signup.json
             exit 1
           fi
