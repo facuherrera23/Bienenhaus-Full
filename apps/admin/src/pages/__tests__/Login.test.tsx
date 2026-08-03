@@ -1,26 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { Login } from '../Login';
-import { supabase, __mocks } from '../../lib/supabase';
-import { useLocation } from 'wouter-preact';
-
-// Mock wouter-preact at top level (hoisted)
-vi.mock('wouter-preact', () => ({
-  useLocation: vi.fn(),
-  useRoutes: (routes: any) => routes,
-  Link: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
-  Switch: ({ children }: any) => <>{children}</>,
-  Route: ({ component: Component, ...props }: any) => <Component {...props} />,
-}));
+import { __mocks } from '../../lib/supabase';
 
 describe('Login Page', () => {
-  const mockUseLocation = useLocation as unknown as ReturnType<typeof vi.fn>;
-  let mockSetLocation: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSetLocation = vi.fn();
-    mockUseLocation.mockReturnValue(['/', mockSetLocation]);
-    
+
     // Reset supabase mocks to default
     __mocks.signInWithPassword.mockResolvedValue({ data: { user: null, session: null }, error: null });
     __mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
@@ -53,7 +38,7 @@ describe('Login Page', () => {
     });
   });
 
-  it('redirects on successful login', async () => {
+  it('calls signInWithPassword with credentials on submit', async () => {
     __mocks.signInWithPassword.mockResolvedValueOnce({
       error: null,
       data: { user: { id: '1' }, session: { access_token: 'token' } },
@@ -65,9 +50,17 @@ describe('Login Page', () => {
     fireEvent.input(screen.getByLabelText('Contraseña'), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
+    // El componente no navega: el redirect lo maneja initAuth
+    // (onAuthStateChange SIGNED_IN -> window.location.href '/admin#/')
     await waitFor(() => {
-      expect(mockSetLocation).toHaveBeenCalledWith('/');
+      expect(__mocks.signInWithPassword).toHaveBeenCalledWith({
+        email: 'admin@bienenhaus.com',
+        password: 'password123',
+      });
     });
+
+    expect(screen.queryByText(/credenciales incorrectas/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /entrar/i })).not.toBeDisabled();
   });
 
   it('disables submit button while loading', async () => {
