@@ -42,4 +42,29 @@ test.describe('Login', () => {
         .locator('.kpi-value'),
     ).toHaveText('3');
   });
+
+  test('carga la tabla de leads con el agente asignado desplegado', async ({ page }) => {
+    await page.goto('/admin/login');
+
+    await page.getByLabel('Email').fill(TEST_EMAIL);
+    await page.getByLabel('Contraseña').fill(TEST_PASSWORD);
+    await page.getByRole('button', { name: /entrar/i }).click();
+
+    await page.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 60000 });
+
+    // Navigate through the sidebar — hash routing lands on '#/leads'.
+    // The dashboard also renders a "Ver leads" link, so match the label exactly.
+    await page.getByRole('link', { name: 'Leads', exact: true }).click();
+    await page.waitForURL((url) => url.hash.includes('/leads'));
+
+    // Seed inserts exactly 5 leads. Row presence proves the list query resolved.
+    const rows = page.locator('.table tbody tr');
+    await expect(rows).toHaveCount(5, { timeout: 30000 });
+
+    // 'agent' arrives from PostgREST as an embedded object (agent:agents(name));
+    // the row mapper must flatten it to a string — otherwise rendering the cell
+    // throws "Objects are not valid as a child" and the page crashes.
+    // All seeded leads are assigned to María Fernández.
+    await expect(rows.first()).toContainText('Fernández');
+  });
 });
