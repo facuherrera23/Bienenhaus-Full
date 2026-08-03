@@ -1,19 +1,12 @@
-export type PropertyStatus =
-  | 'borrador'
-  | 'en_revision'
-  | 'publicada'
-  | 'pausada'
-  | 'vendida'
-  | 'alquilada'
-  | 'archivada';
+import type { Database } from './database';
 
-export type ListingType =
-  | 'venta'
-  | 'alquiler'
-  | 'venta_alquiler'
-  | 'emprendimiento';
-
+export type PropertyStatus = Database['public']['Enums']['property_status'];
+export type ListingType = Database['public']['Enums']['listing_type'];
 export type PropertyCondition = 'nuevo' | 'usado' | 'a_refaccionar';
+export type Currency = Database['public']['Enums']['currency'];
+
+// Re-export the DB row type
+export type PropertyDbRow = Database['public']['Tables']['properties']['Row'];
 
 export interface PropertyRow {
   id: string;
@@ -22,7 +15,7 @@ export interface PropertyRow {
   status: PropertyStatus;
   listing_type: ListingType;
   price: number | null;
-  currency: 'USD' | 'ARS';
+  currency: Currency;
   location: string;
   area_total: number | null;
   bedrooms: number | null;

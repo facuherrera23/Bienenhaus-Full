@@ -1,28 +1,11 @@
-export type LeadStatus =
-  | 'nuevo'
-  | 'contactado'
-  | 'calificado'
-  | 'en_proceso'
-  | 'cerrado_ganado'
-  | 'cerrado_perdido';
+import type { Database } from './database';
 
-export type LeadIntent =
-  | 'comprar'
-  | 'vender'
-  | 'alquilar'
-  | 'invertir'
-  | 'tasar'
-  | 'desarrollador'
-  | 'otro';
+export type LeadStatus = Database['public']['Enums']['lead_status'];
+export type LeadIntent = Database['public']['Enums']['lead_intent'];
+export type LeadSource = Database['public']['Enums']['lead_source'];
 
-export type LeadSource =
-  | 'landing_form'
-  | 'whatsapp'
-  | 'telefono'
-  | 'email'
-  | 'referido'
-  | 'ml_contacto'
-  | 'manual';
+// Re-export the DB row type
+export type LeadDbRow = Database['public']['Tables']['leads']['Row'];
 
 export interface LeadRow {
   id: string;

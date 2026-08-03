@@ -1,6 +1,10 @@
-export type VisitStatus = 'programada' | 'confirmada' | 'en_curso' | 'completada' | 'cancelada' | 'no_show';
+import type { Database } from './database';
 
+export type VisitStatus = Database['public']['Enums']['visit_status'];
 export type VisitType = 'presencial' | 'virtual' | 'telefono';
+
+// Re-export the DB row type
+export type VisitDbRow = Database['public']['Tables']['visits']['Row'];
 
 export interface VisitRow {
   id: string;

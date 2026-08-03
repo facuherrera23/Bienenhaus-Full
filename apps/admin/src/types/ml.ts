@@ -1,5 +1,7 @@
-export type MlOperation = 'publish' | 'update' | 'delete';
-export type MlSyncStatus = 'pending' | 'processing' | 'success' | 'failed' | 'cancelled';
+import type { Database } from './database';
+
+export type MlOperation = Database['public']['Enums']['ml_operation'];
+export type MlSyncStatus = Database['public']['Enums']['ml_sync_status'];
 
 export interface MlConnectionInfo {
   id: string;
