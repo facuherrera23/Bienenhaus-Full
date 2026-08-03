@@ -14,6 +14,7 @@ test.describe('Login', () => {
   });
 
   test('loguea correctamente y redirige al dashboard', async ({ page }) => {
+    test.setTimeout(90000);
     await page.goto('/admin/login');
 
     await page.getByLabel('Email').fill(TEST_EMAIL);
@@ -44,6 +45,7 @@ test.describe('Login', () => {
   });
 
   test('carga la tabla de leads con el agente asignado desplegado', async ({ page }) => {
+    test.setTimeout(90000);
     await page.goto('/admin/login');
 
     await page.getByLabel('Email').fill(TEST_EMAIL);

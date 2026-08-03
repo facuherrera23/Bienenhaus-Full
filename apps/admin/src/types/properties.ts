@@ -27,25 +27,28 @@ export interface PropertyRow {
 }
 
 export interface PropertyDetail extends PropertyRow {
+  slug: string;
   description: string | null;
   expenses: number | null;
   address: string | null;
-  neighborhood: string | null;
-  city: string | null;
-  province: string | null;
-  country: string | null;
+  location_id: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
   latitude: number | null;
   longitude: number | null;
   area_covered: number | null;
   garages: number | null;
   floors: number | null;
-  floor_number: number | null;
-  antiquity: number | null;
-  orientation: string | null;
-  condition: PropertyCondition;
+  floor_number?: number | null;
+  year_built: number | null;
+  antiquity?: number | null;
+  orientation?: string | null;
+  condition?: PropertyCondition;
   video_url: string | null;
-  images: { id: string; url: string; is_cover: boolean; sort_order: number }[];
-  ml_meta: {
+  images?: { id: string; url: string; is_cover: boolean; sort_order: number }[];
+  ml_meta?: {
     ml_item_id: number | null;
     status: string | null;
     permalink: string | null;
