@@ -20,6 +20,8 @@ import {
   calculateCommission,
   softDeleteAgent,
   restoreAgent,
+  toRow,
+  type AgentApiRow,
 } from './agents';
 import { supabase } from '../lib/supabase';
 
@@ -35,7 +37,7 @@ export function useAgents(filters?: {
 
   if (filters?.is_active !== undefined) apiFilters.is_active = `eq.${filters.is_active}`;
 
-  return useList<AgentRow>({
+  return useList<AgentRow, AgentApiRow>({
     queryKey: queryKeys.agents(filters),
     path: AGENTS_PATH,
     select: '*,leads(count)',
@@ -44,6 +46,7 @@ export function useAgents(filters?: {
     pageSize: filters?.pageSize ?? 20,
     orderBy: 'sort_order',
     ascending: true,
+    transform: toRow,
   });
 }
 
@@ -198,7 +201,7 @@ export function useRestoreAgent() {
 }
 
 export function useFetchDeletedAgents() {
-  return useList<AgentRow>({
+  return useList<AgentRow, AgentApiRow>({
     queryKey: queryKeys.agents({ deleted: true }),
     path: AGENTS_PATH,
     select: '*,leads(count)',
@@ -207,6 +210,7 @@ export function useFetchDeletedAgents() {
     pageSize: 50,
     orderBy: 'deleted_at',
     ascending: false,
+    transform: toRow,
   });
 }
 

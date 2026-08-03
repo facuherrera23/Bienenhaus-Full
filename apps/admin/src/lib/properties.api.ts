@@ -3,7 +3,7 @@ import {
   duplicateProperty,
   softDeleteProperty,
 } from './properties';
-import { bulkEnqueueMl } from './ml';
+import { bulkEnqueueMl, embedProperty, type QueueApiRow, type MetaApiRow } from './ml';
 import type {
   PropertyStatus,
   ListingType,
@@ -60,6 +60,39 @@ function toPropertyRow(p: PropertyApiRow): PropertyRow {
     published_at: p.published_at,
     updated_at: p.updated_at,
     cover_url: p.images?.find((i) => i.is_cover)?.url ?? p.images?.[0]?.url ?? null,
+  };
+}
+
+function toMLQueueRow(q: QueueApiRow): MlQueueRow {
+  const prop = embedProperty(q.property);
+  return {
+    id: q.id,
+    property_id: q.property_id,
+    operation: q.operation,
+    status: q.status,
+    attempts: q.attempts,
+    max_attempts: q.max_attempts,
+    next_attempt_at: q.next_attempt_at,
+    ml_item_id: q.ml_item_id,
+    last_error: q.last_error,
+    created_at: q.created_at,
+    property_title: prop.title,
+    property_code: prop.code,
+  };
+}
+
+function toMLMetaRow(m: MetaApiRow): MlMetaRow {
+  const prop = embedProperty(m.property);
+  return {
+    property_id: m.property_id,
+    ml_item_id: m.ml_item_id,
+    status: m.status,
+    permalink: m.permalink,
+    price: m.price === null ? null : Number(m.price),
+    last_sync_at: m.last_sync_at,
+    last_sync_status: m.last_sync_status,
+    property_title: prop.title,
+    property_code: prop.code,
   };
 }
 
@@ -185,7 +218,7 @@ export function useBulkEnqueueMl() {
 // ==================== ML QUEUE HOOKS ====================
 
 export function useMLQueue() {
-  return useList<unknown>({
+  return useList<MlQueueRow, QueueApiRow>({
     queryKey: queryKeys.mlQueue(),
     path: 'ml_sync_queue',
     select: 'id,property_id,operation,status,attempts,max_attempts,next_attempt_at,ml_item_id,last_error,created_at,property:properties(title,code)',
@@ -194,11 +227,12 @@ export function useMLQueue() {
     pageSize: 50,
     orderBy: 'created_at',
     ascending: false,
+    transform: toMLQueueRow,
   });
 }
 
 export function useMLMeta() {
-  return useList<unknown>({
+  return useList<MlMetaRow, MetaApiRow>({
     queryKey: queryKeys.mlMeta(),
     path: 'property_ml_meta',
     select: 'property_id,ml_item_id,status,permalink,price,last_sync_at,last_sync_status,property:properties(title,code)',
@@ -207,6 +241,7 @@ export function useMLMeta() {
     pageSize: 100,
     orderBy: 'last_sync_at',
     ascending: false,
+    transform: toMLMetaRow,
   });
 }
 

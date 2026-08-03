@@ -28,11 +28,47 @@ import {
   updateMlAutoReplyTemplate,
   deleteMlAutoReplyTemplate,
   bulkEnqueueMl,
+  embedProperty,
+  type QueueApiRow,
+  type MetaApiRow,
 } from './ml';
 
 // Wrapper que bypassa el problema de resolución de tipos de useList en este módulo
 function useListMl<T>(options: ListOptions<T>) {
   return useListHook<T>(options);
+}
+
+function toMlQueueRow(q: QueueApiRow): MlQueueRow {
+  const prop = embedProperty(q.property);
+  return {
+    id: q.id,
+    property_id: q.property_id,
+    operation: q.operation,
+    status: q.status,
+    attempts: q.attempts,
+    max_attempts: q.max_attempts,
+    next_attempt_at: q.next_attempt_at,
+    ml_item_id: q.ml_item_id,
+    last_error: q.last_error,
+    created_at: q.created_at,
+    property_title: prop.title,
+    property_code: prop.code,
+  };
+}
+
+function toMlMetaRow(m: MetaApiRow): MlMetaRow {
+  const prop = embedProperty(m.property);
+  return {
+    property_id: m.property_id,
+    ml_item_id: m.ml_item_id,
+    status: m.status,
+    permalink: m.permalink,
+    price: m.price === null ? null : Number(m.price),
+    last_sync_at: m.last_sync_at,
+    last_sync_status: m.last_sync_status,
+    property_title: prop.title,
+    property_code: prop.code,
+  };
 }
 
 export function useMlOverview() {
@@ -50,7 +86,7 @@ export function useMlQueue(filters?: {
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
   if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
 
-  return useListMl<MlQueueRow>({
+  return useListHook<MlQueueRow, QueueApiRow>({
     queryKey: queryKeys.mlQueue(filters),
     path: 'ml_sync_queue',
     select: 'id,property_id,operation,status,attempts,max_attempts,next_attempt_at,ml_item_id,last_error,created_at,property:properties(title,code)',
@@ -59,6 +95,7 @@ export function useMlQueue(filters?: {
     pageSize: filters?.pageSize ?? 50,
     orderBy: 'created_at',
     ascending: false,
+    transform: toMlQueueRow,
   });
 }
 
@@ -71,7 +108,7 @@ export function useMlMeta(filters?: {
 
   if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
 
-  return useListMl<MlMetaRow>({
+  return useListHook<MlMetaRow, MetaApiRow>({
     queryKey: queryKeys.mlMeta(filters),
     path: 'property_ml_meta',
     select: 'property_id,ml_item_id,status,permalink,price,last_sync_at,last_sync_status,property:properties(title,code)',
@@ -80,6 +117,7 @@ export function useMlMeta(filters?: {
     pageSize: filters?.pageSize ?? 100,
     orderBy: 'last_sync_at',
     ascending: false,
+    transform: toMlMetaRow,
   });
 }
 

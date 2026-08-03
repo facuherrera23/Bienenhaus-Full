@@ -55,7 +55,7 @@ export interface AgentSchedule {
   break_end?: string;       // HH:MM
 }
 
-interface AgentApiRow {
+export interface AgentApiRow {
   id: string;
   name: string;
   email: string;
@@ -76,7 +76,7 @@ interface AgentApiRow {
   leads: { count: number }[];
 }
 
-function toRow(a: AgentApiRow): AgentRow {
+export function toRow(a: AgentApiRow): AgentRow {
   const specs = Array.isArray(a.specialties)
     ? a.specialties.filter((s): s is string => typeof s === 'string')
     : [];

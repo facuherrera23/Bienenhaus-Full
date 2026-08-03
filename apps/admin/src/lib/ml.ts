@@ -148,7 +148,7 @@ export interface MlQueueRow {
   property_code: number | null;
 }
 
-interface QueueApiRow {
+export interface QueueApiRow {
   id: number;
   property_id: string;
   operation: MlOperation;
@@ -162,7 +162,7 @@ interface QueueApiRow {
   property: { title: string; code: number } | { title: string; code: number }[] | null;
 }
 
-function embedProperty(v: { title: string; code: number } | { title: string; code: number }[] | null): {
+export function embedProperty(v: { title: string; code: number } | { title: string; code: number }[] | null): {
   title: string | null;
   code: number | null;
 } {
@@ -215,7 +215,7 @@ export interface MlMetaRow {
   property_code: number | null;
 }
 
-interface MetaApiRow {
+export interface MetaApiRow {
   property_id: string;
   ml_item_id: number | null;
   status: string | null;

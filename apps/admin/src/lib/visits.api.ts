@@ -27,6 +27,8 @@ import {
   generateQrCode,
   checkInWithQr,
   getQrCode,
+  toVisitRow,
+  type VisitApiRow,
 } from './visits';
 
 const VISITS_PATH = 'visits';
@@ -50,7 +52,7 @@ export function useVisits(filters?: {
   if (filters?.from) apiFilters.starts_at = `gte.${filters.from}`;
   if (filters?.to) apiFilters.starts_at = `lte.${filters.to}`;
 
-  return useList<VisitRow>({
+  return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits(filters),
     path: VISITS_PATH,
     select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
@@ -59,6 +61,7 @@ export function useVisits(filters?: {
     pageSize: filters?.pageSize ?? 50,
     orderBy: 'starts_at',
     ascending: true,
+    transform: toVisitRow,
   });
 }
 
@@ -104,7 +107,7 @@ export function useDeleteVisit() {
 // ==================== CUSTOM MUTATIONS ====================
 
 export function useVisitsByAgent(agentId: string | null) {
-  return useList<VisitRow>({
+  return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits({ agent_id: agentId }),
     path: VISITS_PATH,
     select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
@@ -114,11 +117,12 @@ export function useVisitsByAgent(agentId: string | null) {
     orderBy: 'starts_at',
     ascending: true,
     enabled: !!agentId,
+    transform: toVisitRow,
   });
 }
 
 export function useVisitsByDateRange(from: string, to: string, agentId?: string) {
-  return useList<VisitRow>({
+  return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits({ from, to, agent_id: agentId }),
     path: VISITS_PATH,
     select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
@@ -131,11 +135,12 @@ export function useVisitsByDateRange(from: string, to: string, agentId?: string)
     pageSize: 200,
     orderBy: 'starts_at',
     ascending: true,
+    transform: toVisitRow,
   });
 }
 
 export function useVisitsByLead(leadId: string | null) {
-  return useList<VisitRow>({
+  return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits({ lead_id: leadId }),
     path: VISITS_PATH,
     select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
@@ -145,6 +150,7 @@ export function useVisitsByLead(leadId: string | null) {
     orderBy: 'starts_at',
     ascending: false,
     enabled: !!leadId,
+    transform: toVisitRow,
   });
 }
 
@@ -165,7 +171,7 @@ export function useRestoreVisit() {
 }
 
 export function useFetchDeletedVisits() {
-  return useList<VisitRow>({
+  return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits({ deleted: true }),
     path: VISITS_PATH,
     select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
@@ -174,6 +180,7 @@ export function useFetchDeletedVisits() {
     pageSize: 50,
     orderBy: 'deleted_at',
     ascending: false,
+    transform: toVisitRow,
   });
 }
 

@@ -1,53 +1,12 @@
 import { supabase, supabaseUrl } from './supabase';
+import type {
+  VisitStatus,
+  VisitType,
+  VisitRow,
+  VisitFormValues,
+} from '../types/visits';
 
-export type VisitStatus = 'programada' | 'confirmada' | 'en_curso' | 'completada' | 'cancelada' | 'no_show';
-
-export interface VisitRow {
-  id: string;
-  lead_id: string | null;
-  property_id: string | null;
-  agent_id: string;
-  title: string;
-  description: string | null;
-  starts_at: string;
-  ends_at: string;
-  status: VisitStatus;
-  location: string | null;
-  meeting_type: string | null;
-  meeting_link: string | null;
-  notes: string | null;
-  reminder_sent: boolean;
-  reminder_sent_at: string | null;
-  confirmed_at: string | null;
-  completed_at: string | null;
-  cancelled_at: string | null;
-  cancellation_reason: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  // Joined data
-  lead_name: string | null;
-  lead_email: string | null;
-  lead_phone: string | null;
-  property_title: string | null;
-  agent_name: string | null;
-}
-
-export interface VisitFormValues {
-  lead_id: string;
-  property_id: string;
-  agent_id: string;
-  title: string;
-  description: string;
-  starts_at: string;
-  ends_at: string;
-  status: VisitStatus;
-  location: string;
-  meeting_type: string;
-  meeting_link: string;
-  notes: string;
-}
+export type { VisitStatus, VisitType, VisitRow, VisitFormValues };
 
 export const VISIT_STATUS_LABEL: Record<VisitStatus, string> = {
   programada: 'Programada',
@@ -73,27 +32,27 @@ export const MEETING_TYPE_LABEL: Record<string, string> = {
   telefono: 'Teléfono',
 };
 
-function embedVisitName(v: { name: string } | { name: string }[] | null): string | null {
+export function embedVisitName(v: { name: string } | { name: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.name ?? null : v.name;
 }
 
-function embedVisitEmail(v: { email: string } | { email: string }[] | null): string | null {
+export function embedVisitEmail(v: { email: string } | { email: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.email ?? null : v.email;
 }
 
-function embedVisitPhone(v: { phone: string } | { phone: string }[] | null): string | null {
+export function embedVisitPhone(v: { phone: string } | { phone: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.phone ?? null : v.phone;
 }
 
-function embedVisitTitle(v: { title: string } | { title: string }[] | null): string | null {
+export function embedVisitTitle(v: { title: string } | { title: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.title ?? null : v.title;
 }
 
-interface VisitApiRow {
+export interface VisitApiRow {
   id: string;
   lead_id: string | null;
   property_id: string | null;
@@ -104,7 +63,7 @@ interface VisitApiRow {
   ends_at: string;
   status: VisitStatus;
   location: string | null;
-  meeting_type: string | null;
+  meeting_type: VisitType | null;
   meeting_link: string | null;
   notes: string | null;
   reminder_sent: boolean;
@@ -122,7 +81,7 @@ interface VisitApiRow {
   agent: { name: string } | { name: string }[] | null;
 }
 
-function toVisitRow(v: VisitApiRow): VisitRow {
+export function toVisitRow(v: VisitApiRow): VisitRow {
   return {
     id: v.id,
     lead_id: v.lead_id,
@@ -134,7 +93,7 @@ function toVisitRow(v: VisitApiRow): VisitRow {
     ends_at: v.ends_at,
     status: v.status,
     location: v.location,
-    meeting_type: v.meeting_type,
+    meeting_type: v.meeting_type as VisitType | null,
     meeting_link: v.meeting_link,
     notes: v.notes,
     reminder_sent: v.reminder_sent,
