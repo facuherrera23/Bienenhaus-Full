@@ -23,7 +23,7 @@ import {
   addLeadTag,
   removeLeadTag,
   setLeadTags,
-  bulkImportLeads,
+  bulkImportLeadsParsed,
   parseLeadsCsv,
   softDeleteLead,
   restoreLead,
@@ -184,7 +184,7 @@ export function useSetLeadTags() {
 export function useImportLeads() {
   return useMutation({
     mutationFn: async (leads: CsvLeadRow[]) => {
-      return bulkImportLeads(leads);
+      return bulkImportLeadsParsed(leads);
     },
   });
 }
