@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Permite ejecución manual
 
 env:
-  SUPABASE_PROJECT_ID: bienenhaus
+  SUPABASE_PROJECT_ID: rnldqiwwzhjnurkguihu
   RETENTION_DAYS: 90
 
 jobs:
@@ -35,7 +35,6 @@ jobs:
           supabase db dump --project-ref ${{ env.SUPABASE_PROJECT_ID }} \
             --schema public \
             --data-only=false \
-            --role=postgres \
             --file=- | gzip > "${BACKUP_FILE}"
           
           echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT

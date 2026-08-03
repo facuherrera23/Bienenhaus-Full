@@ -43,3 +43,6 @@ supabase/.temp/
 
 # Scratch / backups
 Fix/
+
+# OpenCode session artifacts
+.omo/

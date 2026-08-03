@@ -25,23 +25,28 @@ function respond(status: number, body: Record<string, unknown>): Response {
   });
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  const ba = new TextEncoder().encode(a);
+  const bb = new TextEncoder().encode(b);
+  if (ba.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ba.length; i++) diff |= ba[i] ^ bb[i];
+  return diff === 0;
+}
+
+/**
+ * ML envía en x-meli-signature el auth_token fijo registrado al suscribir el tópico
+ * (no firma el body). ML_WEBHOOK_SECRET debe ser ese mismo auth_token. Sin secret
+ * seteado se acepta en modo degradado para no romper notificaciones existentes.
+ */
 async function verifySignature(req: Request): Promise<boolean> {
-  if (!ML_WEBHOOK_SECRET) return true;
+  if (!ML_WEBHOOK_SECRET) {
+    console.warn('ML_WEBHOOK_SECRET no está seteado: webhook sin verificación de firma.');
+    return true;
+  }
   const signature = req.headers.get('x-meli-signature');
   if (!signature) return false;
-  const body = await req.text();
-  // ML uses HMAC-SHA256 with the app secret
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(ML_WEBHOOK_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
-  const expected = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return signature === expected;
+  return timingSafeEqual(signature, ML_WEBHOOK_SECRET);
 }
 
 interface WebhookPayload {

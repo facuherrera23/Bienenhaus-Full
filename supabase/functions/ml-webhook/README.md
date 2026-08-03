@@ -42,11 +42,21 @@ Baja: `DELETE /users/{USER_ID}/topics/{topic}`.
 ML devuelve en cada notificación el `auth_token` registrado en el header
 `x-meli-signature` (es un token fijo por tópico, **no** una firma HMAC del body).
 
-Por eso el secret `ML_WEBHOOK_SECRET` se deja **sin setear**: `verifySignature`
-lo acepta sin validar. Si algún día se setea, el código intentará verificarlo
-como HMAC-SHA256 del body, lo que rechazaría todas las notificaciones reales
-de ML. No setear ese secret salvo que se implemente la verificación correcta
-(comparar `x-meli-signature` contra el `auth_token` registrado).
+Para proteger el webhook:
+
+1. Generá un token fuerte (ej. `openssl rand -hex 32`).
+2. Setealo como secret de la función: `supabase secrets set ML_WEBHOOK_SECRET=<token>`.
+3. Usá el **mismo valor** como `auth_token` al registrar cada tópico
+   (ver "Registro de tópicos" arriba).
+
+`verifySignature` compara `x-meli-signature` contra `ML_WEBHOOK_SECRET` con
+comparación en tiempo constante (timing-safe). Si el secret **no** está seteado,
+la función acepta las notificaciones en modo degradado (con warning en logs)
+para no romper suscripciones existentes, pero esto deja el webhook abierto:
+setear el secret es requisito para producción.
+
+Si tus tópicos ya están registrados con un `auth_token` distinto, debés
+re-registrarlos (DELETE + POST) con el token que elijas como `ML_WEBHOOK_SECRET`.
 
 ## Auto-respuestas
 

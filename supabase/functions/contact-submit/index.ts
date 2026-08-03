@@ -68,6 +68,9 @@ async function checkRateLimit(supabase: any, ip: string): Promise<boolean> {
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
+  if (!RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY no configurada");
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
