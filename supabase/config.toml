@@ -412,3 +412,11 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Functions invoked by MercadoLibre without Supabase auth headers
+# (OAuth callback redirect + webhook notifications) must not require JWT.
+[functions.ml-oauth]
+verify_jwt = false
+
+[functions.ml-webhook]
+verify_jwt = false
