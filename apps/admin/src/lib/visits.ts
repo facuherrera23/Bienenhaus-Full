@@ -4,34 +4,33 @@ import type {
   VisitType,
   VisitRow,
   VisitFormValues,
+  VisitDbRow,
+  AgentAvailability,
+  RecurrenceRule,
+  RecurringVisit,
+  ReminderConfig,
+  QrCheckin,
+} from '../types/visits';
+import {
+  VISIT_STATUS_LABEL,
+  VISIT_STATUS_TONE,
+  MEETING_TYPE_LABEL,
+  DEFAULT_REMINDERS,
+  DAY_LABELS,
 } from '../types/visits';
 
-export type { VisitStatus, VisitType, VisitRow, VisitFormValues };
+// Re-export types needed by consumers
+export type { VisitStatus, VisitType, VisitRow, VisitFormValues, AgentAvailability, RecurrenceRule, RecurringVisit, ReminderConfig, QrCheckin };
+export { VISIT_STATUS_LABEL, VISIT_STATUS_TONE, MEETING_TYPE_LABEL, DEFAULT_REMINDERS, DAY_LABELS };
 
-export const VISIT_STATUS_LABEL: Record<VisitStatus, string> = {
-  programada: 'Programada',
-  confirmada: 'Confirmada',
-  en_curso: 'En curso',
-  completada: 'Completada',
-  cancelada: 'Cancelada',
-  no_show: 'No asistió',
-};
+// DB row type with embedded relations (from select with lead:leads(...), property:properties(...), agent:agents(...))
+export interface VisitApiRow extends VisitDbRow {
+  lead: { name: string; email: string; phone: string } | { name: string; email: string; phone: string }[] | null;
+  property: { title: string } | { title: string }[] | null;
+  agent: { name: string } | { name: string }[] | null;
+}
 
-export const VISIT_STATUS_TONE: Record<VisitStatus, string> = {
-  programada: 'info',
-  confirmada: 'success',
-  en_curso: 'warning',
-  completada: 'neutral',
-  cancelada: 'danger',
-  no_show: 'danger',
-};
-
-export const MEETING_TYPE_LABEL: Record<string, string> = {
-  presencial: 'Presencial',
-  virtual: 'Virtual',
-  telefono: 'Teléfono',
-};
-
+// Embed helpers
 export function embedVisitName(v: { name: string } | { name: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.name ?? null : v.name;
@@ -52,35 +51,7 @@ export function embedVisitTitle(v: { title: string } | { title: string }[] | nul
   return Array.isArray(v) ? v[0]?.title ?? null : v.title;
 }
 
-export interface VisitApiRow {
-  id: string;
-  lead_id: string | null;
-  property_id: string | null;
-  agent_id: string;
-  title: string;
-  description: string | null;
-  starts_at: string;
-  ends_at: string;
-  status: VisitStatus;
-  location: string | null;
-  meeting_type: VisitType | null;
-  meeting_link: string | null;
-  notes: string | null;
-  reminder_sent: boolean;
-  reminder_sent_at: string | null;
-  confirmed_at: string | null;
-  completed_at: string | null;
-  cancelled_at: string | null;
-  cancellation_reason: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  lead: { name: string; email: string; phone: string } | { name: string; email: string; phone: string }[] | null;
-  property: { title: string } | { title: string }[] | null;
-  agent: { name: string } | { name: string }[] | null;
-}
-
+// Mapper: DB row with embedded relations -> UI row
 export function toVisitRow(v: VisitApiRow): VisitRow {
   return {
     id: v.id,
@@ -96,7 +67,7 @@ export function toVisitRow(v: VisitApiRow): VisitRow {
     meeting_type: v.meeting_type as VisitType | null,
     meeting_link: v.meeting_link,
     notes: v.notes,
-    reminder_sent: v.reminder_sent,
+    reminder_sent: v.reminder_sent ?? false,
     reminder_sent_at: v.reminder_sent_at,
     confirmed_at: v.confirmed_at,
     completed_at: v.completed_at,
@@ -114,54 +85,51 @@ export function toVisitRow(v: VisitApiRow): VisitRow {
   };
 }
 
+// Select string for visits with embedded relations
+const VISITS_SELECT = `
+  id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)
+`.trim();
+
 export async function fetchVisits(): Promise<VisitRow[]> {
   const { data, error } = await supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .is('deleted_at', null)
     .order('starts_at', { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toVisitRow);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
 export async function fetchVisit(id: string): Promise<VisitRow> {
   const { data, error } = await supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
   if (!data) throw new Error('Visita no encontrada');
-  return toVisitRow(data as VisitApiRow);
+  return toVisitRow(data as unknown as VisitApiRow);
 }
 
 export async function fetchVisitsByAgent(agentId: string): Promise<VisitRow[]> {
   const { data, error } = await supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .eq('agent_id', agentId)
     .is('deleted_at', null)
     .order('starts_at', { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toVisitRow);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
 export async function fetchVisitsByDateRange(from: string, to: string, agentId?: string): Promise<VisitRow[]> {
   let query = supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .is('deleted_at', null)
     .gte('starts_at', from)
     .lte('starts_at', to)
@@ -171,21 +139,19 @@ export async function fetchVisitsByDateRange(from: string, to: string, agentId?:
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toVisitRow);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
 export async function fetchVisitsByLead(leadId: string): Promise<VisitRow[]> {
   const { data, error } = await supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .eq('lead_id', leadId)
     .is('deleted_at', null)
     .order('starts_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toVisitRow);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
 export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
@@ -206,13 +172,11 @@ export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
       notes: values.notes || null,
       reminder_sent: false,
     })
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .single();
 
   if (error) throw new Error(error.message);
-  return toVisitRow(data as VisitApiRow);
+  return toVisitRow(data as unknown as VisitApiRow);
 }
 
 export async function updateVisit(id: string, values: Partial<VisitFormValues>): Promise<void> {
@@ -259,27 +223,15 @@ export async function restoreVisit(id: string): Promise<void> {
 export async function fetchDeletedVisits(): Promise<VisitRow[]> {
   const { data, error } = await supabase
     .from('visits')
-    .select(
-      'id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)'
-    )
+    .select(VISITS_SELECT)
     .not('deleted_at', 'is', null)
     .order('deleted_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toVisitRow);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
-// Agent Availability
-export interface AgentAvailability {
-  id: string;
-  agent_id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// Agent Availability (uses type from types/visits)
 
 export async function fetchAgentAvailability(agentId: string): Promise<AgentAvailability[]> {
   const { data, error } = await supabase
@@ -315,32 +267,9 @@ export async function deleteAgentAvailability(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export const DAY_LABELS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
 // ---------------------------------------------------------------------------
 // Recurring Visits
 // ---------------------------------------------------------------------------
-
-export interface RecurrenceRule {
-  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  interval: number;           // every N days/weeks/months/years
-  days_of_week?: number[];    // for weekly: [1,3,5] = Mon/Wed/Fri
-  day_of_month?: number;      // for monthly: 15 = 15th of each month
-  end_date?: string;          // ISO date when recurrence ends
-  count?: number;             // max occurrences
-  exceptions?: string[];      // ISO dates to skip
-}
-
-export interface RecurringVisit {
-  id: string;
-  base_visit_id: string;
-  rule: RecurrenceRule;
-  next_occurrence: string;    // ISO datetime of next occurrence
-  occurrences_generated: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
 
 export async function createRecurringVisit(
   baseVisitId: string,
@@ -505,24 +434,6 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
 // Reminders (Email/SMS)
 // ---------------------------------------------------------------------------
 
-export interface ReminderConfig {
-  id: string;
-  visit_id: string;
-  type: 'email' | 'sms' | 'push';
-  trigger_minutes_before: number;  // e.g., 1440 = 24h, 60 = 1h
-  template?: string;               // custom template
-  is_sent: boolean;
-  sent_at: string | null;
-  created_at: string;
-}
-
-export const DEFAULT_REMINDERS: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[] = [
-  { type: 'email', trigger_minutes_before: 1440 }, // 24h before
-  { type: 'email', trigger_minutes_before: 60 },   // 1h before
-  { type: 'sms', trigger_minutes_before: 60 },     // 1h before SMS
-  { type: 'push', trigger_minutes_before: 30 },    // 30min before push
-];
-
 export async function createReminders(visitId: string, reminders: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[] = DEFAULT_REMINDERS): Promise<ReminderConfig[]> {
   const { data, error } = await supabase
     .from('visit_reminders')
@@ -547,16 +458,6 @@ export async function processReminders(): Promise<{ sent: number; failed: number
 // ---------------------------------------------------------------------------
 // QR Check-in
 // ---------------------------------------------------------------------------
-
-export interface QrCheckin {
-  id: string;
-  visit_id: string;
-  code: string;              // unique code for QR
-  checked_in: boolean;
-  checked_in_at: string | null;
-  checked_in_by: string | null;  // agent who checked in
-  created_at: string;
-}
 
 export async function generateQrCode(visitId: string): Promise<QrCheckin> {
   const code = `VIS-${visitId.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`;
