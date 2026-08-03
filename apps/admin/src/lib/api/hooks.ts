@@ -53,7 +53,7 @@ export function useExport<T extends Record<string, any>>() {
 
   return { exportToCSV };
 }
-export interface ListOptions<_T> {
+export interface ListOptions<T, TRaw = T> {
   queryKey: QueryKey;
   path: string;
   select?: string;
@@ -64,6 +64,8 @@ export interface ListOptions<_T> {
   ascending?: boolean;
   enabled?: boolean;
   staleTime?: number;
+  /** Maps each raw API row (e.g. PostgREST embedded objects) to the consumer-facing row type. */
+  transform?: (raw: TRaw) => T;
 }
 
 export interface PaginatedResult<T> {
@@ -74,7 +76,7 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-export function useList<T>(options: ListOptions<T>) {
+export function useList<T, TRaw = T>(options: ListOptions<T, TRaw>) {
   const {
     queryKey,
     path,
@@ -86,6 +88,7 @@ export function useList<T>(options: ListOptions<T>) {
     ascending = false,
     enabled = true,
     staleTime = 30_000,
+    transform,
   } = options;
   const from = (page - 1) * pageSize;
 
@@ -100,11 +103,20 @@ export function useList<T>(options: ListOptions<T>) {
   return useQuery({
     queryKey: [...queryKey, { page, pageSize, orderBy, ascending, filters }],
     queryFn: async () => {
-      const { data, error } = await api.get<PaginatedResult<T>>(path, {
+      const { data, error, count } = await api.get<TRaw[]>(path, {
         params: queryParams,
       });
       if (error) throw new Error(error.message);
-      return data;
+      const raw = data ?? [];
+      const rows = transform ? raw.map(transform) : (raw as unknown as T[]);
+      const total = count ?? rows.length;
+      return {
+        data: rows,
+        count: total,
+        page,
+        pageSize,
+        totalPages: pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1,
+      } satisfies PaginatedResult<T>;
     },
     enabled,
     staleTime,

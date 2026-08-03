@@ -24,6 +24,45 @@ import {
 
 const PROPERTIES_PATH = 'properties';
 
+interface PropertyApiRow {
+  id: string;
+  code: number;
+  title: string;
+  status: PropertyStatus;
+  listing_type: ListingType;
+  price: number | null;
+  currency: 'USD' | 'ARS';
+  area_total: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  featured: boolean;
+  published_at: string | null;
+  updated_at: string;
+  location: { name: string } | { name: string }[] | null;
+  images: { url: string; is_cover: boolean }[];
+}
+
+function toPropertyRow(p: PropertyApiRow): PropertyRow {
+  const locName = Array.isArray(p.location) ? p.location[0]?.name : p.location?.name;
+  return {
+    id: p.id,
+    code: p.code,
+    title: p.title,
+    status: p.status,
+    listing_type: p.listing_type,
+    price: p.price,
+    currency: p.currency,
+    location: locName ?? 'Sin zona',
+    area_total: p.area_total,
+    bedrooms: p.bedrooms,
+    bathrooms: p.bathrooms,
+    featured: p.featured,
+    published_at: p.published_at,
+    updated_at: p.updated_at,
+    cover_url: p.images?.find((i) => i.is_cover)?.url ?? p.images?.[0]?.url ?? null,
+  };
+}
+
 // ==================== QUERY HOOKS ====================
 
 export function useProperties(filters?: {
@@ -39,7 +78,7 @@ export function useProperties(filters?: {
   if (filters?.listing_type) apiFilters.listing_type = `eq.${filters.listing_type}`;
   if (filters?.search) apiFilters.title = `ilike.*${filters.search}*`;
 
-  return useList<PropertyRow>({
+  return useList<PropertyRow, PropertyApiRow>({
     queryKey: queryKeys.properties(filters),
     path: PROPERTIES_PATH,
     select: 'id,code,title,status,listing_type,price,currency,area_total,bedrooms,bathrooms,featured,published_at,updated_at,location:locations(name),images:property_images(url,is_cover)',
@@ -48,6 +87,7 @@ export function useProperties(filters?: {
     pageSize: filters?.pageSize ?? 20,
     orderBy: 'updated_at',
     ascending: false,
+    transform: toPropertyRow,
   });
 }
 

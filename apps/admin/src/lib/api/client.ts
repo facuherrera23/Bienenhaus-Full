@@ -12,6 +12,8 @@ export interface ApiResponse<T> {
   data: T | null;
   error: ApiError | null;
   status: number;
+  /** Total row count from PostgREST `Content-Range` header (e.g. `0-19/42`). */
+  count?: number;
 }
 
 export interface RequestOptions extends RequestInit {
@@ -20,7 +22,7 @@ export interface RequestOptions extends RequestInit {
 }
 
 function buildUrl(path: string, params?: Record<string, any>): string {
-  const url = new URL(`${supabaseUrl}/rest/v1${path}`);
+  const url = new URL(`${supabaseUrl}/rest/v1/${path.replace(/^\/+/, '')}`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -70,6 +72,7 @@ export async function apiRequest<T>(
 
   let data: T | null = null;
   let error: ApiError | null = null;
+  let count: number | undefined;
 
   const contentType = response.headers.get('content-type');
   if (contentType?.includes('application/json')) {
@@ -84,6 +87,9 @@ export async function apiRequest<T>(
       };
     } else {
       data = json as T;
+      const contentRange = response.headers.get('content-range');
+      const total = contentRange?.match(/\/(\d+)$/)?.[1];
+      if (total !== undefined) count = Number(total);
     }
   } else if (!response.ok) {
     const text = await response.text().catch(() => '');
@@ -94,7 +100,7 @@ export async function apiRequest<T>(
     };
   }
 
-  return { data, error, status: response.status };
+  return { data, error, status: response.status, count };
 }
 
 // Helpers comunes
