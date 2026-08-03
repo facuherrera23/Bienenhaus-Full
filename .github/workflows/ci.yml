@@ -99,15 +99,19 @@ jobs:
 
       - name: Create E2E test user
         run: |
-          ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY // .anon_key // empty' 2>/dev/null)
+          ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY // .anon_key // empty')
           if [ -z "$ANON_KEY" ]; then
             ANON_KEY=$(supabase status | sed -n 's/^anon key: //p')
           fi
           echo "SUPABASE_LOCAL_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
           E2E_TEST_PASSWORD="e2e-test-pass-2026x"
           echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
-          supabase auth signup --email e2e-test@bienenhaus.local --password "$E2E_TEST_PASSWORD"
-          supabase db execute "insert into public.admin_users (id, email, full_name, role) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin' from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do nothing;"
+          curl -fsS -X POST "http://127.0.0.1:54321/auth/v1/signup" \
+            -H "apikey: $ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\"}"
+          supabase db query --local "insert into public.admin_users (id, email, full_name, role) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin' from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do nothing;"
+        working-directory: ./supabase
 
       - name: Run E2E tests
         run: pnpm test:e2e
