@@ -396,6 +396,7 @@ export async function fetchAgents(): Promise<AgentOption[]> {
     .from('agents')
     .select('id, name')
     .eq('is_active', true)
+    .is('deleted_at', null)
     .order('sort_order', { ascending: true });
 
   if (error) throw new Error(error.message);

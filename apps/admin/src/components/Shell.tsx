@@ -66,9 +66,8 @@ function getGlobalCommands(setLocation: (to: string) => void) {
       label: 'Sincronizar Mercado Libre',
       description: 'Ejecutar sincronización manual',
       section: 'Mercado Libre',
-      action: () => { 
-        // This would need access to the sync mutation
-        console.log('Sync ML');
+      action: () => {
+        setLocation('/mercadolibre');
       },
     },
     {

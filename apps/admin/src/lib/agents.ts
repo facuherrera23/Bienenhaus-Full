@@ -151,7 +151,7 @@ export async function uploadAgentPhoto(file: File): Promise<string> {
 
 export async function deleteAgentPhoto(url: string): Promise<void> {
   try {
-    const path = url.split('/').pop();
+    const path = url.split('/agent-photos/')[1]?.split('?')[0];
     if (path) await supabase.storage.from('agent-photos').remove([path]);
   } catch {
     // no op

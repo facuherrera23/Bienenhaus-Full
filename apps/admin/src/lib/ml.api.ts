@@ -1,4 +1,5 @@
 import { useList as useListHook, useMutation, useRpc, useExport, queryKeys, type ExportColumn, type ListOptions } from './api';
+import { useQuery } from '@tanstack/react-query';
 import type {
   MlOperation,
   MlSyncStatus,
@@ -102,10 +103,9 @@ export function useMlOverview() {
 }
 
 export function useMlSettings() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlSettings();
-    },
+  return useQuery({
+    queryKey: ['ml-settings'],
+    queryFn: () => fetchMlSettings(),
   });
 }
 
@@ -206,18 +206,16 @@ export function useMlOrders(filters?: {
 // ============================================================
 
 export function useMlCategories() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlCategories();
-    },
+  return useQuery({
+    queryKey: ['ml-categories'],
+    queryFn: () => fetchMlCategories(),
   });
 }
 
 export function useMlListingTypes() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlListingTypes();
-    },
+  return useQuery({
+    queryKey: ['ml-listing-types'],
+    queryFn: () => fetchMlListingTypes(),
   });
 }
 
@@ -226,10 +224,9 @@ export function useMlListingTypes() {
 // ============================================================
 
 export function useMlMetrics() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlMetrics();
-    },
+  return useQuery({
+    queryKey: ['ml-metrics'],
+    queryFn: () => fetchMlMetrics(),
   });
 }
 
@@ -364,7 +361,7 @@ export const ML_QUEUE_EXPORT_COLUMNS: ExportColumn<MlQueueRow>[] = [
   { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
   { key: 'operation', label: 'Operación', format: (v) => ML_OPERATION_LABEL[v as MlOperation] ?? v },
   { key: 'status', label: 'Estado', format: (v) => ML_SYNC_STATUS_LABEL[v as MlSyncStatus] ?? v },
-  { key: 'attempts', label: 'Intentos', format: (v) => `${v}/${v}` },
+  { key: 'attempts', label: 'Intentos', format: (v, row) => `${v}/${(row as MlQueueRow).max_attempts}` },
   { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
   { key: 'last_error', label: 'Último error', format: (v) => v ?? '—' },
   { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },

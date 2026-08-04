@@ -79,7 +79,8 @@ export async function fetchSubscribers(
   }
 
   if (options?.search) {
-    query = query.ilike('email', `%${options.search}%`);
+    const escaped = options.search.replace(/[%_]/g, '\\$&');
+    query = query.ilike('email', `%${escaped}%`);
   }
 
   const limit = options?.pageSize ?? 50;

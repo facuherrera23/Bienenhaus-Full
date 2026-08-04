@@ -66,8 +66,13 @@ export function useVisits(filters?: {
   if (filters?.lead_id) apiFilters.lead_id = `eq.${filters.lead_id}`;
   if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
-  if (filters?.from) apiFilters.starts_at = `gte.${filters.from}`;
-  if (filters?.to) apiFilters.starts_at = `lte.${filters.to}`;
+  if (filters?.from && filters?.to) {
+    apiFilters.starts_at = `gte.${filters.from},lte.${filters.to}`;
+  } else if (filters?.from) {
+    apiFilters.starts_at = `gte.${filters.from}`;
+  } else if (filters?.to) {
+    apiFilters.starts_at = `lte.${filters.to}`;
+  }
 
   return useList<VisitRow, VisitApiRow>({
     queryKey: queryKeys.visits(filters),

@@ -343,13 +343,7 @@ export function useRealtime<T extends Record<string, any>>({
           }
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Subscribed to ${table}`);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error(`[Realtime] Channel error for ${table}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 

@@ -349,7 +349,7 @@ if (published_at) patch.published_at = published_at;
 
 const { error } = await supabase
       .from('properties')
-      .update({ deleted_at: null })
+      .update(patch)
       .eq('id', id);
     if (error) throw new Error(error.message);
   }
@@ -498,8 +498,8 @@ export async function uploadPropertyImages(propertyId: string, files: File[]): P
     try {
       const img = await uploadPropertyImage(propertyId, file, file.name);
       results.push(img);
-    } catch (err) {
-      console.error('Error subiendo imagen:', err);
+    } catch {
+      // failed upload — skip and continue with remaining images
     }
   }
   return results;
