@@ -90,6 +90,12 @@ if (exists(join(adminDist, 'assets'))) {
   cpSync(join(adminDist, 'assets'), join(OUT, 'admin', 'assets'), { recursive: true });
 }
 
+// SPA fallback for admin sub-routes (/admin/propiedades, /admin/leads, etc.)
+cpSync(join(OUT, 'admin', 'index.html'), join(OUT, 'admin', '404.html'));
+
+// Redirect /admin → /admin/ (without trailing slash)
+writeFileSync(join(OUT, 'admin.html'), '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/admin/"></head></html>');
+
 cpSync(join(OUT, 'index.html'), join(OUT, '404.html'));
 writeFileSync(join(OUT, '.nojekyll'), '');
 

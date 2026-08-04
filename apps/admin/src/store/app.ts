@@ -60,14 +60,20 @@ export async function initAuth(): Promise<void> {
       const role = await fetchUserRole(session.user.email);
       authUserRole.value = role;
       if (event === 'SIGNED_IN') {
-        // BASE_URL incluye el trailing slash (ej. '/admin/'), necesario para que
-        // el dev server (base configurada) sirva la SPA y no su página de warning.
-        window.location.href = `${import.meta.env.BASE_URL}#/`;
+        const base = import.meta.env.BASE_URL;
+        const target = `${base}#/`;
+        if (window.location.pathname + window.location.search + window.location.hash !== target) {
+          window.location.href = target;
+        }
       }
     } else {
       authUserRole.value = null;
       if (event === 'SIGNED_OUT') {
-        window.location.href = `${import.meta.env.BASE_URL}#/login`;
+        const base = import.meta.env.BASE_URL;
+        const target = `${base}#/login`;
+        if (window.location.pathname + window.location.search + window.location.hash !== target) {
+          window.location.href = target;
+        }
       }
     }
     setTimeout(cleanAuthHash, 0);
