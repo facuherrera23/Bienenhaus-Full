@@ -11,9 +11,27 @@ import {
   MESSAGE_TYPE_LABEL,
   CHANNEL_TYPE_LABEL,
 } from '../types/chat';
+import {
+  createDirectChannel,
+  createGroupChannel,
+  createPropertyChannel,
+  createLeadChannel,
+  addParticipant,
+  removeParticipant,
+  sendMessage,
+  editMessage,
+  softDeleteMessage,
+  markAsRead,
+  markChannelAsRead,
+  updateLastRead,
+} from './chat';
 
 const CHANNELS_PATH = 'chat_channels';
 const MESSAGES_PATH = 'chat_messages';
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useChannels(agentId: string | null) {
   return useList<ChatChannel>({
@@ -95,10 +113,13 @@ export function useMessages(channelId: string | null, options?: {
   });
 }
 
+// ============================================================
+// Mutation Hooks - Channel Creation
+// ============================================================
+
 export function useCreateDirectChannel() {
   return useMutation({
     mutationFn: async ({ agentIds, creatorId }: { agentIds: string[]; creatorId: string }) => {
-      const { createDirectChannel } = await import('./chat');
       return createDirectChannel(agentIds, creatorId);
     },
   });
@@ -107,7 +128,6 @@ export function useCreateDirectChannel() {
 export function useCreateGroupChannel() {
   return useMutation({
     mutationFn: async ({ name, agentIds, creatorId }: { name: string; agentIds: string[]; creatorId: string }) => {
-      const { createGroupChannel } = await import('./chat');
       return createGroupChannel(name, agentIds, creatorId);
     },
   });
@@ -116,7 +136,6 @@ export function useCreateGroupChannel() {
 export function useCreatePropertyChannel() {
   return useMutation({
     mutationFn: async ({ propertyId, agentIds, creatorId }: { propertyId: string; agentIds: string[]; creatorId: string }) => {
-      const { createPropertyChannel } = await import('./chat');
       return createPropertyChannel(propertyId, agentIds, creatorId);
     },
   });
@@ -125,16 +144,18 @@ export function useCreatePropertyChannel() {
 export function useCreateLeadChannel() {
   return useMutation({
     mutationFn: async ({ leadId, agentIds, creatorId }: { leadId: string; agentIds: string[]; creatorId: string }) => {
-      const { createLeadChannel } = await import('./chat');
       return createLeadChannel(leadId, agentIds, creatorId);
     },
   });
 }
 
+// ============================================================
+// Mutation Hooks - Participants
+// ============================================================
+
 export function useAddParticipant() {
   return useMutation({
     mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-      const { addParticipant } = await import('./chat');
       return addParticipant(channelId, agentId);
     },
   });
@@ -143,11 +164,14 @@ export function useAddParticipant() {
 export function useRemoveParticipant() {
   return useMutation({
     mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-      const { removeParticipant } = await import('./chat');
       return removeParticipant(channelId, agentId);
     },
   });
 }
+
+// ============================================================
+// Mutation Hooks - Messages
+// ============================================================
 
 export function useSendMessage() {
   return useMutation({
@@ -168,7 +192,6 @@ export function useSendMessage() {
         reply_to_id?: string;
       };
     }) => {
-      const { sendMessage } = await import('./chat');
       return sendMessage(channelId, senderId, content, options);
     },
   });
@@ -177,7 +200,6 @@ export function useSendMessage() {
 export function useEditMessage() {
   return useMutation({
     mutationFn: async ({ messageId, content }: { messageId: string; content: string }) => {
-      const { editMessage } = await import('./chat');
       return editMessage(messageId, content);
     },
   });
@@ -186,16 +208,18 @@ export function useEditMessage() {
 export function useSoftDeleteMessage() {
   return useMutation({
     mutationFn: async (messageId: string) => {
-      const { softDeleteMessage } = await import('./chat');
       return softDeleteMessage(messageId);
     },
   });
 }
 
+// ============================================================
+// Mutation Hooks - Read Status
+// ============================================================
+
 export function useMarkAsRead() {
   return useMutation({
     mutationFn: async ({ messageId, agentId }: { messageId: string; agentId: string }) => {
-      const { markAsRead } = await import('./chat');
       return markAsRead(messageId, agentId);
     },
   });
@@ -204,7 +228,6 @@ export function useMarkAsRead() {
 export function useMarkChannelAsRead() {
   return useMutation({
     mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-      const { markChannelAsRead } = await import('./chat');
       return markChannelAsRead(channelId, agentId);
     },
   });
@@ -213,23 +236,63 @@ export function useMarkChannelAsRead() {
 export function useUpdateLastRead() {
   return useMutation({
     mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-      const { updateLastRead } = await import('./chat');
       return updateLastRead(channelId, agentId);
     },
   });
 }
 
+// ============================================================
+// Realtime Subscription
+// ============================================================
+
 export function useSubscribeToChannelMessages(
-  _channelId: string | null,
-  _callbacks: {
+  channelId: string | null,
+  callbacks: {
     onMessage?: (msg: ChatMessage) => void;
     onUpdate?: (msg: ChatMessage) => void;
     onDelete?: (messageId: string) => void;
   }
 ) {
-  return { subscribe: () => {}, unsubscribe: () => {} };
+  // Esta función retorna un objeto con subscribe y unsubscribe
+  // El componente debe llamar a subscribe cuando quiera activar la suscripción
+  let unsubscribe: (() => void) | null = null;
+
+  const subscribe = () => {
+    if (!channelId) return;
+    if (unsubscribe) return; // Ya está suscrito
+
+    // Importación dinámica para evitar dependencia circular
+    import('./chat').then(({ subscribeToChannelMessages }) => {
+      unsubscribe = subscribeToChannelMessages(
+        channelId,
+        (msg) => callbacks.onMessage?.(msg),
+        (msg) => callbacks.onUpdate?.(msg),
+        (msgId) => callbacks.onDelete?.(msgId)
+      );
+    });
+  };
+
+  const unsubscribeFn = () => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  };
+
+  return { subscribe, unsubscribe: unsubscribeFn };
 }
 
+// ============================================================
+// Export
+// ============================================================
+
 export { queryKeys };
-export type { ChatChannelType, MessageType, ChatChannel, ChatParticipant, ChatMessage, ChatMessageRead };
+export type {
+  ChatChannelType,
+  MessageType,
+  ChatChannel,
+  ChatParticipant,
+  ChatMessage,
+  ChatMessageRead,
+};
 export { MESSAGE_TYPE_LABEL, CHANNEL_TYPE_LABEL };

@@ -18,59 +18,43 @@ import {
   STATUS_ORDER,
 } from '../types/leads';
 import {
+  fetchLeads,
+  fetchLead,
+  fetchDeletedLeads,
+  createLead,
+  updateLead,
+  updateLeadStatus,
+  softDeleteLead,
+  restoreLead,
+  permanentDeleteLead,
+  autoAssignLead,
   bulkAutoAssignLeads,
   bulkRecalculateScores,
   addLeadTag,
   removeLeadTag,
   setLeadTags,
-  bulkImportLeadsParsed,
+  fetchAgents as fetchAgentOptions,
+  calculateLeadScore,
+  recalculateLeadScore,
   parseLeadsCsv,
-  softDeleteLead,
-  restoreLead,
+  importLeadsFromCsv,
+  bulkImportLeadsParsed,
   embedName,
+  toLeadRow,
+  type LeadApiRow,
 } from './leads';
 
 const LEADS_PATH = 'leads';
 
-// PostgREST row shape for the list query: `agent` arrives as the embedded
-// object(s) from `agent:agents(name)`, never as a plain string column.
-interface LeadApiRow {
-  id: string;
-  name: string;
-  last_name: string;
-  email: string;
-  phone: string | null;
-  city: string | null;
-  intent: LeadIntent;
-  message: string | null;
-  source: LeadSource;
-  status: LeadStatus;
-  created_at: string;
-  updated_at: string;
-  agent: { name: string } | { name: string }[] | null;
-  tags?: string[] | null;
-  score?: number | null;
-}
+// ============================================================
+// Mappers
+// ============================================================
 
-function toLeadRow(l: LeadApiRow): LeadRow {
-  return {
-    id: l.id,
-    name: l.name,
-    last_name: l.last_name,
-    email: l.email,
-    phone: l.phone,
-    city: l.city,
-    intent: l.intent,
-    message: l.message,
-    source: l.source,
-    status: l.status,
-    agent: embedName(l.agent),
-    created_at: l.created_at,
-    updated_at: l.updated_at,
-    tags: l.tags ?? [],
-    score: l.score ?? 0,
-  };
-}
+// toLeadRow ya está exportado desde leads.ts
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useLeads(filters?: {
   status?: LeadStatus;
@@ -85,7 +69,9 @@ export function useLeads(filters?: {
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
   if (filters?.intent) apiFilters.intent = `eq.${filters.intent}`;
   if (filters?.source) apiFilters.source = `eq.${filters.source}`;
-  if (filters?.search) apiFilters.or = `(name.ilike.*${filters.search}*,last_name.ilike.*${filters.search}*,email.ilike.*${filters.search}*,phone.ilike.*${filters.search}*)`;
+  if (filters?.search) {
+    apiFilters.or = `(name.ilike.*${filters.search}*,last_name.ilike.*${filters.search}*,email.ilike.*${filters.search}*,phone.ilike.*${filters.search}*)`;
+  }
 
   return useList<LeadRow, LeadApiRow>({
     queryKey: queryKeys.leads(filters),
@@ -108,6 +94,41 @@ export function useLead(id: string | null) {
     !!id
   );
 }
+
+export function useFetchDeletedLeads() {
+  return useList<LeadRow, LeadApiRow>({
+    queryKey: queryKeys.leads({ deleted: true }),
+    path: LEADS_PATH,
+    select: 'id,name,last_name,email,phone,city,intent,message,source,status,created_at,updated_at,agent:agents(name),tags,score',
+    filters: { deleted_at: 'not.is.null' },
+    page: 1,
+    pageSize: 50,
+    orderBy: 'deleted_at',
+    ascending: false,
+    transform: toLeadRow,
+  });
+}
+
+// ============================================================
+// Query Hooks - Agents (for assignment)
+// ============================================================
+
+export function useAgentOptions() {
+  return useList<AgentOption>({
+    queryKey: queryKeys.agents({ options: true }),
+    path: 'agents',
+    select: 'id,name',
+    filters: { is_active: 'eq.true' },
+    page: 1,
+    pageSize: 100,
+    orderBy: 'sort_order',
+    ascending: true,
+  });
+}
+
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
 
 export function useCreateLead() {
   return useCreate<LeadRow, LeadFormValues>(
@@ -139,12 +160,78 @@ export function useDeleteLead() {
   );
 }
 
-// ==================== CUSTOM MUTATIONS ====================
+export function useUpdateLeadStatus() {
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
+      return updateLeadStatus(id, status);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Soft Delete & Restore
+// ============================================================
+
+export function useSoftDeleteLead() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return softDeleteLead(id);
+    },
+  });
+}
+
+export function useRestoreLead() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return restoreLead(id);
+    },
+  });
+}
+
+export function usePermanentDeleteLead() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return permanentDeleteLead(id);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Assignment
+// ============================================================
+
+export function useAutoAssignLead() {
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      return autoAssignLead(leadId);
+    },
+  });
+}
 
 export function useBulkAutoAssignLeads() {
   return useMutation({
     mutationFn: async (leadIds: string[]) => {
       return bulkAutoAssignLeads(leadIds);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Score
+// ============================================================
+
+export function useCalculateLeadScore() {
+  return useMutation({
+    mutationFn: async (lead: { intent: LeadIntent; source: LeadSource; message?: string | null; phone?: string | null; city?: string | null }) => {
+      return calculateLeadScore(lead);
+    },
+  });
+}
+
+export function useRecalculateLeadScore() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return recalculateLeadScore(id);
     },
   });
 }
@@ -156,6 +243,10 @@ export function useBulkRecalculateScores() {
     },
   });
 }
+
+// ============================================================
+// Mutation Hooks - Tags
+// ============================================================
 
 export function useAddLeadTag() {
   return useMutation({
@@ -181,13 +272,9 @@ export function useSetLeadTags() {
   });
 }
 
-export function useImportLeads() {
-  return useMutation({
-    mutationFn: async (leads: CsvLeadRow[]) => {
-      return bulkImportLeadsParsed(leads);
-    },
-  });
-}
+// ============================================================
+// Mutation Hooks - Import
+// ============================================================
 
 export function useParseLeadsCsv() {
   return useMutation({
@@ -197,38 +284,25 @@ export function useParseLeadsCsv() {
   });
 }
 
-// ==================== SOFT DELETE ====================
-
-export function useSoftDeleteLead() {
+export function useImportLeads() {
   return useMutation({
-    mutationFn: async (id: string) => {
-      return softDeleteLead(id);
+    mutationFn: async (leads: CsvLeadRow[]) => {
+      return bulkImportLeadsParsed(leads);
     },
   });
 }
 
-export function useRestoreLead() {
+export function useImportLeadsFromCsv() {
   return useMutation({
-    mutationFn: async (id: string) => {
-      return restoreLead(id);
+    mutationFn: async (csvText: string) => {
+      return importLeadsFromCsv(csvText);
     },
   });
 }
 
-export function useFetchDeletedLeads() {
-  return useList<LeadRow>({
-    queryKey: queryKeys.leads({ deleted: true }),
-    path: LEADS_PATH,
-    select: '*',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
-  });
-}
-
-// ==================== EXPORT ====================
+// ============================================================
+// Export
+// ============================================================
 
 export const LEAD_EXPORT_COLUMNS: ExportColumn<LeadRow>[] = [
   { key: 'name', label: 'Nombre' },
@@ -263,6 +337,49 @@ export function useExportLeads() {
   };
 }
 
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchLeads,
+  fetchLead,
+  fetchDeletedLeads,
+  createLead,
+  updateLead,
+  updateLeadStatus,
+  softDeleteLead,
+  restoreLead,
+  permanentDeleteLead,
+  autoAssignLead,
+  bulkAutoAssignLeads,
+  bulkRecalculateScores,
+  addLeadTag,
+  removeLeadTag,
+  setLeadTags,
+  fetchAgentOptions as fetchAgents,
+  calculateLeadScore,
+  recalculateLeadScore,
+  parseLeadsCsv,
+  importLeadsFromCsv,
+  bulkImportLeadsParsed,
+  embedName,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
+
 export { queryKeys };
-export type { LeadStatus, LeadIntent, LeadSource, LeadRow, LeadDetail, LeadFormValues, LeadPatch, CsvLeadRow, AgentOption };
+export type {
+  LeadStatus,
+  LeadIntent,
+  LeadSource,
+  LeadRow,
+  LeadDetail,
+  LeadFormValues,
+  LeadPatch,
+  CsvLeadRow,
+  AgentOption,
+};
 export { LEAD_STATUS_LABEL, LEAD_STATUS_TONE, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, STATUS_ORDER };

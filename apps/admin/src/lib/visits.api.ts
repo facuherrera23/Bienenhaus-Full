@@ -18,8 +18,21 @@ import {
   DAY_LABELS,
 } from '../types/visits';
 import {
+  fetchVisits,
+  fetchVisit,
+  fetchVisitsByAgent,
+  fetchVisitsByDateRange,
+  fetchVisitsByLead,
+  fetchDeletedVisits,
+  createVisit,
+  updateVisit,
   softDeleteVisit,
   restoreVisit,
+  permanentDeleteVisit,
+  fetchAgentAvailability,
+  createAgentAvailability,
+  updateAgentAvailability,
+  deleteAgentAvailability,
   createRecurringVisit,
   generateOccurrences,
   createReminders,
@@ -32,6 +45,10 @@ import {
 } from './visits';
 
 const VISITS_PATH = 'visits';
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useVisits(filters?: {
   agent_id?: string;
@@ -74,37 +91,23 @@ export function useVisit(id: string | null) {
   );
 }
 
-export function useCreateVisit() {
-  return useCreate<VisitRow, VisitFormValues>(
-    queryKeys.visits(),
-    VISITS_PATH,
-    {
-      invalidateKeys: [queryKeys.visits()],
-    }
-  );
+export function useFetchDeletedVisits() {
+  return useList<VisitRow, VisitApiRow>({
+    queryKey: queryKeys.visits({ deleted: true }),
+    path: VISITS_PATH,
+    select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
+    filters: { deleted_at: 'not.is.null' },
+    page: 1,
+    pageSize: 50,
+    orderBy: 'deleted_at',
+    ascending: false,
+    transform: toVisitRow,
+  });
 }
 
-export function useUpdateVisit() {
-  return useUpdate<VisitRow, Partial<VisitFormValues>>(
-    queryKeys.visits(),
-    VISITS_PATH,
-    {
-      invalidateKeys: [queryKeys.visits()],
-    }
-  );
-}
-
-export function useDeleteVisit() {
-  return useDelete(
-    queryKeys.visits(),
-    VISITS_PATH,
-    {
-      invalidateKeys: [queryKeys.visits()],
-    }
-  );
-}
-
-// ==================== CUSTOM MUTATIONS ====================
+// ============================================================
+// Query Hooks - Filtered
+// ============================================================
 
 export function useVisitsByAgent(agentId: string | null) {
   return useList<VisitRow, VisitApiRow>({
@@ -154,6 +157,44 @@ export function useVisitsByLead(leadId: string | null) {
   });
 }
 
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
+
+export function useCreateVisit() {
+  return useCreate<VisitRow, VisitFormValues>(
+    queryKeys.visits(),
+    VISITS_PATH,
+    {
+      invalidateKeys: [queryKeys.visits()],
+    }
+  );
+}
+
+export function useUpdateVisit() {
+  return useUpdate<VisitRow, Partial<VisitFormValues>>(
+    queryKeys.visits(),
+    VISITS_PATH,
+    {
+      invalidateKeys: [queryKeys.visits()],
+    }
+  );
+}
+
+export function useDeleteVisit() {
+  return useDelete(
+    queryKeys.visits(),
+    VISITS_PATH,
+    {
+      invalidateKeys: [queryKeys.visits()],
+    }
+  );
+}
+
+// ============================================================
+// Mutation Hooks - Soft Delete & Restore
+// ============================================================
+
 export function useSoftDeleteVisit() {
   return useMutation({
     mutationFn: async (id: string) => {
@@ -170,21 +211,29 @@ export function useRestoreVisit() {
   });
 }
 
-export function useFetchDeletedVisits() {
-  return useList<VisitRow, VisitApiRow>({
-    queryKey: queryKeys.visits({ deleted: true }),
-    path: VISITS_PATH,
-    select: 'id,lead_id,property_id,agent_id,title,description,starts_at,ends_at,status,location,meeting_type,meeting_link,notes,reminder_sent,reminder_sent_at,confirmed_at,completed_at,cancelled_at,cancellation_reason,created_by,created_at,updated_at,deleted_at,lead:leads(name,email,phone),property:properties(title),agent:agents(name)',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
-    transform: toVisitRow,
+export function usePermanentDeleteVisit() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return permanentDeleteVisit(id);
+    },
   });
 }
 
-// ==================== AGENT AVAILABILITY ====================
+// ============================================================
+// Mutation Hooks - Status
+// ============================================================
+
+export function useUpdateVisitStatus() {
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: VisitStatus }) => {
+      return updateVisit(id, { status });
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Agent Availability
+// ============================================================
 
 export function useAgentAvailability(agentId: string | null) {
   return useList<AgentAvailability>({
@@ -230,7 +279,9 @@ export function useDeleteAgentAvailability() {
   );
 }
 
-// ==================== RECURRING VISITS ====================
+// ============================================================
+// Mutation Hooks - Recurring Visits
+// ============================================================
 
 export function useCreateRecurringVisit() {
   return useMutation({
@@ -241,18 +292,26 @@ export function useCreateRecurringVisit() {
 }
 
 export function useGenerateOccurrences() {
-  return useMutation({
-    mutationFn: async (recurringId: string) => {
-      return generateOccurrences(recurringId);
-    },
-  });
+   return useMutation({
+     mutationFn: async (recurringId: number) => {
+       return generateOccurrences(recurringId);
+     },
+   });
 }
 
-// ==================== REMINDERS ====================
+// ============================================================
+// Mutation Hooks - Reminders
+// ============================================================
 
 export function useCreateReminders() {
   return useMutation({
-    mutationFn: async ({ visitId, reminders }: { visitId: string; reminders?: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[] }) => {
+    mutationFn: async ({
+      visitId,
+      reminders,
+    }: {
+      visitId: string;
+      reminders?: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[];
+    }) => {
       return createReminders(visitId, reminders);
     },
   });
@@ -266,7 +325,9 @@ export function useProcessReminders() {
   });
 }
 
-// ==================== QR CHECK-IN ====================
+// ============================================================
+// Mutation Hooks - QR Check-in
+// ============================================================
 
 export function useGenerateQrCode() {
   return useMutation({
@@ -293,7 +354,9 @@ export function useGetQrCode(visitId: string | null) {
   });
 }
 
-// ==================== EXPORT ====================
+// ============================================================
+// Export
+// ============================================================
 
 export const VISIT_EXPORT_COLUMNS: ExportColumn<VisitRow>[] = [
   { key: 'title', label: 'Título' },
@@ -326,6 +389,50 @@ export function useExportVisits() {
   };
 }
 
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchVisits,
+  fetchVisit,
+  fetchVisitsByAgent,
+  fetchVisitsByDateRange,
+  fetchVisitsByLead,
+  fetchDeletedVisits,
+  createVisit,
+  updateVisit,
+  softDeleteVisit,
+  restoreVisit,
+  permanentDeleteVisit,
+  fetchAgentAvailability,
+  createAgentAvailability,
+  updateAgentAvailability,
+  deleteAgentAvailability,
+  createRecurringVisit,
+  generateOccurrences,
+  createReminders,
+  processReminders,
+  generateQrCode,
+  checkInWithQr,
+  getQrCode,
+  toVisitRow,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
+
 export { queryKeys };
-export type { VisitStatus, VisitType, VisitRow, VisitFormValues, AgentAvailability, RecurrenceRule, RecurringVisit, ReminderConfig, QrCheckin };
+export type {
+  VisitStatus,
+  VisitType,
+  VisitRow,
+  VisitFormValues,
+  AgentAvailability,
+  RecurrenceRule,
+  RecurringVisit,
+  ReminderConfig,
+  QrCheckin,
+};
 export { VISIT_STATUS_LABEL, VISIT_STATUS_TONE, MEETING_TYPE_LABEL, DEFAULT_REMINDERS, DAY_LABELS };

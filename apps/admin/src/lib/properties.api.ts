@@ -2,6 +2,20 @@ import { useList, useItem, useCreate, useUpdate, useDelete, useRpc, useUpload, u
 import {
   duplicateProperty,
   softDeleteProperty,
+  restoreProperty,
+  permanentDeleteProperty,
+  fetchProperties,
+  fetchProperty,
+  fetchDeletedProperties,
+  createProperty,
+  updateProperty,
+  updatePropertyStatus,
+  fetchLocations,
+  uploadPropertyImage,
+  uploadPropertyImages,
+  deletePropertyImage,
+  setPropertyCover,
+  reorderPropertyImages,
 } from './properties';
 import { bulkEnqueueMl, embedProperty, type QueueApiRow, type MetaApiRow } from './ml';
 import type {
@@ -24,6 +38,10 @@ import {
 
 const PROPERTIES_PATH = 'properties';
 
+// ============================================================
+// DB row types with embedded relations
+// ============================================================
+
 interface PropertyApiRow {
   id: string;
   code: number;
@@ -41,6 +59,10 @@ interface PropertyApiRow {
   location: { name: string } | { name: string }[] | null;
   images: { url: string; is_cover: boolean }[];
 }
+
+// ============================================================
+// Mappers
+// ============================================================
 
 function toPropertyRow(p: PropertyApiRow): PropertyRow {
   const locName = Array.isArray(p.location) ? p.location[0]?.name : p.location?.name;
@@ -96,7 +118,9 @@ function toMLMetaRow(m: MetaApiRow): MlMetaRow {
   };
 }
 
-// ==================== QUERY HOOKS ====================
+// ============================================================
+// Query Hooks - Properties
+// ============================================================
 
 export function useProperties(filters?: {
   status?: PropertyStatus;
@@ -132,6 +156,41 @@ export function useProperty(id: string | null) {
     !!id
   );
 }
+
+export function useFetchDeletedProperties() {
+  return useList<PropertyRow, PropertyApiRow>({
+    queryKey: queryKeys.properties({ deleted: true }),
+    path: PROPERTIES_PATH,
+    select: 'id,code,title,status,listing_type,price,currency,area_total,bedrooms,bathrooms,featured,published_at,updated_at,location:locations(name),images:property_images(url,is_cover)',
+    filters: { deleted_at: 'not.is.null' },
+    page: 1,
+    pageSize: 50,
+    orderBy: 'deleted_at',
+    ascending: false,
+    transform: toPropertyRow,
+  });
+}
+
+// ============================================================
+// Query Hooks - Locations
+// ============================================================
+
+export function useLocations() {
+  return useList<LocationOption>({
+    queryKey: queryKeys.leads([{ locations: true }]),
+    path: 'locations',
+    select: 'id,name,zone',
+    filters: { is_active: 'eq.true' },
+    page: 1,
+    pageSize: 100,
+    orderBy: 'sort_order',
+    ascending: true,
+  });
+}
+
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
 
 export function useCreateProperty() {
   return useCreate<PropertyRow, Partial<PropertyDetail>>(
@@ -171,6 +230,66 @@ export function useDuplicateProperty() {
   });
 }
 
+export function useUpdatePropertyStatus() {
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: PropertyStatus }) => {
+      return updatePropertyStatus(id, status);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Images
+// ============================================================
+
+export function usePropertyImages() {
+  return useUpload('property-images');
+}
+
+export function useUploadPropertyImage() {
+  return useMutation({
+    mutationFn: async ({ propertyId, file, alt }: { propertyId: string; file: File; alt?: string }) => {
+      return uploadPropertyImage(propertyId, file, alt);
+    },
+  });
+}
+
+export function useUploadPropertyImages() {
+  return useMutation({
+    mutationFn: async ({ propertyId, files }: { propertyId: string; files: File[] }) => {
+      return uploadPropertyImages(propertyId, files);
+    },
+  });
+}
+
+export function useDeletePropertyImage() {
+  return useMutation({
+    mutationFn: async (imageId: string) => {
+      return deletePropertyImage(imageId);
+    },
+  });
+}
+
+export function useSetPropertyCover() {
+  return useMutation({
+    mutationFn: async ({ propertyId, imageId }: { propertyId: string; imageId: string }) => {
+      return setPropertyCover(propertyId, imageId);
+    },
+  });
+}
+
+export function useReorderPropertyImages() {
+  return useMutation({
+    mutationFn: async ({ propertyId, imageIds }: { propertyId: string; imageIds: string[] }) => {
+      return reorderPropertyImages(propertyId, imageIds);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Soft Delete & Restore
+// ============================================================
+
 export function useSoftDeleteProperty() {
   return useMutation({
     mutationFn: async (id: string) => {
@@ -179,43 +298,45 @@ export function useSoftDeleteProperty() {
   });
 }
 
-export function useLocations() {
-  return useList<LocationOption>({
-    queryKey: queryKeys.leads([{ locations: true }]),
-    path: 'locations',
-    select: 'id,name,zone',
-    filters: { is_active: 'eq.true' },
-    page: 1,
-    pageSize: 100,
-    orderBy: 'sort_order',
-    ascending: true,
+export function useRestoreProperty() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return restoreProperty(id);
+    },
   });
 }
 
-export function usePropertyImages(_propertyId: string) {
-  return useUpload('property-images');
+export function usePermanentDeleteProperty() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return permanentDeleteProperty(id);
+    },
+  });
 }
 
+// ============================================================
+// Mutation Hooks - ML Integration
+// ============================================================
+
 export function usePublishToML() {
-  return useRpc<{ itemId: number; permalink: string }, { p_property_id: string; p_operation: 'publish' | 'update' | 'delete' }>(
-    'ml_enqueue',
-    {
-      onSuccess: (data) => {
-        console.log('ML enqueue result:', data);
-      },
-    }
-  );
+  return useMutation({
+    mutationFn: async ({ propertyId, operation }: { propertyId: string; operation: 'publish' | 'update' | 'delete' }) => {
+      return bulkEnqueueMl([propertyId], operation);
+    },
+  });
 }
 
 export function useBulkEnqueueMl() {
   return useMutation({
-    mutationFn: async ({ propertyIds, operation }: { propertyIds: string[]; operation: 'publish' | 'update' | 'delete' }) => {
+    mutationFn: async ({ propertyIds, operation }: { propertyIds: string[]; operation: MlOperation }) => {
       return bulkEnqueueMl(propertyIds, operation);
     },
   });
 }
 
-// ==================== ML QUEUE HOOKS ====================
+// ============================================================
+// Query Hooks - ML Queue & Meta
+// ============================================================
 
 export function useMLQueue() {
   return useList<MlQueueRow, QueueApiRow>({
@@ -249,7 +370,9 @@ export function useMLOverview() {
   return useRpc<unknown, Record<string, never>>('ml_get_connection');
 }
 
-// ==================== FORM HELPERS ====================
+// ============================================================
+// Form Helpers
+// ============================================================
 
 export function toFormValues(property: PropertyDetail): PropertyFormValues {
   const p = property as any;
@@ -283,7 +406,9 @@ export function toNumeric(value: string | number | null | undefined): number | n
   return isNaN(n) ? null : n;
 }
 
-// ==================== EXPORT ====================
+// ============================================================
+// Export
+// ============================================================
 
 export const PROPERTY_EXPORT_COLUMNS: ExportColumn<PropertyRow>[] = [
   { key: 'code', label: 'Código' },
@@ -319,7 +444,44 @@ export function useExportProperties() {
   };
 }
 
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchProperties,
+  fetchProperty,
+  fetchDeletedProperties,
+  createProperty,
+  updateProperty,
+  updatePropertyStatus,
+  duplicateProperty,
+  softDeleteProperty,
+  restoreProperty,
+  permanentDeleteProperty,
+  fetchLocations,
+  uploadPropertyImage,
+  uploadPropertyImages,
+  deletePropertyImage,
+  setPropertyCover,
+  reorderPropertyImages,
+  
+  
+};
+
+// ============================================================
+// Re-export
+// ============================================================
+
 export { queryKeys };
-export type { PropertyStatus, ListingType, PropertyRow, PropertyDetail, PropertyFormValues, PropertyImage, LocationOption };
+export type {
+  PropertyStatus,
+  ListingType,
+  PropertyRow,
+  PropertyDetail,
+  PropertyFormValues,
+  PropertyImage,
+  LocationOption,
+};
 export type { MlMetaRow, MlQueueRow, MlOperation };
 export { STATUS_LABEL, STATUS_TONE, LISTING_TYPE_LABEL };

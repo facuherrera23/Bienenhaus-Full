@@ -21,22 +21,44 @@ import {
   ML_SYNC_STATUS_TONE,
 } from '../types/ml';
 import {
+  fetchMlOverview,
+  fetchMlSettings,
+  fetchMlQueue,
+  fetchMlMeta,
   fetchMlCategories,
   fetchMlListingTypes,
+  fetchMlQuestions,
+  fetchMlOrders,
   fetchMlMetrics,
+  fetchMlAutoReplyTemplates,
   createMlAutoReplyTemplate,
   updateMlAutoReplyTemplate,
   deleteMlAutoReplyTemplate,
+  enqueueMl,
   bulkEnqueueMl,
+  syncNow,
+  answerMlQuestion,
+  setMlEnabled,
+  setMlAppId,
+  setMlDefaults,
+  buildAuthorizeUrl,
+  disconnectMl,
   embedProperty,
   type QueueApiRow,
   type MetaApiRow,
 } from './ml';
 
-// Wrapper que bypassa el problema de resolución de tipos de useList en este módulo
+// ============================================================
+// Wrapper para useList (bypassa problemas de resolución de tipos)
+// ============================================================
+
 function useListMl<T>(options: ListOptions<T>) {
   return useListHook<T>(options);
 }
+
+// ============================================================
+// Mappers (inline para evitar dependencias circulares)
+// ============================================================
 
 function toMlQueueRow(q: QueueApiRow): MlQueueRow {
   const prop = embedProperty(q.property);
@@ -71,8 +93,20 @@ function toMlMetaRow(m: MetaApiRow): MlMetaRow {
   };
 }
 
+// ============================================================
+// Query Hooks
+// ============================================================
+
 export function useMlOverview() {
   return useRpc<MlOverview, Record<string, never>>('ml_get_connection');
+}
+
+export function useMlSettings() {
+  return useMutation({
+    mutationFn: async () => {
+      return fetchMlSettings();
+    },
+  });
 }
 
 export function useMlQueue(filters?: {
@@ -121,21 +155,9 @@ export function useMlMeta(filters?: {
   });
 }
 
-export function useMlCategories() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlCategories();
-    },
-  });
-}
-
-export function useMlListingTypes() {
-  return useMutation({
-    mutationFn: async () => {
-      return fetchMlListingTypes();
-    },
-  });
-}
+// ============================================================
+// Query Hooks - Questions & Orders
+// ============================================================
 
 export function useMlQuestions(filters?: {
   status?: string;
@@ -179,6 +201,30 @@ export function useMlOrders(filters?: {
   });
 }
 
+// ============================================================
+// Query Hooks - Categories & Listing Types
+// ============================================================
+
+export function useMlCategories() {
+  return useMutation({
+    mutationFn: async () => {
+      return fetchMlCategories();
+    },
+  });
+}
+
+export function useMlListingTypes() {
+  return useMutation({
+    mutationFn: async () => {
+      return fetchMlListingTypes();
+    },
+  });
+}
+
+// ============================================================
+// Query Hooks - Metrics
+// ============================================================
+
 export function useMlMetrics() {
   return useMutation({
     mutationFn: async () => {
@@ -186,6 +232,10 @@ export function useMlMetrics() {
     },
   });
 }
+
+// ============================================================
+// Query Hooks - Auto Reply Templates
+// ============================================================
 
 export function useMlAutoReplyTemplates() {
   return useListMl<MlAutoReplyTemplate>({
@@ -224,17 +274,16 @@ export function useDeleteMlAutoReplyTemplate() {
   });
 }
 
-// ==================== ACTIONS ====================
+// ============================================================
+// Mutation Hooks - Actions
+// ============================================================
 
 export function useEnqueueMl() {
-  return useRpc<{ itemId: number; permalink: string }, { p_property_id: string; p_operation: MlOperation }>(
-    'ml_enqueue',
-    {
-      onSuccess: (data) => {
-        console.log('ML enqueue result:', data);
-      },
-    }
-  );
+  return useMutation({
+    mutationFn: async ({ propertyId, operation }: { propertyId: string; operation: MlOperation }) => {
+      return enqueueMl(propertyId, operation);
+    },
+  });
 }
 
 export function useBulkEnqueueMl() {
@@ -248,7 +297,6 @@ export function useBulkEnqueueMl() {
 export function useSyncNow() {
   return useMutation({
     mutationFn: async () => {
-      const { syncNow } = await import('./ml');
       return syncNow();
     },
   });
@@ -257,25 +305,18 @@ export function useSyncNow() {
 export function useAnswerMlQuestion() {
   return useMutation({
     mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
-      const { answerMlQuestion } = await import('./ml');
       return answerMlQuestion(questionId, answer);
     },
   });
 }
 
-export function useMlSettings() {
-  return useMutation({
-    mutationFn: async () => {
-      const { fetchMlSettings } = await import('./ml');
-      return fetchMlSettings();
-    },
-  });
-}
+// ============================================================
+// Mutation Hooks - Settings
+// ============================================================
 
 export function useSetMlEnabled() {
   return useMutation({
     mutationFn: async (enabled: boolean) => {
-      const { setMlEnabled } = await import('./ml');
       return setMlEnabled(enabled);
     },
   });
@@ -284,7 +325,6 @@ export function useSetMlEnabled() {
 export function useSetMlAppId() {
   return useMutation({
     mutationFn: async (appId: string) => {
-      const { setMlAppId } = await import('./ml');
       return setMlAppId(appId);
     },
   });
@@ -293,7 +333,6 @@ export function useSetMlAppId() {
 export function useSetMlDefaults() {
   return useMutation({
     mutationFn: async (defaults: { category_id: string; listing_type_id: string; condition: string }) => {
-      const { setMlDefaults } = await import('./ml');
       return setMlDefaults(defaults);
     },
   });
@@ -302,7 +341,6 @@ export function useSetMlDefaults() {
 export function useBuildAuthorizeUrl() {
   return useMutation({
     mutationFn: async (appId: string) => {
-      const { buildAuthorizeUrl } = await import('./ml');
       return buildAuthorizeUrl(appId);
     },
   });
@@ -311,13 +349,14 @@ export function useBuildAuthorizeUrl() {
 export function useDisconnectMl() {
   return useMutation({
     mutationFn: async () => {
-      const { disconnectMl } = await import('./ml');
       return disconnectMl();
     },
   });
 }
 
-// ==================== EXPORT ====================
+// ============================================================
+// Export
+// ============================================================
 
 export const ML_QUEUE_EXPORT_COLUMNS: ExportColumn<MlQueueRow>[] = [
   { key: 'id', label: 'ID' },
@@ -378,6 +417,56 @@ export function useExportMlMeta() {
   };
 }
 
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchMlOverview,
+  fetchMlSettings,
+  fetchMlQueue,
+  fetchMlMeta,
+  fetchMlCategories,
+  fetchMlListingTypes,
+  fetchMlQuestions,
+  fetchMlOrders,
+  fetchMlMetrics,
+  fetchMlAutoReplyTemplates,
+  createMlAutoReplyTemplate,
+  updateMlAutoReplyTemplate,
+  deleteMlAutoReplyTemplate,
+  enqueueMl,
+  bulkEnqueueMl,
+  syncNow,
+  answerMlQuestion,
+  setMlEnabled,
+  setMlAppId,
+  setMlDefaults,
+  buildAuthorizeUrl,
+  disconnectMl,
+  embedProperty,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
+
 export { queryKeys };
-export type { MlOperation, MlSyncStatus, MlConnectionInfo, MlOverview, MlSettings, MlQueueRow, MlMetaRow, MlCategory, MlListingType, MlQuestion, MlOrder, MlMetrics, MlItemMetrics, MlAutoReplyTemplate };
+export type {
+  MlOperation,
+  MlSyncStatus,
+  MlConnectionInfo,
+  MlOverview,
+  MlSettings,
+  MlQueueRow,
+  MlMetaRow,
+  MlCategory,
+  MlListingType,
+  MlQuestion,
+  MlOrder,
+  MlMetrics,
+  MlItemMetrics,
+  MlAutoReplyTemplate,
+};
 export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
+export type { QueueApiRow, MetaApiRow };

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { Database } from '../types/database';
 import type {
   PropertyStatus,
   ListingType,
@@ -9,7 +10,6 @@ import type {
   PropertyFormValues,
   PropertyImage,
   LocationOption,
-  PropertyDbRow,
 } from '../types/properties';
 import {
   STATUS_LABEL,
@@ -18,12 +18,62 @@ import {
   CONDITION_LABEL,
 } from '../types/properties';
 
-// Re-export types needed by consumers
-export type { PropertyStatus, ListingType, PropertyCondition, Currency, PropertyRow, PropertyDetail, PropertyFormValues, PropertyImage, LocationOption };
+// ============================================================
+// Re-export types and constants
+// ============================================================
+
+export type {
+  PropertyStatus,
+  ListingType,
+  PropertyCondition,
+  Currency,
+  PropertyRow,
+  PropertyDetail,
+  PropertyFormValues,
+  PropertyImage,
+  LocationOption,
+};
+
 export { STATUS_LABEL, STATUS_TONE, LISTING_TYPE_LABEL, CONDITION_LABEL };
 
-// Local utility functions
-function toNumeric(v: string | null | undefined): number | null {
+// ============================================================
+// DB row types with embedded relations
+// ============================================================
+
+type PropertyDbRow = Database['public']['Tables']['properties']['Row'];
+
+interface PropertyApiRow extends PropertyDbRow {
+  location: { name: string } | { name: string }[] | null;
+  images: { url: string; is_cover: boolean }[];
+}
+
+interface PropertyDetailApiRow extends PropertyDbRow {
+  location: { name: string } | { name: string }[] | null;
+  images: { url: string; is_cover: boolean }[];
+}
+
+// ============================================================
+// Constants
+// ============================================================
+
+const PROPERTIES_SELECT = `
+  id, code, title, status, listing_type, price, currency, area_total, 
+  bedrooms, bathrooms, featured, published_at, updated_at, 
+  location:locations(name), images:property_images(url, is_cover)
+`.trim();
+
+const PROPERTY_DETAIL_SELECT = `
+  id, code, title, slug, description, status, listing_type, price, currency, 
+  expenses, address, location_id, latitude, longitude, area_total, area_covered, 
+  bedrooms, bathrooms, garages, year_built, floors, featured, published_at, 
+  video_url, updated_at, location:locations(name), images:property_images(url, is_cover)
+`.trim();
+
+// ============================================================
+// Helpers
+// ============================================================
+
+export function toNumeric(v: string | null | undefined): number | null {
   if (v === null || v === undefined || v.trim() === '') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -39,15 +89,17 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
-// DB row type with embedded relations (from select with location:locations(name), images:property_images(...))
-interface PropertyApiRow extends PropertyDbRow {
-  location: { name: string } | { name: string }[] | null;
-  images: { url: string; is_cover: boolean }[];
+function embedLocationName(v: { name: string } | { name: string }[] | null): string | null {
+  if (!v) return null;
+  return Array.isArray(v) ? v[0]?.name ?? null : v.name;
 }
 
-// Mapper: DB row with embedded relations -> UI row
+// ============================================================
+// Mappers
+// ============================================================
+
 function toPropertyRow(p: PropertyApiRow): PropertyRow {
-  const locName = Array.isArray(p.location) ? p.location[0]?.name : p.location?.name;
+  const locName = embedLocationName(p.location);
   return {
     id: p.id,
     code: p.code,
@@ -67,77 +119,8 @@ function toPropertyRow(p: PropertyApiRow): PropertyRow {
   };
 }
 
-// Select string for properties with embedded relations
-const PROPERTIES_SELECT = `
-  id, code, title, status, listing_type, price, currency, area_total, bedrooms, bathrooms, featured, published_at, updated_at, location:locations(name), images:property_images(url, is_cover)
-`.trim();
-
-export async function fetchProperties(): Promise<PropertyRow[]> {
-  const { data, error } = await supabase
-    .from('properties')
-    .select(PROPERTIES_SELECT)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
-}
-
-export async function fetchLocations(): Promise<LocationOption[]> {
-  const { data, error } = await supabase
-    .from('locations')
-    .select('id, name, zone')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw new Error(error.message);
-  return (data ?? []) as LocationOption[];
-}
-
-// DB row type for detail with all columns
-interface PropertyDetailApiRow {
-  id: string;
-  code: number;
-  title: string;
-  slug: string;
-  description: string | null;
-  status: PropertyStatus;
-  listing_type: ListingType;
-  price: number | null;
-  currency: Currency;
-  expenses: number | null;
-  address: string | null;
-  location: { name: string } | { name: string }[] | null;
-  location_id: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  area_total: number | null;
-  area_covered: number | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  garages: number | null;
-  year_built: number | null;
-  floors: number | null;
-  featured: boolean;
-  published_at: string | null;
-  updated_at: string;
-  video_url: string | null;
-  images: { url: string; is_cover: boolean }[];
-}
-
-export async function fetchProperty(id: string): Promise<PropertyDetail> {
-  const { data, error } = await supabase
-    .from('properties')
-    .select(
-      'id, code, title, slug, description, status, listing_type, price, currency, expenses, address, location_id, latitude, longitude, area_total, area_covered, bedrooms, bathrooms, garages, year_built, floors, featured, published_at, video_url, location, updated_at, images:property_images(url, is_cover)'
-    )
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Propiedad no encontrada');
-
-  const p = data as PropertyDetailApiRow;
+function toPropertyDetail(p: PropertyDetailApiRow): PropertyDetail {
+  const locName = embedLocationName(p.location);
   return {
     id: p.id,
     code: p.code,
@@ -150,7 +133,7 @@ export async function fetchProperty(id: string): Promise<PropertyDetail> {
     currency: p.currency,
     expenses: p.expenses === null ? null : Number(p.expenses),
     address: p.address,
-    location: Array.isArray(p.location) ? p.location[0]?.name : p.location?.name ?? 'Sin zona',
+    location: locName ?? 'Sin zona',
     location_id: p.location_id,
     latitude: p.latitude,
     longitude: p.longitude,
@@ -168,6 +151,101 @@ export async function fetchProperty(id: string): Promise<PropertyDetail> {
     cover_url: p.images?.find((i) => i.is_cover)?.url ?? p.images?.[0]?.url ?? null,
   };
 }
+
+// ============================================================
+// API Functions - Fetch
+// ============================================================
+
+export async function fetchProperties(): Promise<PropertyRow[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTIES_SELECT)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
+}
+
+export async function fetchProperty(id: string): Promise<PropertyDetail> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTY_DETAIL_SELECT)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Propiedad no encontrada');
+  return toPropertyDetail(data as unknown as PropertyDetailApiRow);
+}
+
+export async function fetchDeletedProperties(): Promise<PropertyRow[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTIES_SELECT)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
+}
+
+export async function fetchPropertiesByStatus(status: PropertyStatus): Promise<PropertyRow[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTIES_SELECT)
+    .eq('status', status)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
+}
+
+export async function fetchPropertiesByListingType(listingType: ListingType): Promise<PropertyRow[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTIES_SELECT)
+    .eq('listing_type', listingType)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
+}
+
+export async function fetchFeaturedProperties(limit = 6): Promise<PropertyRow[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(PROPERTIES_SELECT)
+    .eq('featured', true)
+    .eq('status', 'publicada')
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
+}
+
+// ============================================================
+// API Functions - Locations
+// ============================================================
+
+export async function fetchLocations(): Promise<LocationOption[]> {
+  const { data, error } = await supabase
+    .from('locations')
+    .select('id, name, zone')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LocationOption[];
+}
+
+// ============================================================
+// API Functions - CRUD
+// ============================================================
 
 export async function createProperty(values: PropertyFormValues): Promise<PropertyDetail> {
   const slug = slugify(values.title);
@@ -209,13 +287,12 @@ export async function createProperty(values: PropertyFormValues): Promise<Proper
     throw new Error(error.message);
   }
 
-  // Fetch the full property detail after creation
   return fetchProperty(data.id);
 }
 
 export async function updateProperty(id: string, values: PropertyFormValues): Promise<void> {
   const detail = await fetchProperty(id);
-  const payload: Record<string, unknown> = {
+  const payload: Database['public']['Tables']['properties']['Update'] = {
     title: values.title,
     status: values.status,
     listing_type: values.listing_type,
@@ -245,48 +322,121 @@ export async function updateProperty(id: string, values: PropertyFormValues): Pr
     payload.slug = slugify(values.title);
   }
 
-  const { error } = await supabase.from('properties').update(payload).eq('id', id);
-  if (error) throw new Error(error.message);
-}
+  const { error } = await supabase
+    .from('properties')
+    .update(payload)
+    .eq('id', id);
 
-export function toFormValues(p: PropertyDetail): PropertyFormValues {
-  return {
-    title: p.title,
-    status: p.status,
-    listing_type: p.listing_type,
-    price: p.price,
-    currency: p.currency,
-    expenses: p.expenses,
-    description: p.description ?? '',
-    address: p.address ?? '',
-    location_id: p.location_id,
-    area_total: p.area_total,
-    area_covered: p.area_covered,
-    bedrooms: p.bedrooms,
-    bathrooms: p.bathrooms,
-    garages: p.garages,
-    floors: p.floors,
-    year_built: p.year_built,
-    featured: p.featured,
-    video_url: p.video_url ?? '',
-    latitude: p.latitude,
-    longitude: p.longitude,
-  };
+  if (error) throw new Error(error.message);
 }
 
 export async function updatePropertyStatus(id: string, status: PropertyStatus): Promise<void> {
   let published_at: string | null = null;
   if (status === 'publicada') {
-    const { data } = await supabase.from('properties').select('published_at').eq('id', id).maybeSingle();
-    if (data && !data.published_at) published_at = new Date().toISOString();
+    const { data } = await supabase
+      .from('properties')
+      .select('published_at')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (data && !data.published_at) {
+      published_at = new Date().toISOString();
+    }
   }
 
-  const patch: Record<string, unknown> = { status };
-  if (published_at) patch.published_at = published_at;
+const patch: Database['public']['Tables']['properties']['Update'] = { status };
+if (published_at) patch.published_at = published_at;
 
-  const { error } = await supabase.from('properties').update(patch).eq('id', id);
+const { error } = await supabase
+      .from('properties')
+      .update({ deleted_at: null })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+// ============================================================
+// API Functions - Soft Delete & Restore
+// ============================================================
+
+export async function softDeleteProperty(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('properties')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
+
+export async function restoreProperty(id: string): Promise<void> {
+const { error } = await supabase
+  .from('properties')
+  .update({ deleted_at: null })
+  .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function permanentDeleteProperty(id: string): Promise<void> {
+  // Obtener imágenes para eliminar del storage
+  const { data: images } = await supabase
+    .from('property_images')
+    .select('url')
+    .eq('property_id', id);
+
+  if (images?.length) {
+    const paths = images
+      .map((img) => img.url.split('/property-images/')[1])
+      .filter(Boolean);
+
+    if (paths.length) {
+      await supabase.storage.from('property-images').remove(paths);
+    }
+  }
+
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Duplicate
+// ============================================================
+
+export async function duplicateProperty(id: string): Promise<PropertyDetail> {
+  const original = await fetchProperty(id);
+
+  const duplicateValues: PropertyFormValues = {
+    title: `${original.title} (Copia)`,
+    status: 'borrador',
+    listing_type: original.listing_type,
+    price: original.price,
+    currency: original.currency,
+    expenses: original.expenses,
+    description: original.description || '',
+    address: original.address || '',
+    location_id: original.location_id,
+    area_total: original.area_total,
+    area_covered: original.area_covered,
+    bedrooms: original.bedrooms,
+    bathrooms: original.bathrooms,
+    garages: original.garages,
+    floors: original.floors,
+    year_built: original.year_built,
+    featured: false,
+    video_url: original.video_url || '',
+    latitude: original.latitude,
+    longitude: original.longitude,
+  };
+
+  return createProperty(duplicateValues);
+}
+
+// ============================================================
+// API Functions - Images
+// ============================================================
 
 export async function fetchPropertyImages(propertyId: string): Promise<PropertyImage[]> {
   const { data, error } = await supabase
@@ -342,10 +492,7 @@ export async function uploadPropertyImage(
   return data as PropertyImage;
 }
 
-export async function uploadPropertyImages(
-  propertyId: string,
-  files: File[]
-): Promise<PropertyImage[]> {
+export async function uploadPropertyImages(propertyId: string, files: File[]): Promise<PropertyImage[]> {
   const results: PropertyImage[] = [];
   for (const file of files) {
     try {
@@ -365,7 +512,11 @@ export async function deletePropertyImage(imageId: string): Promise<void> {
     .eq('id', imageId)
     .maybeSingle();
 
-  const { error } = await supabase.from('property_images').delete().eq('id', imageId);
+  const { error } = await supabase
+    .from('property_images')
+    .delete()
+    .eq('id', imageId);
+
   if (error) throw new Error(error.message);
 
   if (img?.url && img.url.includes('/property-images/')) {
@@ -379,54 +530,69 @@ export async function deletePropertyImage(imageId: string): Promise<void> {
 }
 
 export async function setPropertyCover(propertyId: string, imageId: string): Promise<void> {
+  // Primero, quitar cover de todas las imágenes
   await supabase
     .from('property_images')
     .update({ is_cover: false })
     .eq('property_id', propertyId)
     .eq('is_cover', true);
 
+  // Luego, establecer la nueva cover
   const { error } = await supabase
     .from('property_images')
     .update({ is_cover: true })
     .eq('id', imageId);
+
   if (error) throw new Error(error.message);
 }
 
-export async function reorderPropertyImages(
-  propertyId: string,
-  imageIds: string[]
-): Promise<void> {
+export async function reorderPropertyImages(propertyId: string, imageIds: string[]): Promise<void> {
   const updates = imageIds.map((id, index) =>
-    supabase.from('property_images').update({ position: index }).eq('id', id).eq('property_id', propertyId)
+    supabase
+      .from('property_images')
+      .update({ position: index })
+      .eq('id', id)
+      .eq('property_id', propertyId)
   );
+
   await Promise.all(updates);
 }
 
-function convertToWebP(file: File, quality = 0.85): Promise<File> {
+// ============================================================
+// Helpers - Image Conversion
+// ============================================================
+
+async function convertToWebP(file: File, quality = 0.85): Promise<File> {
   return new Promise((resolve) => {
     if (file.type === 'image/webp') {
       resolve(file);
       return;
     }
+
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
+
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
+
       if (!ctx) {
         resolve(file);
         return;
       }
+
       ctx.drawImage(img, 0, 0);
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            const webpFile = new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), {
-              type: 'image/webp',
-            });
+            const webpFile = new File(
+              [blob],
+              file.name.replace(/\.[^.]+$/, '.webp'),
+              { type: 'image/webp' }
+            );
             resolve(webpFile);
           } else {
             resolve(file);
@@ -436,89 +602,41 @@ function convertToWebP(file: File, quality = 0.85): Promise<File> {
         quality
       );
     };
+
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       resolve(file);
     };
+
     img.src = objectUrl;
   });
 }
 
-export async function softDeleteProperty(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('properties')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) throw new Error(error.message);
-}
+// ============================================================
+// Form Helpers
+// ============================================================
 
-export async function restoreProperty(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('properties')
-    .update({ deleted_at: null })
-    .eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function permanentDeleteProperty(id: string): Promise<void> {
-  const { data: images } = await supabase
-    .from('property_images')
-    .select('url')
-    .eq('property_id', id);
-
-  if (images?.length) {
-    const paths = images
-      .map((img) => img.url.split('/property-images/')[1])
-      .filter(Boolean);
-    if (paths.length) {
-      await supabase.storage.from('property-images').remove(paths);
-    }
-  }
-
-  const { error } = await supabase.from('properties').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function duplicateProperty(id: string): Promise<PropertyDetail> {
-  const original = await fetchProperty(id);
-
-  const duplicateValues: PropertyFormValues = {
-    title: `${original.title} (Copia)`,
-    status: 'borrador',
-    listing_type: original.listing_type,
-    price: original.price,
-    currency: original.currency,
-    expenses: original.expenses,
-    description: original.description || '',
-    address: original.address || '',
-    location_id: original.location_id,
-    area_total: original.area_total,
-    area_covered: original.area_covered,
-    bedrooms: original.bedrooms,
-    bathrooms: original.bathrooms,
-    garages: original.garages,
-    floors: original.floors,
-    year_built: original.year_built,
-    featured: false,
-    video_url: original.video_url || '',
-    latitude: original.latitude,
-    longitude: original.longitude,
+export function toFormValues(p: PropertyDetail): PropertyFormValues {
+  return {
+    title: p.title,
+    status: p.status,
+    listing_type: p.listing_type,
+    price: p.price,
+    currency: p.currency,
+    expenses: p.expenses,
+    description: p.description ?? '',
+    address: p.address ?? '',
+    location_id: p.location_id,
+    area_total: p.area_total,
+    area_covered: p.area_covered,
+    bedrooms: p.bedrooms,
+    bathrooms: p.bathrooms,
+    garages: p.garages,
+    floors: p.floors,
+    year_built: p.year_built,
+    featured: p.featured,
+    video_url: p.video_url ?? '',
+    latitude: p.latitude,
+    longitude: p.longitude,
   };
-
-  return createProperty(duplicateValues);
 }
-
-export async function fetchDeletedProperties(): Promise<PropertyRow[]> {
-  const { data, error } = await supabase
-    .from('properties')
-    .select(PROPERTIES_SELECT)
-    .not('deleted_at', 'is', null)
-    .order('deleted_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-
-  return ((data ?? []) as unknown as PropertyApiRow[]).map(toPropertyRow);
-}
-
-export { toNumeric };
-

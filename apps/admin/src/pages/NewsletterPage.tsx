@@ -115,7 +115,7 @@ export function NewsletterPage() {
                   </td>
                   <td className="cap">{NEWSLETTER_SOURCE_LABEL[s.source] ?? s.source}</td>
                   <td>
-                    <span className={`badge badge--${s.status === 'activo' ? 'success' : 'neutral'}`}>
+                    <span className={`badge badge--${s.status === 'active' ? 'success' : 'neutral'}`}>
                       {s.status}
                     </span>
                   </td>

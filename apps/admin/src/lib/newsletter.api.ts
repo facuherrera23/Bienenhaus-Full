@@ -8,8 +8,28 @@ import {
   NEWSLETTER_SOURCE_LABEL,
   NEWSLETTER_STATUS_LABEL,
 } from '../types/newsletter';
+import {
+  fetchSubscribers,
+  fetchSubscriber,
+  fetchDeletedSubscribers,
+  createSubscriber,
+  updateSubscriber,
+  deleteSubscriber,
+  restoreSubscriber,
+  countSubscribers,
+  bulkCreateSubscribers,
+  bulkUpdateSubscribers,
+  bulkDeleteSubscribers,
+  exportSubscribersToCSV,
+  subscribeFromLanding,
+  unsubscribeSubscriber,
+} from './newsletter';
 
 const NEWSLETTER_PATH = 'newsletter_subscribers';
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useSubscribers(filters?: {
   status?: NewsletterStatus;
@@ -45,6 +65,35 @@ export function useSubscriber(id: string | null) {
   );
 }
 
+export function useFetchDeletedSubscribers() {
+  return useList<NewsletterSubscriber>({
+    queryKey: queryKeys.leads([{ newsletter: { deleted: true } }]),
+    path: NEWSLETTER_PATH,
+    select: 'id,email,source,status,created_at',
+    filters: { deleted_at: 'not.is.null' },
+    page: 1,
+    pageSize: 50,
+    orderBy: 'deleted_at',
+    ascending: false,
+  });
+}
+
+export function useCountSubscribers(options?: {
+  status?: NewsletterStatus;
+  source?: NewsletterSource;
+  includeDeleted?: boolean;
+}) {
+  return useMutation({
+    mutationFn: async () => {
+      return countSubscribers(options);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
+
 export function useCreateSubscriber() {
   return useCreate<NewsletterSubscriber, Partial<NewsletterSubscriber>>(
     queryKeys.leads([{ newsletter: true }]),
@@ -75,11 +124,22 @@ export function useDeleteSubscriber() {
   );
 }
 
+// ============================================================
+// Mutation Hooks - Soft Delete & Restore
+// ============================================================
+
 export function useSoftDeleteSubscriber() {
   return useMutation({
     mutationFn: async (id: string) => {
-      const { softDeleteSubscriber } = await import('./newsletter');
-      return softDeleteSubscriber(id);
+      return deleteSubscriber(id, false);
+    },
+  });
+}
+
+export function usePermanentDeleteSubscriber() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return deleteSubscriber(id, true);
     },
   });
 }
@@ -87,42 +147,80 @@ export function useSoftDeleteSubscriber() {
 export function useRestoreSubscriber() {
   return useMutation({
     mutationFn: async (id: string) => {
-      const { restoreSubscriber } = await import('./newsletter');
       return restoreSubscriber(id);
     },
   });
 }
 
-export function useFetchDeletedSubscribers() {
-  return useList<NewsletterSubscriber>({
-    queryKey: queryKeys.leads([{ newsletter: { deleted: true } }]),
-    path: NEWSLETTER_PATH,
-    select: 'id,email,source,status,created_at',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
+// ============================================================
+// Mutation Hooks - Bulk Operations
+// ============================================================
+
+export function useBulkCreateSubscribers() {
+  return useMutation({
+    mutationFn: async ({ emails, source }: { emails: string[]; source?: NewsletterSource }) => {
+      return bulkCreateSubscribers(emails, source);
+    },
   });
 }
+
+export function useBulkUpdateSubscribers() {
+  return useMutation({
+    mutationFn: async ({ ids, params }: { ids: string[]; params: { status?: NewsletterStatus; source?: NewsletterSource } }) => {
+      return bulkUpdateSubscribers(ids, params);
+    },
+  });
+}
+
+export function useBulkDeleteSubscribers() {
+  return useMutation({
+    mutationFn: async ({ ids, permanent }: { ids: string[]; permanent?: boolean }) => {
+      return bulkDeleteSubscribers(ids, permanent ?? false);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Landing/Webhook
+// ============================================================
+
+export function useSubscribeFromLanding() {
+  return useMutation({
+    mutationFn: async ({ email, source }: { email: string; source?: NewsletterSource }) => {
+      return subscribeFromLanding({ email, source });
+    },
+  });
+}
+
+export function useUnsubscribeSubscriber() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      return unsubscribeSubscriber(email);
+    },
+  });
+}
+
+// ============================================================
+// Export
+// ============================================================
+
+export const SUBSCRIBER_EXPORT_COLUMNS: ExportColumn<NewsletterSubscriber>[] = [
+  { key: 'email', label: 'Email' },
+  { key: 'source', label: 'Origen', format: (v) => NEWSLETTER_SOURCE_LABEL[v as NewsletterSource] ?? v },
+  { key: 'status', label: 'Estado', format: (v) => NEWSLETTER_STATUS_LABEL[v as NewsletterStatus] ?? v },
+  { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
+];
 
 export function useExportSubscribers() {
   const { exportToCSV } = useExport<NewsletterSubscriber>();
   const subscribers = useSubscribers({ pageSize: 1000 });
-
-  const columns: ExportColumn<NewsletterSubscriber>[] = [
-    { key: 'email', label: 'Email' },
-    { key: 'source', label: 'Origen', format: (v) => NEWSLETTER_SOURCE_LABEL[v as NewsletterSource] ?? v },
-    { key: 'status', label: 'Estado', format: (v) => NEWSLETTER_STATUS_LABEL[v as NewsletterStatus] ?? v },
-    { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
-  ];
 
   return {
     exportToCSV: async (filename = 'newsletter') => {
       if (subscribers.data?.data) {
         await exportToCSV({
           data: subscribers.data.data,
-          columns,
+          columns: SUBSCRIBER_EXPORT_COLUMNS,
           filename,
         });
       }
@@ -130,6 +228,31 @@ export function useExportSubscribers() {
     isLoading: subscribers.isPending,
   };
 }
+
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchSubscribers,
+  fetchSubscriber,
+  fetchDeletedSubscribers,
+  createSubscriber,
+  updateSubscriber,
+  deleteSubscriber,
+  restoreSubscriber,
+  countSubscribers,
+  bulkCreateSubscribers,
+  bulkUpdateSubscribers,
+  bulkDeleteSubscribers,
+  exportSubscribersToCSV,
+  subscribeFromLanding,
+  unsubscribeSubscriber,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
 
 export { queryKeys };
 export type { NewsletterSource, NewsletterStatus, NewsletterSubscriber };

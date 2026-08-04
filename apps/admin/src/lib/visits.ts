@@ -1,4 +1,5 @@
 import { supabase, supabaseUrl } from './supabase';
+import type { Database, Json } from '../types/database';
 import type {
   VisitStatus,
   VisitType,
@@ -19,18 +20,50 @@ import {
   DAY_LABELS,
 } from '../types/visits';
 
-// Re-export types needed by consumers
-export type { VisitStatus, VisitType, VisitRow, VisitFormValues, AgentAvailability, RecurrenceRule, RecurringVisit, ReminderConfig, QrCheckin };
+// ============================================================
+// Re-export types and constants
+// ============================================================
+
+export type {
+  VisitStatus,
+  VisitType,
+  VisitRow,
+  VisitFormValues,
+  AgentAvailability,
+  RecurrenceRule,
+  RecurringVisit,
+  ReminderConfig,
+  QrCheckin,
+};
+
 export { VISIT_STATUS_LABEL, VISIT_STATUS_TONE, MEETING_TYPE_LABEL, DEFAULT_REMINDERS, DAY_LABELS };
 
-// DB row type with embedded relations (from select with lead:leads(...), property:properties(...), agent:agents(...))
+// ============================================================
+// DB row types with embedded relations
+// ============================================================
+
 export interface VisitApiRow extends VisitDbRow {
   lead: { name: string; email: string; phone: string } | { name: string; email: string; phone: string }[] | null;
   property: { title: string } | { title: string }[] | null;
   agent: { name: string } | { name: string }[] | null;
 }
 
-// Embed helpers
+// ============================================================
+// Constants
+// ============================================================
+
+const VISITS_SELECT = `
+  id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, 
+  status, location, meeting_type, meeting_link, notes, reminder_sent, 
+  reminder_sent_at, confirmed_at, completed_at, cancelled_at, 
+  cancellation_reason, created_by, created_at, updated_at, deleted_at, 
+  lead:leads(name, email, phone), property:properties(title), agent:agents(name)
+`.trim();
+
+// ============================================================
+// Helpers
+// ============================================================
+
 export function embedVisitName(v: { name: string } | { name: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.name ?? null : v.name;
@@ -51,7 +84,10 @@ export function embedVisitTitle(v: { title: string } | { title: string }[] | nul
   return Array.isArray(v) ? v[0]?.title ?? null : v.title;
 }
 
-// Mapper: DB row with embedded relations -> UI row
+// ============================================================
+// Mappers
+// ============================================================
+
 export function toVisitRow(v: VisitApiRow): VisitRow {
   return {
     id: v.id,
@@ -85,10 +121,9 @@ export function toVisitRow(v: VisitApiRow): VisitRow {
   };
 }
 
-// Select string for visits with embedded relations
-const VISITS_SELECT = `
-  id, lead_id, property_id, agent_id, title, description, starts_at, ends_at, status, location, meeting_type, meeting_link, notes, reminder_sent, reminder_sent_at, confirmed_at, completed_at, cancelled_at, cancellation_reason, created_by, created_at, updated_at, deleted_at, lead:leads(name, email, phone), property:properties(title), agent:agents(name)
-`.trim();
+// ============================================================
+// API Functions - Fetch
+// ============================================================
 
 export async function fetchVisits(): Promise<VisitRow[]> {
   const { data, error } = await supabase
@@ -114,6 +149,17 @@ export async function fetchVisit(id: string): Promise<VisitRow> {
   return toVisitRow(data as unknown as VisitApiRow);
 }
 
+export async function fetchDeletedVisits(): Promise<VisitRow[]> {
+  const { data, error } = await supabase
+    .from('visits')
+    .select(VISITS_SELECT)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
+}
+
 export async function fetchVisitsByAgent(agentId: string): Promise<VisitRow[]> {
   const { data, error } = await supabase
     .from('visits')
@@ -135,7 +181,9 @@ export async function fetchVisitsByDateRange(from: string, to: string, agentId?:
     .lte('starts_at', to)
     .order('starts_at', { ascending: true });
 
-  if (agentId) query = query.eq('agent_id', agentId);
+  if (agentId) {
+    query = query.eq('agent_id', agentId);
+  }
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
@@ -153,6 +201,34 @@ export async function fetchVisitsByLead(leadId: string): Promise<VisitRow[]> {
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
+
+export async function fetchVisitsByProperty(propertyId: string): Promise<VisitRow[]> {
+  const { data, error } = await supabase
+    .from('visits')
+    .select(VISITS_SELECT)
+    .eq('property_id', propertyId)
+    .is('deleted_at', null)
+    .order('starts_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
+}
+
+export async function fetchVisitsByStatus(status: VisitStatus): Promise<VisitRow[]> {
+  const { data, error } = await supabase
+    .from('visits')
+    .select(VISITS_SELECT)
+    .eq('status', status)
+    .is('deleted_at', null)
+    .order('starts_at', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
+}
+
+// ============================================================
+// API Functions - CRUD
+// ============================================================
 
 export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
   const { data, error } = await supabase
@@ -180,7 +256,7 @@ export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
 }
 
 export async function updateVisit(id: string, values: Partial<VisitFormValues>): Promise<void> {
-  const patch: Record<string, unknown> = {};
+   const patch: Database['public']['Tables']['visits']['Update'] = {};
 
   if (values.title !== undefined) patch.title = values.title;
   if (values.description !== undefined) patch.description = values.description || null;
@@ -196,19 +272,55 @@ export async function updateVisit(id: string, values: Partial<VisitFormValues>):
   if (values.agent_id !== undefined) patch.agent_id = values.agent_id;
 
   // Auto-set timestamps based on status changes
-  if (values.status === 'confirmada') patch.confirmed_at = new Date().toISOString();
-  if (values.status === 'completada') patch.completed_at = new Date().toISOString();
-  if (values.status === 'cancelada') patch.cancelled_at = new Date().toISOString();
+  if (values.status === 'confirmada') {
+    patch.confirmed_at = new Date().toISOString();
+  }
+  if (values.status === 'completada') {
+    patch.completed_at = new Date().toISOString();
+  }
+  if (values.status === 'cancelada') {
+    patch.cancelled_at = new Date().toISOString();
+  }
 
-  const { error } = await supabase.from('visits').update(patch).eq('id', id);
+  const { error } = await supabase
+    .from('visits')
+    .update(patch)
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
+
+export async function updateVisitStatus(id: string, status: VisitStatus): Promise<void> {
+   const patch: Database['public']['Tables']['visits']['Update'] = { status };
+
+  if (status === 'confirmada') {
+    patch.confirmed_at = new Date().toISOString();
+  }
+  if (status === 'completada') {
+    patch.completed_at = new Date().toISOString();
+  }
+  if (status === 'cancelada') {
+    patch.cancelled_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from('visits')
+    .update(patch)
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Soft Delete & Restore
+// ============================================================
 
 export async function softDeleteVisit(id: string): Promise<void> {
   const { error } = await supabase
     .from('visits')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
@@ -217,21 +329,22 @@ export async function restoreVisit(id: string): Promise<void> {
     .from('visits')
     .update({ deleted_at: null })
     .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
-export async function fetchDeletedVisits(): Promise<VisitRow[]> {
-  const { data, error } = await supabase
+export async function permanentDeleteVisit(id: string): Promise<void> {
+  const { error } = await supabase
     .from('visits')
-    .select(VISITS_SELECT)
-    .not('deleted_at', 'is', null)
-    .order('deleted_at', { ascending: false });
+    .delete()
+    .eq('id', id);
 
   if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as VisitApiRow[]).map(toVisitRow);
 }
 
-// Agent Availability (uses type from types/visits)
+// ============================================================
+// API Functions - Agent Availability
+// ============================================================
 
 export async function fetchAgentAvailability(agentId: string): Promise<AgentAvailability[]> {
   const { data, error } = await supabase
@@ -246,7 +359,9 @@ export async function fetchAgentAvailability(agentId: string): Promise<AgentAvai
   return (data ?? []) as AgentAvailability[];
 }
 
-export async function createAgentAvailability(values: Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>): Promise<AgentAvailability> {
+export async function createAgentAvailability(
+  values: Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>
+): Promise<AgentAvailability> {
   const { data, error } = await supabase
     .from('agent_availability')
     .insert(values)
@@ -257,43 +372,54 @@ export async function createAgentAvailability(values: Omit<AgentAvailability, 'i
   return data as AgentAvailability;
 }
 
-export async function updateAgentAvailability(id: string, values: Partial<AgentAvailability>): Promise<void> {
-  const { error } = await supabase.from('agent_availability').update(values).eq('id', id);
+export async function updateAgentAvailability(
+  id: string,
+  values: Partial<AgentAvailability>
+): Promise<void> {
+  const { error } = await supabase
+    .from('agent_availability')
+    .update(values)
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
 export async function deleteAgentAvailability(id: string): Promise<void> {
-  const { error } = await supabase.from('agent_availability').delete().eq('id', id);
+  const { error } = await supabase
+    .from('agent_availability')
+    .delete()
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Recurring Visits
-// ---------------------------------------------------------------------------
+// ============================================================
+// API Functions - Recurring Visits
+// ============================================================
 
 export async function createRecurringVisit(
   baseVisitId: string,
   rule: RecurrenceRule
 ): Promise<RecurringVisit> {
   const nextOccurrence = calculateNextOccurrence(rule, new Date());
-  
-  const { data, error } = await supabase
-    .from('recurring_visits')
-    .insert({
-      base_visit_id: baseVisitId,
-      rule,
-      next_occurrence: nextOccurrence.toISOString(),
-      occurrences_generated: 0,
-      is_active: true,
-    })
+
+const { data, error } = await supabase
+     .from('recurring_visits')
+     .insert({
+       base_visit_id: baseVisitId,
+       rule: rule as unknown as Json,
+       next_occurrence: nextOccurrence.toISOString(),
+       occurrences_generated: 0,
+       is_active: true,
+     })
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
-  return data as RecurringVisit;
+if (error) throw new Error(error.message);
+   return { ...data, rule: data.rule as unknown as RecurrenceRule };
 }
 
-export async function generateOccurrences(recurringId: string): Promise<{ created: number; skipped: number }> {
+export async function generateOccurrences(recurringId: number): Promise<{ created: number; skipped: number }> {
   const { data: recurring, error } = await supabase
     .from('recurring_visits')
     .select('*, base_visit:visits(*)')
@@ -303,8 +429,8 @@ export async function generateOccurrences(recurringId: string): Promise<{ create
   if (error || !recurring) throw new Error('Recurring visit not found');
   if (!recurring.is_active) return { created: 0, skipped: 0 };
 
-  const baseVisit = recurring.base_visit as VisitRow;
-  const rule = recurring.rule as RecurrenceRule;
+const baseVisit = recurring.base_visit as VisitRow;
+   const rule = recurring.rule as unknown as RecurrenceRule;
   let nextOccurrence = new Date(recurring.next_occurrence);
   const now = new Date();
   let created = 0;
@@ -328,15 +454,12 @@ export async function generateOccurrences(recurringId: string): Promise<{ create
       continue;
     }
 
-    // Check if already exists
-    const { data: existing } = await supabase
-      .from('visits')
-      .select('id')
-      .eq('lead_id', baseVisit.lead_id)
-      .eq('property_id', baseVisit.property_id)
-      .eq('agent_id', baseVisit.agent_id)
-      .eq('starts_at', nextOccurrence.toISOString())
-      .maybeSingle();
+// Check if already exists
+   let query = supabase.from('visits').select('id').eq('starts_at', nextOccurrence.toISOString());
+   if (baseVisit.lead_id) query = query.eq('lead_id', baseVisit.lead_id);
+   if (baseVisit.property_id) query = query.eq('property_id', baseVisit.property_id);
+   if (baseVisit.agent_id) query = query.eq('agent_id', baseVisit.agent_id);
+   const { data: existing } = await query.maybeSingle();
 
     if (!existing) {
       await supabase.from('visits').insert({
@@ -389,7 +512,7 @@ function addMinutes(date: Date, minutes: number): Date {
 
 function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
   const next = new Date(from);
-  
+
   switch (rule.frequency) {
     case 'daily':
       next.setDate(next.getDate() + rule.interval);
@@ -407,7 +530,9 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
           }
         }
         next.setDate(next.getDate() + daysAdded);
-        if (daysAdded === 0) next.setDate(next.getDate() + 7 * rule.interval);
+        if (daysAdded === 0) {
+          next.setDate(next.getDate() + 7 * rule.interval);
+        }
       } else {
         next.setDate(next.getDate() + 7 * rule.interval);
       }
@@ -424,24 +549,27 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
       next.setFullYear(next.getFullYear() + rule.interval);
       break;
   }
-  
+
   // Preserve time
   next.setHours(from.getHours(), from.getMinutes(), from.getSeconds(), from.getMilliseconds());
   return next;
 }
 
-// ---------------------------------------------------------------------------
-// Reminders (Email/SMS)
-// ---------------------------------------------------------------------------
+// ============================================================
+// API Functions - Reminders
+// ============================================================
 
-export async function createReminders(visitId: string, reminders: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[] = DEFAULT_REMINDERS): Promise<ReminderConfig[]> {
-  const { data, error } = await supabase
-    .from('visit_reminders')
-    .insert(reminders.map(r => ({ ...r, visit_id: visitId })))
-    .select();
+export async function createReminders(
+   visitId: string,
+   reminders: Omit<ReminderConfig, 'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'>[] = DEFAULT_REMINDERS
+): Promise<ReminderConfig[]> {
+   const { data, error } = await supabase
+     .from('visit_reminders')
+     .insert(reminders.map((r) => ({ ...r, visit_id: visitId })))
+     .select();
 
-  if (error) throw new Error(error.message);
-  return data as ReminderConfig[];
+   if (error) throw new Error(error.message);
+   return data as unknown as ReminderConfig[];
 }
 
 export async function processReminders(): Promise<{ sent: number; failed: number }> {
@@ -455,13 +583,13 @@ export async function processReminders(): Promise<{ sent: number; failed: number
   return { sent: data.sent ?? 0, failed: data.failed ?? 0 };
 }
 
-// ---------------------------------------------------------------------------
-// QR Check-in
-// ---------------------------------------------------------------------------
+// ============================================================
+// API Functions - QR Check-in
+// ============================================================
 
 export async function generateQrCode(visitId: string): Promise<QrCheckin> {
   const code = `VIS-${visitId.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`;
-  
+
   const { data, error } = await supabase
     .from('qr_checkins')
     .insert({ visit_id: visitId, code })
@@ -472,7 +600,10 @@ export async function generateQrCode(visitId: string): Promise<QrCheckin> {
   return data as QrCheckin;
 }
 
-export async function checkInWithQr(code: string, agentId: string): Promise<{ success: boolean; visit?: any; message: string }> {
+export async function checkInWithQr(
+  code: string,
+  agentId: string
+): Promise<{ success: boolean; visit?: any; message: string }> {
   const { data: checkin, error } = await supabase
     .from('qr_checkins')
     .select('*, visit:visits(*)')
@@ -498,7 +629,9 @@ export async function checkInWithQr(code: string, agentId: string): Promise<{ su
     .update({ checked_in: true, checked_in_at: now, checked_in_by: agentId })
     .eq('id', checkin.id);
 
-  if (updateError) return { success: false, message: 'Error al registrar' };
+  if (updateError) {
+    return { success: false, message: 'Error al registrar' };
+  }
 
   // Also update visit status to 'en_curso'
   await supabase

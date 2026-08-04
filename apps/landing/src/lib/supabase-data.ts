@@ -230,13 +230,14 @@ export function useAgents() {
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
+  // agents_public (vista 0031) filtra is_active/deleted_at y anon no tiene
+  // SELECT sobre la tabla: sin realtime, los cambios llegan con refetch().
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const { data: agents, error } = await supabase
-        .from('agents')
+        .from('agents_public')
         .select('id, name, email, matricula, role, photo_url, bio, sort_order, is_active')
-        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -255,18 +256,8 @@ export function useAgents() {
     mounted.current = true;
     fetchData();
 
-    const channel = supabase
-      .channel('agents_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'agents', filter: 'is_active=eq.true' },
-        () => fetchData()
-      )
-      .subscribe();
-
     return () => {
       mounted.current = false;
-      supabase.removeChannel(channel);
     };
   }, [fetchData]);
 

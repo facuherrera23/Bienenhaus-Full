@@ -72,7 +72,7 @@ function MlActionCell({
     setBusy(true);
     setCurrent(op);
     try {
-      await publishToML.mutateAsync({ p_property_id: property.id, p_operation: op });
+      await publishToML.mutateAsync({ propertyId: property.id, operation: op });
       pushToast({
         type: 'success',
         title: op === 'publish' ? 'Publicación encolada' : op === 'update' ? 'Actualización encolada' : 'Baja encolada',

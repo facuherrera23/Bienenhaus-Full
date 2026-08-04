@@ -41,7 +41,7 @@ export function AdminUsersPage() {
   };
 
   const inviteMutation = useMutation({
-    mutationFn: () => inviteAdminUser(inviteForm.email, inviteForm.full_name, inviteForm.role),
+    mutationFn: () => inviteAdminUser({ email: inviteForm.email, full_name: inviteForm.full_name, role: inviteForm.role }),
     onSuccess: () => {
       pushToast({
         type: 'success',

@@ -22,7 +22,7 @@ export interface ChatParticipant {
   agent_id: string;
   joined_at: string;
   last_read_at: string | null;
-  notifications_enabled: boolean;
+  notifications_enabled: boolean | null;
   agent_name: string | null;
   agent_email: string | null;
   agent_photo_url: string | null;

@@ -63,9 +63,8 @@ async function fetchProperties() {
 
 async function fetchAgents() {
   const { data, error } = await supabase
-    .from('agents')
-    .select('id, name, email, phone, matricula, role, photo_url, bio, sort_order')
-    .eq('is_active', true)
+    .from('agents_public')
+    .select('id, name, email, matricula, role, photo_url, bio, sort_order')
     .order('sort_order', { ascending: true });
 
   if (error) throw new Error(`Agents fetch error: ${error.message}`);

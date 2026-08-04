@@ -15,6 +15,7 @@ import {
   type ActivityAction,
   type ActivityRow,
 } from '../lib/activity';
+import type { PropertyStatus } from '../types/properties';
 import { useQuery } from '../lib/query/hooks';
 
 const ICON_BY_ACTION: Record<ActivityAction, typeof Plus> = {
@@ -42,7 +43,7 @@ function describe(row: ActivityRow): { title: string; detail: string } {
     case 'update':
       return { title: `Actualizó la propiedad ${title}`, detail: 'Datos modificados' };
     case 'status_change': {
-      const label = meta.status ? PROPERTY_STATUS_LABEL[meta.status] ?? meta.status : '';
+      const label = meta.status ? PROPERTY_STATUS_LABEL[meta.status as PropertyStatus] ?? meta.status : '';
       return { title: `Cambió el estado de la propiedad ${title}`, detail: label ? `→ ${label}` : '' };
     }
     case 'publish':

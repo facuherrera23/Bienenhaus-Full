@@ -1,56 +1,136 @@
 import { supabase, supabaseUrl } from './supabase';
+import type { Json } from '../types/database';
+import type {
+  MlOperation,
+  MlSyncStatus,
+  MlConnectionInfo,
+  MlOverview,
+  MlSettings,
+  MlQueueRow,
+  MlMetaRow,
+  MlCategory,
+  MlListingType,
+  MlQuestion,
+  MlOrder,
+  MlMetrics,
+  MlItemMetrics,
+  MlAutoReplyTemplate,
+} from '../types/ml';
+import type { Database } from '../types/database';
+import {
+  ML_OPERATION_LABEL,
+  ML_SYNC_STATUS_LABEL,
+  ML_SYNC_STATUS_TONE,
+} from '../types/ml';
 
-export type MlOperation = 'publish' | 'update' | 'delete';
-export type MlSyncStatus = 'pending' | 'processing' | 'success' | 'failed' | 'cancelled';
+// ============================================================
+// Re-export types and constants
+// ============================================================
 
-export const ML_OPERATION_LABEL: Record<MlOperation, string> = {
-  publish: 'Publicar',
-  update: 'Actualizar',
-  delete: 'Eliminar',
+export type {
+  MlOperation,
+  MlSyncStatus,
+  MlConnectionInfo,
+  MlOverview,
+  MlSettings,
+  MlQueueRow,
+  MlMetaRow,
+  MlCategory,
+  MlListingType,
+  MlQuestion,
+  MlOrder,
+  MlMetrics,
+  MlItemMetrics,
+  MlAutoReplyTemplate,
 };
 
-export const ML_SYNC_STATUS_LABEL: Record<MlSyncStatus, string> = {
-  pending: 'Pendiente',
-  processing: 'Procesando',
-  success: 'Éxito',
-  failed: 'Falló',
-  cancelled: 'Cancelada',
+export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
+
+// ============================================================
+// DB row types with embedded relations
+// ============================================================
+
+export type QueueApiRow = Database['public']['Tables']['ml_sync_queue']['Row'] & {
+  property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
-export const ML_SYNC_STATUS_TONE: Record<MlSyncStatus, string> = {
-  pending: 'neutral',
-  processing: 'warning',
-  success: 'success',
-  failed: 'danger',
-  cancelled: 'neutral',
+export type MetaApiRow = Database['public']['Tables']['property_ml_meta']['Row'] & {
+  property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
-// ---------------------------------------------------------------------------
-// Conexión
-// ---------------------------------------------------------------------------
+// ============================================================
+// Embed helper
+// ============================================================
 
-export interface MlConnectionInfo {
-  id: string;
-  provider: string;
-  site_id: string;
-  user_id: number | null;
-  nickname: string | null;
-  email: string | null;
-  token_expires_at: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+export function embedProperty(
+  v: { title: string; code: number } | { title: string; code: number }[] | null
+): {
+  title: string | null;
+  code: number | null;
+} {
+  if (!v) return { title: null, code: null };
+  return Array.isArray(v)
+    ? { title: v[0]?.title ?? null, code: v[0]?.code ?? null }
+    : { title: v.title, code: v.code };
 }
 
-export interface MlOverview {
-  ml_enabled: boolean;
-  connection: MlConnectionInfo | null;
+// ============================================================
+// Mappers
+// ============================================================
+
+function toMlQueueRow(q: QueueApiRow): MlQueueRow {
+  const prop = embedProperty(q.property);
+  return {
+    id: q.id,
+    property_id: q.property_id,
+    operation: q.operation,
+    status: q.status,
+    attempts: q.attempts,
+    max_attempts: q.max_attempts,
+    next_attempt_at: q.next_attempt_at,
+    ml_item_id: q.ml_item_id,
+    last_error: q.last_error,
+    created_at: q.created_at,
+    property_title: prop.title,
+    property_code: prop.code,
+  };
 }
+
+function toMlMetaRow(m: MetaApiRow): MlMetaRow {
+  const prop = embedProperty(m.property);
+  return {
+    property_id: m.property_id,
+    ml_item_id: m.ml_item_id,
+    status: m.status,
+    permalink: m.permalink,
+    price: m.price === null ? null : Number(m.price),
+    last_sync_at: m.last_sync_at,
+    last_sync_status: m.last_sync_status,
+    property_title: prop.title,
+    property_code: prop.code,
+  };
+}
+
+// ============================================================
+// SELECT strings
+// ============================================================
+
+const ML_QUEUE_SELECT = `
+  id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property:properties(title, code)
+`.trim();
+
+const ML_META_SELECT = `
+  property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property:properties(title, code)
+`.trim();
+
+// ============================================================
+// API Functions - Connection
+// ============================================================
 
 export async function fetchMlOverview(): Promise<MlOverview> {
   const { data, error } = await supabase.rpc('ml_get_connection');
   if (error) throw new Error(error.message);
-  return (data ?? { ml_enabled: false, connection: null }) as MlOverview;
+  return ((data as unknown) ?? { ml_enabled: false, connection: null }) as MlOverview;
 }
 
 export async function setMlEnabled(enabled: boolean): Promise<void> {
@@ -70,21 +150,24 @@ export async function setMlDefaults(defaults: {
 }
 
 async function upsertSetting(key: string, value: Record<string, unknown>): Promise<void> {
-  const { data } = await supabase.from('site_settings').select('id').eq('key', key).maybeSingle();
+  const { data } = await supabase
+    .from('site_settings')
+    .select('id')
+    .eq('key', key)
+    .maybeSingle();
+
   if (data) {
-    const { error } = await supabase.from('site_settings').update({ value }).eq('id', data.id);
+    const { error } = await supabase
+      .from('site_settings')
+      .update({ value: value as unknown as Json })
+      .eq('id', data.id);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from('site_settings')
-      .insert({ key, value, value_type: 'json', is_public: false });
+      .insert({ key, value: value as unknown as Json, value_type: 'json', is_public: false });
     if (error) throw new Error(error.message);
   }
-}
-
-export interface MlSettings {
-  app_id: string;
-  defaults: { category_id: string; listing_type_id: string; condition: string };
 }
 
 export async function fetchMlSettings(): Promise<MlSettings> {
@@ -92,14 +175,18 @@ export async function fetchMlSettings(): Promise<MlSettings> {
     .from('site_settings')
     .select('key, value')
     .in('key', ['ml_app_id', 'ml_defaults']);
+
   if (error) throw new Error(error.message);
 
   const settings: MlSettings = {
     app_id: '',
     defaults: { category_id: '', listing_type_id: 'gold_pro', condition: 'used' },
   };
+
   for (const s of data ?? []) {
-    if (s.key === 'ml_app_id') settings.app_id = String((s.value as { value?: unknown }).value ?? '');
+    if (s.key === 'ml_app_id') {
+      settings.app_id = String((s.value as { value?: unknown }).value ?? '');
+    }
     if (s.key === 'ml_defaults') {
       settings.defaults = {
         category_id: String((s.value as { category_id?: unknown }).category_id ?? ''),
@@ -108,6 +195,7 @@ export async function fetchMlSettings(): Promise<MlSettings> {
       };
     }
   }
+
   return settings;
 }
 
@@ -125,135 +213,46 @@ export function buildAuthorizeUrl(appId: string): string {
 export const ML_REDIRECT_URI = `${supabaseUrl}/functions/v1/ml-oauth`;
 
 export async function disconnectMl(): Promise<void> {
-  const { error } = await supabase.from('ml_connection').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase
+    .from('ml_connection')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Cola de sincronización
-// ---------------------------------------------------------------------------
-
-export interface MlQueueRow {
-  id: number;
-  property_id: string;
-  operation: MlOperation;
-  status: MlSyncStatus;
-  attempts: number;
-  max_attempts: number;
-  next_attempt_at: string;
-  ml_item_id: number | null;
-  last_error: string | null;
-  created_at: string;
-  property_title: string | null;
-  property_code: number | null;
-}
-
-export interface QueueApiRow {
-  id: number;
-  property_id: string;
-  operation: MlOperation;
-  status: MlSyncStatus;
-  attempts: number;
-  max_attempts: number;
-  next_attempt_at: string;
-  ml_item_id: number | null;
-  last_error: string | null;
-  created_at: string;
-  property: { title: string; code: number } | { title: string; code: number }[] | null;
-}
-
-export function embedProperty(v: { title: string; code: number } | { title: string; code: number }[] | null): {
-  title: string | null;
-  code: number | null;
-} {
-  if (!v) return { title: null, code: null };
-  return Array.isArray(v) ? { title: v[0]?.title ?? null, code: v[0]?.code ?? null } : { title: v.title, code: v.code };
-}
+// ============================================================
+// API Functions - Queue
+// ============================================================
 
 export async function fetchMlQueue(): Promise<MlQueueRow[]> {
   const { data, error } = await supabase
     .from('ml_sync_queue')
-    .select(
-      'id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property:properties(title, code)',
-    )
+    .select(ML_QUEUE_SELECT)
     .order('created_at', { ascending: false })
     .limit(50);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((q: QueueApiRow) => {
-    const prop = embedProperty(q.property);
-    return {
-      id: q.id,
-      property_id: q.property_id,
-      operation: q.operation,
-      status: q.status,
-      attempts: q.attempts,
-      max_attempts: q.max_attempts,
-      next_attempt_at: q.next_attempt_at,
-      ml_item_id: q.ml_item_id,
-      last_error: q.last_error,
-      created_at: q.created_at,
-      property_title: prop.title,
-      property_code: prop.code,
-    };
-  });
+  return ((data ?? []) as unknown as QueueApiRow[]).map(toMlQueueRow);
 }
 
-// ---------------------------------------------------------------------------
-// Estado de propiedades en Mercado Libre
-// ---------------------------------------------------------------------------
-
-export interface MlMetaRow {
-  property_id: string;
-  ml_item_id: number | null;
-  status: string | null;
-  permalink: string | null;
-  price: number | null;
-  last_sync_at: string | null;
-  last_sync_status: MlSyncStatus | null;
-  property_title: string | null;
-  property_code: number | null;
-}
-
-export interface MetaApiRow {
-  property_id: string;
-  ml_item_id: number | null;
-  status: string | null;
-  permalink: string | null;
-  price: number | null;
-  last_sync_at: string | null;
-  last_sync_status: MlSyncStatus | null;
-  property: { title: string; code: number } | { title: string; code: number }[] | null;
-}
+// ============================================================
+// API Functions - Meta
+// ============================================================
 
 export async function fetchMlMeta(): Promise<MlMetaRow[]> {
   const { data, error } = await supabase
     .from('property_ml_meta')
-    .select(
-      'property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property:properties(title, code)',
-    )
+    .select(ML_META_SELECT)
     .order('last_sync_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((m: MetaApiRow) => {
-    const prop = embedProperty(m.property);
-    return {
-      property_id: m.property_id,
-      ml_item_id: m.ml_item_id,
-      status: m.status,
-      permalink: m.permalink,
-      price: m.price === null ? null : Number(m.price),
-      last_sync_at: m.last_sync_at,
-      last_sync_status: m.last_sync_status,
-      property_title: prop.title,
-      property_code: prop.code,
-    };
-  });
+  return ((data ?? []) as unknown as MetaApiRow[]).map(toMlMetaRow);
 }
 
-// ---------------------------------------------------------------------------
-// Acciones
-// ---------------------------------------------------------------------------
+// ============================================================
+// API Functions - Actions
+// ============================================================
 
 export async function enqueueMl(propertyId: string, operation: MlOperation): Promise<void> {
   const { error } = await supabase.rpc('ml_enqueue', {
@@ -275,22 +274,20 @@ export async function syncNow(): Promise<{ processed: number }> {
       'content-type': 'application/json',
     },
   });
+
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text ? `Sync falló (${res.status}): ${text.slice(0, 200)}` : `Sync falló (${res.status})`);
+    throw new Error(
+      text ? `Sync falló (${res.status}): ${text.slice(0, 200)}` : `Sync falló (${res.status})`
+    );
   }
+
   return await res.json();
 }
 
-export interface MlCategory {
-  id: string;
-  name: string;
-}
-
-export interface MlListingType {
-  id: string;
-  name: string;
-}
+// ============================================================
+// API Functions - Categories & Listing Types
+// ============================================================
 
 export async function fetchMlCategories(): Promise<MlCategory[]> {
   const { data } = await supabase.auth.getSession();
@@ -301,6 +298,7 @@ export async function fetchMlCategories(): Promise<MlCategory[]> {
     method: 'GET',
     headers: { authorization: `Bearer ${token}` },
   });
+
   if (!res.ok) throw new Error(`No se pudieron cargar categorías`);
   return await res.json();
 }
@@ -314,39 +312,14 @@ export async function fetchMlListingTypes(): Promise<MlListingType[]> {
     method: 'GET',
     headers: { authorization: `Bearer ${token}` },
   });
+
   if (!res.ok) throw new Error(`No se pudieron cargar tipos de publicación`);
   return await res.json();
 }
 
-export interface MlQuestion {
-  id: number;
-  question_id: string;
-  property_id: string | null;
-  ml_item_id: number;
-  question_text: string | null;
-  answer_text: string | null;
-  status: 'unanswered' | 'answered' | 'deleted';
-  from_user_id: number | null;
-  from_user_nickname: string | null;
-  date_created: string | null;
-  date_updated: string | null;
-  received_at: string;
-}
-
-export interface MlOrder {
-  id: number;
-  order_id: string;
-  property_id: string | null;
-  ml_item_id: number;
-  buyer_id: number | null;
-  buyer_nickname: string | null;
-  status: 'new' | 'confirmed' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
-  total_amount: number | null;
-  currency: string;
-  date_created: string | null;
-  date_closed: string | null;
-  received_at: string;
-}
+// ============================================================
+// API Functions - Questions & Orders
+// ============================================================
 
 export async function fetchMlQuestions(): Promise<MlQuestion[]> {
   const { data, error } = await supabase
@@ -354,6 +327,7 @@ export async function fetchMlQuestions(): Promise<MlQuestion[]> {
     .select('*')
     .order('received_at', { ascending: false })
     .limit(50);
+
   if (error) throw new Error(error.message);
   return (data ?? []) as MlQuestion[];
 }
@@ -364,32 +338,14 @@ export async function fetchMlOrders(): Promise<MlOrder[]> {
     .select('*')
     .order('received_at', { ascending: false })
     .limit(50);
+
   if (error) throw new Error(error.message);
   return (data ?? []) as MlOrder[];
 }
 
-export interface MlMetrics {
-  items: MlItemMetrics[];
-  total_visits: number;
-  total_questions: number;
-  unanswered_questions: number;
-  total_sales: number;
-  total_revenue: number;
-  conversion_rate: number;
-}
-
-export interface MlItemMetrics {
-  item_id: string;
-  title: string;
-  visits: number;
-  questions: number;
-  sold_quantity: number;
-  available_quantity: number;
-  price: number;
-  currency_id: string;
-  status: string;
-  permalink: string;
-}
+// ============================================================
+// API Functions - Metrics
+// ============================================================
 
 export async function fetchMlMetrics(): Promise<MlMetrics> {
   const { data } = await supabase.auth.getSession();
@@ -400,54 +356,65 @@ export async function fetchMlMetrics(): Promise<MlMetrics> {
     method: 'GET',
     headers: { authorization: `Bearer ${token}` },
   });
+
   if (!res.ok) throw new Error(`No se pudieron cargar métricas`);
   return await res.json();
 }
 
-export interface MlAutoReplyTemplate {
-  id: number;
-  name: string;
-  trigger: 'new_question' | 'new_order' | 'order_paid' | 'order_shipped' | 'order_delivered';
-  message: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// ============================================================
+// API Functions - Auto Reply Templates
+// ============================================================
 
 export async function fetchMlAutoReplyTemplates(): Promise<MlAutoReplyTemplate[]> {
   const { data, error } = await supabase
     .from('ml_auto_reply_templates')
     .select('*')
     .order('created_at', { ascending: false });
+
   if (error) throw new Error(error.message);
   return (data ?? []) as MlAutoReplyTemplate[];
 }
 
-export async function createMlAutoReplyTemplate(template: Omit<MlAutoReplyTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<MlAutoReplyTemplate> {
+export async function createMlAutoReplyTemplate(
+  template: Omit<MlAutoReplyTemplate, 'id' | 'created_at' | 'updated_at'>
+): Promise<MlAutoReplyTemplate> {
   const { data, error } = await supabase
     .from('ml_auto_reply_templates')
     .insert(template)
     .select()
     .single();
+
   if (error) throw new Error(error.message);
   return data as MlAutoReplyTemplate;
 }
 
-export async function updateMlAutoReplyTemplate(id: number, template: Partial<MlAutoReplyTemplate>): Promise<MlAutoReplyTemplate> {
+export async function updateMlAutoReplyTemplate(
+  id: number,
+  template: Partial<MlAutoReplyTemplate>
+): Promise<MlAutoReplyTemplate> {
   const { data, error } = await supabase
     .from('ml_auto_reply_templates')
     .update(template)
     .eq('id', id)
     .select()
     .single();
+
   if (error) throw new Error(error.message);
   return data as MlAutoReplyTemplate;
 }
 
 export async function deleteMlAutoReplyTemplate(id: number): Promise<void> {
-  const { error } = await supabase.from('ml_auto_reply_templates').delete().eq('id', id);
+  const { error } = await supabase
+    .from('ml_auto_reply_templates')
+    .delete()
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
+
+// ============================================================
+// API Functions - Answer Question
+// ============================================================
 
 export async function answerMlQuestion(questionId: string, answer: string): Promise<void> {
   const { data } = await supabase.auth.getSession();
@@ -462,8 +429,13 @@ export async function answerMlQuestion(questionId: string, answer: string): Prom
     },
     body: JSON.stringify({ question_id: questionId, answer }),
   });
+
   if (!res.ok) throw new Error(`Error respondiendo pregunta`);
 }
+
+// ============================================================
+// API Functions - Bulk Enqueue
+// ============================================================
 
 export async function bulkEnqueueMl(propertyIds: string[], operation: MlOperation): Promise<void> {
   const { data } = await supabase.auth.getSession();
@@ -478,5 +450,6 @@ export async function bulkEnqueueMl(propertyIds: string[], operation: MlOperatio
     },
     body: JSON.stringify({ property_ids: propertyIds, operation }),
   });
+
   if (!res.ok) throw new Error(`Error encolando en lote`);
 }

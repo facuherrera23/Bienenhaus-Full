@@ -1,4 +1,9 @@
 import { supabase } from './supabase';
+import type { Json } from '../types/database';
+
+// ============================================================
+// Types
+// ============================================================
 
 export type ContentSection =
   | 'hero'
@@ -30,6 +35,10 @@ export interface SiteSettingRow {
   description: string | null;
   updated_at: string;
 }
+
+// ============================================================
+// Constants
+// ============================================================
 
 export const SECTION_LABELS: Record<ContentSection, string> = {
   hero: 'Hero',
@@ -64,9 +73,9 @@ export function sortSections(sections: ContentSection[]): ContentSection[] {
   return [...sections].sort((a, b) => SECTION_ORDER.indexOf(a) - SECTION_ORDER.indexOf(b));
 }
 
-// ---------------------------------------------------------------------------
+// ============================================================
 // Metadata de campos por (section, key) para el editor
-// ---------------------------------------------------------------------------
+// ============================================================
 
 export type FieldType = 'text' | 'textarea' | 'number' | 'image' | 'boolean';
 
@@ -226,6 +235,10 @@ export const IMAGE_SETTINGS: Record<string, string> = {
   og_image: 'Imagen para compartir en redes',
 };
 
+// ============================================================
+// Helper Functions - Content
+// ============================================================
+
 export function contentFieldsFor(section: string, key: string): FieldMeta[] | null {
   return CONTENT_FIELD_META[`${section}.${key}`] ?? null;
 }
@@ -239,7 +252,9 @@ export function isListField(section: string, key: string): boolean {
 }
 
 export function settingFieldsFor(key: string): FieldMeta[] | null {
-  if (key in IMAGE_SETTINGS) return [{ key: 'value', label: IMAGE_SETTINGS[key], type: 'image' }];
+  if (key in IMAGE_SETTINGS) {
+    return [{ key: 'value', label: IMAGE_SETTINGS[key], type: 'image' }];
+  }
   return SETTINGS_FIELD_META[key] ?? null;
 }
 
@@ -252,9 +267,9 @@ export function genericFields(value: Record<string, unknown>): FieldMeta[] {
   }));
 }
 
-// ---------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------
+// ============================================================
+// API Functions - Site Content
+// ============================================================
 
 export async function fetchSiteContent(): Promise<SiteContentRow[]> {
   const { data, error } = await supabase
@@ -267,8 +282,35 @@ export async function fetchSiteContent(): Promise<SiteContentRow[]> {
   return (data ?? []) as SiteContentRow[];
 }
 
+export async function fetchSiteContentBySection(section: ContentSection): Promise<SiteContentRow[]> {
+  const { data, error } = await supabase
+    .from('site_content')
+    .select('id, section, key, value, locale, is_active, updated_at')
+    .eq('section', section)
+    .order('key', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SiteContentRow[];
+}
+
+export async function fetchSiteContentByKey(section: ContentSection, key: string): Promise<SiteContentRow | null> {
+  const { data, error } = await supabase
+    .from('site_content')
+    .select('id, section, key, value, locale, is_active, updated_at')
+    .eq('section', section)
+    .eq('key', key)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as SiteContentRow | null;
+}
+
 export async function updateSiteContent(id: string, value: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.from('site_content').update({ value }).eq('id', id);
+  const { error } = await supabase
+    .from('site_content')
+    .update({ value: value as unknown as Json })
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
@@ -286,7 +328,7 @@ export async function upsertSiteContent(input: UpsertContentInput): Promise<void
   if (input.id) {
     const { error } = await supabase
       .from('site_content')
-      .update({ value: input.value, is_active: input.is_active })
+      .update({ value: input.value as unknown as Json, is_active: input.is_active })
       .eq('id', input.id);
     if (error) throw new Error(error.message);
     return;
@@ -299,12 +341,13 @@ export async function upsertSiteContent(input: UpsertContentInput): Promise<void
     .eq('key', input.key)
     .eq('locale', input.locale)
     .maybeSingle();
+
   if (findError) throw new Error(findError.message);
 
   if (existing) {
     const { error } = await supabase
       .from('site_content')
-      .update({ value: input.value, is_active: input.is_active })
+      .update({ value: input.value as unknown as Json, is_active: input.is_active })
       .eq('id', existing.id);
     if (error) throw new Error(error.message);
     return;
@@ -314,11 +357,25 @@ export async function upsertSiteContent(input: UpsertContentInput): Promise<void
     section: input.section,
     key: input.key,
     locale: input.locale,
-    value: input.value,
+    value: input.value as unknown as Json,
     is_active: input.is_active,
   });
+
   if (error) throw new Error(error.message);
 }
+
+export async function deleteSiteContent(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('site_content')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Site Settings
+// ============================================================
 
 export async function fetchSiteSettings(): Promise<SiteSettingRow[]> {
   const { data, error } = await supabase
@@ -330,14 +387,71 @@ export async function fetchSiteSettings(): Promise<SiteSettingRow[]> {
   return (data ?? []) as SiteSettingRow[];
 }
 
+export async function fetchSiteSetting(key: string): Promise<SiteSettingRow | null> {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('id, key, value, value_type, is_public, description, updated_at')
+    .eq('key', key)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as SiteSettingRow | null;
+}
+
 export async function updateSiteSetting(id: string, value: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.from('site_settings').update({ value }).eq('id', id);
+  const { error } = await supabase
+    .from('site_settings')
+    .update({ value: value as unknown as Json })
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
+export async function upsertSiteSetting(
+  key: string,
+  value: Record<string, unknown>,
+  options?: { value_type?: 'string' | 'number' | 'boolean' | 'json'; is_public?: boolean; description?: string }
+): Promise<void> {
+  const { data: existing, error: findError } = await supabase
+    .from('site_settings')
+    .select('id')
+    .eq('key', key)
+    .maybeSingle();
+
+  if (findError) throw new Error(findError.message);
+
+  if (existing) {
+    const { error } = await supabase
+      .from('site_settings')
+      .update({ value: value as unknown as Json })
+      .eq('id', existing.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const { error } = await supabase.from('site_settings').insert({
+    key,
+    value: value as unknown as Json,
+    value_type: options?.value_type ?? 'json',
+    is_public: options?.is_public ?? false,
+    description: options?.description ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteSiteSetting(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('site_settings')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
 // Storage de imágenes del sitio
-// ---------------------------------------------------------------------------
+// ============================================================
 
 export async function uploadSiteImage(file: File): Promise<string> {
   const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
@@ -356,3 +470,13 @@ export async function deleteSiteImage(url: string): Promise<void> {
     // no op: si el archivo no existe en storage, seguimos
   }
 }
+
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  CONTENT_FIELD_META,
+  LIST_FIELD_META,
+  SETTINGS_FIELD_META,
+};

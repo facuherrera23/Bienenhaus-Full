@@ -14,18 +14,31 @@ import {
   DAY_LABELS,
 } from '../types/agents';
 import {
+  fetchAgents,
+  fetchAgent,
+  fetchDeletedAgents,
+  createAgent,
+  updateAgent,
+  softDeleteAgent,
+  restoreAgent,
+  permanentDeleteAgent,
   updateAgentPermissions,
   updateAgentCommission,
   updateAgentSchedule,
   calculateCommission,
-  softDeleteAgent,
-  restoreAgent,
+  uploadAgentPhoto,
+  deleteAgentPhoto,
   toRow,
+  toFormValues,
   type AgentApiRow,
 } from './agents';
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 
 const AGENTS_PATH = 'agents';
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useAgents(filters?: {
   is_active?: boolean;
@@ -59,6 +72,24 @@ export function useAgent(id: string | null) {
   );
 }
 
+export function useFetchDeletedAgents() {
+  return useList<AgentRow, AgentApiRow>({
+    queryKey: queryKeys.agents({ deleted: true }),
+    path: AGENTS_PATH,
+    select: '*,leads(count)',
+    filters: { deleted_at: 'not.is.null' },
+    page: 1,
+    pageSize: 50,
+    orderBy: 'deleted_at',
+    ascending: false,
+    transform: toRow,
+  });
+}
+
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
+
 export function useCreateAgent() {
   return useCreate<AgentRow, AgentFormValues>(
     queryKeys.agents(),
@@ -89,11 +120,33 @@ export function useDeleteAgent() {
   );
 }
 
+// ============================================================
+// Mutation Hooks - Photo Upload
+// ============================================================
+
 export function useAgentPhoto() {
   return useUpload('agent-photos');
 }
 
-// ==================== CUSTOM MUTATIONS ====================
+export function useUploadAgentPhoto() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      return uploadAgentPhoto(file);
+    },
+  });
+}
+
+export function useDeleteAgentPhoto() {
+  return useMutation({
+    mutationFn: async (url: string) => {
+      return deleteAgentPhoto(url);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Toggle Active
+// ============================================================
 
 export function useToggleAgentActive() {
   return useMutation({
@@ -104,6 +157,10 @@ export function useToggleAgentActive() {
   });
 }
 
+// ============================================================
+// Mutation Hooks - Permissions
+// ============================================================
+
 export function useUpdateAgentPermissions() {
   return useMutation({
     mutationFn: async ({ id, permissions }: { id: string; permissions: Partial<AgentPermissions> }) => {
@@ -111,6 +168,10 @@ export function useUpdateAgentPermissions() {
     },
   });
 }
+
+// ============================================================
+// Mutation Hooks - Commission
+// ============================================================
 
 export function useUpdateAgentCommission() {
   return useMutation({
@@ -120,6 +181,26 @@ export function useUpdateAgentCommission() {
   });
 }
 
+export function useCalculateCommission() {
+  return useMutation({
+    mutationFn: async ({
+      agentId,
+      operationType,
+      amount,
+    }: {
+      agentId: string;
+      operationType: 'sale' | 'rental';
+      amount: number;
+    }) => {
+      return calculateCommission(agentId, operationType, amount);
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - Schedule
+// ============================================================
+
 export function useUpdateAgentSchedule() {
   return useMutation({
     mutationFn: async ({ id, schedule }: { id: string; schedule: AgentSchedule[] }) => {
@@ -128,15 +209,9 @@ export function useUpdateAgentSchedule() {
   });
 }
 
-export function useCalculateCommission() {
-  return useMutation({
-    mutationFn: async ({ agentId, operationType, amount }: { agentId: string; operationType: 'sale' | 'rental'; amount: number }) => {
-      return calculateCommission(agentId, operationType, amount);
-    },
-  });
-}
-
-// ==================== AVAILABILITY ====================
+// ============================================================
+// Mutation Hooks - Availability
+// ============================================================
 
 export function useAgentAvailability(agentId: string | null) {
   return useList<AgentAvailability>({
@@ -182,7 +257,9 @@ export function useDeleteAgentAvailability() {
   );
 }
 
-// ==================== SOFT DELETE ====================
+// ============================================================
+// Mutation Hooks - Soft Delete & Restore
+// ============================================================
 
 export function useSoftDeleteAgent() {
   return useMutation({
@@ -200,21 +277,17 @@ export function useRestoreAgent() {
   });
 }
 
-export function useFetchDeletedAgents() {
-  return useList<AgentRow, AgentApiRow>({
-    queryKey: queryKeys.agents({ deleted: true }),
-    path: AGENTS_PATH,
-    select: '*,leads(count)',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
-    transform: toRow,
+export function usePermanentDeleteAgent() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return permanentDeleteAgent(id);
+    },
   });
 }
 
-// ==================== EXPORT ====================
+// ============================================================
+// Export
+// ============================================================
 
 export const AGENT_EXPORT_COLUMNS: ExportColumn<AgentRow>[] = [
   { key: 'name', label: 'Nombre' },
@@ -245,6 +318,33 @@ export function useExportAgents() {
     isLoading: agents.isPending,
   };
 }
+
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchAgents,
+  fetchAgent,
+  fetchDeletedAgents,
+  createAgent,
+  updateAgent,
+  softDeleteAgent,
+  restoreAgent,
+  permanentDeleteAgent,
+  updateAgentPermissions,
+  updateAgentCommission,
+  updateAgentSchedule,
+  calculateCommission,
+  uploadAgentPhoto,
+  deleteAgentPhoto,
+  toRow,
+  toFormValues,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
 
 export { queryKeys };
 export type { AgentRow, AgentFormValues, AgentPermissions, AgentCommission, AgentSchedule, AgentAvailability };

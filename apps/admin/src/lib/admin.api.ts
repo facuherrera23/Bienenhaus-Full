@@ -7,8 +7,30 @@ import {
   ROLE_LABEL,
   ROLE_TONE,
 } from '../types/admin';
+import {
+  fetchAdminUsers,
+  fetchAdminUser,
+  fetchMyUserId,
+  fetchMyAdminUser,
+  updateAdminUser,
+  updateAdminUserRole,
+  toggleAdminUserActive,
+  deleteAdminUser,
+  inviteAdminUser,
+  resetAdminUserPassword,
+  removeAdminUser,
+  updateAdminLastLogin,
+  isAdmin,
+  isSuperAdmin,
+  hasRole,
+  syncAdminUserWithAuth,
+} from './admin';
 
 const ADMIN_USERS_PATH = 'admin_users';
+
+// ============================================================
+// Query Hooks
+// ============================================================
 
 export function useAdminUsers() {
   return useList<AdminUserRow>({
@@ -31,6 +53,26 @@ export function useAdminUser(id: string | null) {
     !!id
   );
 }
+
+export function useMyAdminUser() {
+  return useMutation({
+    mutationFn: async () => {
+      return fetchMyAdminUser();
+    },
+  });
+}
+
+export function useMyUserId() {
+  return useMutation({
+    mutationFn: async () => {
+      return fetchMyUserId();
+    },
+  });
+}
+
+// ============================================================
+// Mutation Hooks - CRUD
+// ============================================================
 
 export function useCreateAdminUser() {
   return useCreate<AdminUserRow, Partial<AdminUserRow>>(
@@ -62,10 +104,13 @@ export function useDeleteAdminUser() {
   );
 }
 
+// ============================================================
+// Mutation Hooks - Role & Status
+// ============================================================
+
 export function useUpdateAdminUserRole() {
   return useMutation({
     mutationFn: async ({ id, role }: { id: string; role: AdminRole }) => {
-      const { updateAdminUserRole } = await import('./adminUsers');
       return updateAdminUserRole(id, role);
     },
   });
@@ -74,17 +119,19 @@ export function useUpdateAdminUserRole() {
 export function useToggleAdminUserActive() {
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const { toggleAdminUserActive } = await import('./adminUsers');
       return toggleAdminUserActive(id, isActive);
     },
   });
 }
 
+// ============================================================
+// Mutation Hooks - Invite & Reset
+// ============================================================
+
 export function useInviteAdminUser() {
   return useMutation({
     mutationFn: async ({ email, fullName, role }: { email: string; fullName: string; role: AdminRole }) => {
-      const { inviteAdminUser } = await import('./adminUsers');
-      return inviteAdminUser(email, fullName, role);
+      return inviteAdminUser({ email, full_name: fullName, role });
     },
   });
 }
@@ -92,7 +139,6 @@ export function useInviteAdminUser() {
 export function useResetAdminUserPassword() {
   return useMutation({
     mutationFn: async (email: string) => {
-      const { resetAdminUserPassword } = await import('./adminUsers');
       return resetAdminUserPassword(email);
     },
   });
@@ -101,11 +147,81 @@ export function useResetAdminUserPassword() {
 export function useRemoveAdminUser() {
   return useMutation({
     mutationFn: async (email: string) => {
-      const { removeAdminUser } = await import('./adminUsers');
       return removeAdminUser(email);
     },
   });
 }
+
+// ============================================================
+// Mutation Hooks - Auth Helpers
+// ============================================================
+
+export function useUpdateAdminLastLogin() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return updateAdminLastLogin(userId);
+    },
+  });
+}
+
+export function useIsAdmin() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return isAdmin(userId);
+    },
+  });
+}
+
+export function useIsSuperAdmin() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return isSuperAdmin(userId);
+    },
+  });
+}
+
+export function useHasRole() {
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: AdminRole }) => {
+      return hasRole(userId, role);
+    },
+  });
+}
+
+export function useSyncAdminUserWithAuth() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return syncAdminUserWithAuth(userId);
+    },
+  });
+}
+
+// ============================================================
+// Export Direct Functions (for components that don't use hooks)
+// ============================================================
+
+export {
+  fetchAdminUsers,
+  fetchAdminUser,
+  fetchMyUserId,
+  fetchMyAdminUser,
+  updateAdminUser,
+  updateAdminUserRole,
+  toggleAdminUserActive,
+  deleteAdminUser,
+  inviteAdminUser,
+  resetAdminUserPassword,
+  removeAdminUser,
+  updateAdminLastLogin,
+  isAdmin,
+  isSuperAdmin,
+  hasRole,
+  syncAdminUserWithAuth,
+};
+
+// ============================================================
+// Re-export
+// ============================================================
 
 export { queryKeys };
 export type { AdminRole, AdminUserRow };

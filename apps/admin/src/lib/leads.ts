@@ -1,34 +1,45 @@
 import { supabase } from './supabase';
+import type { Database } from '../types/database';
 
-export const LeadStatus = ['nuevo', 'contactado', 'calificado', 'en_proceso', 'cerrado_ganado', 'cerrado_perdido'] as const;
-export type LeadStatus = typeof LeadStatus[number];
+// ============================================================
+// Types
+// ============================================================
 
-export const LeadIntent = ['comprar', 'vender', 'alquilar', 'invertir', 'tasar', 'desarrollador', 'otro'] as const;
-export type LeadIntent = typeof LeadIntent[number];
+export const LeadStatus = [
+  'nuevo',
+  'contactado',
+  'calificado',
+  'en_proceso',
+  'cerrado_ganado',
+  'cerrado_perdido',
+] as const;
+export type LeadStatus = (typeof LeadStatus)[number];
 
-export const LeadSource = ['landing_form', 'whatsapp', 'telefono', 'email', 'referido', 'ml_contacto', 'manual'] as const;
-export type LeadSource = typeof LeadSource[number];
+export const LeadIntent = [
+  'comprar',
+  'vender',
+  'alquilar',
+  'invertir',
+  'tasar',
+  'desarrollador',
+  'otro',
+] as const;
+export type LeadIntent = (typeof LeadIntent)[number];
 
-const LEAD_INTENT_VALUES = LeadIntent;
-const LEAD_SOURCE_VALUES = LeadSource;
+export const LeadSource = [
+  'landing_form',
+  'whatsapp',
+  'telefono',
+  'email',
+  'referido',
+  'ml_contacto',
+  'manual',
+] as const;
+export type LeadSource = (typeof LeadSource)[number];
 
-export interface LeadRow {
-  id: string;
-  name: string;
-  last_name: string;
-  email: string;
-  phone: string | null;
-  city: string | null;
-  intent: LeadIntent;
-  message: string | null;
-  source: LeadSource;
-  status: LeadStatus;
-  agent: string | null;
-  created_at: string;
-  updated_at: string;
-  tags?: string[];
-  score?: number;
-}
+// ============================================================
+// Constants
+// ============================================================
 
 export const LEAD_STATUS_LABEL: Record<LeadStatus, string> = {
   nuevo: 'Nuevo',
@@ -46,6 +57,15 @@ export const LEAD_STATUS_TONE: Record<LeadStatus, string> = {
   en_proceso: 'neutral',
   cerrado_ganado: 'success',
   cerrado_perdido: 'danger',
+};
+
+export const LEAD_STATUS_ORDER: Record<LeadStatus, number> = {
+  nuevo: 0,
+  contactado: 1,
+  calificado: 2,
+  en_proceso: 3,
+  cerrado_ganado: 4,
+  cerrado_perdido: 5,
 };
 
 export const LEAD_INTENT_LABEL: Record<LeadIntent, string> = {
@@ -68,42 +88,119 @@ export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
   manual: 'Manual',
 };
 
-// DB row type with embedded relations (from select with agent:agents(name), tags, score)
-interface LeadApiRow {
+// ============================================================
+// DB row types with embedded relations
+// ============================================================
+
+type LeadDbRow = Database['public']['Tables']['leads']['Row'];
+
+export interface LeadApiRow extends LeadDbRow {
+   agent: { name: string } | { name: string }[] | null;
+   property: { title: string } | { title: string }[] | null;
+   tags: string[] | null;
+}
+
+// ============================================================
+// Interfaces
+// ============================================================
+
+export interface LeadRow {
   id: string;
   name: string;
   last_name: string;
   email: string;
   phone: string | null;
   city: string | null;
-  intent: string;
+  intent: LeadIntent;
   message: string | null;
-  source: string;
-  status: string;
+  source: LeadSource;
+  status: LeadStatus;
+  agent: string | null;
   created_at: string;
   updated_at: string;
-  agent: { name: string } | { name: string }[] | null;
-  tags?: unknown;
-  score?: unknown;
+  tags?: string[];
+  score?: number;
 }
 
-export function embedName(v: Record<string, string> | Record<string, string>[] | null): string | null {
+export interface LeadDetail {
+  id: string;
+  name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  intent: LeadIntent;
+  message: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  notes: string | null;
+  assigned_to: string | null;
+  agent_name: string | null;
+  property_title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentOption {
+  id: string;
+  name: string;
+}
+
+export interface LeadFormValues {
+  name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  intent: LeadIntent;
+  source: LeadSource;
+  status: LeadStatus;
+  assigned_to: string;
+  message: string;
+}
+
+export interface LeadPatch {
+  status?: LeadStatus;
+  notes?: string | null;
+  assigned_to?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  tags?: string[];
+  score?: number;
+}
+
+export interface CsvLeadRow {
+  name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  intent: LeadIntent;
+  source: LeadSource;
+  status?: LeadStatus;
+  message?: string;
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+export function embedName(v: { name: string } | { name: string }[] | null): string | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0]?.name ?? null : v.name;
 }
 
-export async function fetchLeads(): Promise<LeadRow[]> {
-  const { data, error } = await supabase
-    .from('leads')
-    .select(
-      'id, name, last_name, email, phone, city, intent, message, source, status, created_at, updated_at, agent:agents(name), tags, score',
-    )
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+export function embedTitle(v: { title: string } | { title: string }[] | null): string | null {
+  if (!v) return null;
+  return Array.isArray(v) ? v[0]?.title ?? null : v.title;
+}
 
-  if (error) throw new Error(error.message);
+// ============================================================
+// Mappers
+// ============================================================
 
-  return (data ?? []).map((l: LeadApiRow) => ({
+export function toLeadRow(l: LeadApiRow): LeadRow {
+  return {
     id: l.id,
     name: l.name,
     last_name: l.last_name,
@@ -119,18 +216,180 @@ export async function fetchLeads(): Promise<LeadRow[]> {
     updated_at: l.updated_at,
     tags: (l.tags ?? []) as string[],
     score: (l.score ?? 0) as number,
-  }));
+  };
 }
 
-export async function updateLeadStatus(id: string, status: LeadStatus): Promise<void> {
-  const { error } = await supabase.from('leads').update({ status }).eq('id', id);
+function toLeadDetail(l: LeadApiRow): LeadDetail {
+  return {
+    id: l.id,
+    name: l.name,
+    last_name: l.last_name,
+    email: l.email,
+    phone: l.phone,
+    city: l.city,
+    intent: l.intent as LeadIntent,
+    message: l.message,
+    source: l.source as LeadSource,
+    status: l.status as LeadStatus,
+    notes: l.notes ?? null,
+    assigned_to: l.assigned_to ?? null,
+    agent_name: embedName(l.agent),
+    property_title: embedTitle(l.property),
+    created_at: l.created_at,
+    updated_at: l.updated_at,
+  };
+}
+
+// ============================================================
+// SELECT strings
+// ============================================================
+
+const LEADS_SELECT = `
+  id, name, last_name, email, phone, city, intent, message, source, status, 
+  notes, assigned_to, created_at, updated_at, deleted_at,
+  agent:agents(name), property:properties(title), tags, score
+`.trim();
+
+// ============================================================
+// API Functions - Fetch
+// ============================================================
+
+export async function fetchLeads(): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEADS_SELECT)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as LeadApiRow[]).map(toLeadRow);
+}
+
+export async function fetchLead(id: string): Promise<LeadDetail> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEADS_SELECT)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Lead no encontrado');
+  return toLeadDetail(data as unknown as LeadApiRow);
+}
+
+export async function fetchDeletedLeads(): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEADS_SELECT)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as LeadApiRow[]).map(toLeadRow);
+}
+
+export async function fetchLeadsByStatus(status: LeadStatus): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEADS_SELECT)
+    .eq('status', status)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as LeadApiRow[]).map(toLeadRow);
+}
+
+export async function fetchLeadsByAgent(agentId: string): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEADS_SELECT)
+    .eq('assigned_to', agentId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as LeadApiRow[]).map(toLeadRow);
+}
+
+// ============================================================
+// API Functions - CRUD
+// ============================================================
+
+export async function createLead(values: LeadFormValues): Promise<string> {
+  const { data, error } = await supabase
+    .from('leads')
+    .insert({
+      name: values.name.trim(),
+      last_name: values.last_name.trim(),
+      email: values.email.trim(),
+      phone: values.phone.trim() || null,
+      city: values.city.trim() || null,
+      intent: values.intent,
+      source: values.source,
+      status: values.status,
+      assigned_to: values.assigned_to || null,
+      message: values.message.trim() || null,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data.id;
+}
+
+export async function updateLead(id: string, patch: LeadPatch): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update(patch)
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
 }
 
-export interface AgentOption {
-  id: string;
-  name: string;
+export async function updateLeadStatus(id: string, status: LeadStatus): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update({ status })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
 }
+
+// ============================================================
+// API Functions - Soft Delete & Restore
+// ============================================================
+
+export async function softDeleteLead(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function restoreLead(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update({ deleted_at: null })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function permanentDeleteLead(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Assignment
+// ============================================================
 
 export async function fetchAgents(): Promise<AgentOption[]> {
   const { data, error } = await supabase
@@ -168,161 +427,22 @@ export async function autoAssignLead(leadId: string): Promise<{ agentId: string;
 export async function bulkAutoAssignLeads(leadIds: string[]): Promise<{ assigned: number; skipped: number }> {
   let assigned = 0;
   let skipped = 0;
+
   for (const leadId of leadIds) {
     const res = await autoAssignLead(leadId);
-    if (res) assigned++;
-    else skipped++;
+    if (res) {
+      assigned++;
+    } else {
+      skipped++;
+    }
   }
+
   return { assigned, skipped };
 }
 
-export interface LeadDetail {
-  id: string;
-  name: string;
-  last_name: string;
-  email: string;
-  phone: string | null;
-  city: string | null;
-  intent: LeadIntent;
-  message: string | null;
-  source: LeadSource;
-  status: LeadStatus;
-  notes: string | null;
-  assigned_to: string | null;
-  agent_name: string | null;
-  property_title: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface LeadDetailApiRow {
-  id: string;
-  name: string;
-  last_name: string;
-  email: string;
-  phone: string | null;
-  city: string | null;
-  intent: string;
-  message: string | null;
-  source: string;
-  status: string;
-  notes: string | null;
-  assigned_to: string | null;
-  created_at: string;
-  updated_at: string;
-  agent: { name: string } | { name: string }[] | null;
-  property: { title: string } | { title: string }[] | null;
-}
-
-export async function fetchLead(id: string): Promise<LeadDetail> {
-  const { data, error } = await supabase
-    .from('leads')
-    .select(
-      'id, name, last_name, email, phone, city, intent, message, source, status, notes, assigned_to, created_at, updated_at, agent:agents(name), property:properties(title)',
-    )
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Lead no encontrado');
-
-  const l = data as LeadDetailApiRow;
-  return {
-    id: l.id,
-    name: l.name,
-    last_name: l.last_name,
-    email: l.email,
-    phone: l.phone,
-    city: l.city,
-    intent: l.intent as LeadIntent,
-    message: l.message,
-    source: l.source as LeadSource,
-    status: l.status as LeadStatus,
-    notes: l.notes,
-    assigned_to: l.assigned_to,
-    agent_name: embedName(l.agent),
-    property_title: embedName(l.property),
-    created_at: l.created_at,
-    updated_at: l.updated_at,
-  };
-}
-
-export type LeadFormValues = {
-  name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  city: string;
-  intent: LeadIntent;
-  source: LeadSource;
-  status: LeadStatus;
-  assigned_to: string;
-  message: string;
-};
-
-export async function createLead(values: LeadFormValues): Promise<string> {
-  const { data, error } = await supabase
-    .from('leads')
-    .insert({
-      name: values.name.trim(),
-      last_name: values.last_name.trim(),
-      email: values.email.trim(),
-      phone: values.phone.trim() || null,
-      city: values.city.trim() || null,
-      intent: values.intent,
-      source: values.source,
-      status: values.status,
-      assigned_to: values.assigned_to || null,
-      message: values.message.trim() || null,
-    })
-    .select('id')
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data.id;
-}
-
-export interface LeadPatch {
-  status?: LeadStatus;
-  notes?: string | null;
-  assigned_to?: string | null;
-  phone?: string | null;
-  city?: string | null;
-  tags?: string[];
-  score?: number;
-}
-
-export async function updateLead(id: string, patch: LeadPatch): Promise<void> {
-  const { error } = await supabase.from('leads').update(patch).eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function addLeadTag(id: string, tag: string): Promise<void> {
-  const { data: lead } = await supabase.from('leads').select('tags').eq('id', id).single();
-  const currentTags = (lead?.tags ?? []) as string[];
-  if (!currentTags.includes(tag)) {
-    const { error } = await supabase
-      .from('leads')
-      .update({ tags: [...currentTags, tag] })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-  }
-}
-
-export async function removeLeadTag(id: string, tag: string): Promise<void> {
-  const { data: lead } = await supabase.from('leads').select('tags').eq('id', id).single();
-  const currentTags = (lead?.tags ?? []) as string[];
-  const { error } = await supabase
-    .from('leads')
-    .update({ tags: currentTags.filter(t => t !== tag) })
-    .eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function setLeadTags(id: string, tags: string[]): Promise<void> {
-  const { error } = await supabase.from('leads').update({ tags }).eq('id', id);
-  if (error) throw new Error(error.message);
-}
+// ============================================================
+// API Functions - Score
+// ============================================================
 
 export function calculateLeadScore(lead: {
   intent: LeadIntent;
@@ -333,6 +453,7 @@ export function calculateLeadScore(lead: {
 }): number {
   let score = 0;
 
+  // Intent scoring
   const intentScores: Record<LeadIntent, number> = {
     comprar: 30,
     vender: 25,
@@ -344,6 +465,7 @@ export function calculateLeadScore(lead: {
   };
   score += intentScores[lead.intent] ?? 5;
 
+  // Source scoring
   const sourceScores: Record<LeadSource, number> = {
     landing_form: 10,
     whatsapp: 20,
@@ -355,56 +477,113 @@ export function calculateLeadScore(lead: {
   };
   score += sourceScores[lead.source] ?? 5;
 
+  // Message length
   if (lead.message && lead.message.length > 50) score += 10;
   else if (lead.message && lead.message.length > 20) score += 5;
 
+  // Phone presence
   if (lead.phone && lead.phone.length >= 10) score += 10;
 
+  // City presence
   if (lead.city) score += 5;
 
   return Math.min(score, 100);
 }
 
 export async function recalculateLeadScore(id: string): Promise<number> {
-  const { data: lead } = await supabase
+  const { data: lead, error } = await supabase
     .from('leads')
     .select('intent, source, message, phone, city')
     .eq('id', id)
     .single();
 
+  if (error) throw new Error(error.message);
   if (!lead) return 0;
 
-  const score = calculateLeadScore(lead as { intent: LeadIntent; source: LeadSource; message: string | null; phone: string | null; city: string | null });
+  const score = calculateLeadScore(lead as {
+    intent: LeadIntent;
+    source: LeadSource;
+    message: string | null;
+    phone: string | null;
+    city: string | null;
+  });
+
   await supabase.from('leads').update({ score }).eq('id', id);
   return score;
 }
 
 export async function bulkRecalculateScores(ids: string[]): Promise<number> {
   let updated = 0;
+
   for (const id of ids) {
     const score = await recalculateLeadScore(id);
     if (score > 0) updated++;
   }
+
   return updated;
 }
 
-export interface CsvLeadRow {
-  name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  city?: string;
-  intent: LeadIntent;
-  source: LeadSource;
-  status?: LeadStatus;
-  message?: string;
+// ============================================================
+// API Functions - Tags
+// ============================================================
+
+export async function addLeadTag(id: string, tag: string): Promise<void> {
+  const { data: lead } = await supabase
+    .from('leads')
+    .select('tags')
+    .eq('id', id)
+    .single();
+
+  const currentTags = (lead?.tags ?? []) as string[];
+  if (!currentTags.includes(tag)) {
+    const { error } = await supabase
+      .from('leads')
+      .update({ tags: [...currentTags, tag] })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+  }
 }
 
-export async function parseLeadsCsv(csvText: string): Promise<{ valid: CsvLeadRow[]; errors: { row: number; message: string }[] }> {
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) return { valid: [], errors: [{ row: 0, message: 'CSV vacío o sin encabezados' }] };
+export async function removeLeadTag(id: string, tag: string): Promise<void> {
+  const { data: lead } = await supabase
+    .from('leads')
+    .select('tags')
+    .eq('id', id)
+    .single();
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const currentTags = (lead?.tags ?? []) as string[];
+  const { error } = await supabase
+    .from('leads')
+    .update({ tags: currentTags.filter((t) => t !== tag) })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function setLeadTags(id: string, tags: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update({ tags })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Import
+// ============================================================
+
+export async function parseLeadsCsv(csvText: string): Promise<{
+  valid: CsvLeadRow[];
+  errors: { row: number; message: string }[];
+}> {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) {
+    return { valid: [], errors: [{ row: 0, message: 'CSV vacío o sin encabezados' }] };
+  }
+
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
   const requiredHeaders = ['name', 'last_name', 'email', 'intent', 'source'];
 
   for (const req of requiredHeaders) {
@@ -417,24 +596,26 @@ export async function parseLeadsCsv(csvText: string): Promise<{ valid: CsvLeadRo
   const errors: { row: number; message: string }[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
+    const values = lines[i].split(',').map((v) => v.trim());
     if (values.length < headers.length) {
       errors.push({ row: i, message: 'Número de columnas incorrecto' });
       continue;
     }
 
     const row: Record<string, string> = {};
-    headers.forEach((h, idx) => { row[h] = values[idx]; });
+    headers.forEach((h, idx) => {
+      row[h] = values[idx];
+    });
 
     const intent = row.intent as LeadIntent;
     const source = row.source as LeadSource;
     const status = (row.status as LeadStatus) || 'nuevo';
 
-    if (!LEAD_INTENT_VALUES.includes(intent)) {
+    if (!LeadIntent.includes(intent)) {
       errors.push({ row: i, message: `Intent inválido: ${intent}` });
       continue;
     }
-    if (!LEAD_SOURCE_VALUES.includes(source)) {
+    if (!LeadSource.includes(source)) {
       errors.push({ row: i, message: `Source inválido: ${source}` });
       continue;
     }
@@ -455,7 +636,10 @@ export async function parseLeadsCsv(csvText: string): Promise<{ valid: CsvLeadRo
   return { valid, errors };
 }
 
-export async function importLeadsFromCsv(csvText: string): Promise<{ created: number; errors: { row: number; message: string }[] }> {
+export async function importLeadsFromCsv(csvText: string): Promise<{
+  created: number;
+  errors: { row: number; message: string }[];
+}> {
   const { valid, errors } = await parseLeadsCsv(csvText);
   let imported = 0;
 
@@ -482,35 +666,10 @@ export async function importLeadsFromCsv(csvText: string): Promise<{ created: nu
   return { created: imported, errors };
 }
 
-export async function fetchDeletedLeads(): Promise<LeadRow[]> {
-  const { data, error } = await supabase
-    .from('leads')
-    .select('*')
-    .not('deleted_at', 'is', null)
-    .order('deleted_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return (data ?? []) as LeadRow[];
-}
-
-export async function softDeleteLead(id: string): Promise<void> {
-  const { error } = await supabase.from('leads').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function restoreLead(id: string): Promise<void> {
-  const { error } = await supabase.from('leads').update({ deleted_at: null }).eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export async function purgeLead(id: string): Promise<void> {
-  const { error } = await supabase.from('leads').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-export const bulkImportLeads = importLeadsFromCsv;
-
-export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{ created: number; errors: { row: number; message: string }[] }> {
+export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{
+  created: number;
+  errors: { row: number; message: string }[];
+}> {
   let imported = 0;
   const errors: { row: number; message: string }[] = [];
 
@@ -537,4 +696,10 @@ export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{ crea
   return { created: imported, errors };
 }
 
-export const permanentDeleteLead = purgeLead;
+// ============================================================
+// Export Direct Functions (para compatibilidad)
+// ============================================================
+
+export { toLeadDetail };
+export const bulkImportLeads = importLeadsFromCsv;
+export const purgeLead = permanentDeleteLead;

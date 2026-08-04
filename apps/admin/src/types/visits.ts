@@ -74,35 +74,35 @@ export interface RecurrenceRule {
 }
 
 export interface RecurringVisit {
-  id: string;
-  base_visit_id: string;
-  rule: RecurrenceRule;
-  next_occurrence: string;
-  occurrences_generated: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+   id: number;
+   base_visit_id: string;
+   rule: RecurrenceRule;
+   next_occurrence: string;
+   occurrences_generated: number;
+   is_active: boolean;
+   created_at: string;
+   updated_at: string;
 }
 
 export interface ReminderConfig {
-  id: string;
-  visit_id: string;
-  type: 'email' | 'sms' | 'push';
-  trigger_minutes_before: number;
-  template?: string;
-  is_sent: boolean;
-  sent_at: string | null;
-  created_at: string;
+   id: number;
+   visit_id: string;
+   type: 'email' | 'sms' | 'push';
+   trigger_minutes_before: number;
+   template?: string;
+   is_sent: boolean;
+   sent_at: string | null;
+   created_at: string;
 }
 
 export interface QrCheckin {
-  id: string;
-  visit_id: string;
-  code: string;
-  checked_in: boolean;
-  checked_in_at: string | null;
-  checked_in_by: string | null;
-  created_at: string;
+   id: number;
+   visit_id: string;
+   code: string;
+   checked_in: boolean;
+   checked_in_at: string | null;
+   checked_in_by: string | null;
+   created_at: string;
 }
 
 export const VISIT_STATUS_LABEL: Record<VisitStatus, string> = {

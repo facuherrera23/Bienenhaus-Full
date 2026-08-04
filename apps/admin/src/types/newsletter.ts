@@ -8,6 +8,7 @@ export interface NewsletterSubscriber {
   source: NewsletterSource;
   status: NewsletterStatus;
   created_at: string;
+  deleted_at?: string;
 }
 
 export const NEWSLETTER_SOURCE_LABEL: Record<NewsletterSource, string> = {
