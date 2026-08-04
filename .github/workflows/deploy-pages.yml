@@ -20,6 +20,10 @@ env:
   VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
   VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
   SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+  # Sentry: opcional. Si la var de repo existe, el admin reporta errores.
+  VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+  # Release único por deploy → Sentry distingue versiones por commit.
+  VITE_APP_VERSION: ${{ github.sha }}
 
 jobs:
   build:

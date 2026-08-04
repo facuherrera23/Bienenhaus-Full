@@ -66,7 +66,7 @@ landing/
 ├── supabase/
 │   ├── config.toml       # Config local (ports, auth, realtime, storage, auth hooks)
 │   ├── seed.sql          # Admin user, propiedades ejemplo, agentes, leads
-│   ├── migrations/       # 21 migraciones SQL (foundation → chat)
+│   ├── migrations/       # 31 migraciones SQL (foundation → public_agents_view)
 │   │   ├── 0001_foundation.sql
 │   │   ├── 0002_admin_auth.sql
 │   │   ├── 0003_taxonomies.sql
@@ -87,12 +87,33 @@ landing/
 │   │   ├── 0018_property_video_url.sql
 │   │   ├── 0019_soft_delete_tables.sql
 │   │   ├── 0020_visits_calendar.sql
-│   │   └── 0021_internal_chat.sql
+│   │   ├── 0021_internal_chat.sql
+│   │   ├── 0022_ml_webhook.sql
+│   │   ├── 0023_audit_log.sql
+│   │   ├── 0024_visits_enhancements.sql
+│   │   ├── 0025_ml_auto_reply.sql
+│   │   ├── 0026_fix_audit_trigger.sql
+│   │   ├── 0027_ml_orders_auto_reply.sql
+│   │   ├── 0028_rate_limit.sql
+│   │   ├── 0029_lead_tags_score.sql
+│   │   ├── 0030_agent_permissions_commission_schedule.sql
+│   │   └── 0031_public_agents_view.sql
 │   ├── functions/        # Edge Functions (Deno)
-│   │   ├── admin-user-invite/   # Invitar/reset/remove admin users
-│   │   ├── ml-oauth/            # OAuth ML callback
-│   │   ├── ml-sync/             # Queue processor (publish/update/delete ML)
-│   │   └── _shared/             # crypto (AES-256-GCM), ml (API helpers)
+│   │   ├── admin-user-invite/     # Invitar/reset/remove admin users
+│   │   ├── audit-log/             # Log de acciones de staff
+│   │   ├── contact-submit/        # Formulario contacto landing (rate-limit)
+│   │   ├── ml-answer-question/    # Auto-respuesta a preguntas ML
+│   │   ├── ml-bulk-enqueue/       # Encola sync masivo desde el admin
+│   │   ├── ml-categories/         # Sync categorías ML
+│   │   ├── ml-ingest/             # (legacy, solo local) Ingesta de propiedades
+│   │   ├── ml-listing-types/      # Sync listing types ML
+│   │   ├── ml-metrics/            # Métricas de publicación ML
+│   │   ├── ml-oauth/              # OAuth ML callback
+│   │   ├── ml-sync/               # Queue processor (publish/update/delete ML)
+│   │   ├── ml-webhook/            # Webhook ML (preguntas, órdenes)
+│   │   ├── qr-checkin/            # Check-in por QR de visitas
+│   │   ├── visits-process-reminders/ # Recordatorios de visitas
+│   │   └── _shared/               # crypto (AES-256-GCM), ml (API helpers), auth
 │   ├── config.toml
 │   ├── seed.sql
 │   └── seed.sql
@@ -130,7 +151,7 @@ landing/
 | **Lucide Preact** | 1.28+ | Iconos SVG |
 | **Recharts** | 3.10+ | Gráficos dashboard |
 | **Zod** | 3.24+ | Validación esquemas |
-| **Wouter Preact** | 3.10+ | Router |
+| **Sentry** | 10.x (@sentry/browser) | Monitoreo de errores del admin (tracing + replay) |
 | **CSS Modules** | - | Estilos scoped + design tokens |
 
 ### Backend / Infraestructura
@@ -141,7 +162,7 @@ landing/
 | **PostgREST** | - | API REST auto-generada |
 | **Realtime** | - | WebSockets para chat/visitas |
 | **Storage** | - | Buckets: property-images, agent-photos |
-| **Edge Functions** | Deno 2 | ml-oauth, ml-sync, admin-user-invite |
+| **Edge Functions** | Deno 2 | 14 funciones (webhooks ML, OAuth, sync, visitas, contact) |
 | **Deno** | 2 | Runtime edge functions |
 
 ### Base de Datos (PostgreSQL 17)
@@ -198,7 +219,7 @@ corepack pnpm dlx supabase db reset
 # o
 npx supabase db reset
 ```
-Ejecuta todas las migraciones (21) + `seed.sql` (admin user, propiedades ejemplo, agentes, leads).
+Ejecuta todas las migraciones (31) + `seed.sql` (admin user, propiedades ejemplo, agentes, leads).
 
 ### 4.1 (Opcional) Verificar seed
 Credenciales admin por defecto:
@@ -230,6 +251,17 @@ Gestionado por `supabase start`. Puertos por defecto:
 - Realtime: `54325`
 - Storage: `54326`
 - Mailpit: `54324`
+
+### Apps (`.env` por app: `apps/landing/.env`, `apps/admin/.env`)
+Copiar el `.env.example` correspondiente y completar:
+
+| Variable | Descripción | App |
+|----------|-------------|-----|
+| `VITE_SUPABASE_URL` | URL del proyecto Supabase (local `http://127.0.0.1:54321` / cloud) | ambas |
+| `VITE_SUPABASE_ANON_KEY` | Anon key (pública por diseño) | ambas |
+| `VITE_BASE_PATH` | Base path de build (ej: `/admin/`) | admin |
+| `VITE_SENTRY_DSN` | DSN de Sentry. **Opcional**: sin DSN no se inicializa ni reporta nada | admin |
+| `VITE_APP_VERSION` | Release reportado a Sentry. Default `dev`; en CI = SHA del commit | admin |
 
 ### Edge Functions (supabase/functions/.env)
 Copiar `supabase/functions/.env.example` → `supabase/functions/.env` y completar:
@@ -326,7 +358,7 @@ pnpm dev:admin
 - **Supabase Realtime** (WebSockets para chat/visitas)
 
 ### Migraciones
-- Ubicación: `supabase/migrations/*.sql` (21 archivos, numerados 0001–0021)
+- Ubicación: `supabase/migrations/*.sql` (31 archivos, numerados 0001–0031)
 - Naming: `NNNN_descripcion_corta.sql`
 - Aplicar: `supabase db push` / `supabase db reset`
 - Crear nueva: `supabase migration new nombre_corto`
@@ -361,9 +393,21 @@ Base: `http://localhost:54321/functions/v1/`
 
 | Función | Método | Descripción |
 |---------|--------|-------------|
+| `admin-user-invite` | POST `{action, email, full_name, role}` | Invite/reset/remove admin users |
+| `audit-log` | POST | Registra acciones de staff en `activity_log` |
+| `contact-submit` | POST | Formulario de contacto landing (honeypot + rate limit) |
+| `ml-answer-question` | POST | Auto-respuesta a preguntas de publicaciones ML |
+| `ml-bulk-enqueue` | POST | Encola propiedades para sync masivo |
+| `ml-categories` | GET | Sincroniza categorías ML |
+| `ml-listing-types` | GET | Sincroniza listing types ML |
+| `ml-metrics` | GET | Métricas de publicación ML |
 | `ml-oauth` | GET `/callback?code=&state=` | OAuth callback ML, guarda tokens cifrados |
 | `ml-sync` | POST | Procesa cola `ml_sync_queue` (publish/update/delete) |
-| `admin-user-invite` | POST `{action, email, full_name, role}` | Invite/reset/remove admin users |
+| `ml-webhook` | POST | Webhook ML (preguntas, órdenes de compra) |
+| `qr-checkin` | POST | Check-in de visita por QR |
+| `visits-process-reminders` | POST (scheduled) | Genera recordatorios de visitas |
+
+> `ml-ingest` existe solo en local (legacy, no desplegada).
 
 #### Autenticación Edge Functions
 - Header: `Authorization: Bearer <service_role_key>` o `x-sync-secret: <ML_SYNC_SECRET>`
@@ -379,7 +423,8 @@ Base: `http://localhost:54321/functions/v1/`
 | **Supabase Auth** | Email/password, magic link, rate limits | `auth` config.toml |
 | **Supabase Storage** | Imágenes propiedades/agentes | Buckets: `property-images`, `agent-photos` |
 | **Supabase Realtime** | Chat, visitas, notificaciones | Habilitado en config.toml |
-| **Supabase Edge Functions** | ML sync, admin invites, OAuth | Deno 2, secrets via env |
+| **Supabase Edge Functions** | Webhooks ML, OAuth, sync, visitas, contacto | Deno 2, secrets via env |
+| **Sentry** | Monitoreo de errores (admin, release por commit) | `VITE_SENTRY_DSN`, `VITE_APP_VERSION` |
 | **WhatsApp Click-to-Chat** | Leads detalle | `wa.me/<phone>?text=...` |
 | **MercadoPago/Stripe** | (Preparado) Reservas online | - |
 
@@ -409,7 +454,7 @@ Base: `http://localhost:54321/functions/v1/`
 El sitio se publica en **GitHub Pages** con un solo proyecto: la landing en la
 raíz (`/`) y el panel admin en `/admin/` (hash routing). El workflow
 `.github/workflows/deploy-pages.yml` builda ambas apps en `out/` y despliega
-automáticamente en cada push a `main`.
+automáticamente en cada push a `main` o `master`.
 
 ```bash
 # Build manual (misma salida que CI): genera out/
@@ -423,10 +468,11 @@ node scripts/build-pages.mjs
 | `VITE_SUPABASE_URL` | `https://rnldqiwwzhjnurkguihu.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | anon key del cloud (pública por diseño) |
 | `SITE_DOMAIN` | opcional; si se define escribe `out/CNAME` para dominio custom |
+| `VITE_SENTRY_DSN` | opcional; si se define, el admin reporta errores a Sentry |
 
 **Pasos una sola vez:**
 1. En GitHub: Settings → Pages → Source = **GitHub Actions**.
-2. Habilitar Pages en el repo y correr el workflow (o hacer push a `main`).
+2. Habilitar Pages en el repo y correr el workflow (o hacer push a `main`/`master`).
 3. Para dominio propio: configurar `SITE_DOMAIN`, agregar el CNAME/apex en el
    DNS y setear el custom domain en Settings → Pages.
 4. En Supabase Cloud (proyecto `rnldqiwwzhjnurkguihu`): en **Auth → URL
@@ -439,6 +485,25 @@ node scripts/build-pages.mjs
 **honeypot** (`p_hp` oculto; si viene lleno responden éxito falso sin insertar)
 y aplican **rate limit** por ventana de tiempo (50 altas/hora newsletter, 30
 consultas/hora contacto + 1 por email cada 24h).
+
+### Monitoreo (Sentry)
+
+El panel admin integra **Sentry** (`@sentry/preact`) para reportar errores de
+frontend:
+
+- Se inicializa en `main.tsx` solo si `VITE_SENTRY_DSN` está definida; sin DSN
+  no se registra ningún listener ni se envía nada.
+- `release` = `VITE_APP_VERSION` (default `dev`); en CI el workflow la setea al
+  SHA del commit, así cada deploy es una versión identificable en Sentry.
+- Para activarlo: crear el proyecto en [sentry.io](https://sentry.io), copiar el
+  DSN a una **variable de repo** `VITE_SENTRY_DSN` (Settings → Secrets and
+  variables → Actions → Variables) y hacer un push. No es secret: viaja al
+  bundle público (los eventos van al frontend SDK).
+
+**Backup de base de datos:** el workflow `.github/workflows/backup.yml` corre
+diario (03:00 UTC, `pg_dump` del schema `public` vía Supabase CLI, artifact con
+retención de 90 días, ejecutable manual via `workflow_dispatch`). Requiere el
+secret `SUPABASE_ACCESS_TOKEN` en el repo.
 
 ### Emails (SMTP)
 
@@ -536,13 +601,13 @@ Mejoras coherentes con la arquitectura actual:
 - [ ] **Reserva online de propiedades** (hold 24-48h, formulario, señal MercadoPago/Stripe)
 - [ ] **CRM Kanban** (pipeline visual leads, drag & drop, etapas personalizables)
 - [ ] **Notificaciones push/email** (Supabase Realtime + edge function + SendGrid/Resend)
-- [ ] **Tipado inductivo** (generar tipos TS desde schema Supabase: `supabase gen types typescript`)
-- [ ] **Tests** (Vitest + Playwright para E2E crítico: login, crear propiedad, sync ML)
+- [x] **Tipado inductivo** — hecho: tipos generados en `apps/admin/src/types/database.ts` y `apps/landing/src/data/generated.d.ts`
+- [ ] **Tests** (ampliar cobertura: crear propiedad, sync ML, chat)
 - [ ] **Storybook** para design system (`packages/bienenhaus-ui`)
 - [ ] **i18n** (es/en/pt) con `i18next` o similar
 - [ ] **Analytics** (Plausible/Umami + eventos custom)
-- [ ] **Backup automatizado** (Supabase Point-in-Time Recovery + pg_dump schedule)
-- [ ] **Monitoreo** (Sentry + Supabase logs + uptime)
+- [x] **Backup automatizado** — hecho: `.github/workflows/backup.yml` (pg_dump diario, retención 90 días)
+- [x] **Monitoreo** — Sentry integrado en el admin (falta setear `VITE_SENTRY_DSN` en el repo); pendiente uptime monitor
 
 ---
 
@@ -563,14 +628,14 @@ Mejoras coherentes con la arquitectura actual:
 | Aspecto | Estado | Comentario |
 |---------|--------|------------|
 | **README previo** | ✅ | Creado desde cero |
-| **Tests automatizados** | ⚠️ | Vitest (1 suite, 4 tests) en admin |
-| **CI/CD** | ✅ | GitHub Actions: CI (typecheck/test/build) + Deploy Pages |
+| **Tests automatizados** | ⚠️ | Vitest (Login) + Playwright E2E (login, admin-pages, visits-agents-ml) |
+| **CI/CD** | ✅ | GitHub Actions: CI (typecheck/test/E2E/build) + Deploy Pages + Backup diario |
 | **Docker Compose prod** | ❌ | Solo Supabase local CLI |
-| **Variables producción** | ⚠️ | Documentadas; falta setear vars/secrets en el repo de GitHub |
+| **Variables producción** | ⚠️ | Documentadas; faltan algunos vars/secrets en el repo (ej. `VITE_SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`) |
 | **Edge Functions secrets** | ⚠️ | Requieren `supabase secrets set` en cloud |
-| **Tipado DB → TS** | ❌ | No hay `supabase gen types` integrado |
-| **Tests E2E críticos** | ❌ | Login, crear propiedad, sync ML, chat |
+| **Tipado DB → TS** | ✅ | Tipos generados (`apps/admin/src/types/database.ts`, `apps/landing/src/data/generated.d.ts`) |
+| **Tests E2E críticos** | ⚠️ | Login y navegación cubiertos; falta crear propiedad, sync ML, chat |
 | **Documentación API** | ⚠️ | Solo PostgREST auto-generada, sin OpenAPI custom |
-| **Monitoreo/Logs** | ⚠️ | Solo Supabase logs + console.log |
+| **Monitoreo/Logs** | ✅ | Sentry en admin (release por commit) + Supabase logs; falta uptime monitor |
 
 > **Recomendación**: Antes de ir a producción, configurar CI/CD (GitHub Actions), añadir tests críticos, validar variables de producción en staging, y documentar runbooks de incidentes (caída Supabase, rate limit ML, migración fallida).
