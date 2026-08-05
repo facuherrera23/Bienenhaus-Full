@@ -295,8 +295,8 @@ export function Contact() {
                       </div>
                       <span className="error-message">Por favor ingresá tu apellido</span>
                     </div>
-                  </div>
-<div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              </div>
+              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={groupClass('email')} style={{ animationDelay: '0.2s' }}>
                       <label htmlFor="email">
                         Correo electrónico <span className="required">*</span>
