@@ -420,3 +420,8 @@ verify_jwt = false
 
 [functions.ml-webhook]
 verify_jwt = false
+
+[functions.ml-sync]
+verify_jwt = false
+# El schedule de ml-sync se registra vía pg_cron en la migración
+# 0035_ml_sync_cron.sql (el CLI ignora la clave `schedule` de config.toml).

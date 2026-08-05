@@ -2,6 +2,9 @@
  * Helpers de la API de Mercado Libre (OAuth + items).
  */
 
+import { decrypt, encrypt } from './crypto.ts';
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+
 export const ML_AUTH_URL = 'https://auth.mercadolibre.com.ar/authorization';
 export const ML_TOKEN_URL = 'https://api.mercadolibre.com/oauth/token';
 export const ML_API = 'https://api.mercadolibre.com';
@@ -70,6 +73,47 @@ export async function refreshToken(refresh: string): Promise<MlTokenResponse> {
     throw new Error(`ML token refresh falló (${res.status}): ${text.slice(0, 300)}`);
   }
   return JSON.parse(text) as MlTokenResponse;
+}
+
+// ============================================================
+// Access token de la conexión (descifrado + refresh automático)
+// ============================================================
+
+export interface MlConnectionRow {
+  id: string;
+  access_token_encrypted: string;
+  access_token_iv: string;
+  refresh_token_encrypted: string;
+  refresh_token_iv: string;
+  token_expires_at: string;
+}
+
+export async function getAccessToken(
+  supabase: SupabaseClient,
+  conn: MlConnectionRow,
+): Promise<string> {
+  const expiresIn = new Date(conn.token_expires_at).getTime() - Date.now();
+  if (expiresIn > 5 * 60 * 1000) {
+    return await decrypt(conn.access_token_encrypted, conn.access_token_iv);
+  }
+
+  const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
+  const tokens = await refreshToken(refresh);
+  const access = await encrypt(tokens.access_token);
+  const refreshEnc = await encrypt(tokens.refresh_token);
+
+  await supabase
+    .from('ml_connection')
+    .update({
+      access_token_encrypted: access.data,
+      access_token_iv: access.iv,
+      refresh_token_encrypted: refreshEnc.data,
+      refresh_token_iv: refreshEnc.iv,
+      token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+    })
+    .eq('id', conn.id);
+
+  return tokens.access_token;
 }
 
 export interface MlUser {
@@ -186,7 +230,7 @@ export interface MlPicture {
 
 export async function mlUploadPicture(
   accessToken: string,
-  file: Uint8Array,
+  file: Uint8Array<ArrayBuffer>,
   fileName: string,
   contentType: string
 ): Promise<MlPictureUploadResponse> {
@@ -211,7 +255,7 @@ export async function mlUploadPicture(
 
 export async function mlUploadPictures(
   accessToken: string,
-  files: Array<{ data: Uint8Array; name: string; type: string }>
+  files: Array<{ data: Uint8Array<ArrayBuffer>; name: string; type: string }>
 ): Promise<string[]> {
   const urls: string[] = [];
   for (const file of files) {

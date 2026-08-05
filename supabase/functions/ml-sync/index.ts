@@ -1,14 +1,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { decrypt, encrypt } from '../_shared/crypto.ts';
 import {
-  getMe,
+  getAccessToken,
   mlCloseItem,
   mlCreateItem,
   mlGetItem,
   mlSetDescription,
   mlUpdateItem,
   mlUploadPictures,
-  refreshToken,
+  type MlConnectionRow,
   type MlItem,
 } from '../_shared/ml.ts';
 
@@ -52,42 +51,6 @@ async function isAuthorized(req: Request): Promise<boolean> {
     .limit(1);
   const admin = admins?.[0];
   return !!admin && admin.is_active && ['super_admin', 'admin', 'staff'].includes(admin.role);
-}
-
-interface ConnectionRow {
-  id: string;
-  nickname: string | null;
-  email: string | null;
-  access_token_encrypted: string;
-  access_token_iv: string;
-  refresh_token_encrypted: string;
-  refresh_token_iv: string;
-  token_expires_at: string;
-}
-
-async function getAccessToken(conn: ConnectionRow): Promise<string> {
-  const expiresIn = new Date(conn.token_expires_at).getTime() - Date.now();
-  if (expiresIn > 5 * 60 * 1000) {
-    return await decrypt(conn.access_token_encrypted, conn.access_token_iv);
-  }
-
-  const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
-  const tokens = await refreshToken(refresh);
-  const access = await encrypt(tokens.access_token);
-  const refreshEnc = await encrypt(tokens.refresh_token);
-
-  await supabase
-    .from('ml_connection')
-    .update({
-      access_token_encrypted: access.data,
-      access_token_iv: access.iv,
-      refresh_token_encrypted: refreshEnc.data,
-      refresh_token_iv: refreshEnc.iv,
-      token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-    })
-    .eq('id', conn.id);
-
-  return tokens.access_token;
 }
 
 interface PropertyRow {
@@ -134,11 +97,9 @@ async function fetchDefaults(): Promise<{ category_id: string; listing_type_id: 
 // Download images from Supabase storage and upload to ML
 async function prepareImagesForML(
   accessToken: string,
-  images: { url: string; storage_path?: string }[],
-  supabaseUrl: string,
-  serviceRoleKey: string
+  images: { url: string; storage_path?: string }[]
 ): Promise<string[]> {
-  const files: Array<{ data: Uint8Array; name: string; type: string }> = [];
+  const files: Array<{ data: Uint8Array<ArrayBuffer>; name: string; type: string }> = [];
 
   for (const img of images.slice(0, 12)) {
     if (!img.storage_path) continue;
@@ -193,7 +154,7 @@ async function runJob(
 const defaults = await fetchDefaults();
 
       // Prepare images for ML (download from Supabase storage and upload to ML)
-      const mlImageUrls = await prepareImagesForML(accessToken, property.images, supabaseUrl, serviceRoleKey);
+      const mlImageUrls = await prepareImagesForML(accessToken, property.images);
 
       try {
         if (operation === 'publish') {
@@ -221,7 +182,18 @@ const defaults = await fetchDefaults();
     }
 
     if (operation === 'update') {
-      if (!mlItemId) {
+      // El trigger y el RPC encolan sin ml_item_id: se resuelve desde
+      // property_ml_meta antes de actualizar el anuncio.
+      let itemId = mlItemId;
+      if (!itemId) {
+        const { data: meta } = await supabase
+          .from('property_ml_meta')
+          .select('ml_item_id')
+          .eq('property_id', propertyId)
+          .maybeSingle();
+        itemId = (meta?.ml_item_id ?? null) as number | null;
+      }
+      if (!itemId) {
         return { ok: false, error: 'La propiedad no tiene item en Mercado Libre' };
       }
       const patch: Record<string, unknown> = {
@@ -232,23 +204,34 @@ const defaults = await fetchDefaults();
       if (property.currency) patch.currency_id = property.currency;
 
       // Prepare images for ML
-      const mlImageUrls = await prepareImagesForML(accessToken, property.images, supabaseUrl, serviceRoleKey);
+      const mlImageUrls = await prepareImagesForML(accessToken, property.images);
       if (mlImageUrls.length > 0) patch.pictures = mlImageUrls.map(url => ({ source: url }));
 
-      await mlUpdateItem(accessToken, String(mlItemId), patch);
+      await mlUpdateItem(accessToken, String(itemId), patch);
       if (property.description) {
-        await mlSetDescription(accessToken, String(mlItemId), property.description);
+        await mlSetDescription(accessToken, String(itemId), property.description);
       }
-      const item = await mlGetItem(accessToken, String(mlItemId));
-      return { ok: true, itemId: mlItemId, permalink: item.permalink, mlStatus: item.status, price: Number(item.price) };
+      const item = await mlGetItem(accessToken, String(itemId));
+      return { ok: true, itemId, permalink: item.permalink, mlStatus: item.status, price: Number(item.price) };
     }
 
     if (operation === 'delete') {
-      if (!mlItemId) {
+      // El trigger de baja (ml_auto_delete) encola sin ml_item_id:
+      // se resuelve desde property_ml_meta antes de cerrar el anuncio.
+      let itemId = mlItemId;
+      if (!itemId) {
+        const { data: meta } = await supabase
+          .from('property_ml_meta')
+          .select('ml_item_id')
+          .eq('property_id', propertyId)
+          .maybeSingle();
+        itemId = (meta?.ml_item_id ?? null) as number | null;
+      }
+      if (!itemId) {
         return { ok: false, error: 'La propiedad no tiene item en Mercado Libre' };
       }
-      await mlCloseItem(accessToken, String(mlItemId));
-      return { ok: true, itemId: mlItemId, mlStatus: 'closed' };
+      await mlCloseItem(accessToken, String(itemId));
+      return { ok: true, itemId, mlStatus: 'closed' };
     }
 
     return { ok: false, error: `Operación desconocida: ${operation}` };
@@ -271,7 +254,7 @@ Deno.serve(async (req) => {
     .order('updated_at', { ascending: false })
     .limit(1);
 
-  const conn = (conns?.[0] ?? null) as ConnectionRow | null;
+  const conn = (conns?.[0] ?? null) as MlConnectionRow | null;
   if (!conn) {
     return respond(400, { error: 'No hay una cuenta de Mercado Libre conectada' });
   }
@@ -298,7 +281,7 @@ Deno.serve(async (req) => {
 
   let accessToken: string;
   try {
-    accessToken = await getAccessToken(conn);
+    accessToken = await getAccessToken(supabase, conn);
   } catch (err) {
     return respond(500, { error: `No se pudo obtener token: ${(err as Error).message}` });
   }

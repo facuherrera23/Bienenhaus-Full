@@ -292,6 +292,7 @@ async function handleItems(payload: WebhookPayload): Promise<void> {
     await supabase.rpc('ml_enqueue', {
       p_property_id: meta.property_id,
       p_operation: 'update',
+      p_internal: true,
     });
   }
 }

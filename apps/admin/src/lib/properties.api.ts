@@ -17,7 +17,7 @@ import {
   setPropertyCover,
   reorderPropertyImages,
 } from './properties';
-import { bulkEnqueueMl, embedProperty, type QueueApiRow, type MetaApiRow } from './ml';
+import { embedProperty, type QueueApiRow, type MetaApiRow } from './ml';
 import type {
   PropertyStatus,
   ListingType,
@@ -310,26 +310,6 @@ export function usePermanentDeleteProperty() {
   return useMutation({
     mutationFn: async (id: string) => {
       return permanentDeleteProperty(id);
-    },
-  });
-}
-
-// ============================================================
-// Mutation Hooks - ML Integration
-// ============================================================
-
-export function usePublishToML() {
-  return useMutation({
-    mutationFn: async ({ propertyId, operation }: { propertyId: string; operation: 'publish' | 'update' | 'delete' }) => {
-      return bulkEnqueueMl([propertyId], operation);
-    },
-  });
-}
-
-export function useBulkEnqueueMl() {
-  return useMutation({
-    mutationFn: async ({ propertyIds, operation }: { propertyIds: string[]; operation: MlOperation }) => {
-      return bulkEnqueueMl(propertyIds, operation);
     },
   });
 }

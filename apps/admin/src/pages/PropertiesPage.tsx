@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { ChevronDown, Download, ExternalLink, Loader2, Plus, RefreshCw, Search, ShoppingBag, Trash2, X } from 'lucide-preact';
+import { Download, Plus, Search } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { useProperties, useMLMeta, useMLQueue, usePublishToML, useBulkEnqueueMl, STATUS_LABEL, STATUS_TONE, type PropertyRow, type PropertyStatus, type MlMetaRow, type MlQueueRow, type MlOperation } from '../lib/properties.api';
-import { queryClient } from '../lib/query/client';
-import { pushToast } from '../store/app';
+import { useProperties, useMLMeta, STATUS_LABEL, STATUS_TONE, type PropertyRow, type PropertyStatus, type MlMetaRow } from '../lib/properties.api';
 
 function StatusBadge({ status }: { status: PropertyStatus }) {
   return <span className={`badge badge--${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
@@ -47,120 +45,10 @@ function downloadCsv(filename: string, content: string) {
   URL.revokeObjectURL(link.href);
 }
 
-function MlActionCell({
-  property,
-  meta,
-  queue,
-}: {
-  property: PropertyRow;
-  meta?: MlMetaRow;
-  queue: MlQueueRow[];
-}) {
-  const [busy, setBusy] = useState(false);
-  const [current, setCurrent] = useState<MlOperation | null>(null);
-  const publishToML = usePublishToML();
-
-  const active = queue.find((q) => q.status === 'pending' || q.status === 'processing');
-
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['ml-queue'] });
-    void queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
-    void queryClient.invalidateQueries({ queryKey: ['properties'] });
-  };
-
-  const run = async (op: MlOperation) => {
-    setBusy(true);
-    setCurrent(op);
-    try {
-      await publishToML.mutateAsync({ propertyId: property.id, operation: op });
-      pushToast({
-        type: 'success',
-        title: op === 'publish' ? 'Publicación encolada' : op === 'update' ? 'Actualización encolada' : 'Baja encolada',
-      });
-      invalidate();
-    } catch (err) {
-      pushToast({ type: 'error', title: 'No se pudo encolar', description: (err as Error).message });
-    } finally {
-      setBusy(false);
-      setCurrent(null);
-    }
-  };
-
-  if (active) {
-    return (
-      <span className={`badge badge--${active.status === 'processing' ? 'warning' : 'neutral'}`}>
-        {active.status === 'processing' ? 'Sincronizando' : 'En cola'}
-      </span>
-    );
-  }
-
-  if (meta) {
-    const closed = meta.status === 'closed' || meta.status === 'paused';
-    return (
-      <div className="row-actions">
-        {meta.permalink && (
-          <a href={meta.permalink} target="_blank" rel="noreferrer" className="icon-btn" title="Ver en Mercado Libre">
-            <ExternalLink size={13} />
-          </a>
-        )}
-        {closed ? (
-          <button
-            type="button"
-            className="icon-btn"
-            title="Republicar en Mercado Libre"
-            disabled={busy || property.status !== 'publicada'}
-            onClick={() => run('publish')}
-          >
-            {busy && current === 'publish' ? <Loader2 size={13} className="spin" /> : <ShoppingBag size={13} />}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="icon-btn"
-            title="Actualizar en Mercado Libre"
-            disabled={busy}
-            onClick={() => run('update')}
-          >
-            {busy && current === 'update' ? <Loader2 size={13} className="spin" /> : <RefreshCw size={13} />}
-          </button>
-        )}
-        <button
-          type="button"
-          className="icon-btn icon-btn--danger"
-          title="Quitar de Mercado Libre"
-          disabled={busy}
-          onClick={() => run('delete')}
-        >
-          <Trash2 size={13} />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      className="btn btn--sm btn--secondary"
-      title={
-        property.status !== 'publicada'
-          ? 'Publicá la propiedad para poder subirla a Mercado Libre'
-          : 'Publicar en Mercado Libre'
-      }
-      disabled={busy || property.status !== 'publicada'}
-      onClick={() => run('publish')}
-    >
-      {busy && current === 'publish' ? <Loader2 size={13} className="spin" /> : <ShoppingBag size={13} />} Publicar
-    </button>
-  );
-}
-
 export function PropertiesPage() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | PropertyStatus>('todos');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkOp, setBulkOp] = useState<'publish' | 'update' | 'delete' | null>(null);
-  const [bulkBusy, setBulkBusy] = useState(false);
 
   const { data, isPending, isError } = useProperties({
     search,
@@ -169,22 +57,10 @@ export function PropertiesPage() {
   const properties = getListData<PropertyRow>(data);
 
   const { data: mlMetaRaw } = useMLMeta();
-  const { data: mlQueueRaw } = useMLQueue();
-  const bulkEnqueueMl = useBulkEnqueueMl();
 
   const mlMeta = getListData<MlMetaRow>(mlMetaRaw);
-  const mlQueue = getListData<MlQueueRow>(mlQueueRaw);
 
   const metaByProp = useMemo(() => new Map(mlMeta.map((m) => [m.property_id, m])), [mlMeta]);
-  const queueByProp = useMemo(() => {
-    const map = new Map<string, MlQueueRow[]>();
-    for (const q of mlQueue) {
-      const list = map.get(q.property_id) ?? [];
-      list.push(q);
-      map.set(q.property_id, list);
-    }
-    return map;
-  }, [mlQueue]);
 
   useEffect(() => {
     document.title = 'Propiedades · BIENENHAUS';
@@ -204,28 +80,6 @@ export function PropertiesPage() {
       return matchesSearch && matchesStatus;
     });
   }, [properties, search, statusFilter]);
-
-  const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
-  const someSelected = selectedIds.size > 0;
-
-  const toggleAll = () => {
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map((p) => p.id)));
-    }
-  };
-
-  const toggleOne = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const clearSelection = () => setSelectedIds(new Set());
 
   const handleExport = () => {
     if (properties.length === 0) return;
@@ -261,33 +115,6 @@ export function PropertiesPage() {
     downloadCsv(`propiedades-${todayStamp()}.csv`, toCsv(header, rows));
   };
 
-  const runBulk = async (op: 'publish' | 'update' | 'delete') => {
-    setBulkBusy(true);
-    setBulkOp(op);
-    try {
-      await bulkEnqueueMl.mutateAsync({ propertyIds: Array.from(selectedIds), operation: op });
-      pushToast({
-        type: 'success',
-        title: `${op === 'publish' ? 'Publicaciones' : op === 'update' ? 'Actualizaciones' : 'Bajas'} encoladas`,
-        description: `${selectedIds.size} propiedad${selectedIds.size === 1 ? '' : 'es'}`,
-      });
-      clearSelection();
-      void queryClient.invalidateQueries({ queryKey: ['ml-queue'] });
-      void queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
-    } catch (err) {
-      pushToast({ type: 'error', title: 'No se pudo encolar', description: (err as Error).message });
-    } finally {
-      setBulkBusy(false);
-      setBulkOp(null);
-    }
-  };
-
-  const handleBulkConfirm = () => {
-    if (bulkOp) runBulk(bulkOp);
-  };
-
-  const openBulkMenu = (op: MlOperation) => setBulkOp(op);
-
   return (
     <div className="page">
       <div className="page-head">
@@ -304,51 +131,6 @@ export function PropertiesPage() {
           </Link>
         </div>
       </div>
-
-      {someSelected && (
-        <div className="bulk-bar">
-          <div className="bulk-info">
-            <span>{selectedIds.size} seleccionada{selectedIds.size === 1 ? '' : 's'}</span>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={clearSelection}>
-              <X size={14} /> Limpiar
-            </button>
-          </div>
-          <div className="bulk-actions">
-            <div className="dropdown-wrapper">
-              <button
-                className={`dropdown-trigger${bulkOp ? ' open' : ''}`}
-                onClick={() => setBulkOp(bulkOp ? null : 'publish')}
-              >
-                <ShoppingBag size={15} /> Acciones en lote <ChevronDown size={12} />
-              </button>
-              {bulkOp && (
-                <ul className="dropdown-menu open" role="menu">
-                  <li role="menuitem" onClick={() => openBulkMenu('publish')}>
-                    <ShoppingBag size={14} /> Publicar en ML
-                  </li>
-                  <li role="menuitem" onClick={() => openBulkMenu('update')}>
-                    <RefreshCw size={14} /> Actualizar en ML
-                  </li>
-                  <li role="menuitem" onClick={() => openBulkMenu('delete')}>
-                    <Trash2 size={14} /> Quitar de ML
-                  </li>
-                </ul>
-              )}
-            </div>
-            {bulkOp && (
-              <div className="bulk-confirm">
-                <span>¿{bulkOp === 'publish' ? 'Publicar' : bulkOp === 'update' ? 'Actualizar' : 'Quitar'} {selectedIds.size} propiedad{selectedIds.size === 1 ? '' : 'es'}?</span>
-                <button className="btn btn--secondary btn--sm" onClick={() => setBulkOp(null)}>
-                  Cancelar
-                </button>
-                <button className="btn btn--primary btn--sm" onClick={handleBulkConfirm} disabled={bulkBusy}>
-                  {bulkBusy ? <Loader2 size={14} className="spin" /> : 'Confirmar'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="toolbar">
         <div className="toolbar-search">
@@ -382,15 +164,6 @@ export function PropertiesPage() {
           <table className="table">
             <thead>
               <tr>
-                <th style="width:44px;">
-                  <input
-                    type="checkbox"
-                    className="table-select-all"
-                    checked={allSelected}
-                    onChange={toggleAll}
-                    aria-label="Seleccionar todas"
-                  />
-                </th>
                 <th>Propiedad</th>
                 <th>Estado</th>
                 <th>Operación</th>
@@ -398,30 +171,19 @@ export function PropertiesPage() {
                 <th>Zona</th>
                 <th>Dorm.</th>
                 <th>Actualizada</th>
-                <th>Mercado Libre</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => {
-                const isSelected = selectedIds.has(p.id);
                 return (
                   <tr
                     key={p.id}
-                    className={`row-click${isSelected ? ' selected' : ''}`}
+                    className="row-click"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest('input,button,a,.icon-btn')) return;
                       setLocation(`/propiedades/${p.id}`);
                     }}
                   >
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleOne(p.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Seleccionar ${p.title}`}
-                      />
-                    </td>
                     <td>
                       <div className="cell-property">
                         {p.cover_url ? (
@@ -443,15 +205,12 @@ export function PropertiesPage() {
                     <td>{p.location}</td>
                     <td className="num">{p.bedrooms ?? '—'}</td>
                     <td className="muted">{new Date(p.updated_at).toLocaleDateString('es-AR')}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <MlActionCell property={p} meta={metaByProp.get(p.id)} queue={queueByProp.get(p.id) ?? []} />
-                    </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="empty-cell">
+                  <td colSpan={7} className="empty-cell">
                     No hay propiedades que coincidan con la búsqueda.
                   </td>
                 </tr>

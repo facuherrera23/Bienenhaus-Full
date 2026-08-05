@@ -35,9 +35,6 @@ import {
   createMlAutoReplyTemplate,
   updateMlAutoReplyTemplate,
   deleteMlAutoReplyTemplate,
-  enqueueMl,
-  bulkEnqueueMl,
-  syncNow,
   answerMlQuestion,
   setMlEnabled,
   setMlAppId,
@@ -275,30 +272,6 @@ export function useDeleteMlAutoReplyTemplate() {
 // Mutation Hooks - Actions
 // ============================================================
 
-export function useEnqueueMl() {
-  return useMutation({
-    mutationFn: async ({ propertyId, operation }: { propertyId: string; operation: MlOperation }) => {
-      return enqueueMl(propertyId, operation);
-    },
-  });
-}
-
-export function useBulkEnqueueMl() {
-  return useMutation({
-    mutationFn: async ({ propertyIds, operation }: { propertyIds: string[]; operation: MlOperation }) => {
-      return bulkEnqueueMl(propertyIds, operation);
-    },
-  });
-}
-
-export function useSyncNow() {
-  return useMutation({
-    mutationFn: async () => {
-      return syncNow();
-    },
-  });
-}
-
 export function useAnswerMlQuestion() {
   return useMutation({
     mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
@@ -432,9 +405,6 @@ export {
   createMlAutoReplyTemplate,
   updateMlAutoReplyTemplate,
   deleteMlAutoReplyTemplate,
-  enqueueMl,
-  bulkEnqueueMl,
-  syncNow,
   answerMlQuestion,
   setMlEnabled,
   setMlAppId,

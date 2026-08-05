@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { getAccessToken, getMe } from '../_shared/ml.ts';
+import { getAccessToken, type MlConnectionRow } from '../_shared/ml.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -47,10 +47,10 @@ async function getActiveConnection(): Promise<{ access_token: string; user_id: n
     .order('updated_at', { ascending: false })
     .limit(1);
 
-  const conn = conns?.[0] as any;
+  const conn = (conns?.[0] ?? null) as (MlConnectionRow & { user_id: number; site_id: string }) | null;
   if (!conn) return null;
 
-  const accessToken = await getAccessToken(conn);
+  const accessToken = await getAccessToken(supabase, conn);
   return { access_token: accessToken, user_id: conn.user_id, site_id: conn.site_id };
 }
 

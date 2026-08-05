@@ -9,7 +9,6 @@ import {
   Loader2,
   MessageSquare,
   Plus,
-  RefreshCw,
   Search,
   Send,
   ShoppingBag,
@@ -25,7 +24,6 @@ import {
   ML_SYNC_STATUS_TONE,
   answerMlQuestion,
   buildAuthorizeUrl,
-  bulkEnqueueMl,
   createMlAutoReplyTemplate,
   deleteMlAutoReplyTemplate,
   disconnectMl,
@@ -41,7 +39,6 @@ import {
   setMlAppId,
   setMlDefaults,
   setMlEnabled,
-  syncNow,
   updateMlAutoReplyTemplate,
   type MlCategory,
   type MlListingType,
@@ -88,10 +85,6 @@ export function MercadoLibrePage() {
   const listingTypesQ = useQuery({ queryKey: ['ml-listing-types'], queryFn: fetchMlListingTypes });
   const questionsQ = useQuery({ queryKey: ['ml-questions'], queryFn: fetchMlQuestions });
   const autoReplyQ = useQuery({ queryKey: ['ml-auto-reply'], queryFn: fetchMlAutoReplyTemplates });
-  const propertiesQ = useQuery({
-    queryKey: ['properties'],
-    queryFn: () => import('../lib/properties').then(m => m.fetchProperties()),
-  });
 
   const [appIdDraft, setAppIdDraft] = useState('');
   const [savingAppId, setSavingAppId] = useState(false);
@@ -114,10 +107,6 @@ export function MercadoLibrePage() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateForm, setTemplateForm] = useState<{ name: string; trigger: TemplateTrigger; message: string; is_active: boolean }>({ name: '', trigger: 'new_question', message: '', is_active: true });
 
-  const [bulkOperation, setBulkOperation] = useState<'publish' | 'update' | 'delete'>('publish');
-  const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
-  const [bulkEnqueueing, setBulkEnqueueing] = useState(false);
-
   const overview = overviewQ.data;
   const connected = !!overview?.connection;
   const connection = overview?.connection ?? null;
@@ -131,20 +120,6 @@ export function MercadoLibrePage() {
     failed: queueRows.filter(q => q.status === 'failed').length,
     onMl: (metaQ.data ?? []).length,
   };
-
-  const syncMutation = useMutation({
-    mutationFn: syncNow,
-    onSuccess: async () => {
-      pushToast({ type: 'success', title: 'Sincronizacion completada' });
-      await queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
-      await queryClient.invalidateQueries({ queryKey: ['ml-queue'] });
-      await queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
-      await queryClient.invalidateQueries({ queryKey: ['ml-metrics'] });
-    },
-    onError: (err) => {
-      pushToast({ type: 'error', title: 'Error de sincronizacion', description: err instanceof Error ? err.message : 'Intenta de nuevo.' });
-    },
-  });
 
   const disconnectMutation = useMutation({
     mutationFn: disconnectMl,
@@ -198,25 +173,6 @@ export function MercadoLibrePage() {
       pushToast({ type: 'error', title: 'Error al guardar configuracion', description: err instanceof Error ? err.message : 'Intenta de nuevo.' });
     } finally {
       setSavingDefaults(false);
-    }
-  };
-
-  const handleBulkEnqueue = async () => {
-    if (selectedPropertyIds.length === 0 || !connected) return;
-    setBulkEnqueueing(true);
-    try {
-      await bulkEnqueueMl(selectedPropertyIds, bulkOperation);
-      pushToast({
-        type: 'success',
-        title: 'Propiedades encoladas',
-        description: `${selectedPropertyIds.length} propiedad(es) encoladas para ${ML_OPERATION_LABEL[bulkOperation].toLowerCase()}.`,
-      });
-      setSelectedPropertyIds([]);
-      await queryClient.invalidateQueries({ queryKey: ['ml-queue'] });
-    } catch (err) {
-      pushToast({ type: 'error', title: 'Error al encolar', description: err instanceof Error ? err.message : 'Intenta de nuevo.' });
-    } finally {
-      setBulkEnqueueing(false);
     }
   };
 
@@ -457,51 +413,6 @@ export function MercadoLibrePage() {
     </section>
   ) : null;
 
-  const bulkActionsSection = connected ? (
-    <section className="card">
-      <div className="site-section-head">
-        <div>
-          <h3>Acciones en lote</h3>
-          <p>Publica, actualiza o elimina multiples propiedades en Mercado Libre de una vez.</p>
-        </div>
-      </div>
-      <div className="bulk-actions-card">
-        <div className="bulk-options">
-          <label className="field">
-            <span>Operacion</span>
-            <select className="select" value={bulkOperation} onChange={e => setBulkOperation(e.currentTarget.value as 'publish' | 'update' | 'delete')}>
-              <option value="publish">Publicar</option>
-              <option value="update">Actualizar</option>
-              <option value="delete">Eliminar/Pausar</option>
-            </select>
-          </label>
-        </div>
-        <div className="bulk-properties">
-          <h4>Seleccionar propiedades</h4>
-          <div className="property-multi-select">
-            {propertiesQ.data?.map(p => (
-              <label key={p.id} className="property-option">
-                <input
-                  type="checkbox"
-                  checked={selectedPropertyIds.includes(p.id)}
-                  onChange={e => e.currentTarget.checked ? setSelectedPropertyIds([...selectedPropertyIds, p.id]) : setSelectedPropertyIds(selectedPropertyIds.filter(id => id !== p.id))}
-                />
-                <span>{p.title}</span>
-                <span className="muted">#{p.code}</span>
-              </label>
-            ))}
-            {propertiesQ.data?.length === 0 && <span className="muted">No hay propiedades.</span>}
-          </div>
-        </div>
-        <div className="form-actions">
-          <button className="btn btn--primary" onClick={handleBulkEnqueue} disabled={selectedPropertyIds.length === 0 || bulkEnqueueing}>
-            {bulkEnqueueing ? <Loader2 size={14} className="spin" /> : 'Encolar en ML'} {selectedPropertyIds.length > 0 && `(${selectedPropertyIds.length})`}
-          </button>
-        </div>
-      </div>
-    </section>
-  ) : null;
-
   const replyModal = selectedQuestion ? (
     <div className="modal-backdrop" onClick={() => setSelectedQuestion(null)}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -614,16 +525,6 @@ export function MercadoLibrePage() {
             Conecta la cuenta, sincroniza el catalogo y controla el estado de cada publicacion.
           </p>
         </div>
-        <div className="page-head-actions">
-          <button
-            className="btn btn--secondary"
-            onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending || !connected}
-          >
-            {syncMutation.isPending ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />}
-            {syncMutation.isPending ? 'Sincronizando...' : 'Sincronizar ahora'}
-          </button>
-        </div>
       </div>
 
       {overviewQ.isPending && <div className="card placeholder-card">Cargando integracion...</div>}
@@ -648,7 +549,6 @@ export function MercadoLibrePage() {
           {metricsSection}
           {questionsSection}
           {autoReplySection}
-          {bulkActionsSection}
 
           <div className="ml-grid">
             <section className="card">
@@ -884,8 +784,7 @@ export function MercadoLibrePage() {
                 <StatCard label="En Mercado Libre" value={stats.onMl} />
               </div>
               <p className="muted ml-note">
-                La sincronizacion corre en segundo plano. Tambien podes dispararla manualmente desde
-                "Sincronizar ahora".
+                La sincronizacion corre en segundo plano automaticamente cada pocos minutos.
               </p>
             </section>
           </div>

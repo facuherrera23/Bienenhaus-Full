@@ -3,17 +3,7 @@
  * Compartido entre ml-webhook y ml-answer-question.
  */
 
-import { decrypt, encrypt } from './crypto.ts';
-import { ML_API, refreshToken } from './ml.ts';
-
-export interface MlConnectionRow {
-  id: string;
-  access_token_encrypted: string;
-  access_token_iv: string;
-  refresh_token_encrypted: string;
-  refresh_token_iv: string;
-  token_expires_at: string;
-}
+import { getAccessToken, ML_API, type MlConnectionRow } from './ml.ts';
 
 /** Devuelve la plantilla activa para un trigger (p.ej. 'new_question'). */
 export async function getActiveTemplate(
@@ -47,28 +37,7 @@ export async function getMlAccessToken(supabase: any): Promise<string | null> {
   const conn = (data?.[0] ?? null) as MlConnectionRow | null;
   if (!conn) return null;
 
-  const expiresIn = new Date(conn.token_expires_at).getTime() - Date.now();
-  if (expiresIn > 5 * 60 * 1000) {
-    return await decrypt(conn.access_token_encrypted, conn.access_token_iv);
-  }
-
-  const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
-  const tokens = await refreshToken(refresh);
-  const access = await encrypt(tokens.access_token);
-  const refreshEnc = await encrypt(tokens.refresh_token);
-
-  await supabase
-    .from('ml_connection')
-    .update({
-      access_token_encrypted: access.data,
-      access_token_iv: access.iv,
-      refresh_token_encrypted: refreshEnc.data,
-      refresh_token_iv: refreshEnc.iv,
-      token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-    })
-    .eq('id', conn.id);
-
-  return tokens.access_token;
+  return await getAccessToken(supabase, conn);
 }
 
 /**

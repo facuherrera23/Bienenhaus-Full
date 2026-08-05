@@ -251,41 +251,6 @@ export async function fetchMlMeta(): Promise<MlMetaRow[]> {
 }
 
 // ============================================================
-// API Functions - Actions
-// ============================================================
-
-export async function enqueueMl(propertyId: string, operation: MlOperation): Promise<void> {
-  const { error } = await supabase.rpc('ml_enqueue', {
-    p_property_id: propertyId,
-    p_operation: operation,
-  });
-  if (error) throw new Error(error.message);
-}
-
-export async function syncNow(): Promise<{ processed: number }> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error('Sin sesión activa');
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/ml-sync`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(
-      text ? `Sync falló (${res.status}): ${text.slice(0, 200)}` : `Sync falló (${res.status})`
-    );
-  }
-
-  return await res.json();
-}
-
-// ============================================================
 // API Functions - Categories & Listing Types
 // ============================================================
 
@@ -433,23 +398,3 @@ export async function answerMlQuestion(questionId: string, answer: string): Prom
   if (!res.ok) throw new Error(`Error respondiendo pregunta`);
 }
 
-// ============================================================
-// API Functions - Bulk Enqueue
-// ============================================================
-
-export async function bulkEnqueueMl(propertyIds: string[], operation: MlOperation): Promise<void> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error('Sin sesión activa');
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/ml-bulk-enqueue`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ property_ids: propertyIds, operation }),
-  });
-
-  if (!res.ok) throw new Error(`Error encolando en lote`);
-}
