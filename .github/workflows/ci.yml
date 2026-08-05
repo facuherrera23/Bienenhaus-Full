@@ -99,37 +99,61 @@ jobs:
 
       - name: Create E2E test user
         run: |
-          DEMO_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
-          echo "SUPABASE_LOCAL_SERVICE_ROLE_KEY=$DEMO_SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
-          E2E_TEST_PASSWORD="e2e-test-pass-2026x"
-          echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
-
-          # Obtener anon key real del stack local (generada determinísticamente por jwt_secret)
+          # Obtener TODAS las keys reales del stack local
           STATUS_JSON=$(supabase status --output json)
-          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.api.anon_key')
-          API_URL=$(echo "$STATUS_JSON" | jq -r '.api.url')
+          echo "Status JSON: $STATUS_JSON"
+          
+          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.api.service_role_key // .api.service_key // empty')
+          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.api.anon_key // empty')
+          API_URL=$(echo "$STATUS_JSON" | jq -r '.api.url // empty')
+          
+          # Fallback: si jq falla, intentar extraer con grep/sed
+          if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "null" ] || [ "$SERVICE_ROLE_KEY" = "" ]; then
+            echo "Trying alternative extraction..."
+            SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | grep -o '"service_role_key"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"service_role_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            ANON_KEY=$(echo "$STATUS_JSON" | grep -o '"anon_key"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"anon_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            API_URL=$(echo "$STATUS_JSON" | grep -o '"url"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+          fi
+          
+          echo "SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-NOT_FOUND}"
+          echo "ANON_KEY=${ANON_KEY:-NOT_FOUND}"
+          echo "API_URL=${API_URL:-NOT_FOUND}"
+          
+          if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "NOT_FOUND" ] || [ "$SERVICE_ROLE_KEY" = "null" ]; then
+            echo "ERROR: Could not extract service_role_key from supabase status"
+            exit 1
+          fi
+          
+          echo "SUPABASE_LOCAL_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
           echo "SUPABASE_LOCAL_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
           echo "SUPABASE_LOCAL_API_URL=$API_URL" >> "$GITHUB_ENV"
-          echo "Using anon key: $ANON_KEY"
+          
+          E2E_TEST_PASSWORD="e2e-test-pass-2026x"
+          echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
+          
+          echo "Using service_role_key: ${SERVICE_ROLE_KEY:0:20}..."
+          echo "Using anon_key: ${ANON_KEY:0:20}..."
           echo "Using API URL: $API_URL"
-
+          
+          # Crear/actualizar usuario via Admin API
           HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/admin/users" \
-            -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
-            -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" \
+            -H "apikey: $SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"E2E Test User\"}}")
+          
           if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
             echo "admin create user ok (HTTP $HTTP_CODE)"
           elif [ "$HTTP_CODE" = "422" ] || [ "$HTTP_CODE" = "409" ]; then
             echo "user already existed (HTTP $HTTP_CODE) - continuing"
             # Actualizar password por si cambió
             USER_ID=$(curl -sS -X GET "http://127.0.0.1:54321/auth/v1/admin/users" \
-              -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
-              -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" | jq -r '.users[] | select(.email=="e2e-test@bienenhaus.local") | .id')
+              -H "apikey: $SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SERVICE_ROLE_KEY" | jq -r '.users[] | select(.email=="e2e-test@bienenhaus.local") | .id')
             if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
               curl -sS -X PUT "http://127.0.0.1:54321/auth/v1/admin/users/$USER_ID" \
-                -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
-                -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" \
+                -H "apikey: $SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
                 -H "Content-Type: application/json" \
                 -d "{\"password\":\"$E2E_TEST_PASSWORD\"}" > /dev/null
               echo "password updated for existing user"
@@ -139,7 +163,7 @@ jobs:
             cat /tmp/signup.json
             exit 1
           fi
-
+          
           supabase db query --local "insert into public.admin_users (id, email, full_name, role, is_active, must_change_password) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin', true, false from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do update set role = 'admin', is_active = true, must_change_password = false;"
         working-directory: ./supabase
 
