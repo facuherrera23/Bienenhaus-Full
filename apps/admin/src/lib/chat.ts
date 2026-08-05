@@ -539,7 +539,7 @@ export function subscribeToChannelMessages(
         filter: `channel_id=eq.${channelId}`,
       },
       (payload) => {
-        fetchMessage(payload.new.id).then(onMessage);
+        fetchMessage(payload.new.id).then(onMessage).catch(() => {});
       }
     )
     .on(
@@ -551,7 +551,7 @@ export function subscribeToChannelMessages(
         filter: `channel_id=eq.${channelId}`,
       },
       (payload) => {
-        fetchMessage(payload.new.id).then(onUpdate);
+        fetchMessage(payload.new.id).then(onUpdate).catch(() => {});
       }
     )
     .on(

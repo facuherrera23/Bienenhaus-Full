@@ -10,7 +10,7 @@ import {
   type AdminRole,
   ROLE_LABEL,
   updateAdminUserRole,
-} from '../lib/adminUsers';
+} from '../lib/admin';
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';

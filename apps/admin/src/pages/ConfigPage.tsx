@@ -74,7 +74,7 @@ export function ConfigPage() {
   }, []);
 
   useEffect(() => {
-    void fetchMyUserId().then(setMyId);
+    void fetchMyUserId().then(setMyId).catch(() => {});
   }, []);
 
   useEffect(() => {

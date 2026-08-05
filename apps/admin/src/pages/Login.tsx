@@ -1,12 +1,20 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
+import { useLocation } from 'wouter-preact';
 import { supabase } from '../lib/supabase';
 import { authSession } from '../store/app';
 
 export function Login() {
+  const [, setLocation] = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authSession.value) {
+      setLocation('/', { replace: true });
+    }
+  }, []);
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();

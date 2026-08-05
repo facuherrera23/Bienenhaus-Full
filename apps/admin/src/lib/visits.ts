@@ -603,7 +603,7 @@ export async function generateQrCode(visitId: string): Promise<QrCheckin> {
 export async function checkInWithQr(
   code: string,
   agentId: string
-): Promise<{ success: boolean; visit?: any; message: string }> {
+): Promise<{ success: boolean; visit?: { agent_id: string }; message: string }> {
   const { data: checkin, error } = await supabase
     .from('qr_checkins')
     .select('*, visit:visits(*)')
@@ -618,8 +618,8 @@ export async function checkInWithQr(
     return { success: false, message: 'Esta visita ya fue registrada' };
   }
 
-  const visit = checkin.visit as any;
-  if (visit.agent_id !== agentId) {
+  const visit = checkin.visit as { agent_id: string } | undefined;
+  if (!visit || visit.agent_id !== agentId) {
     return { success: false, message: 'No sos el agente asignado a esta visita' };
   }
 

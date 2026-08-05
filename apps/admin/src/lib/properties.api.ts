@@ -375,7 +375,6 @@ export function useMLOverview() {
 // ============================================================
 
 export function toFormValues(property: PropertyDetail): PropertyFormValues {
-  const p = property as any;
   return {
     title: property.title ?? '',
     status: (property.status as PropertyStatus) ?? 'borrador',
@@ -385,14 +384,14 @@ export function toFormValues(property: PropertyDetail): PropertyFormValues {
     expenses: property.expenses ?? null,
     description: property.description ?? '',
     address: property.address ?? '',
-    location_id: p.location_id ?? null,
+    location_id: property.location_id ?? null,
     area_total: property.area_total ?? null,
     area_covered: property.area_covered ?? null,
     bedrooms: property.bedrooms ?? null,
     bathrooms: property.bathrooms ?? null,
     garages: property.garages ?? null,
     floors: property.floors ?? null,
-    year_built: p.year_built ?? null,
+    year_built: property.year_built ?? null,
     featured: property.featured ?? false,
     video_url: property.video_url ?? '',
     latitude: property.latitude ?? null,
