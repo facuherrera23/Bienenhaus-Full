@@ -4,7 +4,7 @@ import { mobileMenuOpen } from '../store/app';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { CommandPalette, useCommandPalette } from './CommandPalette';
-import { Plus, Users, Calendar, UserRound, MessageSquare, Globe, ShoppingBag, Mail, Settings } from 'lucide-preact';
+import { Plus, Users, Calendar, UserRound, ShoppingBag, Settings } from 'lucide-preact';
 
 export function Shell({ children }: { children: ComponentChildren }) {
   const { isOpen, close } = useCommandPalette();
