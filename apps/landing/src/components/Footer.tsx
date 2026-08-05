@@ -146,7 +146,7 @@ export function Footer() {
             <ul>
               {NAV_LINKS.map(([href, label]) => (
                 <li key={label}>
-                  <a href={href}>{label}</a>
+                  <a href={href} aria-label={label}>{label}</a>
                 </li>
               ))}
             </ul>
@@ -157,7 +157,7 @@ export function Footer() {
             <ul>
               {SERVICE_LINKS.map(([href, label]) => (
                 <li key={label}>
-                  <a href={href}>{label}</a>
+                  <a href={href} aria-label={label}>{label}</a>
                 </li>
               ))}
             </ul>
@@ -169,7 +169,8 @@ export function Footer() {
             <form className="footer-newsletter-form" onSubmit={handleNewsletter} ref={formRef}>
               <div className="input-wrapper">
                 <i className="fas fa-envelope"></i>
-                <input type="email" placeholder="Tu correo electrónico" required />
+                <label htmlFor="footer-email" className="visually-hidden">Tu correo electrónico</label>
+                <input id="footer-email" type="email" placeholder="Tu correo electrónico" required />
               </div>
               <input
                 type="text"
@@ -201,10 +202,10 @@ export function Footer() {
             derechos reservados. {siteSettings.company.matricula && <span> | Matrícula: {siteSettings.company.matricula}</span>}
           </div>
           <div className="footer-bottom-center">
-            <a href="#">Política de Privacidad</a>
-            <a href="#">Términos y Condiciones</a>
-            <a href="#">Cookies</a>
-            <a href="#">Mapa del Sitio</a>
+            <a href="#" aria-label="Política de Privacidad">Política de Privacidad</a>
+            <a href="#" aria-label="Términos y Condiciones">Términos y Condiciones</a>
+            <a href="#" aria-label="Cookies">Cookies</a>
+            <a href="#" aria-label="Mapa del Sitio">Mapa del Sitio</a>
           </div>
           <div className="footer-bottom-right">
             <i className="fas fa-map-pin"></i> Diseñado con excelencia. Argentina.

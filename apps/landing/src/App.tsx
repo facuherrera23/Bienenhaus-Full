@@ -21,17 +21,19 @@ export function App() {
       <WebSiteSchema />
       <OrganizationSchema />
       <RealEstateAgencySchema />
-      <a href="#inicio" className="skip-link">
+      <a href="#main-content" className="skip-link" aria-label="Saltar al contenido principal">
         Saltar al contenido principal
       </a>
       <Navbar />
       <Hero />
-      <Catalog />
-      <Services />
-      <Team />
-      <Stats />
-      <Process />
-      <Contact />
+      <main id="main-content" role="main">
+        <Catalog />
+        <Services />
+        <Team />
+        <Stats />
+        <Process />
+        <Contact />
+      </main>
       <TransitionStrip />
       <Footer />
     </div>

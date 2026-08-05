@@ -274,23 +274,23 @@ export function Contact() {
 
                   <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={groupClass('nombre')} style={{ animationDelay: '0.1s' }}>
-                      <label>
+                      <label htmlFor="nombre">
                         Nombre <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
                         <i className="fas fa-user input-icon"></i>
-                        <input type="text" name="nombre" placeholder="Tu nombre" required />
+                        <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
                       <span className="error-message">Por favor ingresá tu nombre</span>
                     </div>
                     <div className={groupClass('apellido')} style={{ animationDelay: '0.15s' }}>
-                      <label>
+                      <label htmlFor="apellido">
                         Apellido <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
                         <i className="fas fa-user input-icon"></i>
-                        <input type="text" name="apellido" placeholder="Tu apellido" required />
+                        <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
                       <span className="error-message">Por favor ingresá tu apellido</span>
@@ -298,23 +298,23 @@ export function Contact() {
                   </div>
 <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={groupClass('email')} style={{ animationDelay: '0.2s' }}>
-                      <label>
+                      <label htmlFor="email">
                         Correo electrónico <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
                         <i className="fas fa-envelope input-icon"></i>
-                        <input type="email" name="email" placeholder="tu@email.com" required />
+                        <input type="email" id="email" name="email" placeholder="tu@email.com" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
                       <span className="error-message">Por favor ingresá un correo válido</span>
                     </div>
                     <div className={groupClass('whatsapp')} style={{ animationDelay: '0.25s' }}>
-                      <label>
+                      <label htmlFor="whatsapp">
                         WhatsApp / Teléfono <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
                         <i className="fab fa-whatsapp input-icon"></i>
-                        <input type="tel" name="whatsapp" placeholder="+54 9 351 000-0000" required />
+                        <input type="tel" id="whatsapp" name="whatsapp" placeholder="+54 9 351 000-0000" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
                       <span className="error-message">Por favor ingresá tu WhatsApp</span>
@@ -322,12 +322,12 @@ export function Contact() {
                   </div>
                   <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={groupClass('ciudad')} style={{ animationDelay: '0.2s' }}>
-                      <label>
+                      <label htmlFor="ciudad">
                         Ciudad <span className="required">*</span>
                       </label>
                       <div className="input-wrapper">
                         <i className="fas fa-map-marker-alt input-icon"></i>
-                        <input type="text" name="ciudad" placeholder="¿En qué ciudad estás?" required />
+                        <input type="text" id="ciudad" name="ciudad" placeholder="¿En qué ciudad estás?" required />
                         <i className="fas fa-check-circle success-check"></i>
                       </div>
                       <span className="error-message">Por favor ingresá tu ciudad</span>
@@ -337,11 +337,11 @@ export function Contact() {
                   <div id="dynamicFields">
                     {config.fields.map((field, index) => (
                       <div className="form-group" style={{ animationDelay: `${0.35 + index * 0.05}s` }} key={field.name}>
-                        <label>{field.label}</label>
+                        <label htmlFor={field.name}>{field.label}</label>
                         <div className="input-wrapper">
                           <i className={`${field.icon} input-icon`}></i>
                           {field.type === 'select' ? (
-                            <select name={field.name}>
+                            <select id={field.name} name={field.name}>
                               {field.options?.map((opt) => (
                                 <option value={opt} key={opt}>
                                   {opt}
@@ -350,12 +350,13 @@ export function Contact() {
                             </select>
                           ) : field.type === 'textarea' ? (
                             <textarea
+                              id={field.name}
                               name={field.name}
                               placeholder={field.placeholder || ''}
                               rows={3}
                             ></textarea>
                           ) : (
-                            <input type="text" name={field.name} placeholder={field.placeholder || ''} />
+                            <input type="text" id={field.name} name={field.name} placeholder={field.placeholder || ''} />
                           )}
                           <i className="fas fa-check-circle success-check"></i>
                         </div>
@@ -363,50 +364,50 @@ export function Contact() {
                     ))}
                   </div>
 
-                  <div className="form-group" style={{ animationDelay: '0.4s' }}>
-                    <label>Mensaje</label>
-                    <div className="input-wrapper">
-                      <i className="fas fa-comment input-icon"></i>
-                      <textarea name="mensaje" placeholder="Contanos un poco más sobre lo que necesitás..."></textarea>
+<div className="form-group" style={{ animationDelay: '0.4s' }}>
+                      <label htmlFor="mensaje">Mensaje</label>
+                      <div className="input-wrapper">
+                        <i className="fas fa-comment input-icon"></i>
+                        <textarea id="mensaje" name="mensaje" placeholder="Contanos un poco más sobre lo que necesitás..."></textarea>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="form-group" style={{ animationDelay: '0.45s' }}>
-                    <label>Adjuntar archivos</label>
-                    <div
-                      className={`drop-zone${dragOver ? ' dragover' : ''}`}
-                      id="dropZone"
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragOver(true);
-                      }}
-                      onDragLeave={() => setDragOver(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setDragOver(false);
-                        if (e.dataTransfer) addFiles(e.dataTransfer.files);
-                      }}
-                    >
-                      <div className="drop-icon">
-                        <i className="fas fa-cloud-upload-alt"></i>
-                      </div>
-                      <div className="drop-text">
-                        Arrastrá archivos aquí o hacé clic para seleccionarlos
-                      </div>
-                      <div className="drop-hint">PDF, JPG, PNG · Máximo 10MB</div>
-                      <input
-                        type="file"
-                        id="fileInput"
-                        multiple
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        style={{ display: 'none' }}
-                        ref={fileInputRef}
-                        onChange={(e) => {
-                          addFiles(e.currentTarget.files);
-                          e.currentTarget.value = '';
+<div className="form-group" style={{ animationDelay: '0.45s' }}>
+                      <label htmlFor="fileInput">Adjuntar archivos</label>
+                      <div
+                        className={`drop-zone${dragOver ? ' dragover' : ''}`}
+                        id="dropZone"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDragOver(true);
                         }}
-                      />
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOver(false);
+                          if (e.dataTransfer) addFiles(e.dataTransfer.files);
+                        }}
+                      >
+                        <div className="drop-icon">
+                          <i className="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div className="drop-text">
+                          Arrastrá archivos aquí o hacé clic para seleccionarlos
+                        </div>
+                        <div className="drop-hint">PDF, JPG, PNG · Máximo 10MB</div>
+                        <input
+                          type="file"
+                          id="fileInput"
+                          multiple
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          style={{ display: 'none' }}
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            addFiles(e.currentTarget.files);
+                            e.currentTarget.value = '';
+                          }}
+                        />
                     </div>
                     {files.length > 0 && (
                       <div className="file-list" id="fileList">
@@ -440,7 +441,7 @@ export function Contact() {
                   </div>
 
                   {/* Honeypot - invisible to humans */}
-                  <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+                  <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
 
                   <button type="submit" className={`btn-submit${loading ? ' loading' : ''}`} id="submitBtn" disabled={loading}>
                     <span className="btn-text">{loading ? 'ENVIANDO...' : 'ENVIAR CONSULTA'}</span>

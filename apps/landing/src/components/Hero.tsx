@@ -1,6 +1,5 @@
 import { useRef, useState } from 'preact/hooks';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
-import { images } from '../lib/images';
 import { VideoModal } from './VideoModal';
 
 interface HeroStat {
@@ -15,6 +14,14 @@ interface HeroFeature {
   title: string;
   desc: string;
 }
+
+const heroImageSources = [
+  { width: 1920, avif: '/assets/images/hero/hero-baner-xl.avif', webp: '/assets/images/hero/hero-baner-xl.webp' },
+  { width: 1280, avif: '/assets/images/hero/hero-baner-lg.avif', webp: '/assets/images/hero/hero-baner-lg.webp' },
+  { width: 1024, avif: '/assets/images/hero/hero-baner-md.avif', webp: '/assets/images/hero/hero-baner-md.webp' },
+  { width: 640, avif: '/assets/images/hero/hero-baner-sm.avif', webp: '/assets/images/hero/hero-baner-sm.webp' },
+  { width: 320, avif: '/assets/images/hero/hero-baner-xs.avif', webp: '/assets/images/hero/hero-baner-xs.webp' },
+];
 
 export function Hero() {
   const featureBarRef = useRef<HTMLDivElement>(null);
@@ -43,18 +50,27 @@ export function Hero() {
     desc: textOf(f, 'text'),
   }));
 
-  const heroBg = textOf(settings.hero_background, 'value') || images.heroBg;
   const videoUrl = textOf(settings.hero_video_url, 'value', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const videoTitle = textOf(settings.hero_video_title, 'value', 'BIENENHAUS PROPIEDADES');
 
   return (
     <section className="hero" id="inicio" aria-label="Presentación principal">
-      <div
-        className="hero-bg"
-        role="img"
-        aria-label="Mansión moderna de arquitectura minimalista"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      ></div>
+      <picture className="hero-bg" role="img" aria-label="Mansión moderna de arquitectura minimalista">
+        {heroImageSources.map((src) => (
+          <>
+            <source srcSet={src.avif} type="image/avif" media={`(min-width: ${src.width}px)`} />
+            <source srcSet={src.webp} type="image/webp" media={`(min-width: ${src.width}px)`} />
+          </>
+        ))}
+        <img
+          src="/assets/images/hero/hero-baner.png"
+          alt="Mansión moderna de arquitectura minimalista en zona residencial exclusiva"
+          aria-hidden="true"
+          className="hero-bg-img"
+          loading="eager"
+          fetchPriority="high"
+        />
+      </picture>
       <div className="hero-overlay-h" aria-hidden="true"></div>
       <div className="hero-overlay-v" aria-hidden="true"></div>
 
@@ -64,7 +80,7 @@ export function Hero() {
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="hero-title">
             <span className="line line-1">{title.line1 ?? 'Propiedades exclusivas.'}</span>
-            <span className="line line-2">{title.line2 ?? 'Experiencias extraordinarias.'}</span>
+            <span className="line line-2"> {title.line2 ?? 'Experiencias extraordinarias.'}</span>
           </h1>
           <p className="hero-desc">{description}</p>
 

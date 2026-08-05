@@ -50,16 +50,16 @@ export function Navbar() {
             <img src={logoSrc} alt={siteName} className="logo-img" />
           </a>
 
-          <nav className="nav-menu" aria-label="Navegación principal">
+          <nav className="nav-menu" role="navigation" aria-label="Navegación principal">
             {NAV_ITEMS.map((item, i) => (
-              <a key={`${item.href}-${i}`} href={item.href} className={i === 0 ? 'is-active' : ''}>
+              <a key={`${item.href}-${i}`} href={item.href} className={i === 0 ? 'is-active' : ''} aria-label={item.label}>
                 {item.label}
               </a>
             ))}
           </nav>
 
           <div className="nav-actions">
-            <a href="#" className="btn-publish">
+            <a href="#" className="btn-publish" aria-label="Publicar propiedad">
               PUBLICAR PROPIEDAD
               <i className="fas fa-arrow-right"></i>
             </a>
@@ -96,9 +96,10 @@ export function Navbar() {
         </div>
       </header>
 
-      <nav
+<nav
         className={`mobile-menu${menuOpen ? ' is-open' : ''}`}
         id="mobileMenu"
+        role="navigation"
         aria-label="Navegación móvil"
       >
         {NAV_ITEMS.map((item, i) => (
@@ -107,14 +108,11 @@ export function Navbar() {
             href={item.href}
             className={i === 0 ? 'is-active' : ''}
             onClick={() => setMenuOpen(false)}
+            aria-label={item.label}
           >
             {item.label}
           </a>
         ))}
-        <a href="#" className="btn-publish" onClick={() => setMenuOpen(false)}>
-          PUBLICAR PROPIEDAD
-          <i className="fas fa-arrow-right"></i>
-        </a>
       </nav>
     </>
   );

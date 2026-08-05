@@ -197,7 +197,7 @@ export function Catalog() {
 
   return (
     <>
-      <main className="catalog" id="catalogo" ref={rootRef}>
+      <main className="catalog" id="catalogo" ref={rootRef} aria-label="Catálogo de propiedades">
         <div className="container">
           <header className="catalog-header">
             <div className="catalog-header-left">
@@ -214,7 +214,7 @@ export function Catalog() {
 
           <div className="search-bar">
             <div className="search-group">
-              <label>Buscar</label>
+              <label htmlFor="search-input">Buscar</label>
               <div
                 className="search-input-wrapper"
                 style={{
@@ -223,6 +223,7 @@ export function Catalog() {
               >
                 <i className="fas fa-search"></i>
                 <input
+                  id="search-input"
                   type="text"
                   placeholder="Buscar propiedad..."
                   value={search}
@@ -239,16 +240,16 @@ export function Catalog() {
               </div>
             </div>
             <div className="search-group">
-              <label>Operación</label>
-              <select value={operation} onChange={(e) => setOperation((e.currentTarget as HTMLSelectElement).value)}>
+              <label htmlFor="operation-select">Operación</label>
+              <select id="operation-select" value={operation} onChange={(e) => setOperation((e.currentTarget as HTMLSelectElement).value)}>
                 <option value="">Todas</option>
                 <option value="venta">Venta</option>
                 <option value="alquiler">Alquiler</option>
               </select>
             </div>
             <div className="search-group">
-              <label>Ubicación</label>
-              <select value={location} onChange={(e) => setLocation((e.currentTarget as HTMLSelectElement).value)}>
+              <label htmlFor="location-select">Ubicación</label>
+              <select id="location-select" value={location} onChange={(e) => setLocation((e.currentTarget as HTMLSelectElement).value)}>
                 {LOCATIONS.map((l) => (
                   <option key={l} value={l}>
                     {l}
@@ -257,8 +258,8 @@ export function Catalog() {
               </select>
             </div>
             <div className="search-group">
-              <label>Precio</label>
-              <select value={priceRange} onChange={(e) => setPriceRange((e.currentTarget as HTMLSelectElement).value)}>
+              <label htmlFor="price-select">Precio</label>
+              <select id="price-select" value={priceRange} onChange={(e) => setPriceRange((e.currentTarget as HTMLSelectElement).value)}>
                 {PRICE_RANGES.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
