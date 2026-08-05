@@ -19,13 +19,14 @@ async function goToOwners(page) {
 }
 
 async function createOwner(page, name) {
+  const uniqueId = Date.now().toString().slice(-8);
   await page.getByRole('link', { name: 'Nuevo propietario' }).first().click();
   await page.waitForURL((url) => url.hash.includes('/propietarios/nuevo'));
 
   await page.getByLabel('Nombre completo').fill(name);
   await page.getByLabel('Email').fill(`e2e.${name.replace(/[^a-zA-Z0-9]/g, '')}@test.local`);
   await page.getByLabel('Teléfono').fill('+54 9 11 5555 1234');
-  await page.getByLabel('DNI / CUIT').fill('30111222');
+  await page.getByLabel('DNI / CUIT').fill(`301112${uniqueId}`);
   await page.getByLabel('Contacto preferido').selectOption('email');
   await page.getByLabel('Dirección completa').fill('Calle E2E 123, CABA');
 
@@ -49,7 +50,7 @@ test.describe('Propietarios - CRUD', () => {
     const card = page.locator('.owner-card').filter({ hasText: name });
     await expect(card).toBeVisible({ timeout: 10000 });
     await expect(card).toContainText(`e2e.${name.replace(/[^a-zA-Z0-9]/g, '')}@test.local`);
-    await expect(card).toContainText('1 propiedad');
+    await expect(card).toContainText('0 propiedades');
   });
 
   test('edita un propietario desde el detalle', async ({ page }) => {

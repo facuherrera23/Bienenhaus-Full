@@ -16,6 +16,7 @@ import {
   deletePropertyImage,
   setPropertyCover,
   reorderPropertyImages,
+  slugify,
 } from './properties';
 import { embedProperty, type QueueApiRow, type MetaApiRow } from './ml';
 import type {
@@ -452,7 +453,7 @@ export {
 // Re-export
 // ============================================================
 
-export { queryKeys };
+export { queryKeys, slugify };
 export type {
   PropertyStatus,
   ListingType,

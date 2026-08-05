@@ -85,6 +85,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             </label>
             <input
               id="full_name"
+              name="full_name"
               type="text"
               placeholder="Juan Pérez"
               value={formData.full_name}
@@ -98,6 +99,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="owner_type">Tipo de propietario</label>
             <select
               id="owner_type"
+              name="owner_type"
               value={formData.owner_type}
               onChange={handleChange}
               disabled={isLoading}
@@ -111,6 +113,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="company_name">Razón social</label>
             <input
               id="company_name"
+              name="company_name"
               type="text"
               placeholder="Empresa S.A."
               value={formData.company_name}
@@ -123,6 +126,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="dni_cuit">DNI / CUIT</label>
             <input
               id="dni_cuit"
+              name="dni_cuit"
               type="text"
               placeholder="12345678 o 20-12345678-9"
               value={formData.dni_cuit}
@@ -143,6 +147,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="email">Email</label>
             <input
               id="email"
+              name="email"
               type="email"
               placeholder="juan@email.com"
               value={formData.email}
@@ -156,6 +161,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="phone">Teléfono</label>
             <input
               id="phone"
+              name="phone"
               type="tel"
               placeholder="+54 9 11 1234-5678"
               value={formData.phone}
@@ -169,6 +175,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
             <label htmlFor="preferred_contact">Contacto preferido</label>
             <select
               id="preferred_contact"
+              name="preferred_contact"
               value={formData.preferred_contact}
               onChange={handleChange}
               disabled={isLoading}
@@ -190,6 +197,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
           <label htmlFor="address">Dirección completa</label>
           <textarea
             id="address"
+            name="address"
             rows={2}
             placeholder="Calle 123, Piso 4, Dpto B, CABA"
             value={formData.address}
@@ -208,6 +216,7 @@ export function OwnerForm({ initialData, onSubmit, onCancel, isLoading, submitLa
           <label htmlFor="notes">Notas internas</label>
           <textarea
             id="notes"
+            name="notes"
             rows={3}
             placeholder="Información adicional relevante..."
             value={formData.notes}

@@ -79,7 +79,7 @@ export function toNumeric(v: string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function slugify(title: string): string {
+export function slugify(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFD')

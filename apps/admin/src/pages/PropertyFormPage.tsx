@@ -12,6 +12,7 @@ import {
   STATUS_LABEL,
   toFormValues,
   toNumeric,
+  slugify,
   type ListingType,
   type PropertyFormValues,
   type PropertyStatus,
@@ -237,7 +238,8 @@ export function PropertyFormPage() {
     setSaving(true);
     try {
       if (isNew) {
-        await createProperty.mutateAsync(values);
+        const slug = slugify(values.title);
+        await createProperty.mutateAsync({ ...values, slug });
         pushToast({ type: 'success', title: 'Propiedad creada', description: values.title });
       } else if (editId) {
         await updateProperty.mutateAsync({ id: editId, body: values });
@@ -395,7 +397,7 @@ export function PropertyFormPage() {
       )}
 
       {!loadError && loaded && (
-        <form className="form-card" onSubmit={handleSubmit}>
+        <form className="form-card" onSubmit={handleSubmit} noValidate>
           {isNew ? (
             <>
               <section className="form-section">
