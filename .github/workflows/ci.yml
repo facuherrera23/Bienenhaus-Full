@@ -101,18 +101,19 @@ jobs:
         run: |
           # Obtener TODAS las keys reales del stack local
           STATUS_JSON=$(supabase status --output json)
-          echo "Status JSON: $STATUS_JSON"
+          echo "Status JSON length: ${#STATUS_JSON}"
           
-          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.api.service_role_key // .api.service_key // empty')
-          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.api.anon_key // empty')
-          API_URL=$(echo "$STATUS_JSON" | jq -r '.api.url // empty')
+          # El JSON tiene las keys en la raíz con estos nombres exactos
+          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.SERVICE_ROLE_KEY // empty')
+          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.ANON_KEY // empty')
+          API_URL=$(echo "$STATUS_JSON" | jq -r '.API_URL // empty')
           
-          # Fallback: si jq falla, intentar extraer con grep/sed
+          # Fallback: si jq falla, intentar con grep/sed
           if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "null" ] || [ "$SERVICE_ROLE_KEY" = "" ]; then
             echo "Trying alternative extraction..."
-            SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | grep -o '"service_role_key"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"service_role_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-            ANON_KEY=$(echo "$STATUS_JSON" | grep -o '"anon_key"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"anon_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-            API_URL=$(echo "$STATUS_JSON" | grep -o '"url"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | grep -o '"SERVICE_ROLE_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"SERVICE_ROLE_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            ANON_KEY=$(echo "$STATUS_JSON" | grep -o '"ANON_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"ANON_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            API_URL=$(echo "$STATUS_JSON" | grep -o '"API_URL"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"API_URL"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
           fi
           
           echo "SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-NOT_FOUND}"
@@ -120,7 +121,7 @@ jobs:
           echo "API_URL=${API_URL:-NOT_FOUND}"
           
           if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "NOT_FOUND" ] || [ "$SERVICE_ROLE_KEY" = "null" ]; then
-            echo "ERROR: Could not extract service_role_key from supabase status"
+            echo "ERROR: Could not extract SERVICE_ROLE_KEY from supabase status"
             exit 1
           fi
           
