@@ -165,6 +165,9 @@ additional_redirect_urls = ["https://bienenhaus.com.ar/admin/**"]
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
 # jwt_issuer = ""
+# JWT signing secret (fixed for deterministic local keys). Must be 32+ chars.
+# Generated once: `openssl rand -hex 32`
+jwt_secret = "bienenhaus-local-jwt-secret-2026-32chars-minimum-length"
 # Path to JWT signing key. DO NOT commit your signing keys file to git.
 # signing_keys_path = "./signing_keys.json"
 # If disabled, the refresh token will never expire.

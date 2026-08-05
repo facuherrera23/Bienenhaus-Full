@@ -97,17 +97,23 @@ jobs:
         run: supabase db reset
         working-directory: ./supabase
 
-      - name: Create E2E test user
-        # El stack local de Supabase usa demo keys deterministas (constantes públicas)
-        # cuando config.toml no define jwt_secret. El signup público falla con HTTP 400
-        # captcha_failed (auth.captcha.enabled = true en config.toml), así que se crea el
-        # usuario vía GoTrue Admin API (service_role), que no requiere captcha ni confirmación.
+- name: Create E2E test user
+        # El stack local de Supabase usa keys deterministas gracias a jwt_secret en config.toml.
+        # Obtenemos las keys reales del stack local vía `supabase status --output json`.
         run: |
-          DEMO_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
           DEMO_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
-          echo "SUPABASE_LOCAL_ANON_KEY=$DEMO_ANON_KEY" >> "$GITHUB_ENV"
+          echo "SUPABASE_LOCAL_SERVICE_ROLE_KEY=$DEMO_SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
           E2E_TEST_PASSWORD="e2e-test-pass-2026x"
           echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
+
+          # Obtener anon key real del stack local (generada determinísticamente por jwt_secret)
+          STATUS_JSON=$(supabase status --output json)
+          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.api.anon_key')
+          API_URL=$(echo "$STATUS_JSON" | jq -r '.api.url')
+          echo "SUPABASE_LOCAL_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          echo "SUPABASE_LOCAL_API_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "Using anon key: $ANON_KEY"
+          echo "Using API URL: $API_URL"
 
           HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/admin/users" \
             -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
@@ -117,20 +123,32 @@ jobs:
           if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
             echo "admin create user ok (HTTP $HTTP_CODE)"
           elif [ "$HTTP_CODE" = "422" ] || [ "$HTTP_CODE" = "409" ]; then
-            echo "user already existed (HTTP $HTTP_CODE) — continuing"
+            echo "user already existed (HTTP $HTTP_CODE) - continuing"
+            # Actualizar password por si cambió
+            USER_ID=$(curl -sS -X GET "http://127.0.0.1:54321/auth/v1/admin/users" \
+              -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" | jq -r '.users[] | select(.email=="e2e-test@bienenhaus.local") | .id')
+            if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
+              curl -sS -X PUT "http://127.0.0.1:54321/auth/v1/admin/users/$USER_ID" \
+                -H "apikey: $DEMO_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" \
+                -H "Content-Type: application/json" \
+                -d "{\"password\":\"$E2E_TEST_PASSWORD\"}" > /dev/null
+              echo "password updated for existing user"
+            fi
           else
             echo "admin create user failed with HTTP $HTTP_CODE"
             cat /tmp/signup.json
             exit 1
           fi
 
-          supabase db query --local "insert into public.admin_users (id, email, full_name, role) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin' from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do nothing;"
+          supabase db query --local "insert into public.admin_users (id, email, full_name, role, is_active, must_change_password) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin', true, false from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do update set role = 'admin', is_active = true, must_change_password = false;"
         working-directory: ./supabase
 
       - name: Run E2E tests
         run: pnpm test:e2e
         env:
-          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_URL: ${{ env.SUPABASE_LOCAL_API_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ env.SUPABASE_LOCAL_ANON_KEY }}
           E2E_TEST_EMAIL: e2e-test@bienenhaus.local
           E2E_TEST_PASSWORD: ${{ env.E2E_TEST_PASSWORD }}
