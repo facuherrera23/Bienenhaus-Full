@@ -12,6 +12,7 @@ import {
   useReports,
   useSendCommunication,
   useCreateReport,
+  ownersKeys,
 } from '@lib/owners';
 import { pushToast } from '@store/app';
 import {
@@ -76,7 +77,8 @@ export function OwnerDetailPage() {
       const { updateOwner } = await import('@lib/owners');
       await updateOwner(ownerId, data);
       pushToast({ type: 'success', title: 'Propietario actualizado', description: data.full_name });
-      queryClient.invalidateQueries({ queryKey: ['owners'] });
+      queryClient.invalidateQueries({ queryKey: ownersKeys.detail(ownerId) });
+      queryClient.invalidateQueries({ queryKey: ownersKeys.lists() });
       setEditing(false);
     } catch {
       pushToast({ type: 'error', title: 'No se pudo actualizar' });
