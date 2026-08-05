@@ -30,13 +30,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { error };
   }
 
-  componentDidCatch(error: Error, errorInfo: { componentStack?: string } | undefined) {
+componentDidCatch(error: Error, errorInfo: { componentStack?: string } | undefined) {
     this.props.onError?.(error, errorInfo?.componentStack);
 
-    // Reporte a Sentry opcional: no-op seguro si no está inicializado.
+    // Reporte a Sentry opcional: no-op seguro si no est� inicializado.
     // Lazy import para no cargar @sentry/browser salvo que haya un error.
-    void import('../lib/sentry').then(({ captureBoundaryError }) => {
-      captureBoundaryError(error, errorInfo?.componentStack ?? '', 'ErrorBoundary');
+    Promise.resolve().then(() => {
+      import('../lib/sentry')
+        .then(({ captureBoundaryError }) => {
+          captureBoundaryError(error, errorInfo?.componentStack ?? '', 'ErrorBoundary');
+        })
+        .catch(() => {
+          // Ignorar errores de Sentry
+        });
     });
   }
 
