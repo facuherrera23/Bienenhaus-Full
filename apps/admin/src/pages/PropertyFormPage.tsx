@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
-import { ArrowLeft, Save, Trash2, Copy, MapPin, Eye, Loader2, X } from 'lucide-preact';
+import { ArrowLeft, Save, Trash2, Copy, MapPin, Eye, Loader2, X, Building2, Home, List, Users } from 'lucide-preact';
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -16,6 +16,7 @@ import {
   type PropertyFormValues,
   type PropertyStatus,
 } from '../lib/properties.api';
+import { PropertyOwnerManager } from '../components/owners';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 
@@ -105,6 +106,7 @@ export function PropertyFormPage() {
   const [showMLPreview, setShowMLPreview] = useState(false);
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'location' | 'details' | 'publish' | 'owners'>('basic');
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<any>(null);
 
@@ -347,168 +349,398 @@ export function PropertyFormPage() {
 
       {!loadError && !loaded && <div className="card placeholder-card">Cargando…</div>}
 
+      {!loadError && loaded && !isNew && (
+        <div className="form-tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === 'basic'}
+            className={`form-tab${activeTab === 'basic' ? ' active' : ''}`}
+            onClick={() => setActiveTab('basic')}
+          >
+            <Home size={16} /> Datos básicos
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'location'}
+            className={`form-tab${activeTab === 'location' ? ' active' : ''}`}
+            onClick={() => setActiveTab('location')}
+          >
+            <MapPin size={16} /> Ubicación
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'details'}
+            className={`form-tab${activeTab === 'details' ? ' active' : ''}`}
+            onClick={() => setActiveTab('details')}
+          >
+            <List size={16} /> Detalles
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'publish'}
+            className={`form-tab${activeTab === 'publish' ? ' active' : ''}`}
+            onClick={() => setActiveTab('publish')}
+          >
+            <Building2 size={16} /> Publicación
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'owners'}
+            className={`form-tab${activeTab === 'owners' ? ' active' : ''}`}
+            onClick={() => setActiveTab('owners')}
+          >
+            <Users size={16} /> Propietarios
+          </button>
+        </div>
+      )}
+
       {!loadError && loaded && (
         <form className="form-card" onSubmit={handleSubmit}>
-          <section className="form-section">
-            <div className="form-section-head">
-              <h3>Datos básicos</h3>
-              <p>Nombre del inmueble, operación y precio.</p>
-            </div>
-            <div className="form-grid">
-              <label className="field field--wide">
-                <span>Título *</span>
-                <input
-                  type="text"
-                  value={values.title}
-                  placeholder="Ej: Casa en Villa Belgrano"
-                  required
-                  onInput={(e) => set('title', (e.currentTarget as HTMLInputElement).value)}
-                />
-              </label>
-              <label className="field">
-                <span>Estado</span>
-                <select
-                  className="select"
-                  value={values.status}
-                  onChange={(e) =>
-                    set('status', (e.currentTarget as HTMLSelectElement).value as PropertyStatus)
-                  }
-                >
-                  {(Object.keys(STATUS_LABEL) as PropertyStatus[]).map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABEL[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>Operación</span>
-                <select
-                  className="select"
-                  value={values.listing_type}
-                  onChange={(e) =>
-                    set('listing_type', (e.currentTarget as HTMLSelectElement).value as ListingType)
-                  }
-                >
-                  {LISTING_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <NumField
-                label="Precio"
-                value={values.price}
-                onInput={(n) => set('price', n)}
-                placeholder="Ej: 285000"
-              />
-              <label className="field">
-                <span>Moneda</span>
-                <select
-                  className="select"
-                  value={values.currency}
-                  onChange={(e) => set('currency', (e.currentTarget as HTMLSelectElement).value as 'USD' | 'ARS')}
-                >
-                  <option value="USD">USD</option>
-                  <option value="ARS">ARS</option>
-                </select>
-              </label>
-              <NumField
-                label="Expensas"
-                value={values.expenses}
-                onInput={(n) => set('expenses', n)}
-                placeholder="Opcional"
-              />
-              <label className="field field--wide">
-                <span>Descripción</span>
-                <textarea
-                  rows={4}
-                  value={values.description}
-                  placeholder="Descripción del inmueble…"
-                  onInput={(e) => set('description', (e.currentTarget as HTMLTextAreaElement).value)}
-                />
-              </label>
-              <label className="field field--wide">
-                <span>Video (YouTube)</span>
-                <input
-                  type="url"
-                  value={values.video_url}
-                  placeholder="https://youtube.com/watch?v=... o https://youtu.be/..."
-                  onInput={(e) => set('video_url', (e.currentTarget as HTMLInputElement).value)}
-                />
-                <small className="field-hint">Opcional. Link de YouTube para mostrar en el detalle.</small>
-              </label>
-            </div>
-          </section>
+          {isNew ? (
+            <>
+              <section className="form-section">
+                <div className="form-section-head">
+                  <h3>Datos básicos</h3>
+                  <p>Nombre del inmueble, operación y precio.</p>
+                </div>
+                <div className="form-grid">
+                  <label className="field field--wide">
+                    <span>Título *</span>
+                    <input
+                      type="text"
+                      value={values.title}
+                      placeholder="Ej: Casa en Villa Belgrano"
+                      required
+                      onInput={(e) => set('title', (e.currentTarget as HTMLInputElement).value)}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Estado</span>
+                    <select
+                      className="select"
+                      value={values.status}
+                      onChange={(e) =>
+                        set('status', (e.currentTarget as HTMLSelectElement).value as PropertyStatus)
+                      }
+                    >
+                      {(Object.keys(STATUS_LABEL) as PropertyStatus[]).map((s) => (
+                        <option key={s} value={s}>
+                          {STATUS_LABEL[s]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Operación</span>
+                    <select
+                      className="select"
+                      value={values.listing_type}
+                      onChange={(e) =>
+                        set('listing_type', (e.currentTarget as HTMLSelectElement).value as ListingType)
+                      }
+                    >
+                      {LISTING_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <NumField
+                    label="Precio"
+                    value={values.price}
+                    onInput={(n) => set('price', n)}
+                    placeholder="Ej: 285000"
+                  />
+                  <label className="field">
+                    <span>Moneda</span>
+                    <select
+                      className="select"
+                      value={values.currency}
+                      onChange={(e) => set('currency', (e.currentTarget as HTMLSelectElement).value as 'USD' | 'ARS')}
+                    >
+                      <option value="USD">USD</option>
+                      <option value="ARS">ARS</option>
+                    </select>
+                  </label>
+                  <NumField
+                    label="Expensas"
+                    value={values.expenses}
+                    onInput={(n) => set('expenses', n)}
+                    placeholder="Opcional"
+                  />
+                  <label className="field field--wide">
+                    <span>Descripción</span>
+                    <textarea
+                      rows={4}
+                      value={values.description}
+                      placeholder="Descripción del inmueble…"
+                      onInput={(e) => set('description', (e.currentTarget as HTMLTextAreaElement).value)}
+                    />
+                  </label>
+                  <label className="field field--wide">
+                    <span>Video (YouTube)</span>
+                    <input
+                      type="url"
+                      value={values.video_url}
+                      placeholder="https://youtube.com/watch?v=... o https://youtu.be/..."
+                      onInput={(e) => set('video_url', (e.currentTarget as HTMLInputElement).value)}
+                    />
+                    <small className="field-hint">Opcional. Link de YouTube para mostrar en el detalle.</small>
+                  </label>
+                </div>
+              </section>
 
-          <section className="form-section">
-            <div className="form-section-head">
-              <h3>Ubicación</h3>
-              <p>Zona y dirección del inmueble.</p>
-            </div>
-            <div className="form-grid">
-              <label className="field">
-                <span>Zona</span>
-                <select
-                  className="select"
-                  value={values.location_id ?? ''}
-                  onChange={(e) =>
-                    set('location_id', (e.currentTarget as HTMLSelectElement).value || null)
-                  }
-                >
-                  <option value="">Sin zona</option>
-                  {getListData<{ id: string; name: string }>(locations?.data).map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field field--wide">
-                <span>Dirección</span>
-                <input
-                  type="text"
-                  value={values.address}
-                  placeholder="Ej: Av. Vélez Sarsfield 900"
-                  onInput={(e) => set('address', (e.currentTarget as HTMLInputElement).value)}
-                />
-              </label>
-              <NumField label="Latitud" value={values.latitude} onInput={(n) => set('latitude', n)} placeholder="Ej: -34.6037" step="0.000001" />
-              <NumField label="Longitud" value={values.longitude} onInput={(n) => set('longitude', n)} placeholder="Ej: -58.3816" step="0.000001" />
-            </div>
-          </section>
+              <section className="form-section">
+                <div className="form-section-head">
+                  <h3>Ubicación</h3>
+                  <p>Zona y dirección del inmueble.</p>
+                </div>
+                <div className="form-grid">
+                  <label className="field">
+                    <span>Zona</span>
+                    <select
+                      className="select"
+                      value={values.location_id ?? ''}
+                      onChange={(e) =>
+                        set('location_id', (e.currentTarget as HTMLSelectElement).value || null)
+                      }
+                    >
+                      <option value="">Sin zona</option>
+                      {getListData<{ id: string; name: string }>(locations?.data).map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field field--wide">
+                    <span>Dirección</span>
+                    <input
+                      type="text"
+                      value={values.address}
+                      placeholder="Ej: Av. Vélez Sarsfield 900"
+                      onInput={(e) => set('address', (e.currentTarget as HTMLInputElement).value)}
+                    />
+                  </label>
+                  <NumField label="Latitud" value={values.latitude} onInput={(n) => set('latitude', n)} placeholder="Ej: -34.6037" step="0.000001" />
+                  <NumField label="Longitud" value={values.longitude} onInput={(n) => set('longitude', n)} placeholder="Ej: -58.3816" step="0.000001" />
+                </div>
+              </section>
 
-          <section className="form-section">
-            <div className="form-section-head">
-              <h3>Detalles</h3>
-              <p>Superficies y distribución.</p>
-            </div>
-            <div className="form-grid">
-              <NumField label="Superficie total (m²)" value={values.area_total} onInput={(n) => set('area_total', n)} />
-              <NumField label="Superficie cubierta (m²)" value={values.area_covered} onInput={(n) => set('area_covered', n)} />
-              <NumField label="Dormitorios" value={values.bedrooms} onInput={(n) => set('bedrooms', n)} />
-              <NumField label="Baños" value={values.bathrooms} onInput={(n) => set('bathrooms', n)} />
-              <NumField label="Cocheras" value={values.garages} onInput={(n) => set('garages', n)} />
-              <NumField label="Pisos" value={values.floors} onInput={(n) => set('floors', n)} />
-              <NumField label="Año de construcción" value={values.year_built} onInput={(n) => set('year_built', n)} />
-            </div>
-          </section>
+              <section className="form-section">
+                <div className="form-section-head">
+                  <h3>Detalles</h3>
+                  <p>Superficies y distribución.</p>
+                </div>
+                <div className="form-grid">
+                  <NumField label="Superficie total (m²)" value={values.area_total} onInput={(n) => set('area_total', n)} />
+                  <NumField label="Superficie cubierta (m²)" value={values.area_covered} onInput={(n) => set('area_covered', n)} />
+                  <NumField label="Dormitorios" value={values.bedrooms} onInput={(n) => set('bedrooms', n)} />
+                  <NumField label="Baños" value={values.bathrooms} onInput={(n) => set('bathrooms', n)} />
+                  <NumField label="Cocheras" value={values.garages} onInput={(n) => set('garages', n)} />
+                  <NumField label="Pisos" value={values.floors} onInput={(n) => set('floors', n)} />
+                  <NumField label="Año de construcción" value={values.year_built} onInput={(n) => set('year_built', n)} />
+                </div>
+              </section>
 
-          <section className="form-section">
-            <div className="form-section-head">
-              <h3>Publicación</h3>
-              <p>Visibilidad en el catálogo.</p>
-            </div>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={values.featured}
-                onChange={(e) => set('featured', (e.currentTarget as HTMLInputElement).checked)}
-              />
-              <span>Propiedad destacada</span>
-            </label>
-          </section>
+              <section className="form-section">
+                <div className="form-section-head">
+                  <h3>Publicación</h3>
+                  <p>Visibilidad en el catálogo.</p>
+                </div>
+                <label className="checkbox">
+                  <input
+                    type="checkbox"
+                    checked={values.featured}
+                    onChange={(e) => set('featured', (e.currentTarget as HTMLInputElement).checked)}
+                  />
+                  <span>Propiedad destacada</span>
+                </label>
+              </section>
+            </>
+          ) : (
+            <>
+              {activeTab === 'basic' && (
+                <section className="form-section">
+                  <div className="form-section-head">
+                    <h3>Datos básicos</h3>
+                    <p>Nombre del inmueble, operación y precio.</p>
+                  </div>
+                  <div className="form-grid">
+                    <label className="field field--wide">
+                      <span>Título *</span>
+                      <input
+                        type="text"
+                        value={values.title}
+                        placeholder="Ej: Casa en Villa Belgrano"
+                        required
+                        onInput={(e) => set('title', (e.currentTarget as HTMLInputElement).value)}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Estado</span>
+                      <select
+                        className="select"
+                        value={values.status}
+                        onChange={(e) =>
+                          set('status', (e.currentTarget as HTMLSelectElement).value as PropertyStatus)
+                        }
+                      >
+                        {(Object.keys(STATUS_LABEL) as PropertyStatus[]).map((s) => (
+                          <option key={s} value={s}>
+                            {STATUS_LABEL[s]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span>Operación</span>
+                      <select
+                        className="select"
+                        value={values.listing_type}
+                        onChange={(e) =>
+                          set('listing_type', (e.currentTarget as HTMLSelectElement).value as ListingType)
+                        }
+                      >
+                        {LISTING_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <NumField
+                      label="Precio"
+                      value={values.price}
+                      onInput={(n) => set('price', n)}
+                      placeholder="Ej: 285000"
+                    />
+                    <label className="field">
+                      <span>Moneda</span>
+                      <select
+                        className="select"
+                        value={values.currency}
+                        onChange={(e) => set('currency', (e.currentTarget as HTMLSelectElement).value as 'USD' | 'ARS')}
+                      >
+                        <option value="USD">USD</option>
+                        <option value="ARS">ARS</option>
+                      </select>
+                    </label>
+                    <NumField
+                      label="Expensas"
+                      value={values.expenses}
+                      onInput={(n) => set('expenses', n)}
+                      placeholder="Opcional"
+                    />
+                    <label className="field field--wide">
+                      <span>Descripción</span>
+                      <textarea
+                        rows={4}
+                        value={values.description}
+                        placeholder="Descripción del inmueble…"
+                        onInput={(e) => set('description', (e.currentTarget as HTMLTextAreaElement).value)}
+                      />
+                    </label>
+                    <label className="field field--wide">
+                      <span>Video (YouTube)</span>
+                      <input
+                        type="url"
+                        value={values.video_url}
+                        placeholder="https://youtube.com/watch?v=... o https://youtu.be/..."
+                        onInput={(e) => set('video_url', (e.currentTarget as HTMLInputElement).value)}
+                      />
+                      <small className="field-hint">Opcional. Link de YouTube para mostrar en el detalle.</small>
+                    </label>
+                  </div>
+                </section>
+              )}
+
+              {activeTab === 'location' && (
+                <section className="form-section">
+                  <div className="form-section-head">
+                    <h3>Ubicación</h3>
+                    <p>Zona y dirección del inmueble.</p>
+                  </div>
+                  <div className="form-grid">
+                    <label className="field">
+                      <span>Zona</span>
+                      <select
+                        className="select"
+                        value={values.location_id ?? ''}
+                        onChange={(e) =>
+                          set('location_id', (e.currentTarget as HTMLSelectElement).value || null)
+                        }
+                      >
+                        <option value="">Sin zona</option>
+                        {getListData<{ id: string; name: string }>(locations?.data).map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field field--wide">
+                      <span>Dirección</span>
+                      <input
+                        type="text"
+                        value={values.address}
+                        placeholder="Ej: Av. Vélez Sarsfield 900"
+                        onInput={(e) => set('address', (e.currentTarget as HTMLInputElement).value)}
+                      />
+                    </label>
+                    <NumField label="Latitud" value={values.latitude} onInput={(n) => set('latitude', n)} placeholder="Ej: -34.6037" step="0.000001" />
+                    <NumField label="Longitud" value={values.longitude} onInput={(n) => set('longitude', n)} placeholder="Ej: -58.3816" step="0.000001" />
+                  </div>
+                </section>
+              )}
+
+              {activeTab === 'details' && (
+                <section className="form-section">
+                  <div className="form-section-head">
+                    <h3>Detalles</h3>
+                    <p>Superficies y distribución.</p>
+                  </div>
+                  <div className="form-grid">
+                    <NumField label="Superficie total (m²)" value={values.area_total} onInput={(n) => set('area_total', n)} />
+                    <NumField label="Superficie cubierta (m²)" value={values.area_covered} onInput={(n) => set('area_covered', n)} />
+                    <NumField label="Dormitorios" value={values.bedrooms} onInput={(n) => set('bedrooms', n)} />
+                    <NumField label="Baños" value={values.bathrooms} onInput={(n) => set('bathrooms', n)} />
+                    <NumField label="Cocheras" value={values.garages} onInput={(n) => set('garages', n)} />
+                    <NumField label="Pisos" value={values.floors} onInput={(n) => set('floors', n)} />
+                    <NumField label="Año de construcción" value={values.year_built} onInput={(n) => set('year_built', n)} />
+                  </div>
+                </section>
+              )}
+
+              {activeTab === 'publish' && (
+                <section className="form-section">
+                  <div className="form-section-head">
+                    <h3>Publicación</h3>
+                    <p>Visibilidad en el catálogo.</p>
+                  </div>
+                  <label className="checkbox">
+                    <input
+                      type="checkbox"
+                      checked={values.featured}
+                      onChange={(e) => set('featured', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span>Propiedad destacada</span>
+                  </label>
+                </section>
+              )}
+
+              {activeTab === 'owners' && (
+                <section className="form-section">
+                  <div className="form-section-head">
+                    <h3>Propietarios</h3>
+                    <p>Gestión de propietarios vinculados a esta propiedad.</p>
+                  </div>
+                  <PropertyOwnerManager propertyId={editId!} />
+                </section>
+              )}
+            </>
+          )}
 
           <div className="form-actions">
             {!isNew && (

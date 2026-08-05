@@ -15,6 +15,12 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["*"],
+      "@admin/*": ["apps/admin/src/*"],
+      "@landing/*": ["apps/landing/src/*"]
+    }
   }
 }

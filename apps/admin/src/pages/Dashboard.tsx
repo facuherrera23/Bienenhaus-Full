@@ -1,21 +1,26 @@
-import { ArrowUpRight, Building2, Users, TrendingUp, DollarSign, Activity, Home } from 'lucide-preact';
+import { ArrowUpRight, Building2, Users, TrendingUp, DollarSign, Activity, Home, AlertCircle, FileText, Clock, UserCheck, Target } from 'lucide-preact';
 import { Link } from 'wouter-preact';
 import { QuickPropertyActions } from '../components/QuickPropertyActions';
 import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
+import { useActionPlans } from '../lib/owners';
+import { useOwners } from '../lib/owners';
 
 export function Dashboard() {
   const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
   const { data: propertiesResult, isPending: propsPending } = useProperties({ pageSize: 1000 });
+  const { data: actionPlansResult, isPending: plansPending } = useActionPlans({ pageSize: 1000 });
+  const { data: ownersResult, isPending: ownersPending } = useOwners({ pageSize: 1000 });
 
-  const loading = leadsPending || propsPending;
+  const loading = leadsPending || propsPending || plansPending || ownersPending;
 
   const leads = leadsResult?.data ?? [];
   const properties = propertiesResult?.data ?? [];
+  const actionPlans = actionPlansResult?.data ?? [];
+  const owners = ownersResult?.data ?? [];
 
-  // Compute real KPIs
   const totalLeads = leads?.length ?? 0;
   const newLeads = leads?.filter(l => l.status === 'nuevo').length ?? 0;
   const activeLeads = leads?.filter(l => ['nuevo', 'contactado', 'calificado', 'en_proceso'].includes(l.status)).length ?? 0;
@@ -27,11 +32,31 @@ export function Dashboard() {
   const featuredProps = properties?.filter(p => p.featured).length ?? 0;
   const pipelineValue = properties?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
 
+  const totalOwners = owners?.length ?? 0;
+  const ownersWithProps = owners?.filter(o => o.property_count > 0).length ?? 0;
+
+  const now = new Date();
+  const overdueTasks = actionPlans?.reduce((count, plan) => {
+    // Use ActionPlanDetail type which includes tasks
+    const planTasks = (plan as any).tasks ?? [];
+    return count + planTasks.filter((t: any) => 
+      t.due_date && new Date(t.due_date) < now && t.status !== 'completed'
+    ).length;
+  }, 0) ?? 0;
+
+  const pendingPlans = actionPlans?.filter(p => ['pending', 'in_progress'].includes(p.status)).length ?? 0;
+
   const kpis = [
     { label: 'Leads Totales', value: totalLeads, delta: `${newLeads} nuevos`, icon: Users, tone: 'info' },
     { label: 'Leads Activos', value: activeLeads, delta: `Conversión ${conversionRate}%`, icon: TrendingUp, tone: 'success' },
     { label: 'Propiedades Publicadas', value: publishedProps, delta: `${featuredProps} destacadas`, icon: Building2, tone: 'warning' },
     { label: 'Valor Pipeline', value: pipelineValue > 0 ? `$${pipelineValue.toLocaleString('es-AR')}` : '—', delta: `${totalProps} propiedades totales`, icon: DollarSign, tone: 'info' },
+    { label: 'Propietarios Totales', value: totalOwners, delta: `${ownersWithProps} con propiedades`, icon: UserCheck, tone: 'info' },
+    { label: 'Planes de Acción Pendientes', value: pendingPlans, delta: `${overdueTasks} tareas vencidas`, icon: FileText, tone: 'warning' },
+    { label: 'Propietarios sin Contacto >30d', value: '—', delta: 'Requiere datos de comunicación', icon: Clock, tone: 'neutral' },
+    { label: 'Análisis de Precio Vencidos', value: '—', delta: 'Requiere análisis de precio', icon: AlertCircle, tone: 'neutral' },
+    { label: 'Propiedades Sobrevaloradas', value: '—', delta: 'Requiere análisis de precio', icon: TrendingUp, tone: 'danger' },
+    { label: 'Tareas Vencidas', value: overdueTasks, delta: `${pendingPlans} planes activos`, icon: Target, tone: 'danger' },
   ];
 
   return (

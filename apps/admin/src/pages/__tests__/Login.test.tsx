@@ -1,14 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { Login } from '../Login';
-import { __mocks } from '../../lib/supabase';
+import { signInWithPassword, getSession } from '@/test/setup';
 
 describe('Login Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Reset supabase mocks to default
-    __mocks.signInWithPassword.mockResolvedValue({ data: { user: null, session: null }, error: null });
-    __mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
+    signInWithPassword.mockResolvedValue({ data: { user: null, session: null }, error: null });
+    getSession.mockResolvedValue({ data: { session: null }, error: null });
   });
 
   it('renders login form with email and password fields', () => {
@@ -22,7 +22,7 @@ describe('Login Page', () => {
   });
 
   it('shows error when credentials are invalid', async () => {
-    __mocks.signInWithPassword.mockResolvedValueOnce({
+    signInWithPassword.mockResolvedValueOnce({
       error: { message: 'Invalid credentials' },
       data: { user: null, session: null },
     });
@@ -39,7 +39,7 @@ describe('Login Page', () => {
   });
 
   it('calls signInWithPassword with credentials on submit', async () => {
-    __mocks.signInWithPassword.mockResolvedValueOnce({
+    signInWithPassword.mockResolvedValueOnce({
       error: null,
       data: { user: { id: '1' }, session: { access_token: 'token' } },
     });
@@ -53,7 +53,7 @@ describe('Login Page', () => {
     // El componente no navega: el redirect lo maneja initAuth
     // (onAuthStateChange SIGNED_IN -> window.location.href '/admin#/')
     await waitFor(() => {
-      expect(__mocks.signInWithPassword).toHaveBeenCalledWith({
+      expect(signInWithPassword).toHaveBeenCalledWith({
         email: 'admin@bienenhaus.com',
         password: 'password123',
       });
@@ -66,7 +66,7 @@ describe('Login Page', () => {
   it('disables submit button while loading', async () => {
     let resolveSignIn: (value: any) => void;
     const signInPromise = new Promise(resolve => { resolveSignIn = resolve; });
-    __mocks.signInWithPassword.mockReturnValue(signInPromise);
+    signInWithPassword.mockReturnValue(signInPromise);
 
     render(<Login />);
     

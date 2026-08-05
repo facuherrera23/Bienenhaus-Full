@@ -101,7 +101,7 @@ export const leadFormSchema = z.object({
   intent: leadIntentSchema,
   source: leadSourceSchema,
   status: leadStatusSchema.default('nuevo'),
-  assigned_to: z.string().uuid('Agente inválido').default(''),
+  assigned_to: z.union([z.string().uuid('Agente inválido'), z.literal('')]).default(''),
   message: z.string().max(2000).default(''),
 });
 

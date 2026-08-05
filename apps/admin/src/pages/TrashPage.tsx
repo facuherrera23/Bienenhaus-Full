@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { RotateCcw, Trash2, Building2, Users, Mail, UserRound } from 'lucide-preact';
+import { RotateCcw, Trash2, Building2, Users, Mail, UserRound, UserCheck, ClipboardList } from 'lucide-preact';
 import {
   fetchDeletedProperties,
   restoreProperty,
@@ -24,18 +24,32 @@ import {
   permanentDeleteSubscriber,
   type NewsletterSubscriber,
 } from '../lib/newsletter';
+import {
+  fetchDeletedOwners,
+  restoreOwner,
+  permanentDeleteOwner,
+  type OwnerRow,
+} from '../lib/owners';
+import {
+  fetchDeletedActionPlans,
+  restoreActionPlan,
+  permanentDeleteActionPlan,
+  type ActionPlanRow,
+} from '../lib/owners';
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 
-type TabType = 'properties' | 'leads' | 'agents' | 'newsletter';
+type TabType = 'properties' | 'leads' | 'agents' | 'newsletter' | 'owners' | 'action_plans';
 
-function tabToType(tab: TabType): 'property' | 'lead' | 'agent' | 'subscriber' {
+function tabToType(tab: TabType): 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan' {
   switch (tab) {
     case 'properties': return 'property';
     case 'leads': return 'lead';
     case 'agents': return 'agent';
     case 'newsletter': return 'subscriber';
+    case 'owners': return 'owner';
+    case 'action_plans': return 'action_plan';
   }
 }
 
@@ -44,6 +58,8 @@ const TABS: { id: TabType; label: string; icon: any; count: number }[] = [
   { id: 'leads', label: 'Leads', icon: Users, count: 0 },
   { id: 'agents', label: 'Agentes', icon: UserRound, count: 0 },
   { id: 'newsletter', label: 'Newsletter', icon: Mail, count: 0 },
+  { id: 'owners', label: 'Propietarios', icon: UserCheck, count: 0 },
+  { id: 'action_plans', label: 'Planes de acción', icon: ClipboardList, count: 0 },
 ];
 
 function formatDate(iso: string | null): string {
@@ -74,7 +90,17 @@ export function TrashPage() {
     queryFn: fetchDeletedSubscribers,
   });
 
-  const pending = propsPending || leadsPending || agentsPending || subsPending;
+  const { data: deletedOwners, isPending: ownersPending } = useQuery<OwnerRow[]>({
+    queryKey: ['deleted-owners'],
+    queryFn: fetchDeletedOwners,
+  });
+
+  const { data: deletedActionPlans, isPending: plansPending } = useQuery<ActionPlanRow[]>({
+    queryKey: ['deleted-action-plans'],
+    queryFn: fetchDeletedActionPlans,
+  });
+
+  const pending = propsPending || leadsPending || agentsPending || subsPending || ownersPending || plansPending;
 
   // Tab counts - always show all tabs' counts
   const tabsWithCounts = useMemo(() => TABS.map((t) => ({
@@ -82,8 +108,10 @@ export function TrashPage() {
     count: t.id === 'properties' ? (deletedProperties?.length ?? 0) :
            t.id === 'leads' ? (deletedLeads?.length ?? 0) :
            t.id === 'agents' ? (deletedAgents?.length ?? 0) :
-           (deletedSubscribers?.length ?? 0),
-  })), [deletedProperties, deletedLeads, deletedAgents, deletedSubscribers]);
+           t.id === 'newsletter' ? (deletedSubscribers?.length ?? 0) :
+           t.id === 'owners' ? (deletedOwners?.length ?? 0) :
+           (deletedActionPlans?.length ?? 0),
+  })), [deletedProperties, deletedLeads, deletedAgents, deletedSubscribers, deletedOwners, deletedActionPlans]);
 
   useEffect(() => {
     document.title = 'Papelera · BIENENHAUS';
@@ -98,16 +126,20 @@ export function TrashPage() {
     void queryClient.invalidateQueries({ queryKey: ['deleted-leads'] });
     void queryClient.invalidateQueries({ queryKey: ['deleted-agents'] });
     void queryClient.invalidateQueries({ queryKey: ['deleted-subscribers'] });
+    void queryClient.invalidateQueries({ queryKey: ['deleted-owners'] });
+    void queryClient.invalidateQueries({ queryKey: ['deleted-action-plans'] });
     // Also invalidate main list queries so they refresh immediately
     void queryClient.invalidateQueries({ queryKey: ['properties'] });
     void queryClient.invalidateQueries({ queryKey: ['leads'] });
     void queryClient.invalidateQueries({ queryKey: ['agents-full'] });
     void queryClient.invalidateQueries({ queryKey: ['agents'] });
     void queryClient.invalidateQueries({ queryKey: ['newsletter-subscribers'] });
+    void queryClient.invalidateQueries({ queryKey: ['owners'] });
+    void queryClient.invalidateQueries({ queryKey: ['action-plans'] });
   };
 
   const handleRestore = async (
-    type: 'property' | 'lead' | 'agent' | 'subscriber',
+    type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan',
     id: string,
     name: string
   ) => {
@@ -115,7 +147,9 @@ export function TrashPage() {
       if (type === 'property') await restoreProperty(id);
       else if (type === 'lead') await restoreLead(id);
       else if (type === 'agent') await restoreAgent(id);
-      else await restoreSubscriber(id);
+      else if (type === 'subscriber') await restoreSubscriber(id);
+      else if (type === 'owner') await restoreOwner(id);
+      else await restoreActionPlan(id);
 
       pushToast({ type: 'success', title: 'Restaurado', description: name });
       invalidateAll();
@@ -125,7 +159,7 @@ export function TrashPage() {
   };
 
   const handlePermanentDelete = async (
-    type: 'property' | 'lead' | 'agent' | 'subscriber',
+    type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan',
     id: string,
     name: string
   ) => {
@@ -134,7 +168,9 @@ export function TrashPage() {
       if (type === 'property') await permanentDeleteProperty(id);
       else if (type === 'lead') await permanentDeleteLead(id);
       else if (type === 'agent') await permanentDeleteAgent(id);
-      else await permanentDeleteSubscriber(id);
+      else if (type === 'subscriber') await permanentDeleteSubscriber(id);
+      else if (type === 'owner') await permanentDeleteOwner(id);
+      else await permanentDeleteActionPlan(id);
 
       pushToast({ type: 'success', title: 'Eliminado permanentemente', description: name });
       invalidateAll();
@@ -143,15 +179,19 @@ export function TrashPage() {
     }
   };
 
-  const renderRow = (item: any, type: 'property' | 'lead' | 'agent' | 'subscriber') => {
+  const renderRow = (item: any, type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan') => {
     const name = type === 'property' ? item.title :
                  type === 'lead' ? `${item.name} ${item.last_name}` :
                  type === 'agent' ? item.name :
+                 type === 'owner' ? item.full_name :
+                 type === 'action_plan' ? item.title :
                  item.email;
 
     const meta = type === 'property' ? `${item.location} · ${item.status}` :
                  type === 'lead' ? `${item.email} · ${item.status}` :
                  type === 'agent' ? `${item.email} · ${item.role ?? 'Asesor'}` :
+                 type === 'owner' ? `${item.property_count} propiedades` :
+                 type === 'action_plan' ? `${item.property_title ?? '—'} · ${item.status}` :
                  `${item.source} · ${item.status}`;
 
     return (
@@ -162,6 +202,14 @@ export function TrashPage() {
               <img src={item.cover_url} alt="" loading="lazy" />
             ) : type === 'agent' && item.photo_url ? (
               <img src={item.photo_url} alt="" loading="lazy" />
+            ) : type === 'owner' ? (
+              <span className="cell-thumb" aria-hidden="true">
+                {item.full_name.charAt(0).toUpperCase()}
+              </span>
+            ) : type === 'action_plan' ? (
+              <span className="cell-thumb" aria-hidden="true">
+                {item.title.charAt(0).toUpperCase()}
+              </span>
             ) : (
               <span className="cell-thumb" aria-hidden="true">
                 {(name[0] ?? '?').toUpperCase()}
@@ -201,7 +249,9 @@ export function TrashPage() {
       case 'properties': return deletedProperties ?? [];
       case 'leads': return deletedLeads ?? [];
       case 'agents': return deletedAgents ?? [];
-      default: return deletedSubscribers ?? [];
+      case 'newsletter': return deletedSubscribers ?? [];
+      case 'owners': return deletedOwners ?? [];
+      default: return deletedActionPlans ?? [];
     }
   };
 

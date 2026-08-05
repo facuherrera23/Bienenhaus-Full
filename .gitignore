@@ -47,3 +47,10 @@ Fix/
 
 # OpenCode session artifacts
 .omo/
+
+# Tool outputs
+tsc_output.txt
+tsc-current.txt
+build_output.txt
+src.zip
+*.src.zip

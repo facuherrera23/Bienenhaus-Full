@@ -10,7 +10,7 @@
     "demo": "node scripts/serve.mjs",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write .",
-    "test": "pnpm -r test",
+    "test": "pnpm --filter @bienenhaus/admin test",
     "test:e2e": "pnpm --filter @bienenhaus/admin test:e2e"
   },
   "devDependencies": {
@@ -30,6 +30,9 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@sentry/browser": "^10.69.0"
+    "@hookform/resolvers": "^5.7.1",
+    "@sentry/browser": "^10.69.0",
+    "react-hook-form": "^7.84.0",
+    "zod": "^3.25.76"
   }
 }

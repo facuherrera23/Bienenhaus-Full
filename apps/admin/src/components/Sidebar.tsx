@@ -12,6 +12,8 @@ import {
   UserRound,
   Users,
   FileText,
+  UserCheck,
+  ClipboardList,
 } from 'lucide-preact';
 import { Link } from 'wouter-preact';
 import { mobileMenuOpen, sidebarCollapsed, authUserRole } from '../store/app';
@@ -34,6 +36,13 @@ const NAV: NavItem[] = [
   { href: '/sitio', label: 'Sitio Web', icon: Globe, roles: ['super_admin', 'admin'] },
   { href: '/mercadolibre', label: 'Mercado Libre', icon: ShoppingBag, roles: ['super_admin', 'admin', 'staff'] },
   { href: '/newsletter', label: 'Newsletter', icon: Mail, roles: ['super_admin', 'admin'] },
+];
+
+const OWNERS_NAV: NavItem[] = [
+  { href: '/propietarios', label: 'Propietarios', icon: UserCheck },
+  { href: '/planes-accion', label: 'Planes de acción', icon: ClipboardList },
+  { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageSquare },
+  { href: '/reportes', label: 'Reportes', icon: FileText },
 ];
 
 const ADMIN_ONLY_NAV: NavItem[] = [
@@ -79,6 +88,17 @@ export function Sidebar() {
             {!collapsed && <span>{label}</span>}
           </Link>
         ))}
+
+        <div className="sidebar-section">
+          <span className="sidebar-section-title">Propietarios</span>
+          {filterByRole(OWNERS_NAV).map(({ href, label, icon: Icon }) => (
+            <Link href={href} key={href} className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
+              <Icon size={18} strokeWidth={1.8} />
+              {!collapsed && <span>{label}</span>}
+            </Link>
+          ))}
+        </div>
+
         {filterByRole(ADMIN_ONLY_NAV).map(({ href, label, icon: Icon }) => (
           <Link href={href} key={href} className="sidebar-link" onClick={() => (mobileMenuOpen.value = false)}>
             <Icon size={18} strokeWidth={1.8} />

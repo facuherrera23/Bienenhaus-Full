@@ -104,6 +104,13 @@ export const ACTIVITY_ENTITY_LABEL: Record<string, string> = {
   newsletter_subscriber: 'Suscriptor Newsletter',
   chat_channel: 'Canal de Chat',
   chat_message: 'Mensaje de Chat',
+  owner: 'Propietario',
+  property_owner: 'Propiedad-Propietario',
+  price_analysis: 'Análisis de Precio',
+  action_plan: 'Plan de Acción',
+  action_plan_task: 'Tarea de Plan',
+  owner_communication: 'Comunicación con Propietario',
+  owner_report: 'Reporte de Propietario',
 };
 
 // ============================================================

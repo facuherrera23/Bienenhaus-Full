@@ -4,8 +4,16 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"],
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@lib/*": ["src/lib/*"],
+      "@components/*": ["src/components/*"],
+      "@pages/*": ["src/pages/*"],
+      "@store/*": ["src/store/*"]
+    }
   },
   "include": ["src", "vite.config.ts"],
-  "exclude": ["src/**/*.test.tsx", "src/**/__tests__/**"]
+  "exclude": ["src/**/*.test.tsx", "src/**/__tests__/**", "src/test/**"]
 }

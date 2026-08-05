@@ -149,13 +149,6 @@
     border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-family:'Poppins',sans-serif;
   }
   .coef-box .num{font-size:20px; font-weight:800; color:var(--teal-dark);}
-  .field input.input-warn{border-color:var(--warn) !important; box-shadow:0 0 0 1px var(--warn);}
-  .uso-terreno-warning{
-    display:none; margin-top:10px; padding:10px 12px; background:rgba(245,158,11,.12);
-    border:1px solid var(--warn); border-radius:6px; color:var(--warn); font-size:12.5px;
-    font-family:'Poppins',sans-serif; font-weight:600;
-  }
-  .uso-terreno-warning.show{display:block;}
   .add-btn{
     background:none; border:1.5px dashed var(--teal); color:var(--teal-dark); font-family:'Poppins',sans-serif;
     font-weight:600; font-size:13px; padding:10px 16px; border-radius:6px; cursor:pointer; width:100%;
@@ -169,8 +162,9 @@
   table.data-table td{padding:6px; border-bottom:1px solid var(--line);}
   table.data-table td input{padding:6px 8px; font-size:13.5px;}
   .valuation-summary{
-    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; text-align:center;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;
   }
+  .valuation-summary.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
   @media (max-width:640px){.valuation-summary{grid-template-columns:1fr;}}
   .valuation-summary .box{background:#1c1c1c; border:1px solid var(--line); border-radius:6px; padding:16px;}
   .valuation-summary .box .lbl{font-family:'Poppins',sans-serif; font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:.5px;}
@@ -557,19 +551,11 @@
     </div>
     <p style="font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:16px 0 8px; font-family:'Poppins',sans-serif;">Uso del Terreno %</p>
     <div class="grid cols-4">
-      <div class="field"><label>Residencial</label><input type="number" id="f_usoResidencial" min="0" max="100" step="0.1"></div>
-      <div class="field"><label>Comercial</label><input type="number" id="f_usoComercial" min="0" max="100" step="0.1"></div>
-      <div class="field"><label>Industrial</label><input type="number" id="f_usoIndustrial" min="0" max="100" step="0.1"></div>
+      <div class="field"><label>Residencial</label><input type="number" id="f_usoResidencial" min="0" max="100"></div>
+      <div class="field"><label>Comercial</label><input type="number" id="f_usoComercial" min="0" max="100"></div>
+      <div class="field"><label>Industrial</label><input type="number" id="f_usoIndustrial" min="0" max="100"></div>
       <div class="field"><label>Otro (calculado)</label><input type="text" id="f_usoOtro" readonly style="background:#f2f1ee;"></div>
     </div>
-    <div class="uso-terreno-warning" id="usoTerrenoWarning">⚠ La suma de Residencial + Comercial + Industrial supera el 100%. Ajustá los valores: "Otro" no puede ser negativo.</div>
-    <div class="coef-box">
-      <span>Coeficiente de Uso del Terreno</span>
-      <span class="num" id="v_usoTerrenoCoef">1.000</span>
-    </div>
-    <p style="font-size:11px; color:var(--muted); margin-top:6px; font-family:'Poppins',sans-serif;">
-      Mide la compatibilidad entre el uso predominante del entorno (Residencial/Comercial/Industrial) y el tipo de inmueble tasado. Se aplica como ajuste sobre el Precio m² del Terreno en la sección "Valuación".
-    </p>
   </section>
   </div>
 
@@ -630,12 +616,18 @@
     <p style="font-size:11.5px; color:var(--muted); margin-top:-10px; font-family:'Poppins',sans-serif;">
       Los m² de Terreno y Superficie Cubierta se completan automáticamente desde "Datos del Inmueble".
     </p>
-    <div class="valuation-summary">
+    <div class="valuation-summary cols-4">
       <div class="box"><div class="lbl">Precio m² promedio comparables</div><div class="val" id="v_precioPromedio">U$S 0</div></div>
       <div class="box"><div class="lbl">Coef. de condiciones promedio</div><div class="val" id="v_coefPromedio">1.000</div></div>
-      <div class="box"><div class="lbl">Coef. de uso del terreno</div><div class="val" id="v_usoTerrenoCoefResumen">1.000</div></div>
+      <div class="box"><div class="lbl">Depreciación por Servicios</div><div class="val" id="v_depreciacionServicios">1.000</div></div>
       <div class="box final"><div class="lbl">Valor Final Estimado</div><div class="val" id="v_valorFinal">U$S 0</div></div>
     </div>
+  </section>
+
+  <!-- ============ OBSERVACIONES GENERALES ============ -->
+  <section class="card">
+    <h2>Observaciones Generales</h2>
+    <div class="field"><textarea id="f_observaciones" style="min-height:90px;"></textarea></div>
   </section>
 
   <!-- ============ PLAN DE MARKETING (texto fijo) ============ -->
@@ -650,8 +642,6 @@
     <p class="marketing-text"><b>7. Seguimiento:</b> resumen mensual de acciones de venta y resultados.</p>
     <p class="marketing-text"><b>8. Evaluación:</b> cada 30 días revisamos la actividad y ajustamos la estrategia.</p>
   </section>
-
-  <div class="field"><label>Observaciones Generales</label><textarea id="f_observaciones" style="min-height:90px;"></textarea></div>
 
   </fieldset>
 
@@ -742,14 +732,6 @@ function addComparable(prefill){
   wrap.innerHTML = `
     <button type="button" class="remove" onclick="removeComparable(${id})">Quitar</button>
     <h3>Comparable N° <span class="comp-index">${id}</span></h3>
-    <div class="field" style="margin-bottom:14px;">
-      <label>Página web de origen (aviso / publicación)</label>
-      <div style="display:flex; gap:8px;">
-        <input type="url" class="c_url" placeholder="https://..." style="flex:1;">
-        <button type="button" class="add-btn c_extract" style="width:auto; white-space:nowrap; padding:9px 16px;">⇩ Extraer datos</button>
-      </div>
-      <div class="c_extract_status" style="font-size:11.5px; color:var(--muted); margin-top:6px; font-family:'Poppins',sans-serif;"></div>
-    </div>
     <div class="grid cols-3">
       <div class="field"><label>Dirección</label><input type="text" class="c_direccion"></div>
       <div class="field"><label>Barrio</label><input type="text" class="c_barrio"></div>
@@ -757,6 +739,19 @@ function addComparable(prefill){
       <div class="field"><label>Superficie Terreno (m²)</label><input type="number" class="c_supTerreno"></div>
       <div class="field"><label>Superficie Cubierta (m²)</label><input type="number" class="c_supCubierta"></div>
       <div class="field"><label>Días en Mercado</label><input type="number" class="c_dias"></div>
+      <div class="field"><label>Tipo de Construcción</label>
+        <select class="c_tipoConstruccion"><option value=""></option><option>Ladrillo</option><option>Metálica</option><option>Madera</option><option>Bloques de hormigón</option><option>N/A</option></select>
+      </div>
+      <div class="field"><label>Antigüedad (años)</label><input type="number" class="c_antiguedad"></div>
+      <div class="field"><label>Precio por m² (calculado)</label><input type="text" class="c_precioM2" readonly style="background:#1c1c1c; color:var(--ink); font-weight:700;"></div>
+    </div>
+    <div class="field" style="margin:14px 0;">
+      <label>Página web de origen (aviso / publicación)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="url" class="c_url" placeholder="https://..." style="flex:1;">
+        <button type="button" class="add-btn c_extract" style="width:auto; white-space:nowrap; padding:9px 16px;">⇩ Extraer datos</button>
+      </div>
+      <div class="c_extract_status" style="font-size:11.5px; color:var(--muted); margin-top:6px; font-family:'Poppins',sans-serif;"></div>
     </div>
     <p style="font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:14px 0 8px; font-family:'Poppins',sans-serif;">Foto del comparable</p>
     <div class="photo-box c_photo_box">
@@ -915,59 +910,16 @@ function recalcAmbientes(){
   document.getElementById('f_ambTotalCuartos').value = total;
 }
 
-// Relación entre el Tipo de Inmueble tasado y el uso de terreno del entorno que le corresponde.
-// LOTE y OTRO no tienen un uso "objetivo" propio: para esos casos se toma como referencia
-// el uso predominante del entorno (mayor homogeneidad = entorno más previsible/estable).
-const TIPO_A_USO_TERRENO = {
-  CASA: 'residencial', DEPTO: 'residencial',
-  OFICINA: 'comercial', LOCAL: 'comercial',
-  GALPON: 'industrial',
-  LOTE: null, OTRO: null
-};
-
 function recalcUsoTerreno(){
-  const elR = document.getElementById('f_usoResidencial');
-  const elC = document.getElementById('f_usoComercial');
-  const elI = document.getElementById('f_usoIndustrial');
-  const warningBox = document.getElementById('usoTerrenoWarning');
-
-  // Cada campo se limita individualmente entre 0 y 100
-  const r = Math.min(100, Math.max(0, parseFloat(elR.value) || 0));
-  const c = Math.min(100, Math.max(0, parseFloat(elC.value) || 0));
-  const i = Math.min(100, Math.max(0, parseFloat(elI.value) || 0));
-  const suma = r + c + i;
-  const excedeCien = suma > 100;
-
-  // Feedback visual: si la suma supera 100%, se marcan los campos y se muestra el aviso
-  [elR, elC, elI].forEach(el => el.classList.toggle('input-warn', excedeCien));
-  if (warningBox) warningBox.classList.toggle('show', excedeCien);
-
-  const otro = Math.max(0, 100 - suma);
+  const r = parseFloat(document.getElementById('f_usoResidencial').value)||0;
+  const c = parseFloat(document.getElementById('f_usoComercial').value)||0;
+  const i = parseFloat(document.getElementById('f_usoIndustrial').value)||0;
+  const otro = Math.max(0, 100 - r - c - i);
   document.getElementById('f_usoOtro').value = otro.toFixed(1) + '%';
-
-  // --- Coeficiente de Uso del Terreno ---
-  // Mide qué tan compatible es el entorno (Uso del Terreno %) con el Tipo de Inmueble tasado.
-  // Rango: 0.850 (0% de afinidad) a 1.000 (100% de afinidad con el uso objetivo).
-  const tipo = document.getElementById('f_tipo') ? document.getElementById('f_tipo').value : '';
-  const usoObjetivo = TIPO_A_USO_TERRENO[tipo];
-  const usos = { residencial: r, comercial: c, industrial: i, otro: otro };
-  const afinidadPct = (usoObjetivo && usos[usoObjetivo] !== undefined)
-    ? usos[usoObjetivo]                    // % del entorno que coincide con el uso del inmueble
-    : Math.max(r, c, i, otro);             // Lote/Otro: se usa el uso predominante del entorno
-  // Si todavía no se cargó ningún dato (R=C=I=0), no se penaliza: coeficiente neutro (1.000)
-  const sinDatosCargados = suma === 0;
-  const coefUsoTerreno = sinDatosCargados ? 1 : (0.85 + 0.15 * (afinidadPct / 100));
-
-  const coefEl = document.getElementById('v_usoTerrenoCoef');
-  if (coefEl) coefEl.textContent = coefUsoTerreno.toFixed(3);
-  const coefResumenEl = document.getElementById('v_usoTerrenoCoefResumen');
-  if (coefResumenEl) coefResumenEl.textContent = coefUsoTerreno.toFixed(3);
-
-  return coefUsoTerreno;
 }
 
 function recalcAll(){
-  const coefUsoTerreno = recalcUsoTerreno();
+  recalcUsoTerreno();
   recalcAmbientes();
   // Coeficiente de condiciones por comparable + precio/m2 (solo comparables incluidos)
   let precios = [];
@@ -979,6 +931,8 @@ function recalcAll(){
     const supCub = parseFloat(wrap.querySelector('.c_supCubierta').value)||0;
     const supTer = parseFloat(wrap.querySelector('.c_supTerreno').value)||0;
     const base = supCub>0? supCub : supTer;
+    const precioM2Field = wrap.querySelector('.c_precioM2');
+    if(precioM2Field) precioM2Field.value = (precio>0 && base>0) ? 'U$S ' + (precio/base).toFixed(2) : '';
     const included = wrap.dataset.included !== 'false';
     if(precio>0 && base>0 && included){
       precios.push(precio/base);
@@ -994,16 +948,16 @@ function recalcAll(){
 
   const precioAjustado = precioPromedio * coefPromedio;
 
-  // Terreno (m² tomados de Datos del Inmueble), precio/m2 ajustado por el Coeficiente de Uso del Terreno
+  // Terreno (m² tomados de Datos del Inmueble)
   const terrM2 = parseFloat(document.getElementById('f_supTerreno').value)||0;
-  const terrPrecioBase = parseFloat(document.getElementById('v_terrenoPrecio').value)||0;
-  const terrPrecioAjustado = terrPrecioBase * coefUsoTerreno;
-  const terrTotal = terrM2*terrPrecioAjustado;
+  const terrPrecio = parseFloat(document.getElementById('v_terrenoPrecio').value)||0;
+  const terrTotal = terrM2*terrPrecio;
   document.getElementById('v_terrenoM2').textContent = terrM2? terrM2.toLocaleString('es-AR') : '—';
   document.getElementById('v_terrenoTotal').textContent = terrTotal? 'U$S '+terrTotal.toLocaleString('es-AR',{maximumFractionDigits:0}) : '—';
 
   // Superficie cubierta (m² tomados de Datos del Inmueble) usa el precio/m2 ajustado por coeficiente de condiciones y depreciación propia
   const depreciacion = coefDepreciacionPropia();
+  document.getElementById('v_depreciacionServicios').textContent = depreciacion.toFixed(3);
   const cubM2 = parseFloat(document.getElementById('f_supConstruida').value)||0;
   const precioCubiertaM2 = precioAjustado * depreciacion;
   const cubTotal = cubM2 * precioCubiertaM2;
@@ -1035,6 +989,8 @@ function collectFormData(){
       supTerreno: wrap.querySelector('.c_supTerreno').value,
       supCubierta: wrap.querySelector('.c_supCubierta').value,
       dias: wrap.querySelector('.c_dias').value,
+      tipoConstruccion: wrap.querySelector('.c_tipoConstruccion').value,
+      antiguedad: wrap.querySelector('.c_antiguedad').value,
       photo: wrap.dataset.photo || null,
       chars: Array.from(wrap.querySelectorAll('.c_char')).map(s=>s.value)
     };
@@ -1074,6 +1030,8 @@ function applyFormData(data){
       wrap.querySelector('.c_supTerreno').value = c.supTerreno||'';
       wrap.querySelector('.c_supCubierta').value = c.supCubierta||'';
       wrap.querySelector('.c_dias').value = c.dias||'';
+      wrap.querySelector('.c_tipoConstruccion').value = c.tipoConstruccion||'';
+      wrap.querySelector('.c_antiguedad').value = c.antiguedad||'';
       if(c.photo) setComparablePhotoFromData(wrap, c.photo);
       const chars = wrap.querySelectorAll('.c_char');
       (c.chars||[]).forEach((v,i)=>{ if(chars[i]) chars[i].value = v; });

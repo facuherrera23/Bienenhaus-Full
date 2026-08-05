@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import preact from '@preact/preset-vite';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -8,6 +9,16 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [preact()],
     base,
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+        '@lib': path.resolve(__dirname, 'src/lib'),
+        '@components': path.resolve(__dirname, 'src/components'),
+        '@pages': path.resolve(__dirname, 'src/pages'),
+        '@store': path.resolve(__dirname, 'src/store'),
+        '@types': path.resolve(__dirname, 'src/types'),
+      },
+    },
     server: {
       port: 5174,
       open: false,
