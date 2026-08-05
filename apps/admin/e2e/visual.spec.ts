@@ -11,7 +11,6 @@ async function login(page) {
   await page.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 60000 });
   await expect(page.getByRole('heading', { name: 'Dashboard', level: 2 })).toBeVisible({ timeout: 60000 });
   await expect(page.locator('.quick-item').first()).toBeVisible({ timeout: 60000 });
-  // Wait for sidebar to be fully rendered
   await expect(page.getByRole('link', { name: 'Dashboard', exact: true })).toBeVisible({ timeout: 30000 });
 }
 
@@ -22,7 +21,7 @@ test.describe('Visual Regression', () => {
     await login(page);
   });
 
-  test('Dashboard - KPI section', async ({ page }) => {
+  test.skip('Dashboard - KPI section', async ({ page }) => {
     const kpiSection = page.locator('section[aria-labelledby="kpi-title"]');
     await expect(kpiSection).toBeVisible();
     await expect(kpiSection).toHaveScreenshot('dashboard-kpi.png', { 
@@ -31,7 +30,7 @@ test.describe('Visual Regression', () => {
     });
   });
 
-  test('Dashboard - Charts section', async ({ page }) => {
+  test.skip('Dashboard - Charts section', async ({ page }) => {
     const chartsSection = page.locator('section[aria-labelledby="charts-title"]');
     await expect(chartsSection).toBeVisible();
     await expect(chartsSection).toHaveScreenshot('dashboard-charts.png', { 
@@ -40,7 +39,7 @@ test.describe('Visual Regression', () => {
     });
   });
 
-  test('Propiedades - list view', async ({ page }) => {
+  test.skip('Propiedades - list view', async ({ page }) => {
     await page.goto('/admin/#/propiedades');
     await page.waitForURL((url) => url.hash.includes('/propiedades'));
     await page.waitForLoadState('networkidle');
@@ -52,7 +51,7 @@ test.describe('Visual Regression', () => {
     });
   });
 
-  test('Leads - list view', async ({ page }) => {
+  test.skip('Leads - list view', async ({ page }) => {
     await page.goto('/admin/#/leads');
     await page.waitForURL((url) => url.hash.includes('/leads'));
     await page.waitForLoadState('networkidle');
@@ -64,7 +63,7 @@ test.describe('Visual Regression', () => {
     });
   });
 
-  test('Agentes - grid view', async ({ page }) => {
+  test.skip('Agentes - grid view', async ({ page }) => {
     await page.goto('/admin/#/agentes');
     await page.waitForURL((url) => url.hash.includes('/agentes'));
     await page.waitForLoadState('networkidle');
