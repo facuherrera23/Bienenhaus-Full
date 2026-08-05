@@ -49,6 +49,12 @@ jobs:
 
       - name: Build landing + admin (out/)
         run: node scripts/build-pages.mjs
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_APP_VERSION: ${{ github.sha }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
