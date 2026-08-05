@@ -107,6 +107,9 @@ export const communicationSchema = z.object({
 export type CommunicationFormValues = z.infer<typeof communicationSchema>;
 
 export type CommunicationType = z.infer<typeof communicationSchema.shape.type>;
+export type CommunicationStatus = 'draft' | 'sent' | 'delivered' | 'read' | 'failed';
+export type CommunicationRow = z.infer<typeof communicationSchema> & { id: string; sent_at: string | null; sent_by: string | null; sent_by_name: string | null; created_at: string; property_title: string | null };
+export type ReportRow = z.infer<typeof reportSchema> & { id: string; generated_at: string; sent_at: string | null; status: CommunicationStatus; created_by: string | null; created_by_name: string | null; property_title: string | null; owner_name: string | null };
 
 // ============================================================
 // Report Schemas
@@ -116,8 +119,9 @@ export const reportSchema = z.object({
   property_id: z.string().uuid(),
   owner_id: z.string().uuid(),
   report_type: z.enum(['price_analysis', 'visit_summary', 'market_update', 'weekly', 'monthly', 'custom']),
-  title: z.string().optional().nullable(),
+  title: z.string().nullable(),
   content_json: z.record(z.unknown()),
+  pdf_url: z.string().url().nullable(),
 });
 
 export type ReportFormValues = z.infer<typeof reportSchema>;

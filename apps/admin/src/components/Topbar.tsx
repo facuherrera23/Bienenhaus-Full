@@ -1,7 +1,6 @@
-import { LogOut, Menu, Search } from 'lucide-preact';
+import { LogOut, Menu, Search, Loader2 } from 'lucide-preact';
 import { useLocation } from 'wouter-preact';
-import { mobileMenuOpen, sidebarCollapsed } from '../store/app';
-import { supabase } from '../lib/supabase';
+import { mobileMenuOpen, sidebarCollapsed, authSigningOut, signOut } from '../store/app';
 
 const TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -14,12 +13,12 @@ const TITLES: Record<string, string> = {
 };
 
 export function Topbar() {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const title = TITLES[location] ?? 'BIENENHAUS Admin';
+  const signingOut = authSigningOut.value;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setLocation('/login');
+    await signOut();
   };
 
   return (
@@ -47,9 +46,9 @@ export function Topbar() {
           <Search size={15} />
           <input type="text" placeholder="Buscar…" aria-label="Buscar" />
         </div>
-        <button className="btn btn--ghost" onClick={handleLogout}>
-          <LogOut size={16} />
-          Salir
+        <button className="btn btn--ghost" onClick={handleLogout} disabled={signingOut} aria-busy={signingOut}>
+          {signingOut ? <Loader2 size={16} className="spin" /> : <LogOut size={16} />}
+          {signingOut ? 'Cerrando…' : 'Salir'}
         </button>
       </div>
     </header>

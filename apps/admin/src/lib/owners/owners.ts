@@ -924,3 +924,34 @@ export async function deleteReport(id: string): Promise<void> {
   const { error } = await supabase.from('owner_reports').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
+
+// ============================================================
+// Re-export types for components that need direct access
+// ============================================================
+export type {
+  OwnerRow,
+  OwnerDetail,
+  OwnerFormValues,
+  PropertyOwnerLink,
+  PropertyOwnerLinkRow,
+  PriceAnalysisRow,
+  ComparableProperty,
+  PriceAnalysisFormValues,
+  ActionPlanRow,
+  ActionPlanDetail,
+  ActionPlanFormValues,
+  ActionPlanTaskRow,
+  ActionPlanTaskFormValues,
+  CommunicationRow,
+  CommunicationFormValues,
+  ReportRow,
+  ReportFormValues,
+  DashboardKPI,
+} from '../../types/owners';
+
+export type {
+  OwnersFilters,
+  ActionPlansFilters,
+  CommunicationsFilters,
+  ReportsFilters,
+} from '../../types/owners';

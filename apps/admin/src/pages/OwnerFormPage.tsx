@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { ArrowLeft } from 'lucide-preact';
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import { OwnerForm } from '@components/owners';
-import { useOwner, useCreateOwner, useUpdateOwner } from '@lib/owners';
+import { useOwner, useCreateOwner, useUpdateOwner } from '@lib/owners/api';
 import { queryClient } from '@lib/query/client';
 import { pushToast } from '@store/app';
 import type { OwnerFormValues } from '@lib/owners/schemas';

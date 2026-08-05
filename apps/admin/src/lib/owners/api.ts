@@ -43,7 +43,7 @@ import {
   createReport,
   sendReport,
   deleteReport,
-} from '.';
+} from './owners';
 import type {
   OwnersFilters,
   ActionPlansFilters,
@@ -581,3 +581,95 @@ export function useDeleteReport() {
     },
   });
 }
+
+// ============================================================
+// Re-export raw functions for components that need direct access
+// ============================================================
+export {
+  fetchOwners,
+  fetchOwnersPaginated,
+  fetchOwnerById,
+  createOwner,
+  updateOwner,
+  softDeleteOwner,
+  restoreOwner,
+  permanentDeleteOwner,
+  fetchDeletedOwners,
+  fetchPropertyOwners,
+  fetchOwnerProperties,
+  linkOwnerToProperty,
+  unlinkOwnerFromProperty,
+  updatePropertyOwnerLink,
+  setPrimaryContact,
+  fetchPriceAnalysis,
+  fetchPriceAnalysisHistory,
+  createPriceAnalysis,
+  updatePriceAnalysis,
+  deletePriceAnalysis,
+  fetchActionPlans,
+  fetchActionPlanById,
+  createActionPlan,
+  updateActionPlan,
+  completeActionPlan,
+  softDeleteActionPlan,
+  restoreActionPlan,
+  permanentDeleteActionPlan,
+  fetchDeletedActionPlans,
+  fetchTasksByPlan,
+  createActionPlanTask,
+  updateActionPlanTask,
+  completeActionPlanTask,
+  deleteActionPlanTask,
+  fetchCommunications,
+  createCommunication,
+  createDraftCommunication,
+  sendCommunication,
+  deleteCommunication,
+  fetchReports,
+  fetchReportById,
+  createReport,
+  sendReport,
+  deleteReport,
+} from './owners';
+
+// ============================================================
+// Re-export schemas for components that need direct access
+// ============================================================
+export {
+  ownerSchema,
+  propertyOwnerLinkSchema,
+  comparablePropertySchema,
+  priceAnalysisSchema,
+  actionPlanSchema,
+  actionPlanTaskSchema,
+  communicationSchema,
+  reportSchema,
+  ownersFiltersSchema,
+  actionPlansFiltersSchema,
+  communicationsFiltersSchema,
+  reportsFiltersSchema,
+} from './schemas';
+
+// ============================================================
+// Re-export types for components that need direct access
+// ============================================================
+export type {
+  OwnerRow,
+  OwnerDetail,
+  OwnerFormValues,
+  PropertyOwnerLink,
+  PropertyOwnerLinkRow,
+  PriceAnalysisRow,
+  ComparableProperty,
+  PriceAnalysisFormValues,
+  ActionPlanRow,
+  ActionPlanDetail,
+  ActionPlanFormValues,
+  ActionPlanTaskRow,
+  ActionPlanTaskFormValues,
+  CommunicationRow,
+  CommunicationFormValues,
+  ReportRow,
+  ReportFormValues,
+  DashboardKPI,
+} from './owners';

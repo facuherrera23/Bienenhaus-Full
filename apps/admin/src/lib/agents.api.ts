@@ -1,4 +1,6 @@
 import { useList, useItem, useCreate, useUpdate, useDelete, useMutation, useUpload, useExport, queryKeys, type ExportColumn } from './api';
+import { supabase } from '../lib/supabase';
+import { useState, useEffect } from 'preact/hooks';
 import type {
   AgentRow,
   AgentFormValues,
@@ -32,7 +34,6 @@ import {
   toFormValues,
   type AgentApiRow,
 } from './agents';
-import { supabase } from './supabase';
 
 const AGENTS_PATH = 'agents';
 
@@ -50,16 +51,25 @@ export function useAgents(filters?: {
 
   if (filters?.is_active !== undefined) apiFilters.is_active = `eq.${filters.is_active}`;
 
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setEnabled(!!session);
+    });
+  }, []);
+
   return useList<AgentRow, AgentApiRow>({
     queryKey: queryKeys.agents(filters),
     path: AGENTS_PATH,
-    select: '*,leads(count)',
+    select: '*',
     filters: apiFilters,
     page: filters?.page ?? 1,
     pageSize: filters?.pageSize ?? 20,
     orderBy: 'sort_order',
     ascending: true,
     transform: toRow,
+    enabled,
   });
 }
 

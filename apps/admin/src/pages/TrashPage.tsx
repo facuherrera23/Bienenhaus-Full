@@ -29,13 +29,13 @@ import {
   restoreOwner,
   permanentDeleteOwner,
   type OwnerRow,
-} from '../lib/owners';
+} from '../lib/owners/api';
 import {
   fetchDeletedActionPlans,
   restoreActionPlan,
   permanentDeleteActionPlan,
   type ActionPlanRow,
-} from '../lib/owners';
+} from '../lib/owners/api';
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';

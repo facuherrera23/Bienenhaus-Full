@@ -9,7 +9,7 @@ import {
   usePermanentDeleteOwner,
   useDeletedOwners,
   ownersKeys,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { OwnerCard } from '@components/owners';
 import type { OwnerRow, OwnerType, OwnerPreferredContact } from '@/types/owners';

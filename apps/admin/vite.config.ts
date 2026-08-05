@@ -29,7 +29,11 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes('node_modules')) return;
+            if (!id.includes('node_modules')) {
+              // App code chunks
+              if (id.includes('/lib/owners/')) return 'owners';
+              return;
+            }
 
             // Order matters - more specific matches first
             if (id.includes('lucide-preact')) return 'vendor-lucide';

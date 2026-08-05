@@ -44,7 +44,7 @@ export default defineConfig({
     command: 'npx pnpm dev',
     url: 'http://localhost:5174',
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 120_000,
     env: {
       ...localEnv,
       VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? localEnv.VITE_SUPABASE_URL,

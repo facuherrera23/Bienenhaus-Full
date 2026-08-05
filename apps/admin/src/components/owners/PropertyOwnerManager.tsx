@@ -10,7 +10,7 @@ import {
   updatePropertyOwnerLink,
   setPrimaryContact,
   fetchOwners,
-} from '../../lib/owners';
+} from '../../lib/owners/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface PropertyOwnerManagerProps {

@@ -1,7 +1,7 @@
-﻿/* ==========================================================================
-   Admin â€” BIENENHAUS
+/* ==========================================================================
+   Admin — BIENENHAUS
    Layout: sidebar fija + topbar sticky + contenido.
-   Los tokens de diseÃ±o se importan vÃ­a main.tsx (@bienenhaus/ui/tokens.css).
+   Los tokens de diseño se importan vía main.tsx (@bienenhaus/ui/tokens.css).
    ========================================================================== */
 
 *,
@@ -381,7 +381,7 @@ select {
 }
 
 /* --------------------------------------------------------------------------
-   PÃ¡ginas
+   Páginas
    -------------------------------------------------------------------------- */
 
 .page {
@@ -1334,7 +1334,7 @@ select {
 }
 
 /* --------------------------------------------------------------------------
-   Editor de sitio â€” encabezado, idiomas y layout con preview
+   Editor de sitio — encabezado, idiomas y layout con preview
    -------------------------------------------------------------------------- */
 
 .page-head-actions {
@@ -1495,7 +1495,7 @@ select {
 
 
 /* --------------------------------------------------------------------------
-   Mercado Libre + Configuración + Modales
+   Mercado Libre + Configuraci�n + Modales
    -------------------------------------------------------------------------- */
 
 .spin {
@@ -1829,7 +1829,7 @@ select {
 }
 
 /* --------------------------------------------------------------------------
-   Acciones rápidas (dashboard)
+   Acciones r�pidas (dashboard)
    -------------------------------------------------------------------------- */
 
 .quick-list {
@@ -3312,285 +3312,24 @@ select {
   color: var(--bh-text-tertiary);
 }
 
-.kanban-card .badge {
-  font-size: 11px;
-  padding: 2px 6px;
-}
+/* Page Loader (Suspense fallback) */
 
-.kanban-card .badge--success {
-  background: var(--bh-success-soft);
-  color: var(--bh-success);
-}
-
-.kanban-card .badge--warning {
-  background: var(--bh-warning-soft);
-  color: var(--bh-warning);
-}
-
-.kanban-card .badge--danger {
-  background: var(--bh-danger-soft);
-  color: var(--bh-danger);
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: default;
-}
-
-.tag .X {
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s;
-}
-.tag .X:hover {
-  opacity: 1;
-}
-
-.view-toggle {
+.page-loader {
   display: flex;
-  border: 1px solid var(--bh-border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.view-toggle .btn {
-  border-radius: 0;
-  border: none;
-}
-
-.view-toggle .btn:first-child {
-  border-radius: 8px 0 0 8px;
-}
-
-.view-toggle .btn:last-child {
-  border-radius: 0 8px 8px 0;
-}
-
-.dropdown-wrapper {
-  position: relative;
-}
-
-.dropdown-trigger {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-md);
-  box-shadow: var(--bh-shadow-lg);
-  list-style: none;
-  padding: 4px 0;
-  min-width: 180px;
-  z-index: 100;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity var(--bh-dur-fast) var(--bh-ease), transform var(--bh-dur-fast) var(--bh-ease), visibility var(--bh-dur-fast);
-}
-
-.dropdown-trigger.open .dropdown-menu,
-.dropdown-menu.open {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.dropdown-menu li {
-  padding: 0;
-}
-
-.dropdown-menu li[role="menuitem"] {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--bh-text-primary);
-  transition: background var(--bh-dur-fast) var(--bh-ease);
-}
-
-.dropdown-menu li[role="menuitem"]:hover {
-  background: var(--bh-bg-hover);
-}
-
-.bulk-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  min-height: 300px;
   gap: 16px;
-  padding: 12px 16px;
-  background: rgba(31, 200, 195, 0.06);
-  border: 1px solid rgba(31, 200, 195, 0.2);
-  border-radius: 10px;
-  margin-bottom: 12px;
-  animation: slideDown var(--dur-fast) var(--ease-premium);
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.bulk-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  color: var(--bh-text-tertiary);
   font-size: 14px;
-  font-weight: 500;
-  color: var(--bh-text-primary);
 }
 
-.bulk-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.page-loader .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--bh-border);
+  border-top-color: var(--bh-accent);
+  border-radius: 50%;
+  animation: bh-spin 0.9s linear infinite;
 }
-
-.bulk-confirm {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--bh-text-secondary);
-}
-
-.kanban-column-body {
-  min-height: 400px;
-  background: var(--bh-bg-hover);
-  border-radius: 0 0 8px 8px;
-  padding: 8px;
-  overflow-y: auto;
-}
-
-.kanban-empty {
-  text-align: center;
-  color: var(--bh-text-tertiary);
-  padding: 24px;
-  font-size: 12px;
-}
-
-.kanban-card .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-right: 4px;
-  margin-bottom: 4px;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--bh-bg-hover);
-  color: var(--bh-text-secondary);
-  border: 1px solid var(--bh-border);
-}
-
-.tag .X {
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s;
-}
-.tag .X:hover {
-  opacity: 1;
-}
-
-.import-summary {
-  display: flex;
-  gap: 16px;
-  padding: 12px;
-  background: var(--bh-bg-hover);
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.import-summary .stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.import-summary .stat strong {
-  font-size: 18px;
-  color: var(--bh-text-primary);
-}
-
-.import-summary .stat span {
-  font-size: 11px;
-  color: var(--bh-text-tertiary);
-}
-
-/* Tag popover */
-.tag-popover {
-  position: fixed;
-  z-index: 1000;
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: var(--bh-shadow-lg);
-  animation: fadeIn 0.1s ease-out;
-}
-
-.tag-popover input {
-  width: 200px;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-sm);
-  background: var(--bh-bg-input);
-  color: var(--bh-text-primary);
-  font-size: 13px;
-}
-
-.tag-popover input:focus {
-  outline: none;
-  border-color: var(--bh-border-focus);
-  box-shadow: 0 0 0 3px var(--bh-accent-soft);
-}
-
-/* Import modal */
-.import-summary {
-  display: flex;
-  gap: 16px;
-  padding: 12px;
-  background: var(--bh-bg-hover);
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.import-summary .stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.import-summary .stat strong {
-  font-size: 18px;
-  color: var(--bh-text-primary);
-}
-
-.import-summary .stat span {
-  font-size: 11px;
-  color: var(--bh-text-tertiary);
-}
-
-

@@ -7,13 +7,13 @@ import {
   useCreateDraftCommunication,
   useSendCommunication,
   useDeleteCommunication,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { CommunicationTimeline } from '@components/owners';
 import { communicationSchema, type CommunicationFormValues } from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CommunicationRow, CommunicationStatus, CommunicationType } from '@lib/owners';
+import type { CommunicationRow, CommunicationStatus, CommunicationType } from '@lib/owners/schemas';
 
 export function CommunicationsPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'drafts' | 'sent'>('all');

@@ -4,7 +4,7 @@ import { useHashLocation } from 'wouter-preact/use-hash-location';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { initAuth } from './store/app';
+import { initAuth, authLoading } from './store/app';
 import { initSentry } from './lib/sentry';
 import { queryClient } from './lib/query/client';
 import '@bienenhaus/ui/tokens.css';
@@ -16,15 +16,21 @@ initSentry({
   release: import.meta.env.VITE_APP_VERSION || 'dev',
 });
 
-initAuth();
+await initAuth();
 
-render(
-  <QueryClientProvider client={queryClient}>
-    <ErrorBoundary>
-      <Router hook={useHashLocation}>
-        <App />
-      </Router>
-    </ErrorBoundary>
-  </QueryClientProvider>,
-  document.getElementById('app')!,
-);
+function Root() {
+  if (authLoading.value) {
+    return <div className="app-loading">Cargando…</div>;
+  }
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <Router hook={useHashLocation}>
+          <App />
+        </Router>
+      </ErrorBoundary>
+    </QueryClientProvider>
+  );
+}
+
+render(<Root />, document.getElementById('app')!);

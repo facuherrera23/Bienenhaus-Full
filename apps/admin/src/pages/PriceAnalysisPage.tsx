@@ -8,7 +8,7 @@ import {
   useUpdatePriceAnalysis,
   useDeletePriceAnalysis,
   usePropertyOwners,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { PriceAnalysisGauge, ComparablePropertyInput } from '@components/owners';
 import { priceAnalysisSchema } from '@lib/owners/schemas';

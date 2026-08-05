@@ -6,7 +6,7 @@ import {
   useActionPlans,
   useCreateActionPlan,
   usePropertyOwners,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { ActionPlanCard } from '@components/owners';
 import { actionPlanSchema, type ActionPlanFormValues } from '@lib/owners/schemas';

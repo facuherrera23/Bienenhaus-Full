@@ -7,7 +7,7 @@ import {
   useCreateReport,
   useSendReport,
   useDeleteReport,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { OwnerReportGenerator, OwnerReportPreview } from '@components/owners';
 import { type ReportFormValues, ReportType } from '@lib/owners/schemas';

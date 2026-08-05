@@ -13,7 +13,7 @@ import {
   useSendCommunication,
   useCreateReport,
   ownersKeys,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import {
   OwnerForm,
@@ -24,14 +24,14 @@ import {
   OwnerReportPreview,
   PropertyOwnerManager,
 } from '@components/owners';
-import type { CommunicationRow, ReportRow } from '@lib/owners';
+import type { CommunicationRow, ReportRow } from '@lib/owners/schemas';
 import {
   OWNER_TYPE_LABEL,
   OWNER_PREFERRED_CONTACT_LABEL,
   COMMUNICATION_STATUS_LABEL,
   COMMUNICATION_STATUS_TONE,
   REPORT_TYPE_LABEL,
-} from '@/lib/owners';
+} from '@/types/owners';
 
 export function OwnerDetailPage() {
   const [, setLocation] = useLocation();

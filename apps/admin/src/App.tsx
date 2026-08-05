@@ -1,38 +1,68 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, Suspense, lazy } from 'preact/compat';
 import type { ComponentType } from 'preact';
 import { Route, Switch, useLocation, type RouteComponentProps } from 'wouter-preact';
 import { Shell } from './components/Shell';
 import { ToastHost } from './components/ToastHost';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Dashboard } from './pages/Dashboard';
-import { Login } from './pages/Login';
-import { NotFound } from './pages/NotFound';
-import { PropertiesPage } from './pages/PropertiesPage';
-import { PropertyFormPage } from './pages/PropertyFormPage';
-import { LeadsPage } from './pages/LeadsPage';
-import { LeadDetailPage } from './pages/LeadDetailPage';
-import { LeadFormPage } from './pages/LeadFormPage';
-import { AgentsPage } from './pages/AgentsPage';
-import { AgentFormPage } from './pages/AgentFormPage';
-import { AdminUsersPage } from './pages/AdminUsersPage';
-import { TrashPage } from './pages/TrashPage';
-import { VisitsPage } from './pages/VisitsPage';
-import { ChatPage } from './pages/ChatPage';
-import { SitePage } from './pages/SitePage';
-import { MercadoLibrePage } from './pages/MercadoLibrePage';
-import { ConfigPage } from './pages/ConfigPage';
-import { NewsletterPage } from './pages/NewsletterPage';
-import { AuditLogPage } from './pages/AuditLogPage';
-import { OwnersPage } from './pages/OwnersPage';
-import { OwnerFormPage } from './pages/OwnerFormPage';
-import { OwnerDetailPage } from './pages/OwnerDetailPage';
-import { PriceAnalysisPage } from './pages/PriceAnalysisPage';
-import { ActionPlansPage } from './pages/ActionPlansPage';
-import { ActionPlansDashboard } from './pages/ActionPlansDashboard';
-import { ActionPlanDetailPage } from './pages/ActionPlanDetailPage';
-import { CommunicationsPage } from './pages/CommunicationsPage';
-import { ReportsPage } from './pages/ReportsPage';
-import { authLoading, authSession, authUserRole, pushToast } from './store/app';
+import { authLoading, authSession, authUserRole, authMustChangePassword, pushToast } from './store/app';
+
+// ============================================================
+// Lazy-loaded page components (code-splitting)
+// ============================================================
+
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const PropertiesPage = lazy(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
+const PropertyFormPage = lazy(() => import('./pages/PropertyFormPage').then(m => ({ default: m.PropertyFormPage })));
+const LeadsPage = lazy(() => import('./pages/LeadsPage').then(m => ({ default: m.LeadsPage })));
+const LeadDetailPage = lazy(() => import('./pages/LeadDetailPage').then(m => ({ default: m.LeadDetailPage })));
+const LeadFormPage = lazy(() => import('./pages/LeadFormPage').then(m => ({ default: m.LeadFormPage })));
+const AgentsPage = lazy(() => import('./pages/AgentsPage').then(m => ({ default: m.AgentsPage })));
+const AgentFormPage = lazy(() => import('./pages/AgentFormPage').then(m => ({ default: m.AgentFormPage })));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
+const TrashPage = lazy(() => import('./pages/TrashPage').then(m => ({ default: m.TrashPage })));
+const VisitsPage = lazy(() => import('./pages/VisitsPage').then(m => ({ default: m.VisitsPage })));
+const ChatPage = lazy(() => import('./pages/ChatPage').then(m => ({ default: m.ChatPage })));
+const SitePage = lazy(() => import('./pages/SitePage').then(m => ({ default: m.SitePage })));
+const MercadoLibrePage = lazy(() => import('./pages/MercadoLibrePage').then(m => ({ default: m.MercadoLibrePage })));
+const ConfigPage = lazy(() => import('./pages/ConfigPage').then(m => ({ default: m.ConfigPage })));
+const NewsletterPage = lazy(() => import('./pages/NewsletterPage').then(m => ({ default: m.NewsletterPage })));
+const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
+const OwnersPage = lazy(() => import('./pages/OwnersPage').then(m => ({ default: m.OwnersPage })));
+const OwnerFormPage = lazy(() => import('./pages/OwnerFormPage').then(m => ({ default: m.OwnerFormPage })));
+const OwnerDetailPage = lazy(() => import('./pages/OwnerDetailPage').then(m => ({ default: m.OwnerDetailPage })));
+const PriceAnalysisPage = lazy(() => import('./pages/PriceAnalysisPage').then(m => ({ default: m.PriceAnalysisPage })));
+const ActionPlansPage = lazy(() => import('./pages/ActionPlansPage').then(m => ({ default: m.ActionPlansPage })));
+const ActionPlansDashboard = lazy(() => import('./pages/ActionPlansDashboard').then(m => ({ default: m.ActionPlansDashboard })));
+const ActionPlanDetailPage = lazy(() => import('./pages/ActionPlanDetailPage').then(m => ({ default: m.ActionPlanDetailPage })));
+const CommunicationsPage = lazy(() => import('./pages/CommunicationsPage').then(m => ({ default: m.CommunicationsPage })));
+const ReportsPage = lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const ChangePassword = lazy(() => import('./pages/ChangePassword').then(m => ({ default: m.ChangePassword })));
+
+// ============================================================
+// Loading fallback component
+// ============================================================
+
+function PageLoader() {
+  return (
+    <div className="page-loader" role="status" aria-label="Cargando página…">
+      <div className="spinner" aria-hidden="true"></div>
+      <p>Cargando…</p>
+    </div>
+  );
+}
+
+// Wrapper para Suspense en cada ruta
+function withSuspense(Component: ComponentType<any>) {
+  return function SuspenseWrapper(props: any) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Component {...props} />
+      </Suspense>
+    );
+  };
+}
 
 type AdminRole = 'super_admin' | 'admin' | 'staff' | 'viewer';
 
@@ -48,12 +78,6 @@ function hasMinRole(actual: AdminRole | null, required: AdminRole): boolean {
   return ROLE_RANK[actual] >= ROLE_RANK[required];
 }
 
-/**
- * Wraps a route component with a minimum-role guard. If the authenticated
- * user does not meet `minRole`, redirects to `/` and pushes a toast.
- * Designed to compose with wouter-preact's `<Route component={...} />`:
- * we pass it as `component` so wouter still injects route params.
- */
 function withRoleGuard(component: ComponentType<RouteComponentProps<Record<string, string | undefined>>>, minRole: AdminRole): ComponentType<RouteComponentProps<Record<string, string | undefined>>> {
   function Guarded(props: RouteComponentProps<Record<string, string | undefined>>) {
     const [, setLocation] = useLocation();
@@ -81,6 +105,11 @@ function withRoleGuard(component: ComponentType<RouteComponentProps<Record<strin
 function ProtectedRoutes() {
   const [location, setLocation] = useLocation();
   const session = authSession.value;
+  const loading = authLoading.value;
+  const userRole = authUserRole.value;
+  const mustChangePassword = authMustChangePassword.value;
+
+  if (loading) return null;
 
   useEffect(() => {
     if (!session) setLocation('/login', { replace: true });
@@ -88,50 +117,58 @@ function ProtectedRoutes() {
 
   if (!session) return null;
 
+  if (userRole === null) {
+    useEffect(() => {
+      setLocation('/login', { replace: true });
+    }, [userRole]);
+    return null;
+  }
+
+  if (mustChangePassword) {
+    useEffect(() => {
+      setLocation('/cambiar-contrasena', { replace: true });
+    }, [mustChangePassword]);
+    return null;
+  }
+
   return (
     <Shell>
-      {/* Boundary por página: si una página revienta, el resto del Shell sigue vivo
-          y navegar (cambia `resetKey`) resetea el estado de error automáticamente. */}
       <ErrorBoundary resetKey={location}>
         <Switch>
-        {/* Cualquier autenticado (viewer+ ) */}
-        <Route path="/" component={Dashboard} />
-        <Route path="/propiedades/nueva" component={PropertyFormPage} />
-        <Route path="/propiedades/:id" component={PropertyFormPage} />
-        <Route path="/propiedades/:id/analisis" component={PriceAnalysisPage} />
-        <Route path="/propiedades/:id/planes" component={ActionPlansPage} />
-        <Route path="/propiedades/:id/planes/nuevo" component={ActionPlansPage} />
-        <Route path="/propiedades" component={PropertiesPage} />
-        <Route path="/leads/nueva" component={LeadFormPage} />
-        <Route path="/leads/:id" component={LeadDetailPage} />
-        <Route path="/leads" component={LeadsPage} />
-        <Route path="/agentes/nueva" component={AgentFormPage} />
-        <Route path="/agentes/:id" component={AgentFormPage} />
-        <Route path="/agentes" component={AgentsPage} />
-        <Route path="/visitas" component={VisitsPage} />
-        <Route path="/chat" component={ChatPage} />
-        <Route path="/mercadolibre" component={MercadoLibrePage} />
-        <Route path="/newsletter" component={NewsletterPage} />
-        <Route path="/papelera" component={TrashPage} />
-        <Route path="/propietarios" component={OwnersPage} />
-        <Route path="/propietarios/nuevo" component={OwnerFormPage} />
-        <Route path="/propietarios/:id" component={OwnerDetailPage} />
-        <Route path="/planes-accion" component={ActionPlansDashboard} />
-        <Route path="/planes-accion/:id" component={ActionPlanDetailPage} />
-        <Route path="/comunicaciones" component={CommunicationsPage} />
-        <Route path="/reportes" component={ReportsPage} />
+        <Route path="/" component={withSuspense(Dashboard)} />
+        <Route path="/propiedades/nueva" component={withSuspense(PropertyFormPage)} />
+        <Route path="/propiedades/:id" component={withSuspense(PropertyFormPage)} />
+        <Route path="/propiedades/:id/analisis" component={withSuspense(PriceAnalysisPage)} />
+        <Route path="/propiedades/:id/planes" component={withSuspense(ActionPlansPage)} />
+        <Route path="/propiedades/:id/planes/nuevo" component={withSuspense(ActionPlansPage)} />
+        <Route path="/propiedades" component={withSuspense(PropertiesPage)} />
+        <Route path="/leads/nueva" component={withSuspense(LeadFormPage)} />
+        <Route path="/leads/:id" component={withSuspense(LeadDetailPage)} />
+        <Route path="/leads" component={withSuspense(LeadsPage)} />
+        <Route path="/agentes/nueva" component={withSuspense(AgentFormPage)} />
+        <Route path="/agentes/:id" component={withSuspense(AgentFormPage)} />
+        <Route path="/agentes" component={withSuspense(AgentsPage)} />
+        <Route path="/visitas" component={withSuspense(VisitsPage)} />
+        <Route path="/chat" component={withSuspense(ChatPage)} />
+        <Route path="/mercadolibre" component={withSuspense(MercadoLibrePage)} />
+        <Route path="/newsletter" component={withSuspense(NewsletterPage)} />
+        <Route path="/papelera" component={withSuspense(TrashPage)} />
+        <Route path="/propietarios" component={withSuspense(OwnersPage)} />
+        <Route path="/propietarios/nuevo" component={withSuspense(OwnerFormPage)} />
+        <Route path="/propietarios/:id" component={withSuspense(OwnerDetailPage)} />
+        <Route path="/planes-accion" component={withSuspense(ActionPlansDashboard)} />
+        <Route path="/planes-accion/:id" component={withSuspense(ActionPlanDetailPage)} />
+        <Route path="/comunicaciones" component={withSuspense(CommunicationsPage)} />
+        <Route path="/reportes" component={withSuspense(ReportsPage)} />
 
-        {/* staff+ : edición del contenido del sitio */}
-        <Route path="/sitio" component={withRoleGuard(SitePage, 'staff')} />
+        <Route path="/sitio" component={withSuspense(withRoleGuard(SitePage, 'staff'))} />
 
-        {/* admin+ : gestión de usuarios y configuración */}
-        <Route path="/usuarios" component={withRoleGuard(AdminUsersPage, 'admin')} />
-        <Route path="/configuracion" component={withRoleGuard(ConfigPage, 'admin')} />
+        <Route path="/usuarios" component={withSuspense(withRoleGuard(AdminUsersPage, 'admin'))} />
+        <Route path="/configuracion" component={withSuspense(withRoleGuard(ConfigPage, 'admin'))} />
 
-        {/* admin+ : auditoría (solo lectura pero sensible) */}
-        <Route path="/auditoria" component={withRoleGuard(AuditLogPage, 'admin')} />
+        <Route path="/auditoria" component={withSuspense(withRoleGuard(AuditLogPage, 'admin'))} />
 
-        <Route component={NotFound} />
+        <Route component={withSuspense(NotFound)} />
         </Switch>
       </ErrorBoundary>
     </Shell>
@@ -144,7 +181,8 @@ export function App() {
   return (
     <>
       <Switch>
-        <Route path="/login" component={Login} />
+        <Route path="/login" component={withSuspense(Login)} />
+        <Route path="/cambiar-contrasena" component={withSuspense(ChangePassword)} />
         <Route path="*">{() => <ProtectedRoutes />}</Route>
       </Switch>
       <ToastHost />

@@ -9,7 +9,7 @@ import {
   useRestoreActionPlan,
   usePermanentDeleteActionPlan,
   useDeletedActionPlans,
-} from '@lib/owners';
+} from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import type { ActionPlanStatus, ActionPlanPriority, ActionPlanCategory } from '@/types/owners';
 import {

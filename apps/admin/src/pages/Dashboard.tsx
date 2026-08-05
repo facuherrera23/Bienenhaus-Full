@@ -5,8 +5,8 @@ import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
-import { useActionPlans } from '../lib/owners';
-import { useOwners } from '../lib/owners';
+import { useActionPlans } from '../lib/owners/api';
+import { useOwners } from '../lib/owners/api';
 
 export function Dashboard() {
   const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
