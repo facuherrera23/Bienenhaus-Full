@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Hashtag,
   Share2,
   MapPin,
   Bed,
@@ -15,10 +14,9 @@ import {
   Key,
   Tag,
   Play,
-  MessageSquare,
-  PaperPlane,
   ArrowRight,
 } from 'lucide-preact';
+import { HashIcon, SendIcon } from '../lib/brand-icons';
 import styles from '../styles/modules/PropertyModal.module.css';
 
 function getYouTubeId(url: string): string | null {
@@ -68,6 +66,48 @@ export function PropertyModal({
     previousActiveElement.current = document.activeElement as HTMLElement;
     document.body.style.overflow = 'hidden';
     containerRef.current?.focus();
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const focusableSelectors = [
+      'button:not([disabled]):not([aria-hidden="true"])',
+      'a[href]:not([aria-hidden="true"])',
+      'input:not([disabled]):not([aria-hidden="true"])',
+      'select:not([disabled]):not([aria-hidden="true"])',
+      'textarea:not([disabled]):not([aria-hidden="true"])',
+      '[tabindex]:not([tabindex="-1"]):not([aria-hidden="true"])',
+    ].join(', ');
+
+    const getFocusableElements = () =>
+      Array.from(container.querySelectorAll<HTMLElement>(focusableSelectors)).filter(
+        (el) => el.offsetParent !== null && !el.hasAttribute('aria-hidden')
+      );
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleTab);
+
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowLeft' && allImages.length > 1) {
@@ -78,9 +118,16 @@ export function PropertyModal({
       }
     };
     document.addEventListener('keydown', handleKey);
+
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    }
+
     return () => {
       document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKey);
+      container.removeEventListener('keydown', handleTab);
       previousActiveElement.current?.focus();
     };
   }, [onClose, allImages.length]);
@@ -187,7 +234,7 @@ export function PropertyModal({
             <div className={styles.modalMeta}>
               {property.code && (
                 <span className={styles.propertyCode} id="modal-code">
-                  <Hashtag className={styles.icon} aria-hidden="true" /> Ref: {property.code}
+                  <HashIcon className={styles.icon} aria-hidden={true} /> Ref: {property.code}
                 </span>
               )}
               <div className={styles.modalShare} title="Compartir propiedad">
@@ -296,7 +343,7 @@ export function PropertyModal({
             className={`${styles.btnPrimary} ${styles.fullWidth}`}
             onClick={onClose}
           >
-            <PaperPlane className={styles.icon} aria-hidden="true" />
+            <SendIcon className={styles.icon} aria-hidden={true} />
             CONSULTAR AHORA
           </a>
         </div>

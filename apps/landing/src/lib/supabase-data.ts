@@ -2,13 +2,10 @@
  * Client-side Supabase data fetching with realtime subscriptions.
  * Replaces build-time fetch for live updates without redeploy.
  */
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@bienenhaus/supabase';
 import { useEffect, useState, useCallback, useRef } from 'preact/hooks';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://rnldqiwwzhjnurkguihu.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export { supabase };
 
 export interface Property {
   id: string;
@@ -229,14 +226,13 @@ export function useAgents() {
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
-  // agents_public (vista 0031) filtra is_active/deleted_at y anon no tiene
-  // SELECT sobre la tabla: sin realtime, los cambios llegan con refetch().
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const { data: agents, error } = await supabase
-        .from('agents_public')
+        .from('agents_realtime')
         .select('id, name, matricula, role, photo_url, bio, sort_order, is_active')
+        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -255,8 +251,19 @@ export function useAgents() {
     mounted.current = true;
     fetchData();
 
+    // Realtime subscription
+    const channel = supabase
+      .channel('agents_realtime_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'agents_realtime' },
+        () => fetchData()
+      )
+      .subscribe();
+
     return () => {
       mounted.current = false;
+      supabase.removeChannel(channel);
     };
   }, [fetchData]);
 

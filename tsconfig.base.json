@@ -20,7 +20,8 @@
     "paths": {
       "@/*": ["*"],
       "@admin/*": ["apps/admin/src/*"],
-      "@landing/*": ["apps/landing/src/*"]
+      "@landing/*": ["apps/landing/src/*"],
+      "@bienenhaus/supabase": ["packages/bienenhaus-supabase/src"]
     }
   }
 }

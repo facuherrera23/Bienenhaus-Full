@@ -5,6 +5,7 @@ import { textOf, useSiteContent } from '../lib/content';
 import { PropertyCard } from './PropertyCard';
 import { PropertyModal } from './PropertyModal';
 import { useProperties, type PropertyCardData } from '../lib/supabase-data';
+import { Suspense } from 'preact/compat';
 import {
   Search,
   ChevronDown,
@@ -400,7 +401,9 @@ export function Catalog() {
         </div>
       </main>
 
-      <PropertyModal property={selectedProperty} onClose={closeModal} />
+      <Suspense fallback={<div className={styles.modalLoading}>Cargando detalles...</div>}>
+        <PropertyModal property={selectedProperty} onClose={closeModal} />
+      </Suspense>
     </>
   );
 }

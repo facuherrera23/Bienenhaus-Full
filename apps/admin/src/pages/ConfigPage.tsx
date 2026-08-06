@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { Copy, KeyRound, Loader2, Save, Trash2, UserPlus } from 'lucide-preact';
+import { Copy, KeyRound, Loader2, Save, Trash2, UserPlus, X } from 'lucide-preact';
 import {
   ADMIN_ROLE_LABEL,
   fetchAdminUsers,
@@ -39,8 +39,8 @@ function Modal({
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>{title}</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
-            ×
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
         <div className="modal-body">{children}</div>

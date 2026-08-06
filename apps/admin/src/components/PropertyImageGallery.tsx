@@ -215,16 +215,24 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
         />
 
         {loading ? (
-          <div className="gallery-loading">
-            <Loader2 size={24} className="spin" />
-            <span>Cargando imágenes…</span>
+          <div className="image-gallery-grid" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div className="image-gallery-skeleton" key={i}>
+                <div className="image-gallery-skeleton-thumb" />
+                <div className="image-gallery-skeleton-bar" />
+                <div className="image-gallery-skeleton-bar image-gallery-skeleton-bar--short" />
+              </div>
+            ))}
           </div>
         ) : images.length === 0 ? (
           <div className="gallery-empty" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={48} />
-            <p>Arrastra imágenes aquí o haz click para seleccionar</p>
+            <div className="gallery-empty-icon">
+              <Upload size={48} strokeWidth={1.5} />
+            </div>
+            <p className="gallery-empty-title">Subí las fotos de la propiedad</p>
+            <p className="gallery-empty-hint">Arrastrá y soltá aquí, o hacé click para elegir archivos</p>
             <button type="button" className="btn btn--secondary btn--sm">
-              Seleccionar archivos
+              <Upload size={15} /> Seleccionar archivos
             </button>
           </div>
         ) : (
@@ -263,8 +271,10 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                     <Trash2 size={16} />
                   </button>
                 </div>
-                <div className="image-position">
+                <div className="image-drag-handle" title="Arrastrar para reordenar" aria-hidden="true">
                   <Move size={14} />
+                </div>
+                <div className="image-position">
                   <span>{index + 1}</span>
                 </div>
                 {img.is_cover && <span className="cover-badge">PORTADA</span>}
@@ -275,10 +285,12 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
 
         {images.length > 0 && !loading && (
           <div className="gallery-footer">
-            <label htmlFor="property-images-input" className="btn btn--secondary">
+            <label htmlFor="property-images-input" className="btn btn--secondary btn--sm">
               <Upload size={15} /> Agregar más
             </label>
-            <span className="gallery-count">{images.length} imagen{images.length === 1 ? '' : 'es'}</span>
+            <span className="gallery-count-badge">
+              {images.length} imagen{images.length === 1 ? '' : 'es'}
+            </span>
           </div>
         )}
       </div>

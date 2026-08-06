@@ -5,16 +5,18 @@ import { subscribeNewsletter } from '../lib/newsletter';
 import { images } from '../lib/images';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
 import {
-  Instagram,
-  Facebook,
-  Youtube,
-  Tiktok,
-  Whatsapp,
-  Linkedin,
   ArrowRight,
   Mail,
   MapPin,
 } from 'lucide-preact';
+import {
+  InstagramIcon,
+  FacebookIcon,
+  YoutubeIcon,
+  TiktokIcon,
+  WhatsappIcon,
+  LinkedinIcon,
+} from '../lib/brand-icons';
 import styles from '../styles/modules/Footer.module.css';
 
 const NAV_LINKS = [
@@ -42,14 +44,14 @@ const SERVICE_LINKS = [
 
 function getSocialIcon(name: string) {
   const iconMap: Record<string, any> = {
-    'fa-instagram': Instagram,
-    'fa-facebook-f': Facebook,
-    'fa-youtube': Youtube,
-    'fa-tiktok': Tiktok,
-    'fa-whatsapp': Whatsapp,
-    'fa-linkedin-in': Linkedin,
+    'fa-instagram': InstagramIcon,
+    'fa-facebook-f': FacebookIcon,
+    'fa-youtube': YoutubeIcon,
+    'fa-tiktok': TiktokIcon,
+    'fa-whatsapp': WhatsappIcon,
+    'fa-linkedin-in': LinkedinIcon,
   };
-  return iconMap[name] || Instagram;
+  return iconMap[name] || InstagramIcon;
 }
 
 export function Footer() {

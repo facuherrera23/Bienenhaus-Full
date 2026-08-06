@@ -13,10 +13,6 @@ import {
   MapPin,
   Mail,
   Clock,
-  Whatsapp,
-  Instagram,
-  Facebook,
-  Linkedin,
   UploadCloud,
   FileText,
   Image,
@@ -25,10 +21,15 @@ import {
   CheckCircle,
   Star,
   ArrowRight,
-  AlertCircle,
   Loader2,
   MessageSquare,
 } from 'lucide-preact';
+import {
+  WhatsappIcon,
+  InstagramIcon,
+  FacebookIcon,
+  LinkedinIcon,
+} from '../lib/brand-icons';
 import styles from '../styles/modules/Contact.module.css';
 
 const INTENTS = [
@@ -245,16 +246,16 @@ export function Contact() {
             </div>
             <div className={styles.contactSocial}>
               <a href={siteSettings.social.instagram} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="Instagram">
-                <Instagram className={styles.icon} aria-hidden="true" />
+                <InstagramIcon className={styles.icon} aria-hidden={true} />
               </a>
               <a href={siteSettings.social.facebook} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="Facebook">
-                <Facebook className={styles.icon} aria-hidden="true" />
+                <FacebookIcon className={styles.icon} aria-hidden={true} />
               </a>
               <a href={siteSettings.social.linkedin} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="LinkedIn">
-                <Linkedin className={styles.icon} aria-hidden="true" />
+                <LinkedinIcon className={styles.icon} aria-hidden={true} />
               </a>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="WhatsApp">
-                <Whatsapp className={styles.icon} aria-hidden="true" />
+                <WhatsappIcon className={styles.icon} aria-hidden={true} />
               </a>
             </div>
             <div className={styles.contactMap}>
@@ -358,7 +359,7 @@ export function Contact() {
                         WhatsApp / Teléfono <span className={styles.required}>*</span>
                       </label>
                       <div className={styles.inputWrapper}>
-                        <Whatsapp className={styles.inputIcon} aria-hidden="true" />
+                        <WhatsappIcon className={styles.inputIcon} aria-hidden={true} />
                         <input type="tel" id="whatsapp" name="whatsapp" placeholder="+54 9 351 000-0000" required />
                         <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>

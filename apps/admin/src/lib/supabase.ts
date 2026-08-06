@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 
 // ============================================================
@@ -23,12 +23,12 @@ if (!anonKey) {
 }
 
 // ============================================================
-// Client Configuration
+// Client Configuration (typed for admin)
 // ============================================================
 
 export const supabaseUrl = url;
 
-export const supabase: SupabaseClient<Database> = createClient<Database>(supabaseUrl, anonKey, {
+export const supabase: SupabaseClient<Database> = createClient<Database>(url, anonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -173,7 +173,7 @@ export async function callRpc<
 ): Promise<Database['public']['Functions'][Fn]['Returns']> {
   const { data, error } = await supabase.rpc(fn, params);
   if (error) throw new Error(error.message);
-  return data as unknown as Database['public']['Functions'][Fn]['Returns'];
+  return data as Database['public']['Functions'][Fn]['Returns'];
 }
 
 // ============================================================
@@ -183,5 +183,6 @@ export async function callRpc<
 export {
   createClient,
   type SupabaseClient,
+  type Session,
   type Database,
 };

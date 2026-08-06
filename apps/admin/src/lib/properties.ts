@@ -385,7 +385,7 @@ export async function permanentDeleteProperty(id: string): Promise<void> {
 
   if (images?.length) {
     const paths = images
-      .map((img) => img.url.split('/property-images/')[1])
+      .map((img: { url: string }) => img.url.split('/property-images/')[1])
       .filter(Boolean);
 
     if (paths.length) {

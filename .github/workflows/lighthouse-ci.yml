@@ -1,0 +1,195 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '11.20.0'
+
+jobs:
+  lighthouse:
+    name: Lighthouse Budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build landing
+        run: pnpm --filter @bienenhaus/landing build
+        env:
+          # Landing only needs Supabase URL + anon key for its 2 RPCs.
+          # Use placeholder values for the perf audit — the bundle is identical
+          # regardless of the real values; we are measuring static assets.
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: placeholder-anon-key-for-perf-audit
+
+      - name: Install Lighthouse CI
+        run: pnpm dlx @lhci/cli@0.14.x --version
+
+      # ─────────────────────────────────────────────────────────────
+      # Desktop preset (Performance >= 98)
+      # ─────────────────────────────────────────────────────────────
+      - name: Run Lighthouse CI (Desktop)
+        id: lhci-desktop
+        continue-on-error: true
+        working-directory: apps/landing
+        run: |
+          pnpm dlx @lhci/cli@0.14.x autorun \
+            --config=./lighthouserc.json \
+            --collect.staticDistDir=./dist \
+            --collect.numberOfRuns=3 \
+            --collect.settings.preset=desktop \
+            --upload.target=temporary-public-storage \
+            --upload.reportFilename=lighthouse-report-desktop.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      # ─────────────────────────────────────────────────────────────
+      # Mobile preset (Performance >= 95, simulated 4G throttling)
+      # ─────────────────────────────────────────────────────────────
+      - name: Run Lighthouse CI (Mobile)
+        id: lhci-mobile
+        continue-on-error: true
+        working-directory: apps/landing
+        run: |
+          pnpm dlx @lhci/cli@0.14.x autorun \
+            --config=./lighthouserc.json \
+            --collect.staticDistDir=./dist \
+            --collect.numberOfRuns=3 \
+            --collect.settings.preset=desktop \
+            --collect.settings.preset= \
+            --collect.settings.throttling.rttMs=150 \
+            --collect.settings.throttling.throughputKbps=1638.4 \
+            --collect.settings.throttling.cpuSlowdownMultiplier=4 \
+            --collect.settings.throttling.requestLatencyMs=150 \
+            --collect.settings.throttling.downloadThroughputKbps=1638.4 \
+            --collect.settings.throttling.uploadThroughputKbps=750 \
+            --assert.assertions.categories:performance=minScore:0.95 \
+            --assert.assertions.interactive=maxNumericValue:5000 \
+            --assert.assertions.render-blocking-resources=maxNumericValue:300 \
+            --assert.assertions.mainthread-work-breakdown=maxNumericValue:4000 \
+            --upload.target=temporary-public-storage \
+            --upload.reportFilename=lighthouse-report-mobile.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      # ─────────────────────────────────────────────────────────────
+      # Aggregate results — fail the job if EITHER preset missed a budget
+      # ─────────────────────────────────────────────────────────────
+      - name: Check budget results
+        if: always()
+        run: |
+          echo "=== Lighthouse CI Results ==="
+          echo "Desktop outcome: ${{ steps.lhci-desktop.outcome }}"
+          echo "Mobile outcome:  ${{ steps.lhci-mobile.outcome }}"
+          if [ "${{ steps.lhci-desktop.outcome }}" != "success" ]; then
+            echo "::error::Desktop Lighthouse budgets NOT met — see logs above"
+            DESKTOP_FAIL=1
+          else
+            DESKTOP_FAIL=0
+          fi
+          if [ "${{ steps.lhci-mobile.outcome }}" != "success" ]; then
+            echo "::error::Mobile Lighthouse budgets NOT met — see logs above"
+            MOBILE_FAIL=1
+          else
+            MOBILE_FAIL=0
+          fi
+          if [ "$DESKTOP_FAIL" -eq 1 ] || [ "$MOBILE_FAIL" -eq 1 ]; then
+            echo "::error::One or more Lighthouse performance budgets were missed. Fix the regression before merging."
+            exit 1
+          fi
+          echo "::notice::All Lighthouse performance budgets passed (desktop + mobile)."
+
+      # ─────────────────────────────────────────────────────────────
+      # Upload reports as artifacts for offline debugging
+      # ─────────────────────────────────────────────────────────────
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: |
+            apps/landing/.lighthouseci/
+            apps/landing/lighthouse-report-*.json
+            apps/landing/lighthouse-report-*.html
+          retention-days: 30
+          if-no-files-found: warn
+
+      # ─────────────────────────────────────────────────────────────
+      # Comment on the PR with a summary (optional, non-blocking)
+      # ─────────────────────────────────────────────────────────────
+      - name: Publish PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const desktop = '${{ steps.lhci-desktop.outcome }}';
+            const mobile = '${{ steps.lhci-mobile.outcome }}';
+            const emoji = (s) => s === 'success' ? '✅' : (s === 'skipped' ? '⏭️' : '❌');
+            const body = [
+              '## 📊 Lighthouse CI Results',
+              '',
+              `| Preset | Status | Performance |`,
+              `|--------|--------|-------------|`,
+              `| Desktop | ${emoji(desktop)} ${desktop} | >= 98 required |`,
+              `| Mobile  | ${emoji(mobile)} ${mobile}  | >= 95 required |`,
+              '',
+              '### Budgets enforced',
+              '- **Performance**: Desktop ≥ 98 / Mobile ≥ 95',
+              '- **Accessibility / Best Practices / SEO**: ≥ 100 (all)',
+              '- **LCP** < 2.5s · **CLS** < 0.1 · **TBT** < 200ms',
+              '- **Total JS** < 150KB gzipped · **Total CSS** < 50KB gzipped',
+              '',
+              '### Reports',
+              'Full JSON + HTML reports available in the **lighthouse-reports** artifact.',
+              '',
+              desktop === 'success' && mobile === 'success'
+                ? '> 🟢 All budgets passed. Safe to merge.'
+                : '> 🔴 One or more budgets missed. Review the logs and fix the regression.'
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Lighthouse CI Results')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

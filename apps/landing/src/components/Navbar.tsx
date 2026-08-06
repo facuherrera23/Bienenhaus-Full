@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { textOf, useSiteContent } from '../lib/content';
 import { images } from '../lib/images';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
-import { ArrowRight, Whatsapp, Heart, Menu, X } from 'lucide-preact';
+import { ArrowRight, Heart } from 'lucide-preact';
+import { WhatsappIcon } from '../lib/brand-icons';
 import styles from '../styles/modules/Navbar.module.css';
 
 const NAV_ITEMS = [
@@ -71,7 +72,7 @@ export function Navbar() {
               aria-label="WhatsApp"
               onClick={() => window.open(whatsappUrl, '_blank')}
             >
-              <Whatsapp className={styles.icon} aria-hidden="true" />
+              <WhatsappIcon className={styles.icon} aria-hidden={true} />
             </button>
             <button
               className={`${styles.iconBtn}${fav ? ` ${styles.isActive}` : ''}`}
@@ -79,7 +80,7 @@ export function Navbar() {
               aria-label="Favoritos"
               onClick={() => setFav((f) => !f)}
             >
-              <Heart className={styles.icon} aria-hidden="true" fill={fav ? 'currentColor' : 'none'} />
+              <Heart className={styles.icon} aria-hidden={true} fill={fav ? 'currentColor' : 'none'} />
             </button>
             <button
               className={styles.iconBtn}

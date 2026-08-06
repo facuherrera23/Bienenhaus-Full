@@ -1,4 +1,5 @@
 import {
+  Activity,
   ArrowRightLeft,
   Globe,
   LogIn,
@@ -102,7 +103,11 @@ export function RecentActivity() {
       {isError && <div className="placeholder-card">No se pudo cargar la actividad.</div>}
 
       {!isPending && !isError && (data?.length ?? 0) === 0 && (
-        <div className="placeholder-card">Todavía no hay actividad registrada.</div>
+        <div className="activity-empty">
+          <Activity size={28} strokeWidth={1.6} aria-hidden="true" />
+          <p className="activity-empty-title">Sin actividad aún</p>
+          <p className="activity-empty-hint">Las acciones del panel aparecerán aquí.</p>
+        </div>
       )}
 
       {!isPending && !isError && (data?.length ?? 0) > 0 && (

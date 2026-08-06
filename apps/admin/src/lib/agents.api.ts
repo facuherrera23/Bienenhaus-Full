@@ -54,7 +54,7 @@ export function useAgents(filters?: {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session: session } }) => {
       setEnabled(!!session);
     });
   }, []);

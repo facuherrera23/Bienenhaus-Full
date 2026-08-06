@@ -318,9 +318,10 @@ export function PropertyFormPage() {
           {!isNew && (
             <button
               type="button"
-              className="btn btn--secondary"
+              className={`btn btn--secondary btn--ml-toggle${showMLPreview ? ' active' : ''}`}
               onClick={() => setShowMLPreview(!showMLPreview)}
               disabled={saving}
+              aria-pressed={showMLPreview}
             >
               <Eye size={16} /> {showMLPreview ? 'Ocultar' : 'Vista previa'} ML
             </button>
@@ -354,48 +355,53 @@ export function PropertyFormPage() {
       {!loadError && !loaded && <div className="card placeholder-card">Cargando…</div>}
 
       {!loadError && loaded && !isNew && (
-        <div className="form-tabs" role="tablist">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'basic'}
-            className={`form-tab${activeTab === 'basic' ? ' active' : ''}`}
-            onClick={() => setActiveTab('basic')}
-          >
-            <Home size={16} /> Datos básicos
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'location'}
-            className={`form-tab${activeTab === 'location' ? ' active' : ''}`}
-            onClick={() => setActiveTab('location')}
-          >
-            <MapPin size={16} /> Ubicación
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'details'}
-            className={`form-tab${activeTab === 'details' ? ' active' : ''}`}
-            onClick={() => setActiveTab('details')}
-          >
-            <List size={16} /> Detalles
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'publish'}
-            className={`form-tab${activeTab === 'publish' ? ' active' : ''}`}
-            onClick={() => setActiveTab('publish')}
-          >
-            <Building2 size={16} /> Publicación
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'owners'}
-            className={`form-tab${activeTab === 'owners' ? ' active' : ''}`}
-            onClick={() => setActiveTab('owners')}
-          >
-            <Users size={16} /> Propietarios
-          </button>
-        </div>
+        <div className="form-tabs" role="tablist" data-active-index={['basic', 'location', 'details', 'publish', 'owners'].indexOf(activeTab)}>
+           <button
+             role="tab"
+             aria-selected={activeTab === 'basic'}
+             data-tab="basic"
+             className={`form-tab${activeTab === 'basic' ? ' active' : ''}`}
+             onClick={() => setActiveTab('basic')}
+           >
+             <Home size={16} /> Datos básicos
+           </button>
+           <button
+             role="tab"
+             aria-selected={activeTab === 'location'}
+             data-tab="location"
+             className={`form-tab${activeTab === 'location' ? ' active' : ''}`}
+             onClick={() => setActiveTab('location')}
+           >
+             <MapPin size={16} /> Ubicación
+           </button>
+           <button
+             role="tab"
+             aria-selected={activeTab === 'details'}
+             data-tab="details"
+             className={`form-tab${activeTab === 'details' ? ' active' : ''}`}
+             onClick={() => setActiveTab('details')}
+           >
+             <List size={16} /> Detalles
+           </button>
+           <button
+             role="tab"
+             aria-selected={activeTab === 'publish'}
+             data-tab="publish"
+             className={`form-tab${activeTab === 'publish' ? ' active' : ''}`}
+             onClick={() => setActiveTab('publish')}
+           >
+             <Building2 size={16} /> Publicación
+           </button>
+           <button
+             role="tab"
+             aria-selected={activeTab === 'owners'}
+             data-tab="owners"
+             className={`form-tab${activeTab === 'owners' ? ' active' : ''}`}
+             onClick={() => setActiveTab('owners')}
+           >
+             <Users size={16} /> Propietarios
+           </button>
+         </div>
       )}
 
       {!loadError && loaded && (
@@ -772,20 +778,20 @@ export function PropertyFormPage() {
               <h3>Vista previa Mercado Libre</h3>
               <button className="icon-btn" onClick={() => setShowMLPreview(false)}><X size={20} /></button>
             </div>
-            <div className="modal-body" style={{ padding: '24px' }}>
-              <div style={{ border: '1px solid var(--bh-border)', borderRadius: '8px', overflow: 'hidden', background: 'white' }}>
-                <div style={{ background: '#f5f5f5', padding: '16px', borderBottom: '1px solid var(--bh-border)' }}>
-                  <h4 style={{ margin: 0, fontSize: '18px', color: '#333' }}>{values.title}</h4>
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+            <div className="modal-body">
+              <div className="ml-preview">
+                <div className="ml-preview-header">
+                  <h4>{values.title}</h4>
+                  <div className="ml-preview-badges">
                     <span className="badge badge--info">{getListingTypeLabel(values.listing_type)}</span>
-                    <span className="badge badge--success" style={{ fontSize: '14px' }}>{values.price ? `${values.currency} ${values.price.toLocaleString('es-AR')}` : 'Precio no definido'}</span>
+                    <span className="badge badge--success">{values.price ? `${values.currency} ${values.price.toLocaleString('es-AR')}` : 'Precio no definido'}</span>
                     <span className="badge badge--neutral">{values.currency}</span>
                   </div>
                 </div>
-                <div style={{ padding: '16px' }}>
-                  <h5 style={{ margin: '0 0 12px', fontSize: '14px' }}>Descripción</h5>
-                  <p style={{ margin: 0, lineHeight: '1.6', color: '#333' }}>{values.description || 'Sin descripción'}</p>
-                  <div style={{ marginTop: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--bh-text-secondary)' }}>
+                <div className="ml-preview-body">
+                  <h5>Descripción</h5>
+                  <p>{values.description || 'Sin descripción'}</p>
+                  <div className="ml-preview-attrs">
                     {values.area_total && <span><strong>Sup. total:</strong> {values.area_total} m²</span>}
                     {values.area_covered && <span><strong>Sup. cubierta:</strong> {values.area_covered} m²</span>}
                     {values.bedrooms && <span><strong>Dormitorios:</strong> {values.bedrooms}</span>}
@@ -795,7 +801,7 @@ export function PropertyFormPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bh-bg-hover)', borderRadius: '8px', fontSize: '12px', color: 'var(--bh-text-tertiary)' }}>
+              <div className="ml-preview-note">
                 <strong>Nota:</strong> Esta es una vista previa aproximada. La publicación final en Mercado Libre puede variar según la configuración de la cuenta y las políticas de la plataforma.
               </div>
             </div>
@@ -805,7 +811,7 @@ export function PropertyFormPage() {
 
       {showMap && (
         <div className="modal-backdrop" onClick={() => setShowMap(false)}>
-          <div className="modal-card modal--large" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+          <div className="modal-card modal--large" onClick={e => e.stopPropagation()}>
             <div className="modal-head">
               <h3>Seleccionar coordenadas en el mapa</h3>
               <button className="icon-btn" onClick={() => setShowMap(false)}><X size={20} /></button>

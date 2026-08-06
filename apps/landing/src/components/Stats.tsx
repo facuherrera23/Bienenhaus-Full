@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useCountUp } from '../hooks/useCountUp';
 import { useReveal } from '../hooks/useReveal';
-import { faIcon, textOf, useSiteContent } from '../lib/content';
+import { textOf, useSiteContent } from '../lib/content';
 import { Building2, Users, Shield, Clock, Gem, ArrowRight } from 'lucide-preact';
 import styles from '../styles/modules/Stats.module.css';
 

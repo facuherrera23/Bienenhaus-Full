@@ -11,7 +11,8 @@
       "@lib/*": ["src/lib/*"],
       "@components/*": ["src/components/*"],
       "@pages/*": ["src/pages/*"],
-      "@store/*": ["src/store/*"]
+      "@store/*": ["src/store/*"],
+      "@bienenhaus/supabase": ["../../packages/bienenhaus-supabase/src"]
     }
   },
   "include": ["src", "vite.config.ts"],

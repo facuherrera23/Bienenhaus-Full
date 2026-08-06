@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { X, Loader2 } from 'lucide-preact';
 
-interface VideoModalProps {
+export interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   videoUrl: string;
@@ -62,11 +63,11 @@ export function VideoModal({ isOpen, onClose, videoUrl, title }: VideoModalProps
           onClick={onClose}
           aria-label="Cerrar video"
         >
-          <i className="fas fa-times"></i>
+          <X className="icon" aria-hidden="true" />
         </button>
         {title && <h2 id="video-modal-title" className="video-modal-title">{title}</h2>}
         <div className="video-modal-wrapper">
-          {isLoading && <div className="video-modal-loader"><i className="fas fa-spinner fa-spin"></i></div>}
+          {isLoading && <div className="video-modal-loader"><Loader2 className="icon spin" aria-hidden="true" /></div>}
           <iframe
             ref={iframeRef}
             src={embedUrl}

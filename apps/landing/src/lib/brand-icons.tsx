@@ -3,8 +3,6 @@
  * These replace FontAwesome brand icons since lucide-preact doesn't include trademarked brand logos
  */
 
-import { type JSX } from 'preact';
-
 interface BrandIconProps {
   size?: string | number;
   color?: string;

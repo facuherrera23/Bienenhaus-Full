@@ -87,7 +87,7 @@ const now = new Date();
               aria-label={`KPI: ${kpi.label}`}
             >
               <span className="kpi-icon" aria-hidden="true">
-                <kpi.icon size={22} strokeWidth={1.8} />
+                <kpi.icon size={20} strokeWidth={1.8} />
               </span>
               <div className="kpi-content">
                 <p className="kpi-label">{kpi.label}</p>

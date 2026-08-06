@@ -278,7 +278,7 @@
   color: var(--bh-text-secondary);
   flex: 1;
   position: relative;
-  z-index: 2.
+  z-index: 2;
 }
 
 .commitmentBar {
@@ -415,22 +415,22 @@
   .stepNumber {
     width: 48px;
     height: 48px;
-    font-size: 22px.
+    font-size: 22px;
   }
   .stepTitle {
-    font-size: var(--bh-text-lg).
+    font-size: var(--bh-text-lg);
   }
   .stepDesc {
-    font-size: var(--bh-text-sm).
+    font-size: var(--bh-text-sm);
   }
   .commitmentBar {
-    padding: var(--bh-space-6) var(--bh-space-5).
-    border-radius: var(--bh-radius-2xl).
+    padding: var(--bh-space-6) var(--bh-space-5);
+    border-radius: var(--bh-radius-2xl);
   }
   .commitmentText {
-    font-size: var(--bh-text-md).
+    font-size: var(--bh-text-md);
   }
   .commitmentSignature {
-    font-size: 24px.
+    font-size: 24px;
   }
 }

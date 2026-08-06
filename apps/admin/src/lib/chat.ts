@@ -485,7 +485,7 @@ export async function markChannelAsRead(channelId: string, agentId: string): Pro
     .select('message_id')
     .eq('agent_id', agentId);
 
-  const readMessageIds = readMessages?.map((m) => m.message_id) ?? [];
+  const readMessageIds = readMessages?.map((m: { message_id: string }) => m.message_id) ?? [];
 
   // Obtener mensajes no leídos
   let query = supabase
@@ -502,7 +502,7 @@ export async function markChannelAsRead(channelId: string, agentId: string): Pro
 
   // Marcar como leídos
   if (unreadMessages?.length) {
-    const reads = unreadMessages.map((m) => ({
+    const reads = unreadMessages.map((m: { id: string }) => ({
       message_id: m.id,
       agent_id: agentId,
       read_at: new Date().toISOString(),
@@ -538,7 +538,7 @@ export function subscribeToChannelMessages(
         table: 'chat_messages',
         filter: `channel_id=eq.${channelId}`,
       },
-      (payload) => {
+      (payload: any) => {
         fetchMessage(payload.new.id).then(onMessage).catch(() => {});
       }
     )
@@ -550,7 +550,7 @@ export function subscribeToChannelMessages(
         table: 'chat_messages',
         filter: `channel_id=eq.${channelId}`,
       },
-      (payload) => {
+      (payload: any) => {
         fetchMessage(payload.new.id).then(onUpdate).catch(() => {});
       }
     )
@@ -562,7 +562,7 @@ export function subscribeToChannelMessages(
         table: 'chat_messages',
         filter: `channel_id=eq.${channelId}`,
       },
-      (payload) => {
+      (payload: any) => {
         onDelete(payload.old.id);
       }
     )

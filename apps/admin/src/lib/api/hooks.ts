@@ -320,7 +320,7 @@ export function useRealtime<T extends Record<string, any>>({
           table,
           filter,
         },
-        (payload) => {
+        (payload: any) => {
           const { onInsert, onUpdate, onDelete, onChange } = callbacksRef.current;
           const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
           const newRecord = payload.new as T | null;

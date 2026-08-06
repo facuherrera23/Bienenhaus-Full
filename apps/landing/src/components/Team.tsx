@@ -2,7 +2,8 @@ import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { useAgents } from '../lib/supabase-data';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
-import { ArrowRight, Linkedin, Whatsapp, Mail, Users, AlertTriangle } from 'lucide-preact';
+import { ArrowRight, Mail, Users, AlertTriangle } from 'lucide-preact';
+import { LinkedinIcon, WhatsappIcon } from '../lib/brand-icons';
 import styles from '../styles/modules/Team.module.css';
 
 const SPECIALTIES = ['Venta Premium', 'Tasaciones', 'Inversiones'];
@@ -105,10 +106,10 @@ export function Team() {
                   </div>
                   <div className={styles.teamSocial}>
                     <button className={styles.socialBtn} aria-label="LinkedIn">
-                      <Linkedin className={styles.icon} aria-hidden="true" />
+                      <LinkedinIcon className={styles.icon} aria-hidden={true} />
                     </button>
                     <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.socialBtn} aria-label="WhatsApp">
-                      <Whatsapp className={styles.icon} aria-hidden="true" />
+                      <WhatsappIcon className={styles.icon} aria-hidden={true} />
                     </a>
                     <button className={styles.socialBtn} aria-label="Email">
                       <Mail className={styles.icon} aria-hidden="true" />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
+import { AlertTriangle } from 'lucide-preact';
 import { supabase } from '../lib/supabase';
 import { authSession, authMustChangePassword } from '../store/app';
 
@@ -37,6 +38,13 @@ function getLockoutRemainingMs(): number {
 function formatLockoutTime(ms: number): string {
   const minutes = Math.ceil(ms / 60000);
   return `${minutes} minuto${minutes > 1 ? 's' : ''}`;
+}
+
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 export function Login() {
@@ -176,9 +184,20 @@ export function Login() {
         {error && <p className="login-error">{error}</p>}
 
         {lockout && (
-          <p className="login-lockout">
-            Cuenta bloqueada. Probá de nuevo en <strong id="lockout-timer">{formatLockoutTime(lockoutRemaining)}</strong>.
-          </p>
+          <div className="login-lockout" role="alert" aria-live="assertive">
+            <span className="login-lockout__icon" aria-hidden="true">
+              <AlertTriangle size={18} strokeWidth={2.25} />
+            </span>
+            <div className="login-lockout__body">
+              <strong className="login-lockout__title">Cuenta bloqueada</strong>
+              <span className="login-lockout__text">
+                Probá de nuevo en{' '}
+                <span className="login-lockout__timer" aria-label={`Tiempo restante: ${formatCountdown(lockoutRemaining)}`}>
+                  {formatCountdown(lockoutRemaining)}
+                </span>
+              </span>
+            </div>
+          </div>
         )}
 
         <button className="btn btn--primary btn--block" type="submit" disabled={loading || lockout}>

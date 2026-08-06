@@ -1,16 +1,34 @@
 import { useRef, useState } from 'preact/hooks';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
-import { VideoModal } from './VideoModal';
+import { ComponentType, lazy, Suspense } from 'preact/compat';
+import type { VideoModalProps } from './VideoModal';
 import {
   ArrowRight,
   Play,
   ChevronDown,
+  Shield,
   Home,
   Users,
   MapPin,
-  Shield,
 } from 'lucide-preact';
 import styles from '../styles/modules/Hero.module.css';
+
+const VideoModal = lazy(() => import('./VideoModal')) as unknown as ComponentType<VideoModalProps>;
+
+// Map FontAwesome icon names to Lucide icons
+function getLucideIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-home': Home,
+    'fa-user-tie': Users,
+    'fa-map-marker-alt': MapPin,
+    'fa-shield-alt': Shield,
+    'fa-crown': Home,
+    'fa-handshake': Users,
+    'fa-clipboard-list': Home,
+    'fa-clock': Shield,
+  };
+  return iconMap[name] || Home;
+}
 
 interface HeroStat {
   icon: string;
@@ -32,21 +50,6 @@ const heroImageSources = [
   { width: 640, avif: '/assets/images/hero/hero-baner-sm.avif', webp: '/assets/images/hero/hero-baner-sm.webp' },
   { width: 320, avif: '/assets/images/hero/hero-baner-xs.avif', webp: '/assets/images/hero/hero-baner-xs.webp' },
 ];
-
-// Map FontAwesome icon names to Lucide icons
-function getLucideIcon(name: string) {
-  const iconMap: Record<string, any> = {
-    'fa-home': Home,
-    'fa-user-tie': Users,
-    'fa-map-marker-alt': MapPin,
-    'fa-shield-alt': Shield,
-    'fa-crown': Home, // fallback
-    'fa-handshake': Users, // fallback
-    'fa-clipboard-list': Home, // fallback
-    'fa-clock': Shield, // fallback
-  };
-  return iconMap[name] || Home;
-}
 
 export function Hero() {
   const featureBarRef = useRef<HTMLDivElement>(null);
@@ -189,12 +192,16 @@ export function Hero() {
         })}
       </div>
 
-      <VideoModal
-        isOpen={showVideo}
-        onClose={() => setShowVideo(false)}
-        videoUrl={videoUrl}
-        title={videoTitle}
-      />
+      {showVideo && (
+        <Suspense fallback={<div className={styles.videoModalLoading}>Cargando video...</div>}>
+          <VideoModal
+            isOpen={showVideo}
+            onClose={() => setShowVideo(false)}
+            videoUrl={videoUrl}
+            title={videoTitle}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }

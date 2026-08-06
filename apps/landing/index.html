@@ -31,12 +31,9 @@
     <link rel="apple-touch-icon" href="/pwa-512x512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Preload critical fonts (above-the-fold: Playfair Display 700 headings, Inter 400 body) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/playfair-display-700-latin.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/inter-400-latin.woff2" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <script type="application/ld+json">

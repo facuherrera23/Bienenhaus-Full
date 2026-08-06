@@ -156,7 +156,7 @@ export async function fetchRecentActivity(limit = 12): Promise<ActivityRow[]> {
 
   if (actError) throw new Error(actError.message);
 
-  const actorIds = [...new Set((activities ?? []).map((a) => a.actor_id).filter((id): id is string => id !== null))];
+  const actorIds = [...new Set((activities ?? []).map((a: ActivityApiRow) => a.actor_id).filter((id): id is string => id !== null))];
 
   let usersById = new Map<string, { full_name: string; email: string }>();
 
@@ -243,7 +243,7 @@ export async function fetchActivity(filters?: ActivityFilters): Promise<{
   if (error) throw new Error(error.message);
 
   // Obtener nombres de actores
-  const actorIds = [...new Set((data ?? []).map((a) => a.actor_id).filter((id): id is string => id !== null))];
+  const actorIds = [...new Set((data ?? []).map((a: ActivityApiRow) => a.actor_id).filter((id): id is string => id !== null))];
   let usersById = new Map<string, { full_name: string; email: string }>();
 
   if (actorIds.length > 0) {
@@ -298,7 +298,7 @@ export async function fetchActivityByEntity(
   if (error) throw new Error(error.message);
 
   // Obtener nombres de actores
-  const actorIds = [...new Set((data ?? []).map((a) => a.actor_id).filter((id): id is string => id !== null))];
+  const actorIds = [...new Set((data ?? []).map((a: ActivityApiRow) => a.actor_id).filter((id): id is string => id !== null))];
   let usersById = new Map<string, { full_name: string; email: string }>();
 
   if (actorIds.length > 0) {
