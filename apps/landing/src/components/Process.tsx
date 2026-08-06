@@ -1,10 +1,23 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
+import { ArrowRight, Award, Users, BarChart2, Megaphone, Handshake, Key } from 'lucide-preact';
+import styles from '../styles/modules/Process.module.css';
 
 interface Step {
   icon: string;
   title: string;
   desc: string;
+}
+
+function getLucideIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-users': Users,
+    'fa-chart-bar': BarChart2,
+    'fa-bullhorn': Megaphone,
+    'fa-handshake': Handshake,
+    'fa-key': Key,
+  };
+  return iconMap[name] || Users;
 }
 
 export function Process() {
@@ -62,51 +75,54 @@ export function Process() {
   }, []);
 
   return (
-    <section className="process" id="proceso" aria-label="Como trabajamos" ref={rootRef}>
+    <section className={styles.process} id="proceso" aria-label="Como trabajamos" ref={rootRef}>
       <div className="container">
-        <header className="process-header">
-          <div className="process-header-left">
-            <span className="process-label">{label}</span>
-            <h2 className="process-title">{title}</h2>
-            <p className="process-desc">{description}</p>
-            <a href="#contacto" className="btn-process">
-              HABLAR CON UN ASESOR <i className="fas fa-arrow-right"></i>
+        <header className={styles.processHeader}>
+          <div className={styles.processHeaderLeft}>
+            <span className={styles.processLabel}>{label}</span>
+            <h2 className={styles.processTitle}>{title}</h2>
+            <p className={styles.processDesc}>{description}</p>
+            <a href="#contacto" className={styles.btnProcess}>
+              HABLAR CON UN ASESOR <ArrowRight className={styles.icon} aria-hidden="true" />
             </a>
           </div>
-          <div className="process-header-right"></div>
+          <div className={styles.processHeaderRight}></div>
         </header>
-        <div className="timeline">
-          <div className="timeline-line">
-            <div className="timeline-line-progress" id="timelineProgress"></div>
+        <div className={styles.timeline}>
+          <div className={styles.timelineLine}>
+            <div className={styles.timelineLineProgress} id="timelineProgress"></div>
           </div>
-          <div className="timeline-dots" id="timelineDots">
+          <div className={styles.timelineDots} id="timelineDots">
             {steps.map((_, i) => (
-              <span className="timeline-dot" data-index={i} key={i}></span>
+              <span className={styles.timelineDot} data-index={i} key={i}></span>
             ))}
           </div>
-          <div className="steps-grid" id="stepsGrid">
-            {steps.map((step, i) => (
-              <article className="step-card" data-delay={i * 120} key={step.title}>
-                <div className="step-number">{`0${i + 1}`}</div>
-                <div className="step-icon" aria-hidden="true">
-                  <i className={step.icon}></i>
-                </div>
-                <h3 className="step-title">{step.title}</h3>
-                <p className="step-desc">{step.desc}</p>
-              </article>
-            ))}
+          <div className={styles.stepsGrid} id="stepsGrid">
+            {steps.map((step, i) => {
+              const StepIcon = getLucideIcon(step.icon);
+              return (
+                <article className={`${styles.stepCard} ${styles.visible}`} data-delay={i * 120} key={step.title}>
+                  <div className={styles.stepNumber}>{`0${i + 1}`}</div>
+                  <div className={styles.stepIcon} aria-hidden="true">
+                    <StepIcon className={styles.icon} aria-hidden="true" />
+                  </div>
+                  <h3 className={styles.stepTitle}>{step.title}</h3>
+                  <p className={styles.stepDesc}>{step.desc}</p>
+                </article>
+              );
+            })}
           </div>
         </div>
-        <div className="commitment-bar" id="commitmentBar">
-          <div className="commitment-icon">
-            <i className="fas fa-award"></i>
+        <div className={styles.commitmentBar} id="commitmentBar">
+          <div className={styles.commitmentIcon}>
+            <Award className={styles.icon} aria-hidden="true" />
             <span>Nuestro compromiso</span>
           </div>
-          <div className="commitment-text">
+          <div className={styles.commitmentText}>
             Transparencia, dedicacion y excelencia en cada etapa del proceso. Tu tranquilidad es
             nuestra prioridad, tu exito nuestro compromiso.
           </div>
-          <div className="commitment-signature">Bienenhaus</div>
+          <div className={styles.commitmentSignature}>Bienenhaus</div>
         </div>
       </div>
     </section>

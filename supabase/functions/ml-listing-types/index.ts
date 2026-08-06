@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { fetchMlListingTypes } from '../_shared/ml.ts';
+import { fetchMlListingTypes, runMlApiCallWithRetry } from '../_shared/ml.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -47,8 +47,11 @@ Deno.serve(async (req) => {
   if (!token) return respond(401, { error: 'No autorizado' });
 
   try {
-    const listingTypes = await fetchMlListingTypes(token);
-    return respond(200, listingTypes);
+    const result = await runMlApiCallWithRetry(token, () => fetchMlListingTypes(token), 'fetchMlListingTypes');
+    if (!result.ok) {
+      return respond(429, { error: result.error, retry_after: 60 });
+    }
+    return respond(200, result.data);
   } catch (err) {
     return respond(500, { error: (err as Error).message });
   }

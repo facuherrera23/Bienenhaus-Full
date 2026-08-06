@@ -34,15 +34,50 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** ML Order response shape from /orders/{order_id} */
+interface MlOrderResponse {
+  id: string;
+  status: string;
+  shipping?: {
+    status: string;
+  };
+  payments?: Array<{
+    status: string;
+  }>;
+  order_items?: Array<{
+    item: {
+      id: number;
+    };
+  }>;
+  buyer?: {
+    id: number;
+    nickname: string;
+  };
+  total_amount?: number;
+  currency_id?: string;
+  date_created?: string;
+  date_closed?: string;
+}
+
+/** ML Question response shape from /questions/{question_id} */
+interface MlQuestionResponse {
+  item_id?: number;
+  text?: string;
+  from?: {
+    user_id?: number;
+    nickname?: string;
+  };
+  date_created?: string;
+}
+
 /**
  * ML envía en x-meli-signature el auth_token fijo registrado al suscribir el tópico
- * (no firma el body). ML_WEBHOOK_SECRET debe ser ese mismo auth_token. Sin secret
- * seteado se acepta en modo degradado para no romper notificaciones existentes.
+ * (no firma el body). ML_WEBHOOK_SECRET debe ser ese mismo auth_token.
+ * Si el secret no está configurado, el webhook rechaza las peticiones (401).
  */
 async function verifySignature(req: Request): Promise<boolean> {
   if (!ML_WEBHOOK_SECRET) {
-    console.warn('ML_WEBHOOK_SECRET no está seteado: webhook sin verificación de firma.');
-    return true;
+    return false;
   }
   const signature = req.headers.get('x-meli-signature');
   if (!signature) return false;
@@ -135,7 +170,7 @@ async function handleQuestions(payload: WebhookPayload): Promise<void> {
         );
 
         try {
-          await sendQuestionAnswer(supabase, questionId, template.message, token);
+          await sendQuestionAnswer(supabase, questionId, template.message, token, `answer:${questionId}`);
         } catch (err) {
           // Si ML rechaza la respuesta, dejamos la pregunta sin responder para retomarla manualmente
           await supabase
@@ -175,7 +210,7 @@ const ORDER_STATUS_TRIGGER: Record<string, string> = {
 };
 
 /** Deriva el estado interno (ml_orders.status) desde la orden de ML. */
-function deriveOrderStatus(order: any): string {
+function deriveOrderStatus(order: MlOrderResponse | null): string {
   if (!order || order.status === 'cancelled') return 'cancelled';
   if (order.status === 'payment_required') return 'new';
 
@@ -183,7 +218,7 @@ function deriveOrderStatus(order: any): string {
   if (shippingStatus === 'delivered') return 'delivered';
   if (shippingStatus === 'shipped' || shippingStatus === 'sent') return 'shipped';
 
-  const approved = (order.payments ?? []).some((p: any) => p?.status === 'approved');
+  const approved = (order.payments ?? []).some((p) => p?.status === 'approved');
   if (approved) return 'paid';
 
   if (order.status === 'confirmed') return 'confirmed';
@@ -203,14 +238,14 @@ async function handleOrders(payload: WebhookPayload): Promise<void> {
   }
 
   // Consultamos la orden en ML para conocer item, comprador y estado
-  let order: any = null;
+  let order: MlOrderResponse | null = null;
   if (token) {
     const res = await fetch(`${ML_API}/orders/${orderId}`, {
       headers: { authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       try {
-        order = await res.json();
+        order = (await res.json()) as MlOrderResponse;
       } catch {
         order = null;
       }
@@ -267,7 +302,7 @@ async function handleOrders(payload: WebhookPayload): Promise<void> {
     const template = await getActiveTemplate(supabase, trigger);
     if (template) {
       try {
-        await sendOrderMessage(supabase, orderId, template.message, token);
+        await sendOrderMessage(supabase, orderId, template.message, token, `order:${orderId}:${status}`);
         console.info(`Auto-reply orden ${orderId} (${trigger}): enviado`);
       } catch (err) {
         console.warn(`Auto-reply orden ${orderId} (${trigger}) falló:`, (err as Error).message);
@@ -325,6 +360,11 @@ async function handleShipments(payload: WebhookPayload): Promise<void> {
 }
 
 Deno.serve(async (req) => {
+  if (!ML_WEBHOOK_SECRET) {
+    console.error('[ml-webhook] ML_WEBHOOK_SECRET missing — webhook disabled');
+    return respond(500, { error: 'ML_WEBHOOK_SECRET not configured' });
+  }
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return respond(405, { error: 'Method not allowed' });
 
@@ -363,6 +403,7 @@ Deno.serve(async (req) => {
     await logWebhookEvent(payload, 'processed');
     return respond(200, { ok: true });
   } catch (err) {
+    console.error('[ml-webhook] handleOrders failed:', err);
     await logWebhookEvent(payload, 'failed', (err as Error).message);
     return respond(500, { error: (err as Error).message });
   }

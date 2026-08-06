@@ -3,14 +3,41 @@ import { contactFieldConfigs } from '../data/contactFieldConfigs';
 import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
+import {
+  Home,
+  DollarSign,
+  Key,
+  TrendingUp,
+  Calculator,
+  MoreHorizontal,
+  MapPin,
+  Mail,
+  Clock,
+  Whatsapp,
+  Instagram,
+  Facebook,
+  Linkedin,
+  UploadCloud,
+  FileText,
+  Image,
+  File,
+  X,
+  CheckCircle,
+  Star,
+  ArrowRight,
+  AlertCircle,
+  Loader2,
+  MessageSquare,
+} from 'lucide-preact';
+import styles from '../styles/modules/Contact.module.css';
 
 const INTENTS = [
-  { value: 'comprar', icon: 'fas fa-home', label: 'Quiero comprar' },
-  { value: 'vender', icon: 'fas fa-hand-holding-usd', label: 'Quiero vender' },
-  { value: 'alquilar', icon: 'fas fa-key', label: 'Quiero alquilar' },
-  { value: 'invertir', icon: 'fas fa-chart-line', label: 'Quiero invertir' },
-  { value: 'tasar', icon: 'fas fa-calculator', label: 'Quiero tasar' },
-  { value: 'otro', icon: 'fas fa-ellipsis-h', label: 'Otro' },
+  { value: 'comprar', icon: 'fa-home', label: 'Quiero comprar' },
+  { value: 'vender', icon: 'fa-hand-holding-usd', label: 'Quiero vender' },
+  { value: 'alquilar', icon: 'fa-key', label: 'Quiero alquilar' },
+  { value: 'invertir', icon: 'fa-chart-line', label: 'Quiero invertir' },
+  { value: 'tasar', icon: 'fa-calculator', label: 'Quiero tasar' },
+  { value: 'otro', icon: 'fa-ellipsis-h', label: 'Otro' },
 ];
 
 const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'whatsapp', 'ciudad'];
@@ -21,10 +48,22 @@ interface AttachedFile {
   type: string;
 }
 
-function fileIcon(type: string): string {
-  if (type.includes('pdf')) return 'fa-file-pdf';
-  if (type.includes('image')) return 'fa-file-image';
-  return 'fa-file';
+function getLucideIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-home': Home,
+    'fa-hand-holding-usd': DollarSign,
+    'fa-key': Key,
+    'fa-chart-line': TrendingUp,
+    'fa-calculator': Calculator,
+    'fa-ellipsis-h': MoreHorizontal,
+  };
+  return iconMap[name] || Home;
+}
+
+function getFileIcon(type: string) {
+  if (type.includes('pdf')) return FileText;
+  if (type.includes('image')) return Image;
+  return File;
 }
 
 export function Contact() {
@@ -46,10 +85,10 @@ export function Contact() {
   );
 
   const contactInfo = [
-    { icon: 'fas fa-map-marker-alt', label: 'Ubicación', value: siteSettings.contact.address || textOf(settings.contact_address, 'value', 'Córdoba, Argentina') },
-    { icon: 'fas fa-envelope', label: 'Email', value: siteSettings.contact.email || textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
-    { icon: 'fas fa-clock', label: 'Horarios', value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}` },
-    { icon: 'fab fa-whatsapp', label: 'WhatsApp', value: whatsappUrl },
+    { icon: 'fa-map-marker-alt', label: 'Ubicación', value: siteSettings.contact.address || textOf(settings.contact_address, 'value', 'Córdoba, Argentina') },
+    { icon: 'fa-envelope', label: 'Email', value: siteSettings.contact.email || textOf(settings.contact_email, 'value', 'info@bienenhaus.com') },
+    { icon: 'fa-clock', label: 'Horarios', value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}` },
+    { icon: 'fa-whatsapp', label: 'WhatsApp', value: whatsappUrl },
   ];
 
   const hours = settings.contact_hours ?? {};
@@ -67,9 +106,9 @@ export function Contact() {
   const config = contactFieldConfigs[intent] ?? contactFieldConfigs.otro;
 
   const groupClass = (name: string): string => {
-    const cls = ['form-group'];
-    if (errors[name]) cls.push('error');
-    else if (tried && values[name]?.trim()) cls.push('success');
+    const cls = [styles.formGroup];
+    if (errors[name]) cls.push(styles.error);
+    else if (tried && values[name]?.trim()) cls.push(styles.success);
     return cls.join(' ');
   };
 
@@ -158,295 +197,307 @@ export function Contact() {
   };
 
   return (
-    <section className="contact" id="contacto" aria-label="Contacto" ref={rootRef}>
+    <section className={styles.contact} id="contacto" aria-label="Contacto" ref={rootRef}>
       <div className="container">
-        <header className="contact-header">
-          <span className="contact-label">{label}</span>
-          <h2 className="contact-title">{title}</h2>
-          <p className="contact-desc">{description}</p>
-          <button className="btn-contact-secondary">
-            Agendar una reunión <i className="fas fa-arrow-right"></i>
+        <header className={styles.contactHeader}>
+          <span className={styles.contactLabel}>{label}</span>
+          <h2 className={styles.contactTitle}>{title}</h2>
+          <p className={styles.contactDesc}>{description}</p>
+          <button className={styles.btnContactSecondary}>
+            Agendar una reunión <ArrowRight className={styles.icon} aria-hidden="true" />
           </button>
         </header>
 
-        <div className="contact-layout">
-          <div className="contact-info" id="contactInfo">
-            <h3 className="contact-info-title">Contacto directo</h3>
-            {contactInfo.map((item) => (
-              <div className="contact-info-item" key={item.label}>
-                <span className="icon">
-                  <i className={item.icon}></i>
-                </span>
-                <div className="content">
-                  <span className="label">{item.label}</span>
-                  <span className="value">{item.value}</span>
+        <div className={styles.contactLayout}>
+          <div className={styles.contactInfo} id="contactInfo">
+            <h3 className={styles.contactInfoTitle}>Contacto directo</h3>
+            {contactInfo.map((item) => {
+              const ContactIcon = getLucideIcon(item.icon);
+              return (
+                <div className={styles.contactInfoItem} key={item.label}>
+                  <span className={styles.icon}>
+                    <ContactIcon className={styles.icon} aria-hidden="true" />
+                  </span>
+                  <div className={styles.content}>
+                    <span className={styles.label}>{item.label}</span>
+                    <span className={styles.value}>{item.value}</span>
+                  </div>
                 </div>
+              );
+            })}
+            <div className={styles.contactResponse}>
+              <div className={styles.responseLabel}>
+                <Clock className={styles.icon} aria-hidden="true" /> Tiempo de respuesta
               </div>
-            ))}
-            <div className="contact-response">
-              <div className="response-label">
-                <i className="fas fa-clock"></i> Tiempo de respuesta
-              </div>
-              <p className="response-text">
+              <p className={styles.responseText}>
                 Respondemos todas las consultas en menos de 24 horas hábiles.
               </p>
-              <div className="response-hours">
-                <div className="hour-block">
-                  <span className="day">Lunes a Viernes</span>
-                  <span className="time">{textOf(hours, 'weekdays', '09:00 - 18:00')}</span>
+              <div className={styles.responseHours}>
+                <div className={styles.hourBlock}>
+                  <span className={styles.day}>Lunes a Viernes</span>
+                  <span className={styles.time}>{textOf(hours, 'weekdays', '09:00 - 18:00')}</span>
                 </div>
-                <div className="hour-block">
-                  <span className="day">Sábados</span>
-                  <span className="time">{textOf(hours, 'saturdays', '09:00 - 13:00')}</span>
+                <div className={styles.hourBlock}>
+                  <span className={styles.day}>Sábados</span>
+                  <span className={styles.time}>{textOf(hours, 'saturdays', '09:00 - 13:00')}</span>
                 </div>
               </div>
             </div>
-            <div className="contact-social">
-              <a href={siteSettings.social.instagram} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="Instagram">
-                <i className="fab fa-instagram"></i>
+            <div className={styles.contactSocial}>
+              <a href={siteSettings.social.instagram} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="Instagram">
+                <Instagram className={styles.icon} aria-hidden="true" />
               </a>
-              <a href={siteSettings.social.facebook} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="Facebook">
-                <i className="fab fa-facebook-f"></i>
+              <a href={siteSettings.social.facebook} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="Facebook">
+                <Facebook className={styles.icon} aria-hidden="true" />
               </a>
-              <a href={siteSettings.social.linkedin} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="LinkedIn">
-                <i className="fab fa-linkedin-in"></i>
+              <a href={siteSettings.social.linkedin} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="LinkedIn">
+                <Linkedin className={styles.icon} aria-hidden="true" />
               </a>
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="social-circle" aria-label="WhatsApp">
-                <i className="fab fa-whatsapp"></i>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.socialCircle} aria-label="WhatsApp">
+                <Whatsapp className={styles.icon} aria-hidden="true" />
               </a>
             </div>
-            <div className="contact-map">
-              <div className="map-placeholder">
-                <i className="fas fa-map"></i>
+            <div className={styles.contactMap}>
+              <div className={styles.mapPlaceholder}>
+                <MapPin className={styles.icon} aria-hidden="true" />
                 <span>Mapa interactivo</span>
               </div>
-              <div className="map-pin"></div>
+              <div className={styles.mapPin}></div>
             </div>
           </div>
 
-          <div className="contact-form-wrapper" id="contactFormWrapper">
+          <div className={styles.contactFormWrapper} id="contactFormWrapper">
             {submitted ? (
-              <div className="submit-success show" id="submitSuccess">
-                <div className="success-icon">
-                  <i className="fas fa-check-circle"></i>
+              <div className={`${styles.submitSuccess} ${styles.show}`} id="submitSuccess">
+                <div className={styles.successIcon}>
+                  <CheckCircle className={styles.icon} aria-hidden="true" />
                 </div>
-                <div className="success-title">¡Consulta enviada!</div>
-                <div className="success-text">
+                <div className={styles.successTitle}>¡Consulta enviada!</div>
+                <div className={styles.successText}>
                   Nuestro equipo se pondrá en contacto contigo en las próximas 24 horas.
                 </div>
               </div>
             ) : (
               <>
-                <div className="form-indicators">
-                  <div className="form-indicator">
-                    <i className="fas fa-star"></i>
+                <div className={styles.formIndicators}>
+                  <div className={styles.formIndicator}>
+                    <Star className={styles.icon} aria-hidden="true" />
                     <span>
-                      <span className="highlight">★★★★★</span> Atención personalizada
+                      <span className={styles.highlight}>★★★★★</span> Atención personalizada
                     </span>
                   </div>
-                  <div className="form-indicator">
-                    <i className="fas fa-clock"></i>
+                  <div className={styles.formIndicator}>
+                    <Clock className={styles.icon} aria-hidden="true" />
                     <span>
-                      <span className="highlight">24h</span> Tiempo de respuesta
+                      <span className={styles.highlight}>24h</span> Tiempo de respuesta
                     </span>
                   </div>
-                  <div className="form-indicator">
-                    <i className="fas fa-check-circle"></i>
+                  <div className={styles.formIndicator}>
+                    <CheckCircle className={styles.icon} aria-hidden="true" />
                     <span>
-                      <span className="highlight">100%</span> Asesoramiento profesional
+                      <span className={styles.highlight}>100%</span> Asesoramiento profesional
                     </span>
                   </div>
                 </div>
                 <form id="contactForm" noValidate onSubmit={handleSubmit}>
-                  <div className="form-pills" id="formPills">
-                    {INTENTS.map((intentOption) => (
-                      <button
-                        type="button"
-                        key={intentOption.value}
-                        className={`form-pill${intent === intentOption.value ? ' active' : ''}`}
-                        data-value={intentOption.value}
-                        onClick={() => setIntent(intentOption.value)}
-                      >
-                        <i className={intentOption.icon}></i> {intentOption.label}
-                      </button>
-                    ))}
+                  <div className={styles.formPills} id="formPills">
+                    {INTENTS.map((intentOption) => {
+                      const IntentIcon = getLucideIcon(intentOption.icon);
+                      return (
+                        <button
+                          type="button"
+                          key={intentOption.value}
+                          className={`${styles.formPill}${intent === intentOption.value ? ` ${styles.active}` : ''}`}
+                          data-value={intentOption.value}
+                          onClick={() => setIntent(intentOption.value)}
+                        >
+                          <IntentIcon className={styles.icon} aria-hidden="true" /> {intentOption.label}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className={styles.formRow}>
                     <div className={groupClass('nombre')} style={{ animationDelay: '0.1s' }}>
                       <label htmlFor="nombre">
-                        Nombre <span className="required">*</span>
+                        Nombre <span className={styles.required}>*</span>
                       </label>
-                      <div className="input-wrapper">
-                        <i className="fas fa-user input-icon"></i>
+                      <div className={styles.inputWrapper}>
+                        <Mail className={styles.inputIcon} aria-hidden="true" />
                         <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
-                        <i className="fas fa-check-circle success-check"></i>
+                        <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>
-                      <span className="error-message">Por favor ingresá tu nombre</span>
+                      <span className={styles.errorMessage}>Por favor ingresá tu nombre</span>
                     </div>
                     <div className={groupClass('apellido')} style={{ animationDelay: '0.15s' }}>
                       <label htmlFor="apellido">
-                        Apellido <span className="required">*</span>
+                        Apellido <span className={styles.required}>*</span>
                       </label>
-                      <div className="input-wrapper">
-                        <i className="fas fa-user input-icon"></i>
+                      <div className={styles.inputWrapper}>
+                        <Mail className={styles.inputIcon} aria-hidden="true" />
                         <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required />
-                        <i className="fas fa-check-circle success-check"></i>
+                        <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>
-                      <span className="error-message">Por favor ingresá tu apellido</span>
+                      <span className={styles.errorMessage}>Por favor ingresá tu apellido</span>
                     </div>
-              </div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  </div>
+                  <div className={styles.formRow}>
                     <div className={groupClass('email')} style={{ animationDelay: '0.2s' }}>
                       <label htmlFor="email">
-                        Correo electrónico <span className="required">*</span>
+                        Correo electrónico <span className={styles.required}>*</span>
                       </label>
-                      <div className="input-wrapper">
-                        <i className="fas fa-envelope input-icon"></i>
+                      <div className={styles.inputWrapper}>
+                        <Mail className={styles.inputIcon} aria-hidden="true" />
                         <input type="email" id="email" name="email" placeholder="tu@email.com" required />
-                        <i className="fas fa-check-circle success-check"></i>
+                        <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>
-                      <span className="error-message">Por favor ingresá un correo válido</span>
+                      <span className={styles.errorMessage}>Por favor ingresá un correo válido</span>
                     </div>
                     <div className={groupClass('whatsapp')} style={{ animationDelay: '0.25s' }}>
                       <label htmlFor="whatsapp">
-                        WhatsApp / Teléfono <span className="required">*</span>
+                        WhatsApp / Teléfono <span className={styles.required}>*</span>
                       </label>
-                      <div className="input-wrapper">
-                        <i className="fab fa-whatsapp input-icon"></i>
+                      <div className={styles.inputWrapper}>
+                        <Whatsapp className={styles.inputIcon} aria-hidden="true" />
                         <input type="tel" id="whatsapp" name="whatsapp" placeholder="+54 9 351 000-0000" required />
-                        <i className="fas fa-check-circle success-check"></i>
+                        <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>
-                      <span className="error-message">Por favor ingresá tu WhatsApp</span>
+                      <span className={styles.errorMessage}>Por favor ingresá tu WhatsApp</span>
                     </div>
                   </div>
-                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className={styles.formRow}>
                     <div className={groupClass('ciudad')} style={{ animationDelay: '0.2s' }}>
                       <label htmlFor="ciudad">
-                        Ciudad <span className="required">*</span>
+                        Ciudad <span className={styles.required}>*</span>
                       </label>
-                      <div className="input-wrapper">
-                        <i className="fas fa-map-marker-alt input-icon"></i>
+                      <div className={styles.inputWrapper}>
+                        <MapPin className={styles.inputIcon} aria-hidden="true" />
                         <input type="text" id="ciudad" name="ciudad" placeholder="¿En qué ciudad estás?" required />
-                        <i className="fas fa-check-circle success-check"></i>
+                        <CheckCircle className={styles.successCheck} aria-hidden="true" />
                       </div>
-                      <span className="error-message">Por favor ingresá tu ciudad</span>
+                      <span className={styles.errorMessage}>Por favor ingresá tu ciudad</span>
                     </div>
                   </div>
 
                   <div id="dynamicFields">
-                    {config.fields.map((field, index) => (
-                      <div className="form-group" style={{ animationDelay: `${0.35 + index * 0.05}s` }} key={field.name}>
-                        <label htmlFor={field.name}>{field.label}</label>
-                        <div className="input-wrapper">
-                          <i className={`${field.icon} input-icon`}></i>
-                          {field.type === 'select' ? (
-                            <select id={field.name} name={field.name}>
-                              {field.options?.map((opt) => (
-                                <option value={opt} key={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          ) : field.type === 'textarea' ? (
-                            <textarea
-                              id={field.name}
-                              name={field.name}
-                              placeholder={field.placeholder || ''}
-                              rows={3}
-                            ></textarea>
-                          ) : (
-                            <input type="text" id={field.name} name={field.name} placeholder={field.placeholder || ''} />
-                          )}
-                          <i className="fas fa-check-circle success-check"></i>
+                    {config.fields.map((field, index) => {
+                      const FieldIcon = getLucideIcon(field.icon);
+                      return (
+                        <div className={styles.formGroup} style={{ animationDelay: `${0.35 + index * 0.05}s` }} key={field.name}>
+                          <label htmlFor={field.name}>{field.label}</label>
+                          <div className={styles.inputWrapper}>
+                            <FieldIcon className={styles.inputIcon} aria-hidden="true" />
+                            {field.type === 'select' ? (
+                              <select id={field.name} name={field.name}>
+                                {field.options?.map((opt) => (
+                                  <option value={opt} key={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : field.type === 'textarea' ? (
+                              <textarea
+                                id={field.name}
+                                name={field.name}
+                                placeholder={field.placeholder || ''}
+                                rows={3}
+                              ></textarea>
+                            ) : (
+                              <input type="text" id={field.name} name={field.name} placeholder={field.placeholder || ''} />
+                            )}
+                            <CheckCircle className={styles.successCheck} aria-hidden="true" />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
-<div className="form-group" style={{ animationDelay: '0.4s' }}>
-                      <label htmlFor="mensaje">Mensaje</label>
-                      <div className="input-wrapper">
-                        <i className="fas fa-comment input-icon"></i>
-                        <textarea id="mensaje" name="mensaje" placeholder="Contanos un poco más sobre lo que necesitás..."></textarea>
-                      </div>
+                  <div className={styles.formGroup} style={{ animationDelay: '0.4s' }}>
+                    <label htmlFor="mensaje">Mensaje</label>
+                    <div className={styles.inputWrapper}>
+                      <MessageSquare className={styles.inputIcon} aria-hidden="true" />
+                      <textarea id="mensaje" name="mensaje" placeholder="Contanos un poco más sobre lo que necesitás..."></textarea>
                     </div>
+                  </div>
 
-<div className="form-group" style={{ animationDelay: '0.45s' }}>
-                      <label htmlFor="fileInput">Adjuntar archivos</label>
-                      <div
-                        className={`drop-zone${dragOver ? ' dragover' : ''}`}
-                        id="dropZone"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setDragOver(true);
+                  <div className={styles.formGroup} style={{ animationDelay: '0.45s' }}>
+                    <label htmlFor="fileInput">Adjuntar archivos</label>
+                    <div
+                      className={`${styles.dropZone}${dragOver ? ` ${styles.dragOver}` : ''}`}
+                      id="dropZone"
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOver(true);
+                      }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOver(false);
+                        if (e.dataTransfer) addFiles(e.dataTransfer.files);
+                      }}
+                    >
+                      <div className={styles.dropIcon}>
+                        <UploadCloud className={styles.icon} aria-hidden="true" />
+                      </div>
+                      <div className={styles.dropText}>
+                        Arrastrá archivos aquí o hacé clic para seleccionarlos
+                      </div>
+                      <div className={styles.dropHint}>PDF, JPG, PNG · Máximo 10MB</div>
+                      <input
+                        type="file"
+                        id="fileInput"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                        onChange={(e) => {
+                          addFiles(e.currentTarget.files);
+                          e.currentTarget.value = '';
                         }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setDragOver(false);
-                          if (e.dataTransfer) addFiles(e.dataTransfer.files);
-                        }}
-                      >
-                        <div className="drop-icon">
-                          <i className="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div className="drop-text">
-                          Arrastrá archivos aquí o hacé clic para seleccionarlos
-                        </div>
-                        <div className="drop-hint">PDF, JPG, PNG · Máximo 10MB</div>
-                        <input
-                          type="file"
-                          id="fileInput"
-                          multiple
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          style={{ display: 'none' }}
-                          ref={fileInputRef}
-                          onChange={(e) => {
-                            addFiles(e.currentTarget.files);
-                            e.currentTarget.value = '';
-                          }}
-                        />
+                      />
                     </div>
                     {files.length > 0 && (
-                      <div className="file-list" id="fileList">
-                        {files.map((file) => (
-                          <div className="file-item" key={file.name}>
-                            <i className={`fas ${fileIcon(file.type)}`}></i>
-                            <span>{file.name}</span>
-                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                              {(file.size / 1024).toFixed(0)}KB
-                            </span>
-                            <span
-                              className="remove-file"
-                              onClick={() => removeFile(file.name)}
-                            >
-                              <i className="fas fa-times"></i>
-                            </span>
-                          </div>
-                        ))}
+                      <div className={styles.fileList} id="fileList">
+                        {files.map((file) => {
+                          const FileIcon = getFileIcon(file.type);
+                          return (
+                            <div className={styles.fileItem} key={file.name}>
+                              <FileIcon className={styles.icon} aria-hidden="true" />
+                              <span>{file.name}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--bh-text-tertiary)' }}>
+                                {(file.size / 1024).toFixed(0)}KB
+                              </span>
+                              <span
+                                className={styles.removeFile}
+                                onClick={() => removeFile(file.name)}
+                              >
+                                <X className={styles.icon} aria-hidden="true" />
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
 
                   <div
-                    className={`checkbox-group form-group${errors.privacy ? ' error' : ''}`}
+                    className={`${styles.checkboxGroup} ${styles.formGroup}${errors.privacy ? ` ${styles.error}` : ''}`}
                     style={{ animationDelay: '0.5s' }}
                   >
                     <input type="checkbox" id="privacy" name="privacy" required />
                     <label htmlFor="privacy">
-                      Acepto la <a href="#">Política de Privacidad</a> <span className="required">*</span>
+                      Acepto la <a href="#">Política de Privacidad</a> <span className={styles.required}>*</span>
                     </label>
                   </div>
 
                   {/* Honeypot - invisible to humans */}
                   <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
 
-                  <button type="submit" className={`btn-submit${loading ? ' loading' : ''}`} id="submitBtn" disabled={loading}>
-                    <span className="btn-text">{loading ? 'ENVIANDO...' : 'ENVIAR CONSULTA'}</span>
-                    <i className="fas fa-arrow-right"></i>
-                    <span className="spinner"></span>
+                  <button type="submit" className={`${styles.btnSubmit}${loading ? ` ${styles.loading}` : ''}`} id="submitBtn" disabled={loading}>
+                    <span className={styles.btnText}>{loading ? 'ENVIANDO...' : 'ENVIAR CONSULTA'}</span>
+                    <ArrowRight className={styles.icon} aria-hidden="true" />
+                    <Loader2 className={styles.spinner} aria-hidden="true" />
                   </button>
                 </form>
               </>

@@ -9,6 +9,9 @@ import {
   mlUploadPictures,
   type MlConnectionRow,
   type MlItem,
+  type MlItemPayload,
+  categorizeMlError,
+  MlErrorType,
 } from '../_shared/ml.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
@@ -40,7 +43,7 @@ async function isAuthorized(req: Request): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? '';
   if (!auth.startsWith('Bearer ')) return false;
   const token = auth.slice(7);
-  if (token && token === Deno.env.get('SERVICE_ROLE_KEY')) return true;
+  // SERVICE_ROLE_KEY auth removed — use JWT + admin role only
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) return false;
@@ -66,6 +69,14 @@ interface PropertyRow {
   bedrooms: number | null;
   bathrooms: number | null;
   garages: number | null;
+  property_type: string | null;
+  rooms: number | null;
+  full_bathrooms: number | null;
+  pets_allowed: boolean | null;
+  has_storage: boolean | null;
+  furnished: boolean | null;
+  maintenance_fee: number | null;
+  inscription_number: string | null;
   images: { url: string; storage_path?: string }[];
 }
 
@@ -73,11 +84,11 @@ async function fetchProperty(id: string): Promise<PropertyRow | null> {
   const { data } = await supabase
     .from('properties')
     .select(
-      'id, title, description, listing_type, price, currency, address, area_total, area_covered, bedrooms, bathrooms, garages, images:property_images(url, storage_path)',
+      'id, title, description, listing_type, price, currency, address, area_total, area_covered, bedrooms, bathrooms, garages, property_type, rooms, full_bathrooms, pets_allowed, has_storage, furnished, maintenance_fee, inscription_number, images:property_images(url, storage_path)',
     )
     .eq('id', id)
     .maybeSingle();
-  return (data as PropertyRow | null) ?? null;
+  return data ?? null;
 }
 
 async function fetchDefaults(): Promise<{ category_id: string; listing_type_id: string; condition: string }> {
@@ -135,8 +146,42 @@ async function prepareImagesForML(
   if (files.length === 0) return [];
 
   // Upload to ML
-  const urls = await mlUploadPictures(accessToken, files);
-  return urls;
+  const result = await runMlApiCall(accessToken, () => mlUploadPictures(accessToken, files), 'mlUploadPictures');
+  if (!result.ok) {
+    console.warn(`[ml-sync] Failed to upload pictures: ${result.error}`);
+    return [];
+  }
+  return result.data;
+}
+
+interface QueueJob {
+  id: number;
+  property_id: string;
+  operation: string;
+  ml_item_id: number | null;
+}
+
+async function runMlApiCall<T>(
+  accessToken: string,
+  fn: () => Promise<T>,
+  operationName: string,
+): Promise<{ ok: true; data: T } | { ok: false; error: string; retryAfter?: number }> {
+  try {
+    const data = await fn();
+    return { ok: true, data };
+  } catch (err) {
+    const categorized = categorizeMlError(err);
+    console.error(`[ml-sync] ${operationName} failed:`, err);
+
+    if (categorized.type === MlErrorType.RATE_LIMIT) {
+      // Try to extract Retry-After from error message or use default
+      const retryAfterMatch = categorized.message.match(/retry[-\s]?after[:\s]+(\d+)/i);
+      const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1], 10) : 60;
+      return { ok: false, error: categorized.message, retryAfter };
+    }
+
+    return { ok: false, error: categorized.message };
+  }
 }
 
 async function runJob(
@@ -151,34 +196,116 @@ async function runJob(
     return { ok: false, error: 'Propiedad no encontrada' };
   }
 
-const defaults = await fetchDefaults();
+  const defaults = await fetchDefaults();
 
-      // Prepare images for ML (download from Supabase storage and upload to ML)
-      const mlImageUrls = await prepareImagesForML(accessToken, property.images);
+  // Prepare images for ML (download from Supabase storage and upload to ML)
+  const mlImageUrls = await prepareImagesForML(accessToken, property.images);
 
-      try {
+try {
         if (operation === 'publish') {
           if (property.price === null || property.price <= 0) {
             return { ok: false, error: 'La propiedad debe tener precio para publicarse' };
           }
-          const payload: Record<string, unknown> = {
-            title: property.title.slice(0, 60),
+
+          // Build ML title per spec: "<operation> <property type> <rooms> amb. <location>"
+          const operationLabel = property.listing_type === 'venta' ? 'Venta' : 'Alquiler';
+          const propertyType = property.property_type ?? 'Departamento';
+          const roomsLabel = property.rooms ?? property.bedrooms ?? 1;
+          const location = property.address?.split(',')[0]?.trim() ?? '';
+          const mlTitle = `${operationLabel} ${propertyType} ${roomsLabel} amb. ${location}`.slice(0, 60);
+
+          // Build real estate attributes array (filter null/undefined)
+          const attributes: Array<{ id: string; value_name: string }> = [];
+
+          // Required: OPERATION
+          attributes.push({ id: 'OPERATION', value_name: property.listing_type === 'venta' ? 'Venta' : 'Alquiler' });
+
+          // Required: PROPERTY_TYPE
+          attributes.push({ id: 'PROPERTY_TYPE', value_name: propertyType });
+
+          // Required: ROOMS (ambientes)
+          attributes.push({ id: 'ROOMS', value_name: String(property.rooms ?? property.bedrooms ?? 1) });
+
+          // Required: BEDROOMS
+          if (property.bedrooms !== null) attributes.push({ id: 'BEDROOMS', value_name: String(property.bedrooms) });
+
+          // Required: FULL_BATHROOMS
+          if (property.full_bathrooms !== null) attributes.push({ id: 'FULL_BATHROOMS', value_name: String(property.full_bathrooms) });
+
+          // Required: BATHROOMS (total)
+          if (property.bathrooms !== null) attributes.push({ id: 'BATHROOMS', value_name: String(property.bathrooms) });
+
+          // COVERED_AREA (superficie cubierta m2)
+          if (property.area_covered !== null) attributes.push({ id: 'COVERED_AREA', value_name: String(property.area_covered) });
+
+          // TOTAL_AREA (superficie total m2)
+          if (property.area_total !== null) attributes.push({ id: 'TOTAL_AREA', value_name: String(property.area_total) });
+
+          // PETS
+          if (property.pets_allowed !== null) attributes.push({ id: 'PETS', value_name: property.pets_allowed ? 'Sí' : 'No' });
+
+          // IS_SUITABLE_FOR_PETS (same as PETS for ML)
+          if (property.pets_allowed !== null) attributes.push({ id: 'IS_SUITABLE_FOR_PETS', value_name: property.pets_allowed ? 'Sí' : 'No' });
+
+          // PARKING
+          if (property.garages !== null && property.garages > 0) attributes.push({ id: 'PARKING', value_name: 'Sí' });
+
+          // STORAGE
+          if (property.has_storage !== null) attributes.push({ id: 'STORAGE', value_name: property.has_storage ? 'Sí' : 'No' });
+
+          // FURNISHED
+          if (property.furnished !== null) attributes.push({ id: 'FURNISHED', value_name: property.furnished ? 'Sí' : 'No' });
+
+          // MAINTENANCE_FEE / COMMON_EXPENSES
+          if (property.maintenance_fee !== null) {
+            attributes.push({ id: 'MAINTENANCE_FEE', value_name: String(property.maintenance_fee) });
+            attributes.push({ id: 'COMMON_EXPENSES', value_name: String(property.maintenance_fee) });
+          }
+
+          // INSCRIPTION_NUMBER (CABA)
+          if (property.inscription_number) attributes.push({ id: 'INSCRIPTION_NUMBER', value_name: property.inscription_number });
+
+          const payload: MlItemPayload = {
+            title: mlTitle,
             price: Number(property.price),
             currency_id: property.currency,
             available_quantity: 1,
             buying_mode: 'buy_it_now',
             condition: defaults.condition === 'used' ? 'used' : 'new',
+            channel: 'marketplace',
+            attributes,
           };
           if (defaults.category_id) payload.category_id = defaults.category_id;
           if (defaults.listing_type_id) payload.listing_type_id = defaults.listing_type_id;
           if (mlImageUrls.length > 0) payload.pictures = mlImageUrls.map(url => ({ source: url }));
 
-      const item = (await mlCreateItem(accessToken, payload as never)) as MlItem;
+          // Idempotency key for publish: queueId + propertyId + operation
+          const idempotencyKey = `${queueId}:${propertyId}:publish`;
 
-      if (property.description) {
-        await mlSetDescription(accessToken, item.id, property.description);
-      }
-      return { ok: true, itemId: Number(item.id), permalink: item.permalink, mlStatus: item.status, price: Number(item.price) };
+          // First attempt
+          let result = await runMlApiCall(accessToken, () => mlCreateItem(accessToken, payload, idempotencyKey), 'mlCreateItem');
+
+          // Retry once on RATE_LIMIT
+          if (!result.ok && result.retryAfter) {
+            console.log(`[ml-sync] Rate limited, waiting ${result.retryAfter}s before retry...`);
+            await new Promise(resolve => setTimeout(resolve, result.retryAfter * 1000));
+            result = await runMlApiCall(accessToken, () => mlCreateItem(accessToken, payload, idempotencyKey), 'mlCreateItem (retry)');
+          }
+
+          if (!result.ok) {
+            return { ok: false, error: result.error };
+          }
+
+          const item = result.data as MlItem;
+
+          if (property.description) {
+            const descIdempotencyKey = `${queueId}:${propertyId}:publish:description`;
+            const descResult = await runMlApiCall(accessToken, () => mlSetDescription(accessToken, item.id, property.description, descIdempotencyKey), 'mlSetDescription');
+            if (!descResult.ok) {
+              console.warn(`[ml-sync] Failed to set description: ${descResult.error}`);
+            }
+          }
+          return { ok: true, itemId: Number(item.id), permalink: item.permalink, mlStatus: item.status, price: Number(item.price) };
     }
 
     if (operation === 'update') {
@@ -191,7 +318,7 @@ const defaults = await fetchDefaults();
           .select('ml_item_id')
           .eq('property_id', propertyId)
           .maybeSingle();
-        itemId = (meta?.ml_item_id ?? null) as number | null;
+        itemId = meta?.ml_item_id ?? null;
       }
       if (!itemId) {
         return { ok: false, error: 'La propiedad no tiene item en Mercado Libre' };
@@ -207,11 +334,35 @@ const defaults = await fetchDefaults();
       const mlImageUrls = await prepareImagesForML(accessToken, property.images);
       if (mlImageUrls.length > 0) patch.pictures = mlImageUrls.map(url => ({ source: url }));
 
-      await mlUpdateItem(accessToken, String(itemId), patch);
-      if (property.description) {
-        await mlSetDescription(accessToken, String(itemId), property.description);
+      // Idempotency key for update: queueId + propertyId + operation
+      const idempotencyKey = `${queueId}:${propertyId}:update`;
+
+      // First attempt
+      let result = await runMlApiCall(accessToken, () => mlUpdateItem(accessToken, String(itemId), patch, idempotencyKey), 'mlUpdateItem');
+
+      // Retry once on RATE_LIMIT
+      if (!result.ok && result.retryAfter) {
+        console.log(`[ml-sync] Rate limited, waiting ${result.retryAfter}s before retry...`);
+        await new Promise(resolve => setTimeout(resolve, result.retryAfter * 1000));
+        result = await runMlApiCall(accessToken, () => mlUpdateItem(accessToken, String(itemId), patch, idempotencyKey), 'mlUpdateItem (retry)');
       }
-      const item = await mlGetItem(accessToken, String(itemId));
+
+      if (!result.ok) {
+        return { ok: false, error: result.error };
+      }
+
+      if (property.description) {
+        const descIdempotencyKey = `${queueId}:${propertyId}:update:description`;
+        const descResult = await runMlApiCall(accessToken, () => mlSetDescription(accessToken, String(itemId), property.description, descIdempotencyKey), 'mlSetDescription');
+        if (!descResult.ok) {
+          console.warn(`[ml-sync] Failed to set description: ${descResult.error}`);
+        }
+      }
+      const itemResult = await runMlApiCall(accessToken, () => mlGetItem(accessToken, String(itemId)), 'mlGetItem');
+      if (!itemResult.ok) {
+        return { ok: false, error: itemResult.error };
+      }
+      const item = itemResult.data as MlItem;
       return { ok: true, itemId, permalink: item.permalink, mlStatus: item.status, price: Number(item.price) };
     }
 
@@ -225,17 +376,34 @@ const defaults = await fetchDefaults();
           .select('ml_item_id')
           .eq('property_id', propertyId)
           .maybeSingle();
-        itemId = (meta?.ml_item_id ?? null) as number | null;
+        itemId = meta?.ml_item_id ?? null;
       }
       if (!itemId) {
         return { ok: false, error: 'La propiedad no tiene item en Mercado Libre' };
       }
-      await mlCloseItem(accessToken, String(itemId));
+
+      // Idempotency key for delete: queueId + propertyId + operation
+      const idempotencyKey = `${queueId}:${propertyId}:delete`;
+
+      // First attempt
+      let result = await runMlApiCall(accessToken, () => mlCloseItem(accessToken, String(itemId), idempotencyKey), 'mlCloseItem');
+
+      // Retry once on RATE_LIMIT
+      if (!result.ok && result.retryAfter) {
+        console.log(`[ml-sync] Rate limited, waiting ${result.retryAfter}s before retry...`);
+        await new Promise(resolve => setTimeout(resolve, result.retryAfter * 1000));
+        result = await runMlApiCall(accessToken, () => mlCloseItem(accessToken, String(itemId), idempotencyKey), 'mlCloseItem (retry)');
+      }
+
+      if (!result.ok) {
+        return { ok: false, error: result.error };
+      }
       return { ok: true, itemId, mlStatus: 'closed' };
     }
 
     return { ok: false, error: `Operación desconocida: ${operation}` };
   } catch (err) {
+    console.error('[ml-sync] job failed:', err);
     return { ok: false, error: (err as Error).message };
   }
 }
@@ -254,7 +422,7 @@ Deno.serve(async (req) => {
     .order('updated_at', { ascending: false })
     .limit(1);
 
-  const conn = (conns?.[0] ?? null) as MlConnectionRow | null;
+  const conn = conns?.[0] ?? null;
   if (!conn) {
     return respond(400, { error: 'No hay una cuenta de Mercado Libre conectada' });
   }
@@ -288,7 +456,7 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown>[] = [];
 
-  for (const job of jobs as { id: number; property_id: string; operation: string; ml_item_id: number | null }[]) {
+  for (const job of jobs as QueueJob[]) {
     const lockId = crypto.randomUUID();
 
     const { data: attemptsRow } = await supabase

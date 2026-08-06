@@ -220,7 +220,7 @@ export function MercadoLibrePage() {
     setEditingTemplate(null);
   };
 
-  const metricsSection = showMetrics && connected && metricsQ.data ? (
+  const metricsSection = showMetrics && connected ? (
     <section className="card">
       <div className="site-section-head">
         <div>
@@ -231,51 +231,79 @@ export function MercadoLibrePage() {
           <X size={16} /> Cerrar
         </button>
       </div>
-      <div className="ml-stats" style={{ marginBottom: '24px' }}>
-        <StatCard label="Visitas totales" value={metricsQ.data.total_visits} />
-        <StatCard label="Preguntas" value={metricsQ.data.total_questions} />
-        <StatCard label="Sin responder" value={metricsQ.data.unanswered_questions} />
-        <StatCard label="Ventas" value={metricsQ.data.total_sales} />
-        <StatCard label="Ingresos (ARS)" value={metricsQ.data.total_revenue} />
-        <StatCard label="Conversion (%)" value={metricsQ.data.conversion_rate} />
-      </div>
-      <div className="card table-card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Publicacion</th>
-              <th>Visitas</th>
-              <th>Preguntas</th>
-              <th>Vendidas</th>
-              <th>Disponibles</th>
-              <th>Precio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {metricsQ.data.items.map((item) => (
-              <tr key={item.item_id}>
-                <td><strong>{item.title}</strong></td>
-                <td className="num">{item.visits}</td>
-                <td className="num">{item.questions}</td>
-                <td className="num">{item.sold_quantity}</td>
-                <td className="num">{item.available_quantity}</td>
-                <td className="num">{`${item.currency_id} ${item.price.toLocaleString('es-AR')}`}</td>
-                <td className="cap">{item.status}</td>
-              </tr>
-            ))}
-            {metricsQ.data.items.length === 0 && (
-              <tr>
-                <td colSpan={7} className="empty-cell">Sin metricas aun.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {metricsQ.isPending && (
+        <div className="ml-skeleton">
+          <div className="skeleton-row">
+            <div className="skeleton-stat"></div>
+            <div className="skeleton-stat"></div>
+            <div className="skeleton-stat"></div>
+            <div className="skeleton-stat"></div>
+            <div className="skeleton-stat"></div>
+            <div className="skeleton-stat"></div>
+          </div>
+          <div className="skeleton-table">
+            <div className="skeleton-row header"></div>
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-row"></div>)}
+          </div>
+        </div>
+      )}
+      {metricsQ.isError && (
+        <div className="ml-error">
+          <p>No se pudieron cargar las metricas.</p>
+          <button className="btn btn--secondary btn--sm" onClick={() => metricsQ.refetch()}>
+            Reintentar
+          </button>
+        </div>
+      )}
+      {metricsQ.data && !metricsQ.isPending && !metricsQ.isError && (
+        <>
+          <div className="ml-stats" style={{ marginBottom: '24px' }}>
+            <StatCard label="Visitas totales" value={metricsQ.data.total_visits} />
+            <StatCard label="Preguntas" value={metricsQ.data.total_questions} />
+            <StatCard label="Sin responder" value={metricsQ.data.unanswered_questions} />
+            <StatCard label="Ventas" value={metricsQ.data.total_sales} />
+            <StatCard label="Ingresos (ARS)" value={metricsQ.data.total_revenue} />
+            <StatCard label="Conversion (%)" value={metricsQ.data.conversion_rate} />
+          </div>
+          <div className="card table-card">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Publicacion</th>
+                  <th>Visitas</th>
+                  <th>Preguntas</th>
+                  <th>Vendidas</th>
+                  <th>Disponibles</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metricsQ.data.items.map((item) => (
+                  <tr key={item.item_id}>
+                    <td><strong>{item.title}</strong></td>
+                    <td className="num">{item.visits}</td>
+                    <td className="num">{item.questions}</td>
+                    <td className="num">{item.sold_quantity}</td>
+                    <td className="num">{item.available_quantity}</td>
+                    <td className="num">{`${item.currency_id} ${item.price.toLocaleString('es-AR')}`}</td>
+                    <td className="cap">{item.status}</td>
+                  </tr>
+                ))}
+                {metricsQ.data.items.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="empty-cell">Sin metricas aun.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   ) : null;
 
-  const questionsSection = showQuestions && connected && questionsQ.data ? (
+  const questionsSection = showQuestions && connected ? (
     <section className="card">
       <div className="site-section-head">
         <div>
@@ -283,68 +311,88 @@ export function MercadoLibrePage() {
           <p>Preguntas de compradores en tus publicaciones. Responde para convertir leads.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className="badge badge--info">{questionsQ.data.filter(q => q.status === 'unanswered').length} sin responder</span>
+          {questionsQ.data && (
+            <span className="badge badge--info">{questionsQ.data.filter(q => q.status === 'unanswered').length} sin responder</span>
+          )}
           <button className="btn btn--ghost btn--sm" onClick={() => setShowQuestions(false)}>
             <X size={16} /> Cerrar
           </button>
         </div>
       </div>
-      <div className="card table-card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Publicacion</th>
-              <th>Pregunta</th>
-              <th>Comprador</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {questionsQ.data.map((q) => (
-              <tr key={q.id}>
-                <td>
-                  <strong>Item #{q.ml_item_id}</strong>
-                </td>
-                <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {q.question_text ?? '-'}
-                </td>
-                <td>
-                  {q.from_user_nickname ?? '-'}
-                  {q.from_user_id && <span className="muted"> (#{q.from_user_id})</span>}
-                </td>
-                <td className="muted">{formatDate(q.date_created)}</td>
-                <td>
-                  <StatusBadge status={q.status === 'unanswered' ? 'pending' : q.status === 'answered' ? 'success' : 'cancelled'} />
-                </td>
-                <td>
-                  {q.status === 'unanswered' && (
-                    <button
-                      className="btn btn--sm btn--primary"
-                      onClick={() => { setSelectedQuestion(q); setReplyText(''); }}
-                    >
-                      <MessageSquare size={14} /> Responder
-                    </button>
-                  )}
-                  {q.status === 'answered' && (
-                    <span className="muted">Respondida</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {questionsQ.data.length === 0 && (
+      {questionsQ.isPending && (
+        <div className="ml-skeleton">
+          <div className="skeleton-table">
+            <div className="skeleton-row header"></div>
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-row"></div>)}
+          </div>
+        </div>
+      )}
+      {questionsQ.isError && (
+        <div className="ml-error">
+          <p>No se pudieron cargar las preguntas.</p>
+          <button className="btn btn--secondary btn--sm" onClick={() => questionsQ.refetch()}>
+            Reintentar
+          </button>
+        </div>
+      )}
+      {questionsQ.data && !questionsQ.isPending && !questionsQ.isError && (
+        <div className="card table-card">
+          <table className="table">
+            <thead>
               <tr>
-                <td colSpan={6} className="empty-cell">No hay preguntas aun.</td>
+                <th>Publicacion</th>
+                <th>Pregunta</th>
+                <th>Comprador</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {questionsQ.data.map((q) => (
+                <tr key={q.id}>
+                  <td>
+                    <strong>Item #{q.ml_item_id}</strong>
+                  </td>
+                  <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {q.question_text ?? '-'}
+                  </td>
+                  <td>
+                    {q.from_user_nickname ?? '-'}
+                    {q.from_user_id && <span className="muted"> (#{q.from_user_id})</span>}
+                  </td>
+                  <td className="muted">{formatDate(q.date_created)}</td>
+                  <td>
+                    <StatusBadge status={q.status === 'unanswered' ? 'pending' : q.status === 'answered' ? 'success' : 'cancelled'} />
+                  </td>
+                  <td>
+                    {q.status === 'unanswered' && (
+                      <button
+                        className="btn btn--sm btn--primary"
+                        onClick={() => { setSelectedQuestion(q); setReplyText(''); }}
+                      >
+                        <MessageSquare size={14} /> Responder
+                      </button>
+                    )}
+                    {q.status === 'answered' && (
+                      <span className="muted">Respondida</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {questionsQ.data.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="empty-cell">No hay preguntas aun.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   ) : null;
 
-  const autoReplySection = showAutoReply && connected && autoReplyQ.data ? (
+  const autoReplySection = showAutoReply && connected ? (
     <section className="card">
       <div className="site-section-head">
         <div>
@@ -363,53 +411,71 @@ export function MercadoLibrePage() {
           </button>
         </div>
       </div>
-      <div className="card table-card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Disparador</th>
-              <th>Mensaje</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {autoReplyQ.data.map((t) => (
-              <tr key={t.id}>
-                <td><strong>{t.name}</strong></td>
-                <td><span className="badge badge--info">{t.trigger}</span></td>
-                <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</td>
-                <td><span className={`badge badge--${t.is_active ? 'success' : 'neutral'}`}>{t.is_active ? 'Activa' : 'Inactiva'}</span></td>
-                <td>
-                  <button
-                    className="btn btn--ghost btn--sm"
-                    onClick={() => { setEditingTemplate(t); setTemplateForm({ name: t.name, trigger: t.trigger, message: t.message, is_active: t.is_active }); setShowAutoReplyModal(true); }}
-                  >
-                    <Edit2 size={14} /> Editar
-                  </button>
-                  <button
-                    className="btn btn--ghost btn--sm"
-                    style={{ color: 'var(--bh-danger)' }}
-                    onClick={() => {
-                      if (confirm('Eliminar plantilla?')) {
-                        void deleteMlAutoReplyTemplate(t.id).then(() => queryClient.invalidateQueries({ queryKey: ['ml-auto-reply'] }));
-                      }
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {autoReplyQ.data.length === 0 && (
+      {autoReplyQ.isPending && (
+        <div className="ml-skeleton">
+          <div className="skeleton-table">
+            <div className="skeleton-row header"></div>
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-row"></div>)}
+          </div>
+        </div>
+      )}
+      {autoReplyQ.isError && (
+        <div className="ml-error">
+          <p>No se pudieron cargar las plantillas.</p>
+          <button className="btn btn--secondary btn--sm" onClick={() => autoReplyQ.refetch()}>
+            Reintentar
+          </button>
+        </div>
+      )}
+      {autoReplyQ.data && !autoReplyQ.isPending && !autoReplyQ.isError && (
+        <div className="card table-card">
+          <table className="table">
+            <thead>
               <tr>
-                <td colSpan={5} className="empty-cell">No hay plantillas aun.</td>
+                <th>Nombre</th>
+                <th>Disparador</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {autoReplyQ.data.map((t) => (
+                <tr key={t.id}>
+                  <td><strong>{t.name}</strong></td>
+                  <td><span className="badge badge--info">{t.trigger}</span></td>
+                  <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</td>
+                  <td><span className={`badge badge--${t.is_active ? 'success' : 'neutral'}`}>{t.is_active ? 'Activa' : 'Inactiva'}</span></td>
+                  <td>
+                    <button
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => { setEditingTemplate(t); setTemplateForm({ name: t.name, trigger: t.trigger, message: t.message, is_active: t.is_active }); setShowAutoReplyModal(true); }}
+                    >
+                      <Edit2 size={14} /> Editar
+                    </button>
+                    <button
+                      className="btn btn--ghost btn--sm"
+                      style={{ color: 'var(--bh-danger)' }}
+                      onClick={() => {
+                        if (confirm('Eliminar plantilla?')) {
+                          void deleteMlAutoReplyTemplate(t.id).then(() => queryClient.invalidateQueries({ queryKey: ['ml-auto-reply'] }));
+                        }
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {autoReplyQ.data.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="empty-cell">No hay plantillas aun.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   ) : null;
 

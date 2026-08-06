@@ -27,7 +27,7 @@ async function isAuthorized(req: Request): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? '';
   if (!auth.startsWith('Bearer ')) return false;
   const token = auth.slice(7);
-  if (token && token === Deno.env.get('SERVICE_ROLE_KEY')) return true;
+  // SERVICE_ROLE_KEY auth removed — use JWT + admin role only
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) return false;
@@ -78,8 +78,11 @@ Deno.serve(async (req) => {
     return respond(500, { error: `No se pudo obtener token: ${(err as Error).message}` });
   }
 
+  // Idempotency key based on question_id
+  const idempotencyKey = `answer:${questionId}`;
+
   try {
-    await sendQuestionAnswer(supabase, questionId, answer, accessToken);
+    await sendQuestionAnswer(supabase, questionId, answer, accessToken, idempotencyKey);
   } catch (err) {
     return respond(502, { error: `No se pudo responder en Mercado Libre: ${(err as Error).message}` });
   }

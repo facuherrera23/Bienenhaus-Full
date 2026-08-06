@@ -1,4 +1,4 @@
-import { useList as useListHook, useMutation, useRpc, useExport, queryKeys, type ExportColumn, type ListOptions } from './api';
+import { useList as useListHook, useMutation, useRpc, useExport, queryKeys, type ExportColumn } from './api';
 import { useQuery } from '@tanstack/react-query';
 import type {
   MlOperation,
@@ -42,54 +42,11 @@ import {
   buildAuthorizeUrl,
   disconnectMl,
   embedProperty,
+  toMlQueueRow,
+  toMlMetaRow,
   type QueueApiRow,
   type MetaApiRow,
 } from './ml';
-
-// ============================================================
-// Wrapper para useList (bypassa problemas de resolución de tipos)
-// ============================================================
-
-function useListMl<T>(options: ListOptions<T>) {
-  return useListHook<T>(options);
-}
-
-// ============================================================
-// Mappers (inline para evitar dependencias circulares)
-// ============================================================
-
-function toMlQueueRow(q: QueueApiRow): MlQueueRow {
-  const prop = embedProperty(q.property);
-  return {
-    id: q.id,
-    property_id: q.property_id,
-    operation: q.operation,
-    status: q.status,
-    attempts: q.attempts,
-    max_attempts: q.max_attempts,
-    next_attempt_at: q.next_attempt_at,
-    ml_item_id: q.ml_item_id,
-    last_error: q.last_error,
-    created_at: q.created_at,
-    property_title: prop.title,
-    property_code: prop.code,
-  };
-}
-
-function toMlMetaRow(m: MetaApiRow): MlMetaRow {
-  const prop = embedProperty(m.property);
-  return {
-    property_id: m.property_id,
-    ml_item_id: m.ml_item_id,
-    status: m.status,
-    permalink: m.permalink,
-    price: m.price === null ? null : Number(m.price),
-    last_sync_at: m.last_sync_at,
-    last_sync_status: m.last_sync_status,
-    property_title: prop.title,
-    property_code: prop.code,
-  };
-}
 
 // ============================================================
 // Query Hooks
@@ -165,7 +122,7 @@ export function useMlQuestions(filters?: {
 
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
-  return useListMl<MlQuestion>({
+  return useListHook<MlQuestion>({
     queryKey: queryKeys.mlQuestions(filters),
     path: 'ml_questions',
     select: '*',
@@ -186,7 +143,7 @@ export function useMlOrders(filters?: {
 
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
-  return useListMl<MlOrder>({
+  return useListHook<MlOrder>({
     queryKey: queryKeys.mlOrders(filters),
     path: 'ml_orders',
     select: '*',
@@ -232,7 +189,7 @@ export function useMlMetrics() {
 // ============================================================
 
 export function useMlAutoReplyTemplates() {
-  return useListMl<MlAutoReplyTemplate>({
+  return useListHook<MlAutoReplyTemplate>({
     queryKey: queryKeys.mlTemplates(),
     path: 'ml_auto_reply_templates',
     select: '*',

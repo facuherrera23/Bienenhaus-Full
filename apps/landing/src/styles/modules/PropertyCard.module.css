@@ -1,0 +1,315 @@
+/**
+ * PropertyCard Module Styles
+ * Extracted from landing.css lines 1331-1590 (Card section)
+ * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
+ */
+
+.cardOperation {
+  display: inline-block;
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-bold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--bh-accent);
+  margin-bottom: var(--bh-space-1);
+}
+
+.propertyCard {
+  background: var(--bh-bg-card);
+  border-radius: var(--bh-radius-3xl);
+  overflow: hidden;
+  border: 1px solid var(--bh-border);
+  transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.propertyCard.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.propertyCard:hover {
+  transform: translateY(-8px) scale(1.01);
+  border-color: var(--bh-accent);
+  box-shadow: var(--bh-shadow-glow-lg);
+}
+
+.cardImageWrapper {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  background: var(--bh-bg-primary);
+}
+
+.cardImageWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--bh-dur-xslow) var(--bh-ease-premium);
+}
+
+.propertyCard:hover .cardImageWrapper img {
+  transform: scale(1.08);
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(5, 7, 8, 0.6) 100%);
+  pointer-events: none;
+}
+
+.cardBadge {
+  position: absolute;
+  top: var(--bh-space-4);
+  left: var(--bh-space-4);
+  background: var(--bh-accent);
+  color: var(--bh-bg-primary);
+  padding: 4px 16px;
+  border-radius: var(--bh-radius-full);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 0 30px var(--bh-accent-glow-soft);
+  backdrop-filter: blur(4px);
+}
+
+.cardFavorite {
+  position: absolute;
+  top: var(--bh-space-4);
+  right: var(--bh-space-4);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--bh-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--bh-text-lg);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  cursor: pointer;
+}
+
+.cardFavorite:hover {
+  color: var(--bh-danger);
+  transform: scale(1.15);
+  border-color: var(--bh-danger);
+  box-shadow: 0 0 20px var(--bh-danger-soft);
+}
+
+.cardFavorite.liked {
+  color: var(--bh-danger);
+}
+
+.cardFavorite.liked svg {
+  font-weight: 900;
+}
+
+.cardBody {
+  padding: var(--bh-space-6) var(--bh-space-6) var(--bh-space-7);
+}
+
+.cardPrice {
+  font-family: var(--bh-font-display);
+  font-size: 32px;
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-1);
+}
+
+.cardTitle {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-xl);
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-1);
+}
+
+.cardLocation {
+  font-size: var(--bh-text-md);
+  color: var(--bh-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  margin-bottom: var(--bh-space-3);
+}
+
+.cardLocation svg {
+  color: var(--bh-accent);
+  font-size: var(--bh-text-sm);
+}
+
+.cardFeatures {
+  display: flex;
+  gap: var(--bh-space-4);
+  padding: var(--bh-space-3) 0;
+  border-top: 1px solid var(--bh-border);
+  border-bottom: 1px solid var(--bh-border);
+  margin-bottom: var(--bh-space-3);
+  flex-wrap: wrap;
+}
+
+.cardFeatures li {
+  font-size: var(--bh-text-sm);
+  color: var(--bh-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  list-style: none;
+}
+
+.cardFeatures svg {
+  color: var(--bh-accent);
+  font-size: var(--bh-text-md);
+}
+
+.cardDesc {
+  font-size: var(--bh-text-md);
+  color: var(--bh-text-tertiary);
+  line-height: 1.5;
+  margin-bottom: var(--bh-space-4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.btnCard {
+  background: transparent;
+  border: none;
+  color: var(--bh-text-secondary);
+  padding: 8px 0;
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-medium);
+  font-family: var(--bh-font-sans);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  cursor: pointer;
+  position: relative;
+}
+
+.btnCard::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--bh-accent);
+  transition: width var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.btnCard:hover {
+  color: var(--bh-accent);
+}
+
+.btnCard:hover::after {
+  width: 100%;
+}
+
+.btnCard svg {
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+  font-size: var(--bh-text-xs);
+}
+
+.btnCard:hover svg {
+  transform: translateX(4px);
+}
+
+/* Heart bounce animation */
+.heartBounce {
+  animation: heartBounce 400ms var(--bh-ease-premium);
+}
+
+@keyframes heartBounce {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Skeleton */
+.skeletonCard {
+  background: var(--bh-bg-card);
+  border-radius: var(--bh-radius-3xl);
+  overflow: hidden;
+  border: 1px solid var(--bh-border);
+}
+
+.skeletonImage {
+  aspect-ratio: 16/10;
+  background: var(--bh-bg-secondary);
+}
+
+.skeletonBody {
+  padding: var(--bh-space-6);
+}
+
+.skeletonLine {
+  background: var(--bh-bg-secondary);
+  border-radius: var(--bh-radius-sm);
+  height: 14px;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, var(--bh-bg-secondary) 25%, var(--bh-bg-card) 50%, var(--bh-bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .propertyCard {
+    border-radius: var(--bh-radius-xl);
+  }
+  .cardBody {
+    padding: var(--bh-space-4) var(--bh-space-4) var(--bh-space-5);
+  }
+  .cardPrice {
+    font-size: 26px;
+  }
+  .cardTitle {
+    font-size: var(--bh-text-lg);
+  }
+  .cardFeatures {
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-2) 0;
+  }
+  .cardFeatures li {
+    font-size: var(--bh-text-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .cardPrice {
+    font-size: 22px;
+  }
+  .cardTitle {
+    font-size: var(--bh-text-md);
+  }
+}

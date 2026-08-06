@@ -2,6 +2,8 @@ import { useReveal } from '../hooks/useReveal';
 import { textOf, useSiteContent } from '../lib/content';
 import { useAgents } from '../lib/supabase-data';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
+import { ArrowRight, Linkedin, Whatsapp, Mail, Users, AlertTriangle } from 'lucide-preact';
+import styles from '../styles/modules/Team.module.css';
 
 const SPECIALTIES = ['Venta Premium', 'Tasaciones', 'Inversiones'];
 
@@ -28,16 +30,16 @@ export function Team() {
 
   if (loading) {
     return (
-      <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
+      <section className={styles.team} id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
         <div className="container">
-          <header className="team-header">
-            <div className="team-header-left">
-              <span className="team-label">{label}</span>
-              <h2 className="team-title">{title}</h2>
-              <p className="team-desc">{description}</p>
+          <header className={styles.teamHeader}>
+            <div className={styles.teamHeaderLeft}>
+              <span className={styles.teamLabel}>{label}</span>
+              <h2 className={styles.teamTitle}>{title}</h2>
+              <p className={styles.teamDesc}>{description}</p>
             </div>
           </header>
-          <div className="team-loading">
+          <div className={styles.teamLoading}>
             <div className="spinner-large"></div>
             <p>Cargando agentes...</p>
           </div>
@@ -48,17 +50,17 @@ export function Team() {
 
   if (error) {
     return (
-      <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
+      <section className={styles.team} id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
         <div className="container">
-          <header className="team-header">
-            <div className="team-header-left">
-              <span className="team-label">{label}</span>
-              <h2 className="team-title">{title}</h2>
-              <p className="team-desc">{description}</p>
+          <header className={styles.teamHeader}>
+            <div className={styles.teamHeaderLeft}>
+              <span className={styles.teamLabel}>{label}</span>
+              <h2 className={styles.teamTitle}>{title}</h2>
+              <p className={styles.teamDesc}>{description}</p>
             </div>
           </header>
-          <div className="team-error">
-            <i className="fas fa-exclamation-triangle"></i>
+          <div className={styles.teamError}>
+            <AlertTriangle className={styles.icon} aria-hidden="true" />
             <p>Error cargando agentes: {error}</p>
           </div>
         </div>
@@ -67,57 +69,57 @@ export function Team() {
   }
 
   return (
-    <section className="team" id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
+    <section className={styles.team} id="equipo" aria-label="Nuestro equipo de expertos" ref={rootRef}>
       <div className="container">
-        <header className="team-header">
-          <div className="team-header-left">
-            <span className="team-label">{label}</span>
-            <h2 className="team-title">{title}</h2>
-            <p className="team-desc">{description}</p>
+        <header className={styles.teamHeader}>
+          <div className={styles.teamHeaderLeft}>
+            <span className={styles.teamLabel}>{label}</span>
+            <h2 className={styles.teamTitle}>{title}</h2>
+            <p className={styles.teamDesc}>{description}</p>
           </div>
-          <div className="team-header-right">
-            <button className="btn-team">
-              CONTACTAR UN ASESOR <i className="fas fa-arrow-right"></i>
+          <div className={styles.teamHeaderRight}>
+            <button className={styles.btnTeam}>
+              CONTACTAR UN ASESOR <ArrowRight className={styles.icon} aria-hidden="true" />
             </button>
           </div>
         </header>
-        <div className="team-grid" id="teamGrid">
+        <div className={styles.teamGrid} id="teamGrid">
           {agents.length > 0 ? (
             agents.map((member, i) => (
-              <article className="team-card" data-delay={i * 120} key={member.name}>
-                <div className="team-image-wrapper">
+              <article className={`${styles.teamCard} ${styles.visible}`} data-delay={i * 120} key={member.name}>
+                <div className={styles.teamImageWrapper}>
                   <img src={member.photo} alt={member.alt} loading="lazy" />
-                  <div className="team-image-overlay"></div>
+                  <div className={styles.teamImageOverlay}></div>
                 </div>
-                <div className="team-body">
-                  <h3 className="team-name">{member.name}</h3>
-                  <p className="team-role">{member.role}</p>
-                  {member.experience && <p className="team-experience">{member.experience}</p>}
-                  <p className="team-bio">{member.bio || 'Asesor inmobiliario con experiencia en el mercado local.'}</p>
-                  <div className="team-specialties">
+                <div className={styles.teamBody}>
+                  <h3 className={styles.teamName}>{member.name}</h3>
+                  <p className={styles.teamRole}>{member.role}</p>
+                  {member.experience && <p className={styles.teamExperience}>{member.experience}</p>}
+                  <p className={styles.teamBio}>{member.bio || 'Asesor inmobiliario con experiencia en el mercado local.'}</p>
+                  <div className={styles.teamSpecialties}>
                     {SPECIALTIES.map((pill) => (
-                      <span className="team-pill" key={pill}>
+                      <span className={styles.teamPill} key={pill}>
                         {pill}
                       </span>
                     ))}
                   </div>
-                  <div className="team-social">
-                    <button className="social-btn" aria-label="LinkedIn">
-                      <i className="fab fa-linkedin-in"></i>
+                  <div className={styles.teamSocial}>
+                    <button className={styles.socialBtn} aria-label="LinkedIn">
+                      <Linkedin className={styles.icon} aria-hidden="true" />
                     </button>
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="social-btn" aria-label="WhatsApp">
-                      <i className="fab fa-whatsapp"></i>
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.socialBtn} aria-label="WhatsApp">
+                      <Whatsapp className={styles.icon} aria-hidden="true" />
                     </a>
-                    <button className="social-btn" aria-label="Email">
-                      <i className="fas fa-envelope"></i>
+                    <button className={styles.socialBtn} aria-label="Email">
+                      <Mail className={styles.icon} aria-hidden="true" />
                     </button>
                   </div>
                 </div>
               </article>
             ))
           ) : (
-            <div className="team-empty">
-              <i className="fas fa-users"></i>
+            <div className={styles.teamEmpty}>
+              <Users className={styles.icon} aria-hidden="true" />
               <p>No hay agentes disponibles.</p>
             </div>
           )}

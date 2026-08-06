@@ -1,5 +1,25 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { PropertyCardData } from '../lib/supabase-data';
+import {
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Hashtag,
+  Share2,
+  MapPin,
+  Bed,
+  Bath,
+  Ruler,
+  Car,
+  Star,
+  Key,
+  Tag,
+  Play,
+  MessageSquare,
+  PaperPlane,
+  ArrowRight,
+} from 'lucide-preact';
+import styles from '../styles/modules/PropertyModal.module.css';
 
 function getYouTubeId(url: string): string | null {
   const patterns = [
@@ -14,10 +34,10 @@ function getYouTubeId(url: string): string | null {
 }
 
 const FEATURE_CONFIG = [
-  { key: 'beds', icon: 'fa-bed', label: 'Dormitorios', unit: '' },
-  { key: 'baths', icon: 'fa-bath', label: 'Baños', unit: '' },
-  { key: 'area', icon: 'fa-ruler-combined', label: 'Superficie', unit: ' m²' },
-  { key: 'garage', icon: 'fa-car', label: 'Cocheras', unit: '' },
+  { key: 'beds', icon: Bed, label: 'Dormitorios', unit: '' },
+  { key: 'baths', icon: Bath, label: 'Baños', unit: '' },
+  { key: 'area', icon: Ruler, label: 'Superficie', unit: ' m²' },
+  { key: 'garage', icon: Car, label: 'Cocheras', unit: '' },
 ] as const;
 
 export function PropertyModal({
@@ -76,7 +96,7 @@ export function PropertyModal({
 
   return (
     <div
-      className="modal-overlay"
+      className={styles.modalOverlay}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -84,18 +104,18 @@ export function PropertyModal({
       aria-describedby="modal-desc"
     >
       <div
-        className="modal-container"
+        className={styles.modalContainer}
         ref={containerRef}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="modal-close" onClick={onClose} aria-label="Cerrar detalle de la propiedad">
-          <i className="fas fa-times" aria-hidden="true"></i>
-          <span className="sr-only">Cerrar</span>
+        <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar detalle de la propiedad">
+          <X className={styles.icon} aria-hidden="true" />
+          <span className={styles.srOnly}>Cerrar</span>
         </button>
 
-        <div className="modal-gallery" role="region" aria-label="Galería de imágenes">
-          <div className="modal-main-image">
+        <div className={styles.modalGallery} role="region" aria-label="Galería de imágenes">
+          <div className={styles.modalMainImage}>
             <img
               src={allImages[activeImage]}
               alt={`${property.alt} - Imagen ${activeImage + 1} de ${allImages.length}`}
@@ -104,43 +124,50 @@ export function PropertyModal({
             {allImages.length > 1 && (
               <>
                 <button
-                  className="gallery-nav gallery-nav--prev"
+                  className={`${styles.galleryNav} ${styles.galleryNavPrev}`}
                   onClick={() => setActiveImage((i) => (i === 0 ? allImages.length - 1 : i - 1))}
                   aria-label="Imagen anterior"
                 >
-                  <i className="fas fa-chevron-left" aria-hidden="true"></i>
+                  <ChevronLeft className={styles.icon} aria-hidden="true" />
                 </button>
                 <button
-                  className="gallery-nav gallery-nav--next"
+                  className={`${styles.galleryNav} ${styles.galleryNavNext}`}
                   onClick={() => setActiveImage((i) => (i === allImages.length - 1 ? 0 : i + 1))}
                   aria-label="Imagen siguiente"
                 >
-                  <i className="fas fa-chevron-right" aria-hidden="true"></i>
+                  <ChevronRight className={styles.icon} aria-hidden="true" />
                 </button>
-                <div className="gallery-counter" aria-live="polite">
+                <div className={styles.galleryCounter} aria-live="polite">
                   {activeImage + 1} / {allImages.length}
                 </div>
               </>
             )}
-            <div className="modal-badges">
+            <div className={styles.modalBadges}>
               {property.featured && (
-                <span className="badge badge--featured">
-                  <i className="fas fa-star" aria-hidden="true"></i> DESTACADA
+                <span className={`${styles.badge} ${styles.badgeFeatured}`}>
+                  <Star className={styles.icon} aria-hidden="true" /> DESTACADA
                 </span>
               )}
-              <span className={`badge badge--operation badge--${property.operation}`}>
-                <i className={property.operation === 'alquiler' ? 'fas fa-key' : 'fas fa-tag'} aria-hidden="true"></i>
-                {property.operation === 'alquiler' ? 'Alquiler' : 'Venta'}
+              <span className={`${styles.badge} ${styles.badgeOperation} ${property.operation === 'alquiler' ? styles.badgeOperationRent : styles.badgeOperationSale}`}>
+                {property.operation === 'alquiler' ? (
+                  <>
+                    <Key className={styles.icon} aria-hidden="true" /> Alquiler
+                  </>
+                ) : (
+                  <>
+                    <Tag className={styles.icon} aria-hidden="true" /> Venta
+                  </>
+                )}
               </span>
             </div>
           </div>
 
           {allImages.length > 1 && (
-            <div className="gallery-thumbs" role="tablist" aria-label="Miniaturas">
+            <div className={styles.galleryThumbs} role="tablist" aria-label="Miniaturas">
               {allImages.map((img, idx) => (
                 <button
                   key={img}
-                  className={`gallery-thumb${idx === activeImage ? ' active' : ''}`}
+                  className={`${styles.galleryThumb}${idx === activeImage ? ` ${styles.active}` : ''}`}
                   role="tab"
                   aria-selected={idx === activeImage}
                   aria-label={`Ver imagen ${idx + 1}`}
@@ -148,24 +175,24 @@ export function PropertyModal({
                   onKeyDown={(e) => handleThumbKey(e, idx)}
                 >
                   <img src={img} alt="" aria-hidden="true" loading="lazy" />
-                  {idx === activeImage && <span className="thumb-indicator" aria-hidden="true"></span>}
+                  {idx === activeImage && <span className={styles.thumbIndicator} aria-hidden="true"></span>}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="modal-content">
-          <div className="modal-header">
-            <div className="modal-meta">
+        <div className={styles.modalContent}>
+          <div className={styles.modalHeader}>
+            <div className={styles.modalMeta}>
               {property.code && (
-                <span className="property-code" id="modal-code">
-                  <i className="fas fa-hashtag" aria-hidden="true"></i> Ref: {property.code}
+                <span className={styles.propertyCode} id="modal-code">
+                  <Hashtag className={styles.icon} aria-hidden="true" /> Ref: {property.code}
                 </span>
               )}
-              <div className="modal-share" title="Compartir propiedad">
+              <div className={styles.modalShare} title="Compartir propiedad">
                 <button
-                  className="share-btn"
+                  className={styles.shareBtn}
                   onClick={async () => {
                     if (navigator.share) {
                       await navigator.share({
@@ -179,27 +206,27 @@ export function PropertyModal({
                   }}
                   aria-label="Compartir propiedad"
                 >
-                  <i className="fas fa-share-alt" aria-hidden="true"></i>
+                  <Share2 className={styles.icon} aria-hidden="true" />
                 </button>
               </div>
             </div>
-            <h2 id="modal-title" className="modal-title">{property.title}</h2>
-            <div className="modal-location">
-              <i className="fas fa-map-pin" aria-hidden="true"></i>
+            <h2 id="modal-title" className={styles.modalTitle}>{property.title}</h2>
+            <div className={styles.modalLocation}>
+              <MapPin className={styles.icon} aria-hidden="true" />
               <span>{property.location}</span>
             </div>
-            <div className="modal-price">{property.price}</div>
+            <div className={styles.modalPrice}>{property.price}</div>
           </div>
 
-          <div className="modal-features" role="list" aria-label="Características principales">
+          <div className={styles.modalFeatures} role="list" aria-label="Características principales">
             {features.map((f) => (
-              <div key={f.key} className="modal-feature" role="listitem">
-                <div className="feature-icon" aria-hidden="true">
-                  <i className={`fas ${f.icon}`}></i>
+              <div key={f.key} className={styles.modalFeature} role="listitem">
+                <div className={styles.featureIcon} aria-hidden="true">
+                  <f.icon className={styles.icon} aria-hidden="true" />
                 </div>
-                <div className="feature-info">
-                  <span className="feature-label">{f.label}</span>
-                  <span className="feature-value">
+                <div className={styles.featureInfo}>
+                  <span className={styles.featureLabel}>{f.label}</span>
+                  <span className={styles.featureValue}>
                     {f.value}{f.unit}
                   </span>
                 </div>
@@ -208,10 +235,10 @@ export function PropertyModal({
           </div>
 
           {videoId && !isVideoPlaying && (
-            <div className="modal-video" id="modal-video">
+            <div className={styles.modalVideo} id="modal-video">
               <h3>Video de la propiedad</h3>
-              <div className="video-wrapper" onClick={() => setIsVideoPlaying(true)}>
-                <div className="video-placeholder">
+              <div className={styles.videoWrapper} onClick={() => setIsVideoPlaying(true)}>
+                <div className={styles.videoPlaceholder}>
                   <iframe
                     src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1`}
                     title={`Video de ${property.title}`}
@@ -221,9 +248,9 @@ export function PropertyModal({
                     allowFullScreen
                     loading="lazy"
                   ></iframe>
-                  <div className="video-play-overlay">
-                    <button className="video-play-btn" aria-label="Reproducir video">
-                      <i className="fas fa-play" aria-hidden="true"></i>
+                  <div className={styles.videoPlayOverlay}>
+                    <button className={styles.videoPlayBtn} aria-label="Reproducir video">
+                      <Play className={styles.icon} aria-hidden="true" />
                     </button>
                   </div>
                 </div>
@@ -232,9 +259,9 @@ export function PropertyModal({
           )}
 
           {videoId && isVideoPlaying && (
-            <div className="modal-video video-playing" id="modal-video">
+            <div className={`${styles.modalVideo} ${styles.videoPlaying}`} id="modal-video">
               <h3>Video de la propiedad</h3>
-              <div className="video-wrapper">
+              <div className={styles.videoWrapper}>
                 <iframe
                   src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
                   title={`Video de ${property.title} (reproduciendo)`}
@@ -247,29 +274,29 @@ export function PropertyModal({
             </div>
           )}
 
-          <div className="modal-description" id="modal-desc">
+          <div className={styles.modalDescription} id="modal-desc">
             <h3>Descripción</h3>
             <p>{property.desc}</p>
           </div>
 
-          <div className="modal-actions">
+          <div className={styles.modalActions}>
             <a
               href="/#contacto"
-              className="btn btn--primary modal-cta"
+              className={`${styles.modalCta} ${styles.btnPrimary}`}
               onClick={onClose}
             >
-              CONTACTAR <i className="fas fa-arrow-right" aria-hidden="true"></i>
+              CONTACTAR <ArrowRight className={styles.icon} aria-hidden="true" />
             </a>
           </div>
         </div>
 
-        <div className="modal-sticky-cta" role="complementary" aria-label="Acción rápida">
+        <div className={styles.modalStickyCta} role="complementary" aria-label="Acción rápida">
           <a
             href="/#contacto"
-            className="btn btn--primary btn--full"
+            className={`${styles.btnPrimary} ${styles.fullWidth}`}
             onClick={onClose}
           >
-            <i className="fas fa-paper-plane" aria-hidden="true"></i>
+            <PaperPlane className={styles.icon} aria-hidden="true" />
             CONSULTAR AHORA
           </a>
         </div>

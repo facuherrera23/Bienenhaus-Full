@@ -2,6 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { useCountUp } from '../hooks/useCountUp';
 import { useReveal } from '../hooks/useReveal';
 import { faIcon, textOf, useSiteContent } from '../lib/content';
+import { Building2, Users, Shield, Clock, Gem, ArrowRight } from 'lucide-preact';
+import styles from '../styles/modules/Stats.module.css';
 
 interface Stat {
   target: number;
@@ -18,48 +20,59 @@ function buildStats(settingsStats: Record<string, unknown>): Stat[] {
     {
       target: n('comercializadas', 320),
       suffix: '+',
-      icon: 'fas fa-building',
+      icon: 'fa-building',
       title: 'Propiedades comercializadas',
       desc: 'Más de trescientas operaciones exitosas concretadas.',
     },
     {
       target: n('clientes', 1850),
       suffix: '+',
-      icon: 'fas fa-users',
+      icon: 'fa-users',
       title: 'Clientes satisfechos',
       desc: 'Personas que confiaron en nuestro equipo.',
     },
     {
       target: n('exito', 98),
       suffix: '%',
-      icon: 'fas fa-shield-alt',
+      icon: 'fa-shield-alt',
       title: 'Operaciones exitosas',
       desc: 'Resultados respaldados por experiencia y compromiso.',
     },
     {
       target: n('anios', 15),
       suffix: ' años',
-      icon: 'fas fa-clock',
+      icon: 'fa-clock',
       title: 'Construyendo confianza',
       desc: 'Trayectoria acompañando a compradores e inversores.',
     },
   ];
 }
 
+function getLucideIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-building': Building2,
+    'fa-users': Users,
+    'fa-shield-alt': Shield,
+    'fa-clock': Clock,
+  };
+  return iconMap[name] || Building2;
+}
+
 function StatCard({ stat, started, delay }: { stat: Stat; started: boolean; delay: number }) {
   const value = useCountUp(stat.target, started);
+  const StatIcon = getLucideIcon(stat.icon);
   return (
-    <div className="stat-card" data-delay={delay}>
-      <div className="stat-card-content">
-        <div className="stat-card-icon" aria-hidden="true">
-          <i className={faIcon(stat.icon)}></i>
+    <div className={`${styles.statCard} ${styles.visible}`} data-delay={delay}>
+      <div className={styles.statCardContent}>
+        <div className={styles.statCardIcon} aria-hidden="true">
+          <StatIcon className={styles.icon} aria-hidden="true" />
         </div>
-        <div className="stat-card-number">
-          <span className="stat-number-value">{value}</span>
-          <span className="accent-symbol">{stat.suffix}</span>
+        <div className={styles.statCardNumber}>
+          <span className={styles.statNumberValue}>{value}</span>
+          <span className={styles.accentSymbol}>{stat.suffix}</span>
         </div>
-        <h3 className="stat-card-title">{stat.title}</h3>
-        <p className="stat-card-desc">{stat.desc}</p>
+        <h3 className={styles.statCardTitle}>{stat.title}</h3>
+        <p className={styles.statCardDesc}>{stat.desc}</p>
       </div>
     </div>
   );
@@ -103,28 +116,28 @@ export function Stats() {
   }, [rootRef]);
 
   return (
-    <section className="stats-premium" id="estadisticas" aria-label="Nuestras estadísticas" ref={rootRef}>
+    <section className={styles.statsPremium} id="estadisticas" aria-label="Nuestras estadísticas" ref={rootRef}>
       <div className="container">
-        <header className="stats-header">
-          <span className="stats-label">{label}</span>
-          <h2 className="stats-title">{title}</h2>
-          <p className="stats-desc">{description}</p>
+        <header className={styles.statsHeader}>
+          <span className={styles.statsLabel}>{label}</span>
+          <h2 className={styles.statsTitle}>{title}</h2>
+          <p className={styles.statsDesc}>{description}</p>
         </header>
-        <div className="stats-grid" id="statsGrid">
+        <div className={styles.statsGrid} id="statsGrid">
           {stats.map((stat, i) => (
             <StatCard key={stat.title} stat={stat} started={started} delay={i * 120} />
           ))}
         </div>
-        <div className="stats-cta" id="statsCta">
-          <div className="stats-cta-icon">
-            <i className="fas fa-gem"></i>
+        <div className={styles.statsCta} id="statsCta">
+          <div className={styles.statsCtaIcon}>
+            <Gem className={styles.icon} aria-hidden="true" />
             <span>Más que cifras</span>
           </div>
-          <div className="stats-cta-text">
+          <div className={styles.statsCtaText}>
             Construimos relaciones duraderas basadas en confianza, transparencia y resultados.
           </div>
-          <button className="btn-stats">
-            VER NUESTRAS PROPIEDADES <i className="fas fa-arrow-right"></i>
+          <button className={styles.btnStats}>
+            VER NUESTRAS PROPIEDADES <ArrowRight className={styles.icon} aria-hidden="true" />
           </button>
         </div>
       </div>

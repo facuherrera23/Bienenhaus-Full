@@ -5,6 +5,16 @@ import { textOf, useSiteContent } from '../lib/content';
 import { PropertyCard } from './PropertyCard';
 import { PropertyModal } from './PropertyModal';
 import { useProperties, type PropertyCardData } from '../lib/supabase-data';
+import {
+  Search,
+  ChevronDown,
+  ArrowRight,
+  Grid,
+  List,
+  Map,
+  AlertTriangle,
+} from 'lucide-preact';
+import styles from '../styles/modules/Catalog.module.css';
 
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -146,7 +156,7 @@ export function Catalog() {
     const y = e.clientY - rect.top - size / 2;
 
     const ripple = document.createElement('span');
-    ripple.className = 'ripple';
+    ripple.className = styles.ripple;
     ripple.style.width = ripple.style.height = `${size}px`;
     ripple.style.left = `${x}px`;
     ripple.style.top = `${y}px`;
@@ -156,16 +166,16 @@ export function Catalog() {
 
   if (loading) {
     return (
-      <main className="catalog" id="catalogo" ref={rootRef}>
+      <main className={styles.catalog} id="catalogo" ref={rootRef}>
         <div className="container">
-          <header className="catalog-header">
-            <div className="catalog-header-left">
-              <span className="catalog-label">{label}</span>
-              <h2 className="catalog-title">{title}</h2>
-              <p className="catalog-desc">{description}</p>
+          <header className={styles.catalogHeader}>
+            <div className={styles.catalogHeaderLeft}>
+              <span className={styles.catalogLabel}>{label}</span>
+              <h2 className={styles.catalogTitle}>{title}</h2>
+              <p className={styles.catalogDesc}>{description}</p>
             </div>
           </header>
-          <div className="catalog-loading">
+          <div className={styles.catalogLoading}>
             <div className="spinner-large"></div>
             <p>Cargando propiedades...</p>
           </div>
@@ -176,19 +186,19 @@ export function Catalog() {
 
   if (error) {
     return (
-      <main className="catalog" id="catalogo" ref={rootRef}>
+      <main className={styles.catalog} id="catalogo" ref={rootRef}>
         <div className="container">
-          <header className="catalog-header">
-            <div className="catalog-header-left">
-              <span className="catalog-label">{label}</span>
-              <h2 className="catalog-title">{title}</h2>
-              <p className="catalog-desc">{description}</p>
+          <header className={styles.catalogHeader}>
+            <div className={styles.catalogHeaderLeft}>
+              <span className={styles.catalogLabel}>{label}</span>
+              <h2 className={styles.catalogTitle}>{title}</h2>
+              <p className={styles.catalogDesc}>{description}</p>
             </div>
           </header>
-          <div className="catalog-error">
-            <i className="fas fa-exclamation-triangle"></i>
+          <div className={styles.catalogError}>
+            <AlertTriangle className={styles.icon} aria-hidden="true" />
             <p>Error cargando propiedades: {error}</p>
-            <button className="btn-outline" onClick={refetch}>Reintentar</button>
+            <button className={styles.btnOutline} onClick={refetch}>Reintentar</button>
           </div>
         </div>
       </main>
@@ -197,31 +207,31 @@ export function Catalog() {
 
   return (
     <>
-      <main className="catalog" id="catalogo" ref={rootRef} aria-label="Catálogo de propiedades">
+      <main className={styles.catalog} id="catalogo" ref={rootRef} aria-label="Catálogo de propiedades">
         <div className="container">
-          <header className="catalog-header">
-            <div className="catalog-header-left">
-              <span className="catalog-label">{label}</span>
-              <h2 className="catalog-title">{title}</h2>
-              <p className="catalog-desc">{description}</p>
+          <header className={styles.catalogHeader}>
+            <div className={styles.catalogHeaderLeft}>
+              <span className={styles.catalogLabel}>{label}</span>
+              <h2 className={styles.catalogTitle}>{title}</h2>
+              <p className={styles.catalogDesc}>{description}</p>
             </div>
-            <div className="catalog-header-right">
-              <button className="btn-outline" onClick={resetFilters}>
-                VER TODAS <i className="fas fa-arrow-right"></i>
+            <div className={styles.catalogHeaderRight}>
+              <button className={styles.btnOutline} onClick={resetFilters}>
+                VER TODAS <ArrowRight className={styles.icon} aria-hidden="true" />
               </button>
             </div>
           </header>
 
-          <div className="search-bar">
-            <div className="search-group">
+          <div className={styles.searchBar}>
+            <div className={styles.searchGroup}>
               <label htmlFor="search-input">Buscar</label>
               <div
-                className="search-input-wrapper"
+                className={styles.searchInputWrapper}
                 style={{
                   boxShadow: searchFocused ? '0 0 20px rgba(32, 184, 171, 0.08)' : 'none',
                 }}
               >
-                <i className="fas fa-search"></i>
+                <Search className={styles.icon} aria-hidden="true" />
                 <input
                   id="search-input"
                   type="text"
@@ -239,7 +249,7 @@ export function Catalog() {
                 />
               </div>
             </div>
-            <div className="search-group">
+            <div className={styles.searchGroup}>
               <label htmlFor="operation-select">Operación</label>
               <select id="operation-select" value={operation} onChange={(e) => setOperation((e.currentTarget as HTMLSelectElement).value)}>
                 <option value="">Todas</option>
@@ -247,7 +257,7 @@ export function Catalog() {
                 <option value="alquiler">Alquiler</option>
               </select>
             </div>
-            <div className="search-group">
+            <div className={styles.searchGroup}>
               <label htmlFor="location-select">Ubicación</label>
               <select id="location-select" value={location} onChange={(e) => setLocation((e.currentTarget as HTMLSelectElement).value)}>
                 {LOCATIONS.map((l) => (
@@ -257,7 +267,7 @@ export function Catalog() {
                 ))}
               </select>
             </div>
-            <div className="search-group">
+            <div className={styles.searchGroup}>
               <label htmlFor="price-select">Precio</label>
               <select id="price-select" value={priceRange} onChange={(e) => setPriceRange((e.currentTarget as HTMLSelectElement).value)}>
                 {PRICE_RANGES.map((r) => (
@@ -267,15 +277,15 @@ export function Catalog() {
                 ))}
               </select>
             </div>
-            <div className="search-group">
+            <div className={styles.searchGroup}>
               <label>Dormitorios</label>
-              <div className="bedroom-pills">
+              <div className={styles.bedroomPills}>
                 {['1', '2', '3', '4+'].map((value, i) => {
                   const num = i + 1;
                   return (
                     <button
                       key={value}
-                      className={`pill${bedroom === num ? ' active' : ''}`}
+                      className={`${styles.pill}${bedroom === num ? ` ${styles.active}` : ''}`}
                       onClick={() => setBedroom((b) => (b === num ? 0 : num))}
                     >
                       {value}
@@ -284,37 +294,37 @@ export function Catalog() {
                 })}
               </div>
             </div>
-            <button className="btn-search" id="searchBtn" onClick={handleSearchRipple}>
-              BUSCAR <i className="fas fa-arrow-right"></i>
+            <button className={styles.btnSearch} id="searchBtn" onClick={handleSearchRipple}>
+              BUSCAR <ArrowRight className={styles.icon} aria-hidden="true" />
             </button>
           </div>
 
-          <div className="filters-section">
-            <div className="filters-pills">
+          <div className={styles.filtersSection}>
+            <div className={styles.filtersPills}>
               {FILTERS.map((value) => (
                 <button
                   key={value}
-                  className={`filter-pill${typeFilter === value ? ' active' : ''}`}
+                  className={`${styles.filterPill}${typeFilter === value ? ` ${styles.active}` : ''}`}
                   onClick={() => setTypeFilter((v) => (v === value ? '' : value))}
                 >
                   {value.charAt(0).toUpperCase() + value.slice(1)}
                 </button>
               ))}
             </div>
-            <div className="filters-right">
-              <span className="results-count">
+            <div className={styles.filtersRight}>
+              <span className={styles.resultsCount}>
                 {sorted.length} {sorted.length === 1 ? 'propiedad' : 'propiedades'}
               </span>
-              <div className="dropdown-wrapper">
+              <div className={styles.dropdownWrapper}>
                 <button
-                  className={`dropdown-trigger${sortOpen ? ' open' : ''}`}
+                  className={`${styles.dropdownTrigger}${sortOpen ? ` ${styles.open}` : ''}`}
                   id="sortTrigger"
                   onClick={() => setSortOpen((o) => !o)}
                 >
-                  {sortLabel} <i className="fas fa-chevron-down"></i>
+                  {sortLabel} <ChevronDown className={styles.icon} aria-hidden="true" />
                 </button>
                 {sortOpen && (
-                  <ul className="dropdown-menu open" id="sortMenu" role="listbox">
+                  <ul className={`${styles.dropdownMenu} ${styles.open}`} id="sortMenu" role="listbox">
                     {SORT_OPTIONS.map((option) => (
                       <li
                         key={option}
@@ -330,21 +340,21 @@ export function Catalog() {
                   </ul>
                 )}
               </div>
-              <div className="view-toggles">
+              <div className={styles.viewToggles}>
                 {(
                   [
-                    ['grid', 'fas fa-th'],
-                    ['list', 'fas fa-list'],
-                    ['map', 'fas fa-map'],
+                    ['grid', Grid],
+                    ['list', List],
+                    ['map', Map],
                   ] as const
-                ).map(([mode, icon]) => (
+                ).map(([mode, Icon]) => (
                   <button
                     key={mode}
-                    className={`view-btn${view === mode ? ' active' : ''}`}
+                    className={`${styles.viewBtn}${view === mode ? ` ${styles.active}` : ''}`}
                     data-view={mode}
                     onClick={() => setView(mode)}
                   >
-                    <i className={icon}></i>
+                    <Icon className={styles.icon} aria-hidden="true" />
                   </button>
                 ))}
               </div>
@@ -352,17 +362,17 @@ export function Catalog() {
           </div>
 
           {sorted.length === 0 && (
-            <div className="catalog-empty">
-              <i className="fas fa-search"></i>
+            <div className={styles.catalogEmpty}>
+              <Search className={styles.icon} aria-hidden="true" />
               <p>No encontramos propiedades con esos criterios.</p>
-              <button className="btn-outline" onClick={resetFilters}>
+              <button className={styles.btnOutline} onClick={resetFilters}>
                 Limpiar filtros
               </button>
             </div>
           )}
 
           <div
-            className="catalog-grid"
+            className={styles.catalogGrid}
             id="catalogGrid"
             ref={gridRef}
             style={{ gridTemplateColumns: gridTemplateColumns(view, viewportW) }}
@@ -378,11 +388,11 @@ export function Catalog() {
           </div>
 
           {hasMore && (
-            <div className="load-more-wrapper">
-              <button className="btn-load-more" onClick={loadMore}>
-                CARGAR MÁS <i className="fas fa-chevron-down"></i>
+            <div className={styles.loadMoreWrapper}>
+              <button className={styles.btnLoadMore} onClick={loadMore}>
+                CARGAR MÁS <ArrowRight className={styles.icon} aria-hidden="true" />
               </button>
-              <p className="load-more-hint">
+              <p className={styles.loadMoreHint}>
                 Mostrando {displayed.length} de {sorted.length} propiedades
               </p>
             </div>

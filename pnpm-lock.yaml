@@ -148,6 +148,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.111.0
+      lucide-preact:
+        specifier: ^1.28.0
+        version: 1.28.0(preact@10.29.7)
       preact:
         specifier: ^10.26.0
         version: 10.29.7

@@ -78,7 +78,7 @@ export function embedProperty(
 // Mappers
 // ============================================================
 
-function toMlQueueRow(q: QueueApiRow): MlQueueRow {
+export function toMlQueueRow(q: QueueApiRow): MlQueueRow {
   const prop = embedProperty(q.property);
   return {
     id: q.id,
@@ -96,7 +96,7 @@ function toMlQueueRow(q: QueueApiRow): MlQueueRow {
   };
 }
 
-function toMlMetaRow(m: MetaApiRow): MlMetaRow {
+export function toMlMetaRow(m: MetaApiRow): MlMetaRow {
   const prop = embedProperty(m.property);
   return {
     property_id: m.property_id,
@@ -130,7 +130,7 @@ const ML_META_SELECT = `
 export async function fetchMlOverview(): Promise<MlOverview> {
   const { data, error } = await supabase.rpc('ml_get_connection');
   if (error) throw new Error(error.message);
-  return ((data as unknown) ?? { ml_enabled: false, connection: null }) as MlOverview;
+  return (data ?? { ml_enabled: false, connection: null }) as unknown as MlOverview;
 }
 
 export async function setMlEnabled(enabled: boolean): Promise<void> {
@@ -159,13 +159,13 @@ async function upsertSetting(key: string, value: Record<string, unknown>): Promi
   if (data) {
     const { error } = await supabase
       .from('site_settings')
-      .update({ value: value as unknown as Json })
+      .update({ value: value as Json })
       .eq('id', data.id);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from('site_settings')
-      .insert({ key, value: value as unknown as Json, value_type: 'json', is_public: false });
+      .insert({ key, value: value as Json, value_type: 'json', is_public: false });
     if (error) throw new Error(error.message);
   }
 }
@@ -230,10 +230,11 @@ export async function fetchMlQueue(): Promise<MlQueueRow[]> {
     .from('ml_sync_queue')
     .select(ML_QUEUE_SELECT)
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(50)
+    .returns<QueueApiRow[]>();
 
   if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as QueueApiRow[]).map(toMlQueueRow);
+  return (data ?? []).map(toMlQueueRow);
 }
 
 // ============================================================
@@ -244,10 +245,11 @@ export async function fetchMlMeta(): Promise<MlMetaRow[]> {
   const { data, error } = await supabase
     .from('property_ml_meta')
     .select(ML_META_SELECT)
-    .order('last_sync_at', { ascending: false });
+    .order('last_sync_at', { ascending: false })
+    .returns<MetaApiRow[]>();
 
   if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as MetaApiRow[]).map(toMlMetaRow);
+  return (data ?? []).map(toMlMetaRow);
 }
 
 // ============================================================
@@ -291,7 +293,8 @@ export async function fetchMlQuestions(): Promise<MlQuestion[]> {
     .from('ml_questions')
     .select('*')
     .order('received_at', { ascending: false })
-    .limit(50);
+    .limit(50)
+    .returns<Database['public']['Tables']['ml_questions']['Row'][]>();
 
   if (error) throw new Error(error.message);
   return (data ?? []) as MlQuestion[];
@@ -302,7 +305,8 @@ export async function fetchMlOrders(): Promise<MlOrder[]> {
     .from('ml_orders')
     .select('*')
     .order('received_at', { ascending: false })
-    .limit(50);
+    .limit(50)
+    .returns<Database['public']['Tables']['ml_orders']['Row'][]>();
 
   if (error) throw new Error(error.message);
   return (data ?? []) as MlOrder[];
@@ -334,7 +338,8 @@ export async function fetchMlAutoReplyTemplates(): Promise<MlAutoReplyTemplate[]
   const { data, error } = await supabase
     .from('ml_auto_reply_templates')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .returns<Database['public']['Tables']['ml_auto_reply_templates']['Row'][]>();
 
   if (error) throw new Error(error.message);
   return (data ?? []) as MlAutoReplyTemplate[];
@@ -347,7 +352,8 @@ export async function createMlAutoReplyTemplate(
     .from('ml_auto_reply_templates')
     .insert(template)
     .select()
-    .single();
+    .single()
+    .returns<Database['public']['Tables']['ml_auto_reply_templates']['Row']>();
 
   if (error) throw new Error(error.message);
   return data as MlAutoReplyTemplate;
@@ -362,7 +368,8 @@ export async function updateMlAutoReplyTemplate(
     .update(template)
     .eq('id', id)
     .select()
-    .single();
+    .single()
+    .returns<Database['public']['Tables']['ml_auto_reply_templates']['Row']>();
 
   if (error) throw new Error(error.message);
   return data as MlAutoReplyTemplate;

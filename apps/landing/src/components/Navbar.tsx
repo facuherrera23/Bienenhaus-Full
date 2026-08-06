@@ -2,6 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { textOf, useSiteContent } from '../lib/content';
 import { images } from '../lib/images';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
+import { ArrowRight, Whatsapp, Heart, Menu, X } from 'lucide-preact';
+import styles from '../styles/modules/Navbar.module.css';
 
 const NAV_ITEMS = [
   { href: '#inicio', label: 'Inicio' },
@@ -44,49 +46,49 @@ export function Navbar() {
 
   return (
     <>
-      <header className={`navbar${scrolled ? ' is-scrolled' : ''}`} id="navbar" role="banner">
-        <div className="navbar-inner container">
-          <a href="#inicio" className="logo" aria-label={siteName}>
-            <img src={logoSrc} alt={siteName} className="logo-img" />
+      <header className={`${styles.navbar}${scrolled ? ` ${styles.isScrolled}` : ''}`} id="navbar" role="banner">
+        <div className={styles.navbarInner}>
+          <a href="#inicio" className={styles.logo} aria-label={siteName}>
+            <img src={logoSrc} alt={siteName} className={styles.logoImg} />
           </a>
 
-          <nav className="nav-menu" role="navigation" aria-label="Navegación principal">
+          <nav className={styles.navMenu} role="navigation" aria-label="Navegación principal">
             {NAV_ITEMS.map((item, i) => (
-              <a key={`${item.href}-${i}`} href={item.href} className={i === 0 ? 'is-active' : ''} aria-label={item.label}>
+              <a key={`${item.href}-${i}`} href={item.href} className={i === 0 ? styles.isActive : ''} aria-label={item.label}>
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <div className="nav-actions">
-            <a href="#" className="btn-publish" aria-label="Publicar propiedad">
+          <div className={styles.navActions}>
+            <a href="#" className={styles.btnPublish} aria-label="Publicar propiedad">
               PUBLICAR PROPIEDAD
-              <i className="fas fa-arrow-right"></i>
+              <ArrowRight className={styles.icon} aria-hidden="true" />
             </a>
             <button
-              className="icon-btn"
+              className={styles.iconBtn}
               id="whatsappBtn"
               aria-label="WhatsApp"
               onClick={() => window.open(whatsappUrl, '_blank')}
             >
-              <i className="fab fa-whatsapp"></i>
+              <Whatsapp className={styles.icon} aria-hidden="true" />
             </button>
             <button
-              className={`icon-btn${fav ? ' is-active' : ''}`}
+              className={`${styles.iconBtn}${fav ? ` ${styles.isActive}` : ''}`}
               id="favBtn"
               aria-label="Favoritos"
               onClick={() => setFav((f) => !f)}
             >
-              <i className={fav ? 'fas fa-heart' : 'far fa-heart'}></i>
+              <Heart className={styles.icon} aria-hidden="true" fill={fav ? 'currentColor' : 'none'} />
             </button>
             <button
-              className="icon-btn"
+              className={styles.iconBtn}
               id="menuBtn"
               aria-label="Menú"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((o) => !o)}
             >
-              <span className="hamburger-lines">
+              <span className={styles.hamburgerLines}>
                 <span></span>
                 <span></span>
                 <span></span>
@@ -96,8 +98,8 @@ export function Navbar() {
         </div>
       </header>
 
-<nav
-        className={`mobile-menu${menuOpen ? ' is-open' : ''}`}
+      <nav
+        className={`${styles.mobileMenu}${menuOpen ? ` ${styles.isOpen}` : ''}`}
         id="mobileMenu"
         role="navigation"
         aria-label="Navegación móvil"
@@ -106,7 +108,7 @@ export function Navbar() {
           <a
             key={`${item.href}-${i}`}
             href={item.href}
-            className={i === 0 ? 'is-active' : ''}
+            className={i === 0 ? styles.isActive : ''}
             onClick={() => setMenuOpen(false)}
             aria-label={item.label}
           >

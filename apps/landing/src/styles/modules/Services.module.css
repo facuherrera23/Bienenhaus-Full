@@ -1,0 +1,273 @@
+/**
+ * Services Module Styles
+ * Extracted from landing.css lines 1592-1813
+ * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
+ */
+
+.services {
+  padding: var(--bh-space-25) 0 var(--bh-space-30);
+  background: var(--bh-bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.services::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(31, 200, 195, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.services::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(31, 200, 195, 0.02) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.services .container {
+  position: relative;
+  z-index: 1;
+}
+
+.servicesHeader {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto var(--bh-space-15);
+}
+
+.servicesLabel {
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-semibold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--bh-accent);
+  display: block;
+  margin-bottom: var(--bh-space-4);
+}
+
+.servicesTitle {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-7xl);
+  font-weight: var(--bh-weight-bold);
+  line-height: 1.05;
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-5);
+}
+
+.servicesTitle .highlight {
+  color: var(--bh-accent);
+  font-style: italic;
+}
+
+.servicesDesc {
+  font-size: var(--bh-text-lg);
+  line-height: 1.7;
+  color: var(--bh-text-secondary);
+  max-width: 560px;
+  margin: 0 auto var(--bh-space-7);
+  font-weight: var(--bh-weight-normal);
+}
+
+.servicesHeader .btnOutline {
+  margin: 0 auto;
+}
+
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--bh-space-7);
+  margin-top: var(--bh-space-5);
+}
+
+.serviceCard {
+  background: var(--bh-bg-card);
+  border-radius: var(--bh-radius-3xl);
+  padding: var(--bh-space-10) var(--bh-space-8) var(--bh-space-8);
+  border: 1px solid var(--bh-border);
+  transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+  opacity: 0;
+  transform: translateY(40px);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+
+.serviceCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(31, 200, 195, 0.06) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.serviceCard:hover::before {
+  opacity: 1;
+}
+
+.serviceCard::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--bh-radius-3xl);
+  border: 1px solid transparent;
+  transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.serviceCard:hover::after {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 30px var(--bh-accent-glow-soft), inset 0 0 30px rgba(31, 200, 195, 0.03);
+}
+
+.serviceCard.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.serviceCard:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.serviceIcon {
+  font-size: 42px;
+  color: var(--bh-accent);
+  margin-bottom: var(--bh-space-5);
+  display: inline-block;
+  transition: transform var(--bh-dur-xslow) var(--bh-ease-premium);
+  position: relative;
+  z-index: 3;
+}
+
+.serviceCard:hover .serviceIcon {
+  transform: rotate(-6deg) scale(1.05);
+}
+
+.serviceCard h3 {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-xl);
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-3);
+  position: relative;
+  z-index: 3;
+}
+
+.serviceCard p {
+  font-size: var(--bh-text-md);
+  line-height: 1.7;
+  color: var(--bh-text-secondary);
+  margin-bottom: var(--bh-space-5);
+  position: relative;
+  z-index: 3;
+}
+
+.serviceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  font-size: var(--bh-text-md);
+  font-weight: var(--bh-weight-medium);
+  color: var(--bh-text-secondary);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  position: relative;
+  z-index: 3;
+  background: none;
+  border: none;
+  font-family: var(--bh-font-sans);
+  cursor: pointer;
+  padding: 0;
+}
+
+.serviceLink::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--bh-accent);
+  transition: width var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.serviceLink:hover {
+  color: var(--bh-accent);
+}
+
+.serviceLink:hover::after {
+  width: 100%;
+}
+
+.serviceLink svg {
+  font-size: var(--bh-text-sm);
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.serviceLink:hover svg {
+  transform: translateX(6px);
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .servicesTitle {
+    font-size: var(--bh-text-5xl);
+  }
+  .servicesGrid {
+    gap: var(--bh-space-6);
+  }
+}
+
+@media (max-width: 1024px) {
+  .servicesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .servicesTitle {
+    font-size: var(--bh-text-4xl);
+  }
+  .services {
+    padding: var(--bh-space-20) 0 var(--bh-space-25);
+  }
+}
+
+@media (max-width: 768px) {
+  .services {
+    padding: var(--bh-space-20) 0 var(--bh-space-25);
+  }
+  .servicesGrid {
+    grid-template-columns: 1fr;
+    gap: var(--bh-space-5);
+  }
+  .servicesTitle {
+    font-size: var(--bh-text-3xl);
+  }
+  .servicesDesc {
+    font-size: var(--bh-text-md);
+  }
+  .serviceCard {
+    padding: var(--bh-space-8) var(--bh-space-6) var(--bh-space-7);
+  }
+  .serviceIcon {
+    font-size: 34px;
+  }
+  .serviceCard h3 {
+    font-size: var(--bh-text-lg);
+  }
+  .serviceCard p {
+    font-size: var(--bh-text-md);
+  }
+}

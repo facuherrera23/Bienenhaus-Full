@@ -9,6 +9,24 @@ export const ML_AUTH_URL = 'https://auth.mercadolibre.com.ar/authorization';
 export const ML_TOKEN_URL = 'https://api.mercadolibre.com/oauth/token';
 export const ML_API = 'https://api.mercadolibre.com';
 
+/**
+ * Fetch con timeout configurable usando AbortController.
+ * Default: 15 segundos.
+ */
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs = 15000,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export interface MlTokenResponse {
   access_token: string;
   token_type: string;
@@ -32,7 +50,7 @@ export async function exchangeCode(
   redirectUri: string,
 ): Promise<MlTokenResponse> {
   const { clientId, clientSecret } = credentials();
-  const res = await fetch(ML_TOKEN_URL, {
+  const res = await fetchWithTimeout(ML_TOKEN_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
@@ -55,7 +73,7 @@ export async function exchangeCode(
 
 export async function refreshToken(refresh: string): Promise<MlTokenResponse> {
   const { clientId, clientSecret } = credentials();
-  const res = await fetch(ML_TOKEN_URL, {
+  const res = await fetchWithTimeout(ML_TOKEN_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
@@ -124,7 +142,7 @@ export interface MlUser {
 }
 
 export async function getMe(accessToken: string): Promise<MlUser> {
-  const res = await fetch(`${ML_API}/users/me`, {
+  const res = await fetchWithTimeout(`${ML_API}/users/me`, {
     headers: { authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`ML getMe falló (${res.status})`);
@@ -159,15 +177,20 @@ async function api(
   path: string,
   accessToken: string,
   init?: RequestInit,
+  idempotencyKey?: string,
 ): Promise<unknown> {
-  const res = await fetch(`${ML_API}${path}`, {
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${accessToken}`,
+    'content-type': 'application/json',
+    accept: 'application/json',
+    ...(init?.headers ?? {}),
+  };
+  if (idempotencyKey) {
+    headers['x-idempotency-key'] = idempotencyKey;
+  }
+  const res = await fetchWithTimeout(`${ML_API}${path}`, {
     ...init,
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-      accept: 'application/json',
-      ...(init?.headers ?? {}),
-    },
+    headers,
   });
   const text = await res.text();
   if (!res.ok) {
@@ -176,27 +199,28 @@ async function api(
   return text ? (JSON.parse(text) as unknown) : null;
 }
 
-export function mlCreateItem(accessToken: string, payload: MlItemPayload): Promise<unknown> {
-  return api('/items', accessToken, { method: 'POST', body: JSON.stringify(payload) });
+export function mlCreateItem(accessToken: string, payload: MlItemPayload, idempotencyKey?: string): Promise<unknown> {
+  return api('/items', accessToken, { method: 'POST', body: JSON.stringify(payload) }, idempotencyKey);
 }
 
-export function mlUpdateItem(accessToken: string, itemId: string, payload: Record<string, unknown>): Promise<unknown> {
-  return api(`/items/${itemId}`, accessToken, { method: 'PUT', body: JSON.stringify(payload) });
+export function mlUpdateItem(accessToken: string, itemId: string, payload: Record<string, unknown>, idempotencyKey?: string): Promise<unknown> {
+  return api(`/items/${itemId}`, accessToken, { method: 'PUT', body: JSON.stringify(payload) }, idempotencyKey);
 }
 
 export function mlSetDescription(
   accessToken: string,
   itemId: string,
   plainText: string,
+  idempotencyKey?: string,
 ): Promise<unknown> {
   return api(`/items/${itemId}/description`, accessToken, {
     method: 'PUT',
     body: JSON.stringify({ plain_text: plainText.slice(0, 20000) }),
-  });
+  }, idempotencyKey);
 }
 
-export function mlCloseItem(accessToken: string, itemId: string): Promise<unknown> {
-  return mlUpdateItem(accessToken, itemId, { status: 'closed' });
+export function mlCloseItem(accessToken: string, itemId: string, idempotencyKey?: string): Promise<unknown> {
+  return mlUpdateItem(accessToken, itemId, { status: 'closed' }, idempotencyKey);
 }
 
 export function mlGetItem(accessToken: string, itemId: string): Promise<MlItem> {
@@ -232,17 +256,23 @@ export async function mlUploadPicture(
   accessToken: string,
   file: Uint8Array<ArrayBuffer>,
   fileName: string,
-  contentType: string
+  contentType: string,
+  idempotencyKey?: string,
 ): Promise<MlPictureUploadResponse> {
   const formData = new FormData();
   const blob = new Blob([file], { type: 'image/jpeg' });
   formData.append('file', blob, fileName);
 
-  const res = await fetch(`${ML_API}/pictures`, {
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${accessToken}`,
+  };
+  if (idempotencyKey) {
+    headers['x-idempotency-key'] = idempotencyKey;
+  }
+
+  const res = await fetchWithTimeout(`${ML_API}/pictures`, {
     method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-    },
+    headers,
     body: formData,
   });
 
@@ -255,12 +285,13 @@ export async function mlUploadPicture(
 
 export async function mlUploadPictures(
   accessToken: string,
-  files: Array<{ data: Uint8Array<ArrayBuffer>; name: string; type: string }>
+  files: Array<{ data: Uint8Array<ArrayBuffer>; name: string; type: string }>,
+  idempotencyKey?: string,
 ): Promise<string[]> {
   const urls: string[] = [];
   for (const file of files) {
     try {
-      const result = await mlUploadPicture(accessToken, file.data, file.name, file.type);
+      const result = await mlUploadPicture(accessToken, file.data, file.name, file.type, idempotencyKey);
       // Usar la primera variación (original) como URL principal
       const mainVariation = result.variations.find(v => v.id === 'original') || result.variations[0];
       if (mainVariation?.url) {
@@ -338,6 +369,67 @@ export function isRetryableError(err: unknown, statusCode?: number): boolean {
 }
 
 // ============================================================
+// Rate-limited API call wrapper with retry logic
+// ============================================================
+
+export interface MlApiCallResult<T> {
+  ok: true;
+  data: T;
+} | {
+  ok: false;
+  error: string;
+  retryAfter?: number;
+}
+
+/**
+ * Ejecuta una llamada a la API de Mercado Libre con manejo de rate limiting.
+ * Si recibe 429, extrae el header Retry-After (o usa 60s por defecto),
+ * espera y reintenta una vez.
+ */
+export async function runMlApiCall<T>(
+  accessToken: string,
+  fn: () => Promise<T>,
+  operationName: string,
+): Promise<MlApiCallResult<T>> {
+  try {
+    const data = await fn();
+    return { ok: true, data };
+  } catch (err) {
+    const categorized = categorizeMlError(err);
+    console.error(`[ml-api] ${operationName} failed:`, err);
+
+    if (categorized.type === MlErrorType.RATE_LIMIT) {
+      // Try to extract Retry-After from error message or use default
+      const retryAfterMatch = categorized.message.match(/retry[-\s]?after[:\s]+(\d+)/i);
+      const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1], 10) : 60;
+      return { ok: false, error: categorized.message, retryAfter };
+    }
+
+    return { ok: false, error: categorized.message };
+  }
+}
+
+/**
+ * Ejecuta una llamada a la API de ML con reintento automático en caso de rate limit.
+ * Versión de conveniencia que hace el wait + retry internamente.
+ */
+export async function runMlApiCallWithRetry<T>(
+  accessToken: string,
+  fn: () => Promise<T>,
+  operationName: string,
+): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
+  const result = await runMlApiCall(accessToken, fn, operationName);
+  
+  if (!result.ok && result.retryAfter) {
+    console.log(`[ml-api] Rate limited on ${operationName}, waiting ${result.retryAfter}s before retry...`);
+    await new Promise(resolve => setTimeout(resolve, result.retryAfter * 1000));
+    return await runMlApiCall(accessToken, fn, `${operationName} (retry)`);
+  }
+  
+  return result;
+}
+
+// ============================================================
 // Categories and Listing Types
 // ============================================================
 
@@ -353,7 +445,7 @@ export interface MlListingType {
 
 export async function fetchMlCategories(accessToken: string): Promise<MlCategory[]> {
   // Get categories for Argentina real estate (MLA1459 = Inmuebles)
-  const res = await fetch(`${ML_API}/sites/MLA/categories/MLA1459`, {
+  const res = await fetchWithTimeout(`${ML_API}/sites/MLA/categories/MLA1459`, {
     headers: { authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`ML categories falló (${res.status})`);
@@ -362,7 +454,7 @@ export async function fetchMlCategories(accessToken: string): Promise<MlCategory
 }
 
 export async function fetchMlListingTypes(accessToken: string): Promise<MlListingType[]> {
-  const res = await fetch(`${ML_API}/sites/MLA/listing_types`, {
+  const res = await fetchWithTimeout(`${ML_API}/sites/MLA/listing_types`, {
     headers: { authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`ML listing_types falló (${res.status})`);

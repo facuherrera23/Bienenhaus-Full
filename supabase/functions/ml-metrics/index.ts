@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { getAccessToken, type MlConnectionRow } from '../_shared/ml.ts';
+import { getAccessToken, type MlConnectionRow, categorizeMlError, MlErrorType } from '../_shared/ml.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -15,6 +15,39 @@ const CORS = {
   'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
 };
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Ejecuta un fetch a la API de ML con manejo de rate limiting (429).
+ * Si recibe 429, extrae Retry-After header, espera y reintenta una vez.
+ */
+async function fetchMlWithRetry(
+  url: string,
+  options: RequestInit,
+  operationName: string,
+  timeoutMs = 10000,
+): Promise<Response> {
+  const res = await fetchWithTimeout(url, options, timeoutMs);
+  
+  if (res.status === 429) {
+    const retryAfterHeader = res.headers.get('retry-after');
+    const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
+    console.log(`[ml-metrics] Rate limited on ${operationName}, waiting ${retryAfter}s before retry...`);
+    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+    return await fetchWithTimeout(url, options, timeoutMs);
+  }
+  
+  return res;
+}
 
 function respond(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -67,6 +100,11 @@ interface MlItemMetrics {
   permalink: string;
 }
 
+interface MlVisitsResponse {
+  item_id: string;
+  visits: number;
+}
+
 interface MlQuestionsResponse {
   questions: Array<{
     id: string;
@@ -91,6 +129,16 @@ interface MlOrdersResponse {
   }>;
 }
 
+interface MlOrderResponse {
+  id: string;
+  date_created: string;
+  status: string;
+  total_amount: number;
+  currency_id: string;
+  buyer: { id: number; nickname: string };
+  order_items: Array<{ item: { id: string; title: string; quantity: number; unit_price: number } }>;
+}
+
 async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
   items: MlItemMetrics[];
   total_visits: number;
@@ -101,9 +149,9 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
   conversion_rate: number;
 }> {
   // Get user's items
-  const itemsRes = await fetch(`https://api.mercadolibre.com/users/${userId}/items/search`, {
+  const itemsRes = await fetchMlWithRetry(`https://api.mercadolibre.com/users/${userId}/items/search`, {
     headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  }, 'fetchUserItems');
   const itemsData = await itemsRes.json();
   const itemIds = itemsData.results || [];
 
@@ -131,9 +179,9 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
     const idsParam = batch.join(',');
     
     // Get item details
-    const detailsRes = await fetch(`https://api.mercadolibre.com/items?ids=${idsParam}`, {
+    const detailsRes = await fetchMlWithRetry(`https://api.mercadolibre.com/items?ids=${idsParam}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    }, 'fetchItemDetails');
     const detailsData = await detailsRes.json();
     
     for (const itemResult of detailsData) {
@@ -158,10 +206,10 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
 
   // Fetch visits for all items (using visits API)
   try {
-    const visitsRes = await fetch(`https://api.mercadolibre.com/items/visits?ids=${itemIds.join(',')}`, {
+    const visitsRes = await fetchMlWithRetry(`https://api.mercadolibre.com/items/visits?ids=${itemIds.join(',')}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const visitsData = await visitsRes.json();
+    }, 'fetchVisits');
+    const visitsData = await visitsRes.json() as MlVisitsResponse[];
     
     for (const visitData of visitsData) {
       const metric = itemsMetrics.find(m => m.item_id === visitData.item_id);
@@ -170,8 +218,8 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
         totalVisits += visitData.visits || 0;
       }
     }
-  } catch {
-    // Visits API might not be available
+  } catch (error) {
+    console.error('[ml-metrics] visits fetch failed:', error);
   }
 
   // Fetch questions for all items
@@ -180,9 +228,9 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
     const idsParam = batch.join(',');
     
     try {
-      const questionsRes = await fetch(`https://api.mercadolibre.com/questions/search?item_ids=${idsParam}&limit=50`, {
+      const questionsRes = await fetchMlWithRetry(`https://api.mercadolibre.com/questions/search?item_ids=${idsParam}&limit=50`, {
         headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      }, 'fetchQuestions');
       const questionsData = await questionsRes.json() as MlQuestionsResponse;
       
       for (const q of questionsData.questions || []) {
@@ -193,8 +241,8 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
           if (q.status === 'UNANSWERED') unansweredQuestions += 1;
         }
       }
-    } catch {
-      // Ignore errors
+    } catch (error) {
+      console.error('[ml-metrics] questions fetch failed:', error);
     }
   }
 
@@ -203,9 +251,9 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
   let totalRevenue = 0;
   
   try {
-    const ordersRes = await fetch(`https://api.mercadolibre.com/orders/search?seller_id=${userId}&limit=50&sort=date_desc`, {
+    const ordersRes = await fetchMlWithRetry(`https://api.mercadolibre.com/orders/search?seller_id=${userId}&limit=50&sort=date_desc`, {
       headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    }, 'fetchOrders');
     const ordersData = await ordersRes.json() as MlOrdersResponse;
     
     for (const order of ordersData.orders || []) {
@@ -214,8 +262,8 @@ async function fetchMlMetrics(accessToken: string, userId: number): Promise<{
         totalRevenue += order.total_amount || 0;
       }
     }
-  } catch {
-    // Ignore errors
+  } catch (error) {
+    console.error('[ml-metrics] orders fetch failed:', error);
   }
 
   const conversionRate = totalVisits > 0 ? (totalSales / totalVisits) * 100 : 0;

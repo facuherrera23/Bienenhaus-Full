@@ -1,0 +1,436 @@
+/**
+ * Process Module Styles
+ * Extracted from landing.css lines 2405-2739
+ * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
+ */
+
+.process {
+  padding: var(--bh-space-35) 0 var(--bh-space-40);
+  background: linear-gradient(180deg, #08090B 0%, #0D1014 50%, #08090B 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.process::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.process .container {
+  position: relative;
+  z-index: 1;
+}
+
+.processHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--bh-space-15);
+  align-items: start;
+  margin-bottom: var(--bh-space-17);
+}
+
+.processHeaderLeft {
+  max-width: 680px;
+}
+
+.processLabel {
+  font-size: var(--bh-text-md);
+  font-weight: var(--bh-weight-semibold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--bh-accent);
+  display: block;
+  margin-bottom: var(--bh-space-4);
+}
+
+.processTitle {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-7xl);
+  font-weight: var(--bh-weight-bold);
+  line-height: 1.05;
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-5);
+}
+
+.processTitle .highlight {
+  color: var(--bh-accent);
+  font-style: italic;
+}
+
+.processDesc {
+  font-size: var(--bh-text-lg);
+  line-height: 1.7;
+  color: var(--bh-text-secondary);
+  max-width: 520px;
+  font-weight: var(--bh-weight-normal);
+  margin-bottom: var(--bh-space-7);
+}
+
+.btnProcess {
+  background: transparent;
+  border: 1.5px solid var(--bh-accent);
+  color: var(--bh-text-primary);
+  padding: 16px 36px;
+  border-radius: var(--bh-radius-md);
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-medium);
+  cursor: pointer;
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-3);
+  font-family: var(--bh-font-sans);
+}
+
+.btnProcess svg {
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+  font-size: var(--bh-text-md);
+}
+
+.btnProcess:hover {
+  background: var(--bh-accent);
+  color: var(--bh-bg-primary);
+  box-shadow: 0 0 40px var(--bh-accent-glow-soft);
+  transform: scale(1.03);
+}
+
+.btnProcess:hover svg {
+  transform: translateX(4px);
+}
+
+.timeline {
+  position: relative;
+  padding: var(--bh-space-5) 0 var(--bh-space-2);
+}
+
+.timelineLine {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 0;
+}
+
+.timelineLineProgress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--bh-accent), var(--bh-accent-glow));
+  border-radius: 2px;
+  transition: width 1.2s var(--bh-ease-premium);
+  box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+.timelineLineProgress.animated {
+  width: 100%;
+}
+
+.timelineDots {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+  padding: 0 var(--bh-space-1);
+}
+
+.timelineDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bh-bg-primary);
+  border: 2px solid var(--bh-accent);
+  box-shadow: 0 0 15px var(--bh-accent-glow-soft), inset 0 0 10px rgba(31, 200, 195, 0.1);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  position: relative;
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.timelineDot.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.timelineDot.active {
+  background: var(--bh-accent);
+  box-shadow: 0 0 30px var(--bh-accent-glow-soft), 0 0 60px rgba(31, 200, 195, 0.1);
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--bh-space-5);
+  margin-top: var(--bh-space-10);
+  position: relative;
+  z-index: 2;
+}
+
+.stepCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-2xl);
+  padding: var(--bh-space-7) var(--bh-space-5) var(--bh-space-6);
+  transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+  opacity: 0;
+  transform: translateY(40px);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+}
+
+.stepCard.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stepCard:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--bh-accent);
+  box-shadow: var(--bh-shadow-glow-lg);
+}
+
+.stepCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(31, 200, 195, 0.05) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stepCard:hover::before {
+  opacity: 1;
+}
+
+.stepNumber {
+  font-family: var(--bh-font-display);
+  font-size: 28px;
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-accent);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(32, 184, 171, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--bh-space-4);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(32, 184, 171, 0.05);
+}
+
+.stepCard:hover .stepNumber {
+  box-shadow: 0 0 30px var(--bh-accent-glow-soft), 0 0 60px rgba(32, 184, 171, 0.05);
+  border-color: var(--bh-accent);
+  transform: scale(1.05);
+}
+
+.stepIcon {
+  font-size: 28px;
+  color: var(--bh-accent);
+  margin-bottom: var(--bh-space-3);
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+  position: relative;
+  z-index: 2;
+}
+
+.stepCard:hover .stepIcon {
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.stepTitle {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-xl);
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-text-primary);
+  margin-bottom: var(--bh-space-2);
+  position: relative;
+  z-index: 2;
+}
+
+.stepDesc {
+  font-size: var(--bh-text-md);
+  line-height: 1.6;
+  color: var(--bh-text-secondary);
+  flex: 1;
+  position: relative;
+  z-index: 2.
+}
+
+.commitmentBar {
+  margin-top: var(--bh-space-20);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-3xl);
+  padding: var(--bh-space-10) var(--bh-space-12);
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--bh-space-7);
+  align-items: center;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+}
+
+.commitmentBar.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.commitmentIcon {
+  font-size: 36px;
+  color: var(--bh-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-4);
+}
+
+.commitmentIcon span {
+  font-family: var(--bh-font-display);
+  font-size: var(--bh-text-lg);
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-text-primary);
+}
+
+.commitmentText {
+  font-size: var(--bh-text-md);
+  line-height: 1.7;
+  color: var(--bh-text-secondary);
+  text-align: center;
+}
+
+.commitmentSignature {
+  font-family: var(--bh-font-display);
+  font-size: 28px;
+  font-weight: var(--bh-weight-bold);
+  color: var(--bh-accent);
+  text-align: right;
+  font-style: italic;
+  letter-spacing: 2px;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .processTitle {
+    font-size: var(--bh-text-5xl);
+  }
+  .stepsGrid {
+    gap: var(--bh-space-5);
+  }
+  .stepCard {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .process {
+    padding: var(--bh-space-25) 0 var(--bh-space-30);
+  }
+  .processHeader {
+    grid-template-columns: 1fr;
+    gap: var(--bh-space-10);
+  }
+  .processTitle {
+    font-size: var(--bh-text-4xl);
+  }
+  .stepsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--bh-space-5);
+  }
+  .stepCard {
+    min-height: 300px;
+  }
+  .timelineDots {
+    display: none;
+  }
+  .timelineLine {
+    display: none;
+  }
+  .commitmentBar {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--bh-space-4);
+    padding: var(--bh-space-8) var(--bh-space-6);
+  }
+  .commitmentIcon {
+    justify-content: center;
+  }
+  .commitmentSignature {
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .process {
+    padding: var(--bh-space-17) 0 var(--bh-space-22);
+  }
+  .processTitle {
+    font-size: var(--bh-text-3xl);
+  }
+  .processDesc {
+    font-size: var(--bh-text-md);
+    max-width: 100%;
+  }
+  .processLabel {
+    font-size: var(--bh-text-sm);
+  }
+  .btnProcess {
+    width: 100%;
+    justify-content: center;
+  }
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--bh-space-4);
+  }
+  .stepCard {
+    min-height: auto;
+    padding: var(--bh-space-6) var(--bh-space-5) var(--bh-space-5);
+  }
+  .stepNumber {
+    width: 48px;
+    height: 48px;
+    font-size: 22px.
+  }
+  .stepTitle {
+    font-size: var(--bh-text-lg).
+  }
+  .stepDesc {
+    font-size: var(--bh-text-sm).
+  }
+  .commitmentBar {
+    padding: var(--bh-space-6) var(--bh-space-5).
+    border-radius: var(--bh-radius-2xl).
+  }
+  .commitmentText {
+    font-size: var(--bh-text-md).
+  }
+  .commitmentSignature {
+    font-size: 24px.
+  }
+}

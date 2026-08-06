@@ -3,7 +3,22 @@
  * Compartido entre ml-webhook y ml-answer-question.
  */
 
-import { getAccessToken, ML_API, type MlConnectionRow } from './ml.ts';
+import { getAccessToken, ML_API, type MlConnectionRow, categorizeMlError, MlErrorType, runMlApiCallWithRetry } from './ml.ts';
+
+/**
+ * Ejecuta un fetch a la API de ML con manejo de rate limiting (429).
+ * Usa el wrapper compartido runMlApiCallWithRetry para reintento automático.
+ */
+async function fetchMlWithRetry(
+  fn: () => Promise<Response>,
+  operationName: string,
+): Promise<Response> {
+  const result = await runMlApiCallWithRetry('', fn, operationName);
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.data;
+}
 
 /** Devuelve la plantilla activa para un trigger (p.ej. 'new_question'). */
 export async function getActiveTemplate(
@@ -49,17 +64,26 @@ export async function sendQuestionAnswer(
   questionId: string,
   text: string,
   accessToken: string,
+  idempotencyKey?: string,
 ): Promise<void> {
-  const res = await fetch(`${ML_API}/answers?api_version=4`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-      accept: 'application/json',
-      'x-format-new': 'true',
-    },
-    body: JSON.stringify({ question_id: Number(questionId), text }),
-  });
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${accessToken}`,
+    'content-type': 'application/json',
+    accept: 'application/json',
+    'x-format-new': 'true',
+  };
+  if (idempotencyKey) {
+    headers['x-idempotency-key'] = idempotencyKey;
+  }
+
+  const res = await fetchMlWithRetry(
+    () => fetch(`${ML_API}/answers?api_version=4`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ question_id: Number(questionId), text }),
+    }),
+    'sendQuestionAnswer'
+  );
 
   const body = await res.text();
   if (!res.ok) {
@@ -86,19 +110,28 @@ export async function sendOrderMessage(
   orderId: string,
   text: string,
   accessToken: string,
+  idempotencyKey?: string,
 ): Promise<void> {
   const params = new URLSearchParams({
     message: text,
     mark_as_read: 'true',
   });
-  const res = await fetch(`${ML_API}/orders/${orderId}/messages?${params.toString()}`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-  });
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${accessToken}`,
+    'content-type': 'application/json',
+    accept: 'application/json',
+  };
+  if (idempotencyKey) {
+    headers['x-idempotency-key'] = idempotencyKey;
+  }
+
+  const res = await fetchMlWithRetry(
+    () => fetch(`${ML_API}/orders/${orderId}/messages?${params.toString()}`, {
+      method: 'POST',
+      headers,
+    }),
+    'sendOrderMessage'
+  );
 
   const body = await res.text();
   if (!res.ok) {

@@ -1,6 +1,16 @@
 import { useRef, useState } from 'preact/hooks';
 import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
 import { VideoModal } from './VideoModal';
+import {
+  ArrowRight,
+  Play,
+  ChevronDown,
+  Home,
+  Users,
+  MapPin,
+  Shield,
+} from 'lucide-preact';
+import styles from '../styles/modules/Hero.module.css';
 
 interface HeroStat {
   icon: string;
@@ -22,6 +32,21 @@ const heroImageSources = [
   { width: 640, avif: '/assets/images/hero/hero-baner-sm.avif', webp: '/assets/images/hero/hero-baner-sm.webp' },
   { width: 320, avif: '/assets/images/hero/hero-baner-xs.avif', webp: '/assets/images/hero/hero-baner-xs.webp' },
 ];
+
+// Map FontAwesome icon names to Lucide icons
+function getLucideIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-home': Home,
+    'fa-user-tie': Users,
+    'fa-map-marker-alt': MapPin,
+    'fa-shield-alt': Shield,
+    'fa-crown': Home, // fallback
+    'fa-handshake': Users, // fallback
+    'fa-clipboard-list': Home, // fallback
+    'fa-clock': Shield, // fallback
+  };
+  return iconMap[name] || Home;
+}
 
 export function Hero() {
   const featureBarRef = useRef<HTMLDivElement>(null);
@@ -54,8 +79,8 @@ export function Hero() {
   const videoTitle = textOf(settings.hero_video_title, 'value', 'BIENENHAUS PROPIEDADES');
 
   return (
-    <section className="hero" id="inicio" aria-label="Presentación principal">
-      <picture className="hero-bg" role="img" aria-label="Mansión moderna de arquitectura minimalista">
+    <section className={styles.hero} id="inicio" aria-label="Presentación principal">
+      <picture className={styles.heroBg} role="img" aria-label="Mansión moderna de arquitectura minimalista">
         {heroImageSources.map((src) => (
           <>
             <source srcSet={src.avif} type="image/avif" media={`(min-width: ${src.width}px)`} />
@@ -66,65 +91,68 @@ export function Hero() {
           src="/assets/images/hero/hero-baner.png"
           alt="Mansión moderna de arquitectura minimalista en zona residencial exclusiva"
           aria-hidden="true"
-          className="hero-bg-img"
+          className={styles.heroBgImg}
           loading="eager"
           fetchPriority="high"
         />
       </picture>
-      <div className="hero-overlay-h" aria-hidden="true"></div>
-      <div className="hero-overlay-v" aria-hidden="true"></div>
+      <div className={styles.heroOverlayH} aria-hidden="true"></div>
+      <div className={styles.heroOverlayV} aria-hidden="true"></div>
 
-      <div className="hero-content container">
-        <div className="hero-left">
-          <span className="hero-deco" aria-hidden="true"></span>
-          <p className="eyebrow">{eyebrow}</p>
-          <h1 className="hero-title">
-            <span className="line line-1">{title.line1 ?? 'Propiedades exclusivas.'}</span>
-            <span className="line line-2"> {title.line2 ?? 'Experiencias extraordinarias.'}</span>
+      <div className={styles.heroContent} role="main">
+        <div className={styles.heroLeft}>
+          <span className={styles.heroDeco} aria-hidden="true"></span>
+          <p className={styles.eyebrow}>{eyebrow}</p>
+          <h1 className={styles.heroTitle}>
+            <span className={`${styles.line} ${styles.line1}`}>{title.line1 ?? 'Propiedades exclusivas.'}</span>
+            <span className={`${styles.line} ${styles.line2}`}> {title.line2 ?? 'Experiencias extraordinarias.'}</span>
           </h1>
-          <p className="hero-desc">{description}</p>
+          <p className={styles.heroDesc}>{description}</p>
 
-          <div className="hero-divider" aria-hidden="true">
-            <span className="dot"></span>
-            <span className="line"></span>
+          <div className={styles.heroDivider} aria-hidden="true">
+            <span className={styles.dot}></span>
+            <span className={styles.line}></span>
           </div>
 
-          <div className="hero-actions">
-            <a href="#catalogo" className="btn-primary">
+          <div className={styles.heroActions}>
+            <a href="#catalogo" className={styles.btnPrimary}>
               Ver propiedades
-              <i className="fas fa-arrow-right"></i>
+              <ArrowRight className={styles.icon} aria-hidden="true" />
             </a>
-            <button className="btn-video" id="videoBtn" onClick={() => setShowVideo(true)}>
-              <span className="play-circle" aria-hidden="true">
-                <i className="fas fa-play"></i>
+            <button className={styles.btnVideo} id="videoBtn" onClick={() => setShowVideo(true)}>
+              <span className={styles.playCircle} aria-hidden="true">
+                <Play className={styles.icon} aria-hidden="true" />
               </span>
               Ver video
             </button>
           </div>
         </div>
 
-        <div className="hero-right">
-          <aside className="stats-panel" aria-label="Estadísticas de la inmobiliaria">
-            {stats.map((stat) => (
-              <div className="stat-row" key={stat.title}>
-                <span className="stat-icon" aria-hidden="true">
-                  <i className={stat.icon}></i>
-                </span>
-                <div>
-                  <p className="stat-number">{stat.value}</p>
-                  <p className="stat-label">{stat.title}</p>
-                  <p className="stat-desc">{stat.note}</p>
+        <div className={styles.heroRight}>
+          <aside className={styles.statsPanel} aria-label="Estadísticas de la inmobiliaria">
+            {stats.map((stat) => {
+              const StatIcon = getLucideIcon(stat.icon);
+              return (
+                <div className={styles.statRow} key={stat.title}>
+                  <span className={styles.statIcon} aria-hidden="true">
+                    <StatIcon className={styles.icon} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className={styles.statNumber}>{stat.value}</p>
+                    <p className={styles.statLabel}>{stat.title}</p>
+                    <p className={styles.statDesc}>{stat.note}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
-            <div className="stat-row trust">
-              <span className="stat-icon" aria-hidden="true">
-                <i className="fas fa-shield-alt"></i>
+            <div className={styles.statRowTrust}>
+              <span className={styles.statIcon} aria-hidden="true">
+                <Shield className={styles.icon} aria-hidden="true" />
               </span>
               <div>
-                <p className="trust-title">Confianza & Seguridad</p>
-                <p className="trust-desc">
+                <p className={styles.trustTitle}>Confianza & Seguridad</p>
+                <p className={styles.trustDesc}>
                   Transacciones seguras y asesoramiento profesional durante todo el proceso.
                 </p>
               </div>
@@ -134,28 +162,31 @@ export function Hero() {
       </div>
 
       <button
-        className="scroll-indicator"
+        className={styles.scrollIndicator}
         id="scrollIndicator"
         aria-label="Desplazarse hacia abajo"
         onClick={() =>
           featureBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
         }
       >
-        <i className="fas fa-chevron-down"></i>
+        <ChevronDown className={styles.icon} aria-hidden="true" />
       </button>
 
-      <div className="feature-bar" id="featureBar" aria-label="Nuestros diferenciales" ref={featureBarRef}>
-        {features.map((feature) => (
-          <div className="feature-item" key={feature.title}>
-            <span className="feature-icon" aria-hidden="true">
-              <i className={feature.icon}></i>
-            </span>
-            <div>
-              <p className="feature-title">{feature.title}</p>
-              <p className="feature-desc">{feature.desc}</p>
+      <div className={styles.featureBar} id="featureBar" aria-label="Nuestros diferenciales" ref={featureBarRef}>
+        {features.map((feature) => {
+          const FeatureIcon = getLucideIcon(feature.icon);
+          return (
+            <div className={styles.featureItem} key={feature.title}>
+              <span className={styles.featureIcon} aria-hidden="true">
+                <FeatureIcon className={styles.icon} aria-hidden="true" />
+              </span>
+              <div>
+                <p className={styles.featureTitle}>{feature.title}</p>
+                <p className={styles.featureDesc}>{feature.desc}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <VideoModal

@@ -4,6 +4,18 @@ import { textOf, useSiteContent } from '../lib/content';
 import { subscribeNewsletter } from '../lib/newsletter';
 import { images } from '../lib/images';
 import { useSiteSettings, getNextWhatsAppUrl } from '../lib/site-settings';
+import {
+  Instagram,
+  Facebook,
+  Youtube,
+  Tiktok,
+  Whatsapp,
+  Linkedin,
+  ArrowRight,
+  Mail,
+  MapPin,
+} from 'lucide-preact';
+import styles from '../styles/modules/Footer.module.css';
 
 const NAV_LINKS = [
   ['#inicio', 'Inicio'],
@@ -27,6 +39,18 @@ const SERVICE_LINKS = [
   ['#', 'Desarrollos'],
   ['#', 'Asesoramiento Legal'],
 ];
+
+function getSocialIcon(name: string) {
+  const iconMap: Record<string, any> = {
+    'fa-instagram': Instagram,
+    'fa-facebook-f': Facebook,
+    'fa-youtube': Youtube,
+    'fa-tiktok': Tiktok,
+    'fa-whatsapp': Whatsapp,
+    'fa-linkedin-in': Linkedin,
+  };
+  return iconMap[name] || Instagram;
+}
 
 export function Footer() {
   const rootRef = useReveal<HTMLElement>('.footer-hero, .footer-col, .footer-bottom', {
@@ -98,50 +122,54 @@ export function Footer() {
   };
 
   return (
-    <footer className="footer" id="footer" role="contentinfo" ref={rootRef}>
-      <div className="footer-watermark" aria-hidden="true">
+    <footer className={styles.footer} id="footer" role="contentinfo" ref={rootRef}>
+      <div className={styles.footerWatermark} aria-hidden="true">
         BIENENHAUS
       </div>
 
       <div className="container">
-        <div className="footer-hero" id="footerHero">
-          <span className="footer-hero-label">{siteName}</span>
-          <h2 className="footer-hero-title">{footerTitle}</h2>
-          <p className="footer-hero-desc">
+        <div className={styles.footerHero} id="footerHero">
+          <span className={styles.footerHeroLabel}>{siteName}</span>
+          <h2 className={styles.footerHeroTitle}>{footerTitle}</h2>
+          <p className={styles.footerHeroDesc}>
             Creamos experiencias inmobiliarias que trascienden la compra y la venta de propiedades.
           </p>
-          <div className="footer-hero-actions">
-            <button className="btn-footer-primary">
-              CONTACTAR UN ASESOR <i className="fas fa-arrow-right"></i>
+          <div className={styles.footerHeroActions}>
+            <button className={styles.btnFooterPrimary}>
+              CONTACTAR UN ASESOR <ArrowRight className={styles.icon} aria-hidden="true" />
             </button>
-            <button className="btn-footer-secondary">
-              VER PROPIEDADES <i className="fas fa-arrow-right"></i>
+            <button className={styles.btnFooterSecondary}>
+              VER PROPIEDADES <ArrowRight className={styles.icon} aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="footer-divider"></div>
+        <div className={styles.footerDivider}></div>
 
-        <div className="footer-grid">
-          <div className="footer-col footer-col-logo" data-delay="0">
-            <div className="footer-logo">
-              <img src={images.logo} alt={siteName} className="footer-logo-img" />
-              <span className="footer-logo-main">BIENENHAUS</span>
-              <span className="footer-logo-sub">PROPIEDADES</span>
-            </div>            <p className="footer-desc">
+        <div className={styles.footerGrid}>
+          <div className={`${styles.footerCol} ${styles.footerColLogo}`} data-delay="0">
+            <div className={styles.footerLogo}>
+              <img src={images.logo} alt={siteName} className={styles.footerLogoImg} />
+              <span className={styles.footerLogoMain}>BIENENHAUS</span>
+              <span className={styles.footerLogoSub}>PROPIEDADES</span>
+            </div>
+            <p className={styles.footerDesc}>
               Especialistas en compra, venta, alquiler e inversiones inmobiliarias con una
               experiencia premium y personalizada.
             </p>
-            <div className="footer-social">
-              {socialLinks.map((s) => (
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="social-btn" key={s.icon} aria-label={s.icon}>
-                  <i className={`fab ${s.icon}`}></i>
-                </a>
-              ))}
+            <div className={styles.footerSocial}>
+              {socialLinks.map((s) => {
+                const SocialIcon = getSocialIcon(s.icon);
+                return (
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className={styles.socialBtn} key={s.icon} aria-label={s.icon}>
+                    <SocialIcon className={styles.icon} aria-hidden="true" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          <div className="footer-col" data-delay="100">
+          <div className={styles.footerCol} data-delay="100">
             <h4>Navegación</h4>
             <ul>
               {NAV_LINKS.map(([href, label]) => (
@@ -152,7 +180,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="footer-col" data-delay="200">
+          <div className={styles.footerCol} data-delay="200">
             <h4>Servicios</h4>
             <ul>
               {SERVICE_LINKS.map(([href, label]) => (
@@ -163,32 +191,32 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="footer-col" data-delay="400">
-            <div className="footer-newsletter-title">Recibí nuevas oportunidades.</div>
-            <p className="footer-newsletter-text">{newsletterText}</p>
-            <form className="footer-newsletter-form" onSubmit={handleNewsletter} ref={formRef}>
-              <div className="input-wrapper">
-                <i className="fas fa-envelope"></i>
+          <div className={styles.footerCol} data-delay="400">
+            <div className={styles.footerNewsletterTitle}>Recibí nuevas oportunidades.</div>
+            <p className={styles.footerNewsletterText}>{newsletterText}</p>
+            <form className={styles.footerNewsletterForm} onSubmit={handleNewsletter} ref={formRef}>
+              <div className={styles.inputWrapper}>
+                <Mail className={styles.icon} aria-hidden="true" />
                 <label htmlFor="footer-email" className="visually-hidden">Tu correo electrónico</label>
                 <input id="footer-email" type="email" placeholder="Tu correo electrónico" required />
               </div>
               <input
                 type="text"
-                className="hp-field"
+                className={styles.hpField}
                 data-hp
                 tabIndex={-1}
                 autoComplete="off"
                 aria-hidden="true"
               />
-              <button type="submit" className="btn-newsletter" disabled={sending}>
-                {sending ? 'ENVIANDO…' : 'SUSCRIBIRME'} <i className="fas fa-arrow-right"></i>
+              <button type="submit" className={styles.btnNewsletter} disabled={sending}>
+                {sending ? 'ENVIANDO…' : 'SUSCRIBIRME'} <ArrowRight className={styles.icon} aria-hidden="true" />
               </button>
-              <div className="footer-newsletter-checkbox">
+              <div className={styles.footerNewsletterCheckbox}>
                 <input type="checkbox" id="newsletterCheck" />
                 <label htmlFor="newsletterCheck">Acepto recibir novedades</label>
               </div>
               {feedback && (
-                <p className={`footer-newsletter-feedback is-${feedback.tone}`} role="status">
+                <p className={`${styles.footerNewsletterFeedback} is-${feedback.tone}`} role="status">
                   {feedback.text}
                 </p>
               )}
@@ -196,19 +224,19 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="footer-bottom" id="footerBottom">
-          <div className="footer-bottom-left">
+        <div className={styles.footerBottom} id="footerBottom">
+          <div className={styles.footerBottomLeft}>
             &copy; {new Date().getFullYear()} <span className="highlight">{siteSettings.company.name || 'BIENENHAUS PROPIEDADES'}</span> — Todos los
             derechos reservados. {siteSettings.company.matricula && <span> | Matrícula: {siteSettings.company.matricula}</span>}
           </div>
-          <div className="footer-bottom-center">
+          <div className={styles.footerBottomCenter}>
             <a href="#" aria-label="Política de Privacidad">Política de Privacidad</a>
             <a href="#" aria-label="Términos y Condiciones">Términos y Condiciones</a>
             <a href="#" aria-label="Cookies">Cookies</a>
             <a href="#" aria-label="Mapa del Sitio">Mapa del Sitio</a>
           </div>
-          <div className="footer-bottom-right">
-            <i className="fas fa-map-pin"></i> Diseñado con excelencia. Argentina.
+          <div className={styles.footerBottomRight}>
+            <MapPin className={styles.icon} aria-hidden="true" /> Diseñado con excelencia. Argentina.
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { encrypt } from '../_shared/crypto.ts';
-import { exchangeCode, getMe } from '../_shared/ml.ts';
+import { exchangeCode, getMe, runMlApiCallWithRetry } from '../_shared/ml.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -22,6 +22,18 @@ function respond(status: number, body: Record<string, unknown>): Response {
 
 interface OauthState {
   admin?: string;
+}
+
+function isInternalUrl(url: string): boolean {
+  const adminBaseUrl = Deno.env.get('ADMIN_BASE_URL');
+  if (adminBaseUrl && url.startsWith(adminBaseUrl)) return true;
+
+  const bienenhausAdminRegex = /^https?:\/\/([a-z0-9-]+\.)?bienenhaus\.com\.ar\/admin/;
+  if (bienenhausAdminRegex.test(url)) return true;
+
+  if (url.startsWith('/admin')) return true;
+
+  return false;
 }
 
 Deno.serve(async (req) => {
@@ -51,12 +63,24 @@ Deno.serve(async (req) => {
     state = {};
   }
 
-  const adminUrl = state.admin ?? Deno.env.get('ADMIN_BASE_URL') ?? 'http://localhost:5173/admin';
-  const redirectUri = `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-oauth`;
+const adminUrl = state.admin ?? Deno.env.get('ADMIN_BASE_URL') ?? '/admin';
+    const validatedAdminUrl = isInternalUrl(adminUrl)
+      ? adminUrl
+      : (console.warn('[ml-oauth] blocked external redirect:', adminUrl), Deno.env.get('ADMIN_BASE_URL') ?? '/admin');
+    const redirectUri = `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-oauth`;
 
   try {
-    const tokens = await exchangeCode(code, redirectUri);
-    const user = await getMe(tokens.access_token);
+    const tokenResult = await runMlApiCallWithRetry('', () => exchangeCode(code, redirectUri), 'exchangeCode');
+    if (!tokenResult.ok) {
+      return respond(429, { error: tokenResult.error, retry_after: 60 });
+    }
+    const tokens = tokenResult.data;
+
+    const userResult = await runMlApiCallWithRetry(tokens.access_token, () => getMe(tokens.access_token), 'getMe');
+    if (!userResult.ok) {
+      return respond(429, { error: userResult.error, retry_after: 60 });
+    }
+    const user = userResult.data;
 
     const access = await encrypt(tokens.access_token);
     const refresh = await encrypt(tokens.refresh_token);
@@ -91,9 +115,9 @@ Deno.serve(async (req) => {
       metadata: { event: 'oauth_connect', ml_user_id: user.id, nickname: user.nickname },
     });
 
-    const redirectTarget = adminUrl.endsWith('/admin')
-      ? `${adminUrl}/mercadolibre?ml=connected=1`
-      : `${adminUrl}/admin/mercadolibre?ml=connected=1`;
+    const redirectTarget = validatedAdminUrl.endsWith('/admin')
+      ? `${validatedAdminUrl}/mercadolibre?ml=connected=1`
+      : `${validatedAdminUrl}/admin/mercadolibre?ml=connected=1`;
     return Response.redirect(redirectTarget, 302);
   } catch (err) {
     console.error('ml-oauth error', err);
