@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-preact';
 import { useExport } from '../lib/api/hooks';
+import { useAuthAccessToken } from '../lib/auth';
 import { pushToast } from '../store/app';
 import { supabaseUrl } from '../lib/supabase';
 import type { ExportColumn } from '../lib/api/hooks';
@@ -176,10 +177,13 @@ export function AuditLogPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
   const { exportToCSV } = useExport<AuditLogEntry>();
+  const accessToken = useAuthAccessToken();
 
   const loadLogs = async () => {
     setLoading(true);
     try {
+      if (!accessToken) throw new Error('No hay sesión activa');
+
       const params = new URLSearchParams({
         page: String(page),
         pageSize: String(pageSize),
@@ -190,7 +194,7 @@ export function AuditLogPage() {
       });
 
       const res = await fetch(`${supabaseUrl}/functions/v1/audit-log?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       
       if (!res.ok) throw new Error('Error cargando logs');
@@ -202,14 +206,6 @@ export function AuditLogPage() {
       pushToast({ type: 'error', title: 'Error', description: (err as Error).message });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getToken = () => {
-    try {
-      return JSON.parse(localStorage.getItem('supabase.auth.token') ?? '{}').access_token ?? '';
-    } catch {
-      return '';
     }
   };
 

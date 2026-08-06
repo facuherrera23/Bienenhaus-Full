@@ -12,7 +12,6 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
   AreaChart,
   Area,
 } from 'recharts';
@@ -201,7 +200,7 @@ export function DashboardCharts() {
               <BarChart data={Object.entries(leadsByStatus).map(([status, count]) => ({
                 status: status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
                 count,
-                color: STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#888',
+                fill: STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#888',
               }))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2e35" />
                 <XAxis dataKey="status" stroke="#6b7280" fontSize={12} />
@@ -215,11 +214,7 @@ export function DashboardCharts() {
                   labelStyle={{ color: 'var(--bh-text-primary)' }}
                 />
                 <Legend />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {Object.entries(leadsByStatus).map(([status]) => (
-                    <Cell key={status} fill={STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#888'} />
-                  ))}
-                </Bar>
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -237,6 +232,7 @@ export function DashboardCharts() {
                   data={Object.entries(propsByStatus).map(([status, count]) => ({
                     name: status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
                     value: count,
+                    fill: STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#888',
                   }))}
                   cx="50%"
                   cy="50%"
@@ -247,11 +243,7 @@ export function DashboardCharts() {
                   nameKey="name"
                   label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
-                >
-                  {Object.entries(propsByStatus).map(([status]) => (
-                    <Cell key={status} fill={STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#888'} />
-                  ))}
-                </Pie>
+                />
                 <Tooltip
                   contentStyle={{
                     background: 'var(--bh-bg-card)',
@@ -275,7 +267,7 @@ export function DashboardCharts() {
                 data={Object.entries(leadsBySource).map(([source, count]) => ({
                   source: source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
                   count,
-                  color: SOURCE_COLORS[source as keyof typeof SOURCE_COLORS] || '#888',
+                  fill: SOURCE_COLORS[source as keyof typeof SOURCE_COLORS] || '#888',
                 }))}
                 layout="vertical"
               >
@@ -289,11 +281,7 @@ export function DashboardCharts() {
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                  {Object.entries(leadsBySource).map(([source]) => (
-                    <Cell key={source} fill={SOURCE_COLORS[source as keyof typeof SOURCE_COLORS] || '#888'} />
-                  ))}
-                </Bar>
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

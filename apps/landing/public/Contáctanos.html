@@ -1131,6 +1131,7 @@ img{max-width:100%;display:block}
         p_message: state.mensaje || null,
         p_data: data,
         p_files: files.map(function (f) { return f.name; }),
+        p_hp: '',
       }),
     }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);

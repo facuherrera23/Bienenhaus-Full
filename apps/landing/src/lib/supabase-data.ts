@@ -62,7 +62,6 @@ export interface PropertyCardData {
 export interface Agent {
   id: string;
   name: string;
-  email: string;
   matricula: string | null;
   role: string | null;
   photo_url: string | null;
@@ -237,7 +236,7 @@ export function useAgents() {
       setLoading(true);
       const { data: agents, error } = await supabase
         .from('agents_public')
-        .select('id, name, email, matricula, role, photo_url, bio, sort_order, is_active')
+        .select('id, name, matricula, role, photo_url, bio, sort_order, is_active')
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
