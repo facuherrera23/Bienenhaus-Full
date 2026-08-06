@@ -146,7 +146,7 @@ const CHANNEL_SELECT = `
     id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
     reply_to_id, edited_at, created_at, updated_at, deleted_at,
     sender:agents(name, photo_url),
-    reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+    reply_to:reply_to_id(
       id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
       reply_to_id, edited_at, created_at, updated_at, deleted_at,
       sender:agents(name, photo_url)
@@ -197,8 +197,8 @@ export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
     .from('chat_channels')
     .select(CHANNEL_SELECT)
     .eq('chat_channel_participants.agent_id', agentId)
-    .is('chat_channels.deleted_at', null)
-    .order('updated_at', { ascending: false, foreignTable: 'chat_messages' });
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false, foreignTable: 'last_message' });
 
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as ChannelApiRow[]).map(toChannelRow);
