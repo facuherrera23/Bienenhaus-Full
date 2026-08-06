@@ -1,19 +1,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Download, Loader2, Plus, Search, Trash2, UserPlus, ChevronDown, Upload, Kanban, List, X, AlertTriangle } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { useLeads, useBulkAutoAssignLeads, useBulkRecalculateScores, useAddLeadTag, useRemoveLeadTag, useImportLeads, useParseLeadsCsv, useExportLeads, useSoftDeleteLead, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, LEAD_STATUS_LABEL, LEAD_STATUS_TONE, STATUS_ORDER, type LeadIntent, type LeadRow, type LeadStatus, type CsvLeadRow } from '../lib/leads.api';
+import { useLeads, useBulkAutoAssignLeads, useBulkRecalculateScores, useAddLeadTag, useRemoveLeadTag, useImportLeads, useParseLeadsCsv, useExportLeads, useSoftDeleteLead, useUpdateLeadStatus, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, LEAD_STATUS_LABEL, LEAD_STATUS_TONE, STATUS_ORDER, type LeadIntent, type LeadRow, type LeadStatus, type CsvLeadRow } from '../lib/leads.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
-import { supabase } from '../lib/supabase';
-
-function getListData<T>(data: unknown): T[] {
-  if (!data) return [];
-  if (Array.isArray(data)) return data as T[];
-  if (typeof data === 'object' && data !== null && 'data' in data) {
-    return (data as { data: T[] }).data ?? [];
-  }
-  return [];
-}
+import { getListData } from '../lib/utils';
 
 export function LeadsPage() {
   const [, setLocation] = useLocation();
@@ -46,6 +37,7 @@ export function LeadsPage() {
   const parseLeadsCsv = useParseLeadsCsv();
   const exportLeads = useExportLeads();
   const softDeleteLead = useSoftDeleteLead();
+  const updateLeadStatus = useUpdateLeadStatus();
 
   useEffect(() => {
     document.title = 'Leads · BIENENHAUS';
@@ -146,8 +138,7 @@ export function LeadsPage() {
 
   const handleStatusChange = async (lead: LeadRow, status: LeadStatus) => {
     try {
-      const { error } = await supabase.from('leads').update({ status }).eq('id', lead.id);
-      if (error) throw error;
+      await updateLeadStatus.mutateAsync({ id: lead.id, status });
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       pushToast({ type: 'success', title: 'Estado actualizado', description: `${lead.name} → ${LEAD_STATUS_LABEL[status]}` });
     } catch { pushToast({ type: 'error', title: 'No se pudo actualizar' }); }

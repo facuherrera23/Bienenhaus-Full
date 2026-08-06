@@ -60,6 +60,7 @@ interface ActionPlanApiRow extends ActionPlanDbRow {
   owner?: { full_name: string } | { full_name: string }[] | null;
   assignee?: { full_name: string } | { full_name: string }[] | null;
   creator?: { full_name: string } | { full_name: string }[] | null;
+  action_plan_tasks?: Array<{ id: string; status: ActionPlanStatus; due_date: string | null }> | null;
 }
 
 interface ActionPlanTaskApiRow extends ActionPlanTaskDbRow {
@@ -176,6 +177,7 @@ function toPriceAnalysisRow(pa: PriceAnalysisApiRow): PriceAnalysisRow {
 }
 
 function toActionPlanRow(ap: ActionPlanApiRow): ActionPlanRow {
+  const tasks = ap.action_plan_tasks ?? [];
   return {
     id: ap.id,
     property_id: ap.property_id,
@@ -196,8 +198,8 @@ function toActionPlanRow(ap: ActionPlanApiRow): ActionPlanRow {
     deleted_at: ap.deleted_at ?? null,
     property_title: embedTitle(ap.property) ?? null,
     owner_name: embedFullName(ap.owner) ?? null,
-    tasks_count: 0,
-    completed_tasks_count: 0,
+    tasks_count: tasks.length,
+    completed_tasks_count: tasks.filter((t) => t.status === 'completed').length,
   };
 }
 
@@ -269,7 +271,8 @@ function toReportRow(r: ReportApiRow): ReportRow {
 
 const OWNERS_SELECT = `
   id, full_name, email, phone, dni_cuit, address, owner_type, company_name,
-  notes, preferred_contact, created_by, created_at, updated_at, deleted_at
+  notes, preferred_contact, created_by, created_at, updated_at, deleted_at,
+  property_owners(id, property_id)
 `.trim();
 
 const OWNER_DETAIL_SELECT = `
@@ -301,7 +304,8 @@ const ACTION_PLANS_SELECT = `
   property:properties(title),
   owner:owners(full_name),
   assignee:admin_users(full_name),
-  creator:admin_users(full_name)
+  creator:admin_users(full_name),
+  action_plan_tasks(id, status, due_date)
 `.trim();
 
 const ACTION_PLAN_TASKS_SELECT = `
@@ -601,7 +605,16 @@ export async function fetchActionPlans(filters?: {
 
   if (filters?.property_id) q = q.eq('property_id', filters.property_id);
   if (filters?.owner_id) q = q.eq('owner_id', filters.owner_id);
-  if (filters?.assigned_to) q = q.eq('assigned_to', filters.assigned_to);
+  if (filters?.assigned_to) {
+    if (filters.assigned_to === 'null') {
+      q = q.is('assigned_to', null);
+    } else if (filters.assigned_to === 'current_user') {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) q = q.eq('assigned_to', user.id);
+    } else {
+      q = q.eq('assigned_to', filters.assigned_to);
+    }
+  }
   if (filters?.status) q = q.eq('status', filters.status);
   if (filters?.category) q = q.eq('category', filters.category);
   if (filters?.priority) q = q.eq('priority', filters.priority);

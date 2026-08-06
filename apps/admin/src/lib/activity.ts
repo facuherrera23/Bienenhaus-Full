@@ -148,23 +148,32 @@ function jsonToRecord(json: Json): Record<string, unknown> {
 // ============================================================
 
 export async function fetchRecentActivity(limit = 12): Promise<ActivityRow[]> {
-  const [actRes, usersRes] = await Promise.all([
-    supabase
-      .from('activity_log')
-      .select('id, action, entity_type, entity_id, metadata, actor_id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit),
-    supabase.from('admin_users').select('id, full_name, email'),
-  ]);
+  const { data: activities, error: actError } = await supabase
+    .from('activity_log')
+    .select('id, action, entity_type, entity_id, metadata, actor_id, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
 
-  if (actRes.error) throw new Error(actRes.error.message);
+  if (actError) throw new Error(actError.message);
 
-  const usersById = new Map<string, { full_name: string; email: string }>();
-  for (const u of usersRes.data ?? []) {
-    usersById.set(u.id, u);
+  const actorIds = [...new Set((activities ?? []).map((a) => a.actor_id).filter((id): id is string => id !== null))];
+
+  let usersById = new Map<string, { full_name: string; email: string }>();
+
+  if (actorIds.length > 0) {
+    const { data: users, error: usersError } = await supabase
+      .from('admin_users')
+      .select('id, full_name, email')
+      .in('id', actorIds);
+
+    if (!usersError) {
+      for (const u of users ?? []) {
+        usersById.set(u.id, u);
+      }
+    }
   }
 
-  return (actRes.data ?? []).map((a: ActivityApiRow) => {
+  return (activities ?? []).map((a: ActivityApiRow) => {
     const actor = a.actor_id ? usersById.get(a.actor_id) : undefined;
     return {
       id: a.id,

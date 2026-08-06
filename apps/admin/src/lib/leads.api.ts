@@ -70,7 +70,8 @@ export function useLeads(filters?: {
   if (filters?.intent) apiFilters.intent = `eq.${filters.intent}`;
   if (filters?.source) apiFilters.source = `eq.${filters.source}`;
   if (filters?.search) {
-    apiFilters.or = `(name.ilike.*${filters.search}*,last_name.ilike.*${filters.search}*,email.ilike.*${filters.search}*,phone.ilike.*${filters.search}*)`;
+    const escaped = filters.search.replace(/[*%]/g, '');
+    apiFilters.or = `(name.ilike.*${escaped}*,last_name.ilike.*${escaped}*,email.ilike.*${escaped}*,phone.ilike.*${escaped}*)`;
   }
 
   return useList<LeadRow, LeadApiRow>({

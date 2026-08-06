@@ -49,7 +49,9 @@ export function LeadFormPage() {
     setValues((v) => ({ ...v, [key]: (e.currentTarget as HTMLInputElement).value }));
   };
 
-  const canSave = values.name.trim() !== '' && values.last_name.trim() !== '' && values.email.trim() !== '';
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const canSave = values.name.trim() !== '' && values.last_name.trim() !== '' && values.email.trim() !== '' && emailRegex.test(values.email);
 
   const handleSubmit = async () => {
     if (!canSave) return;

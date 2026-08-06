@@ -1,4 +1,5 @@
 import { useList, useItem, useCreate, useUpdate, useDelete, useRpc, useUpload, useExport, useMutation, queryKeys, type ExportColumn } from './api';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   duplicateProperty,
   softDeleteProperty,
@@ -134,7 +135,10 @@ export function useProperties(filters?: {
 
   if (filters?.status) apiFilters.status = `eq.${filters.status}`;
   if (filters?.listing_type) apiFilters.listing_type = `eq.${filters.listing_type}`;
-  if (filters?.search) apiFilters.title = `ilike.*${filters.search}*`;
+  if (filters?.search) {
+    const escaped = filters.search.replace(/[*%]/g, '');
+    apiFilters.title = `ilike.*${escaped}*`;
+  }
 
   return useList<PropertyRow, PropertyApiRow>({
     queryKey: queryKeys.properties(filters),
@@ -198,7 +202,12 @@ export function useCreateProperty() {
     queryKeys.properties(),
     PROPERTIES_PATH,
     {
-      invalidateKeys: [queryKeys.properties()],
+      invalidateKeys: [
+        queryKeys.properties(),
+        queryKeys.leads(),
+        queryKeys.owners(),
+        ['recent-activity'],
+      ],
     }
   );
 }
@@ -208,7 +217,12 @@ export function useUpdateProperty() {
     queryKeys.properties(),
     PROPERTIES_PATH,
     {
-      invalidateKeys: [queryKeys.properties()],
+      invalidateKeys: [
+        queryKeys.properties(),
+        queryKeys.leads(),
+        queryKeys.owners(),
+        ['recent-activity'],
+      ],
     }
   );
 }
@@ -218,7 +232,12 @@ export function useDeleteProperty() {
     queryKeys.properties(),
     PROPERTIES_PATH,
     {
-      invalidateKeys: [queryKeys.properties()],
+      invalidateKeys: [
+        queryKeys.properties(),
+        queryKeys.leads(),
+        queryKeys.owners(),
+        ['recent-activity'],
+      ],
     }
   );
 }
@@ -292,25 +311,46 @@ export function useReorderPropertyImages() {
 // ============================================================
 
 export function useSoftDeleteProperty() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       return softDeleteProperty(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     },
   });
 }
 
 export function useRestoreProperty() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       return restoreProperty(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     },
   });
 }
 
 export function usePermanentDeleteProperty() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       return permanentDeleteProperty(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     },
   });
 }

@@ -86,8 +86,9 @@ export function LeadDetailPage() {
   };
 
   const openWhatsApp = (lead: LeadDetail) => {
-    if (!phone.trim()) return;
-    const clean = phone.replace(/\D/g, '');
+    const leadPhone = lead.phone ?? phone;
+    if (!leadPhone.trim()) return;
+    const clean = leadPhone.replace(/\D/g, '');
     const waPhone = clean.startsWith('54') ? clean : `54${clean}`;
     const prop = lead.property_title ? `por tu interés en "${lead.property_title}"` : 'por tu consulta';
     const text = `Hola ${lead.name}, te contactamos desde BIENENHAUS ${prop}. ¿En qué podemos ayudarte?`;

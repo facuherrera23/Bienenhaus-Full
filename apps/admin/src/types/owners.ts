@@ -151,6 +151,7 @@ export interface ActionPlanRow {
   owner_name: string | null;
   tasks_count: number;
   completed_tasks_count: number;
+  action_plan_tasks?: Array<{ id: string; status: ActionPlanStatus; due_date: string | null }> | null;
 }
 
 export interface ActionPlanDetail extends ActionPlanRow {

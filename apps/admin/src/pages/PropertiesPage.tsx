@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Download, Plus, Search } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
 import { useProperties, useMLMeta, STATUS_LABEL, STATUS_TONE, type PropertyRow, type PropertyStatus, type MlMetaRow } from '../lib/properties.api';
+import { getListData as getListDataUtil, todayStamp, toCsv, downloadCsv } from '../lib/utils';
 
 function StatusBadge({ status }: { status: PropertyStatus }) {
   return <span className={`badge badge--${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
@@ -21,30 +22,6 @@ function getListData<T>(data: unknown): T[] {
   return [];
 }
 
-function todayStamp(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-function toCsv(header: string[], rows: (string | number)[][]): string {
-  const escape = (v: string | number) => {
-    const s = String(v);
-    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
-  return [header.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
-}
-
-function downloadCsv(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
 export function PropertiesPage() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState('');
@@ -54,7 +31,7 @@ export function PropertiesPage() {
     search,
     status: statusFilter === 'todos' ? undefined : statusFilter,
   });
-  const properties = getListData<PropertyRow>(data);
+  const properties = getListDataUtil<PropertyRow>(data);
 
   const { data: mlMetaRaw } = useMLMeta();
 

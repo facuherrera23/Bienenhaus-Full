@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Calendar, CalendarClock, ChevronLeft, ChevronRight, Clock, MapPin, Plus, Search, X, QrCode, Loader2 } from 'lucide-preact';
+import { supabaseUrl } from '../lib/supabase';
+import { useAuthAccessToken } from '../lib/auth';
 import {
   fetchVisits,
   fetchVisitsByDateRange,
@@ -18,7 +20,6 @@ import { fetchLeads } from '../lib/leads';
 import { queryClient } from '../lib/query/client';
 import { useQuery, useMutation } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
-import { supabaseUrl } from '../lib/supabase';
 
 const VIEW_MODES = ['month', 'week', 'day'] as const;
 type ViewMode = typeof VIEW_MODES[number];
@@ -55,6 +56,7 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 export function VisitsPage() {
+  const accessToken = useAuthAccessToken();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedVisit, setSelectedVisit] = useState<VisitRow | null>(null);
@@ -97,11 +99,12 @@ export function VisitsPage() {
   // QR code generation mutation
   const qrMutation = useMutation({
     mutationFn: async (visitId: string) => {
+      if (!accessToken) throw new Error('No hay sesión activa');
       const res = await fetch(`${supabaseUrl}/functions/v1/qr-checkin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('supabase.auth.token') ? JSON.parse(localStorage.getItem('supabase.auth.token')!).access_token : ''}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ visitId }),
       });
@@ -148,6 +151,7 @@ export function VisitsPage() {
     return { rangeStart: currentDate, rangeEnd: currentDate };
   }, [viewMode, currentDate]);
 
+  // Use date-range query for better performance
   const { data: visitsInRange, isPending: rangePending } = useQuery({
     queryKey: ['visits-range', formatDateKey(rangeStart), formatDateKey(rangeEnd), agentFilter],
     queryFn: () => fetchVisitsByDateRange(
@@ -155,7 +159,7 @@ export function VisitsPage() {
       formatDateKey(rangeEnd),
       agentFilter !== 'todos' ? agentFilter : undefined
     ),
-    enabled: !visitsPending,
+    enabled: true,
   });
 
   const visits = visitsInRange ?? [];
@@ -474,7 +478,7 @@ export function VisitsPage() {
                 <div style={{ padding: '24px' }}><Loader2 size={32} className="spin" /></div>
               ) : (
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(showQrModal)}`}
+                  src={`${supabaseUrl}/functions/v1/qr-checkin?visitId=${encodeURIComponent(showQrModal)}`}
                   alt="QR Check-in"
                   style={{ maxWidth: '256px', border: '1px solid var(--bh-border)', borderRadius: '8px' }}
                 />

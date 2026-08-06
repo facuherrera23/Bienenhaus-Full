@@ -20,6 +20,7 @@ import {
   X,
   ChevronUp,
 } from 'lucide-preact';
+import { useAuthUserId } from '../lib/auth';
 import {
   fetchChannels,
   createDirectChannel,
@@ -45,6 +46,7 @@ import { pushToast } from '../store/app';
 import { ImageLightbox } from '../components/ImageLightbox';
 
 export function ChatPage() {
+  const currentUserId = useAuthUserId();
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showChannelList, setShowChannelList] = useState(true);
   const [messageText, setMessageText] = useState('');
@@ -68,15 +70,6 @@ export function ChatPage() {
   const [imageLightbox, setImageLightbox] = useState<{ url: string; name: string } | null>(null);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  const currentUserId = useMemo(() => {
-    try {
-      const session = JSON.parse(localStorage.getItem('supabase.auth.token') ?? '{}');
-      return session.user?.id;
-    } catch {
-      return null;
-    }
-  }, []);
 
   const { data: agents } = useQuery({ queryKey: ['agents'], queryFn: fetchAgents });
   const { data: properties } = useQuery({ queryKey: ['properties'], queryFn: fetchProperties });
@@ -350,14 +343,9 @@ export function ChatPage() {
                       )}
                     </div>
                     <div className="channel-preview">
-                      {channel.last_message && (
+{channel.last_message && (
                         <>
-                          {channel.last_message.sender_id === (() => {
-                            try {
-                              const s = JSON.parse(localStorage.getItem('supabase.auth.token') ?? '{}');
-                              return s.user?.id;
-                            } catch { return null; }
-                          })() ? 'Tú: ' : ''}
+                          {channel.last_message.sender_id === currentUserId ? 'Tú: ' : ''}
                           {channel.last_message.message_type !== 'text' && (
                             <span className="msg-type-badge">[{MESSAGE_TYPE_LABEL[channel.last_message.message_type]}]</span>
                           )}

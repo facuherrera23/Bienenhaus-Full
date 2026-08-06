@@ -37,11 +37,14 @@ export function ActionPlansDashboard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
+  const assignedToFilter = assignedFilter === 'todos' ? undefined : assignedFilter === 'mine' ? 'current_user' : assignedFilter === 'unassigned' ? 'null' : undefined;
+
   const { data: activeResult, isLoading: activeLoading } = useActionPlans({
     pageSize: 100,
     status: statusFilter === 'todos' ? undefined : statusFilter,
     category: categoryFilter === 'todos' ? undefined : categoryFilter,
     priority: priorityFilter === 'todos' ? undefined : priorityFilter,
+    assigned_to: assignedToFilter,
   });
 
   const { data: deletedResult, isLoading: deletedLoading } = useDeletedActionPlans();
@@ -267,7 +270,7 @@ export function ActionPlansDashboard() {
               <select
                 className="select"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter((e.currentTarget as HTMLSelectElement).value as any)}
+                onChange={(e) => setStatusFilter((e.currentTarget as HTMLSelectElement).value as 'todos' | ActionPlanStatus)}
               >
                 <option value="todos">Todos</option>
                 <option value="pending">{ACTION_PLAN_STATUS_LABEL.pending}</option>

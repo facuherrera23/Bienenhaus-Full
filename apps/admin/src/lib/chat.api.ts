@@ -35,7 +35,7 @@ const MESSAGES_PATH = 'chat_messages';
 
 export function useChannels(agentId: string | null) {
   return useList<ChatChannel>({
-    queryKey: queryKeys.leads([{ chat: agentId }]),
+    queryKey: queryKeys.chat([{ chat: agentId }]),
     path: CHANNELS_PATH,
     select: `
       id,type,name,property_id,lead_id,created_by,created_at,updated_at,deleted_at,
@@ -72,7 +72,7 @@ export function useChannels(agentId: string | null) {
 
 export function useChannel(channelId: string | null) {
   return useItem<ChatChannel>(
-    queryKeys.leads([{ chat: channelId }]),
+    queryKeys.chat([{ chat: channelId }]),
     CHANNELS_PATH,
     channelId,
     !!channelId
@@ -84,7 +84,7 @@ export function useMessages(channelId: string | null, options?: {
   before?: string;
 }) {
   return useList<ChatMessage>({
-    queryKey: queryKeys.leads([{ chat: channelId, messages: options }]),
+    queryKey: queryKeys.chat([{ chat: channelId, messages: options }]),
     path: MESSAGES_PATH,
     select: `
       id,channel_id,sender_id,content,message_type,file_url,file_name,file_size,

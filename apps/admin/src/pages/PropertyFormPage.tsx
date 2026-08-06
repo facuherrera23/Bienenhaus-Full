@@ -20,17 +20,19 @@ import {
 import { PropertyOwnerManager } from '../components/owners';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
+import { getListData } from '../lib/utils';
 
 const STORAGE_KEY = 'property-form-draft';
 const AUTOSAVE_DELAY = 2000;
 
-function getListData<T>(data: unknown): T[] {
-  if (!data) return [];
-  if (Array.isArray(data)) return data as T[];
-  if (typeof data === 'object' && data !== null && 'data' in data) {
-    return (data as { data: T[] }).data ?? [];
-  }
-  return [];
+function getListingTypeLabel(listingType: ListingType): string {
+  const labels: Record<ListingType, string> = {
+    venta: 'Venta',
+    alquiler: 'Alquiler',
+    venta_alquiler: 'Venta o alquiler',
+    emprendimiento: 'Emprendimiento',
+  };
+  return labels[listingType] ?? listingType;
 }
 
 const EMPTY: PropertyFormValues = {
@@ -775,7 +777,7 @@ export function PropertyFormPage() {
                 <div style={{ background: '#f5f5f5', padding: '16px', borderBottom: '1px solid var(--bh-border)' }}>
                   <h4 style={{ margin: 0, fontSize: '18px', color: '#333' }}>{values.title}</h4>
                   <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
-                    <span className="badge badge--info">{values.listing_type === 'venta' ? 'Venta' : values.listing_type === 'alquiler' ? 'Alquiler' : values.listing_type}</span>
+                    <span className="badge badge--info">{getListingTypeLabel(values.listing_type)}</span>
                     <span className="badge badge--success" style={{ fontSize: '14px' }}>{values.price ? `${values.currency} ${values.price.toLocaleString('es-AR')}` : 'Precio no definido'}</span>
                     <span className="badge badge--neutral">{values.currency}</span>
                   </div>

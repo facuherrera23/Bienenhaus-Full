@@ -436,59 +436,6 @@ select {
   margin: 0;
 }
 
-/* KPIs */
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 16px;
-}
-
-.kpi-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px;
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-md);
-  box-shadow: var(--bh-shadow-sm);
-}
-
-.kpi-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  flex: none;
-  border-radius: 12px;
-  background: var(--bh-accent-soft);
-  color: var(--bh-accent);
-}
-
-.kpi-label {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--bh-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.kpi-value {
-  margin: 2px 0 0;
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--bh-text-primary);
-}
-
-.kpi-delta {
-  margin: 1px 0 0;
-  font-size: 12px;
-  color: var(--bh-accent);
-}
-
 /* Toolbar (listados) */
 
 .toolbar {
@@ -1495,7 +1442,7 @@ select {
 
 
 /* --------------------------------------------------------------------------
-   Mercado Libre + Configuración + Modales
+   Mercado Libre + Configuraciï¿½n + Modales
    -------------------------------------------------------------------------- */
 
 .spin {
@@ -1829,7 +1776,7 @@ select {
 }
 
 /* --------------------------------------------------------------------------
-   Acciones rápidas (dashboard)
+   Acciones rï¿½pidas (dashboard)
    -------------------------------------------------------------------------- */
 
 .quick-list {
@@ -2372,10 +2319,25 @@ select {
   overflow: hidden;
 }
 
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-  border-color: var(--bh-border-hover);
+@media (prefers-reduced-motion: no-preference) {
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    border-color: var(--bh-border-hover);
+  }
+
+  .kpi-card:hover .kpi-icon {
+    transform: scale(1.1);
+  }
+
+  .kpi-card:hover .kpi-accent {
+    opacity: 1;
+  }
+
+  .kpi-card--info:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-info), var(--bh-accent)); }
+  .kpi-card--success:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft)); }
+  .kpi-card--warning:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft)); }
+  .kpi-card--danger:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft)); }
 }
 
 .kpi-card::before {
@@ -2392,6 +2354,7 @@ select {
 .kpi-card--success::before { background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft)); }
 .kpi-card--warning::before { background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft)); }
 .kpi-card--danger::before { background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft)); }
+.kpi-card--neutral::before { background: linear-gradient(90deg, var(--bh-text-tertiary), var(--bh-border)); }
 
 .kpi-icon {
   display: flex;
@@ -2410,10 +2373,7 @@ select {
 .kpi-card--success .kpi-icon { background: rgba(16, 185, 129, 0.15); color: var(--bh-success); }
 .kpi-card--warning .kpi-icon { background: rgba(245, 158, 11, 0.15); color: var(--bh-warning); }
 .kpi-card--danger .kpi-icon { background: rgba(239, 68, 68, 0.15); color: var(--bh-danger); }
-
-.kpi-card:hover .kpi-icon {
-  transform: scale(1.1);
-}
+.kpi-card--neutral .kpi-icon { background: rgba(107, 114, 128, 0.15); color: var(--bh-text-tertiary); }
 
 .kpi-content {
   flex: 1;
@@ -2456,16 +2416,6 @@ select {
   transition: opacity var(--dur-med);
 }
 
-.kpi-card:hover .kpi-accent {
-  opacity: 1;
-}
-
-.kpi-card--info:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-info), var(--bh-accent)); }
-.kpi-card--success:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft)); }
-.kpi-card--warning:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft)); }
-.kpi-card--danger:hover .kpi-accent { background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft)); }
-
-/* Chart cards in dashboard */
 .charts-section .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));

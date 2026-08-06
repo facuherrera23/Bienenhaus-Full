@@ -12,6 +12,8 @@ import {
   useReports,
   useSendCommunication,
   useCreateReport,
+  updateOwner,
+  sendReport,
   ownersKeys,
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
@@ -50,7 +52,8 @@ export function OwnerDetailPage() {
   const createReport = useCreateReport();
 
   const { data: propertyOwners } = usePropertyOwners(ownerId ?? null);
-  const { data: priceAnalysis } = usePriceAnalysis(ownerId !== undefined ? propertyOwners?.[0]?.property_id ?? '' : '');
+  const primaryPropertyId = propertyOwners?.[0]?.property_id ?? '';
+  const { data: priceAnalysis } = usePriceAnalysis(primaryPropertyId || null);
   const { data: actionPlansResult } = useActionPlans({ owner_id: ownerId, pageSize: 20 });
   const { data: communicationsResult } = useCommunications({ owner_id: ownerId, pageSize: 50 });
   const { data: reportsResult } = useReports({ owner_id: ownerId, pageSize: 20 });
@@ -74,7 +77,6 @@ export function OwnerDetailPage() {
   const handleSaveOwner = async (data: any) => {
     if (!ownerId) return;
     try {
-      const { updateOwner } = await import('@lib/owners');
       await updateOwner(ownerId, data);
       pushToast({ type: 'success', title: 'Propietario actualizado', description: data.full_name });
       queryClient.invalidateQueries({ queryKey: ownersKeys.detail(ownerId) });
@@ -102,7 +104,6 @@ export function OwnerDetailPage() {
 
   const handleSendReport = async (report: ReportRow) => {
     try {
-      const { sendReport } = await import('@lib/owners');
       await sendReport(report.id as string);
       pushToast({ type: 'success', title: 'Reporte enviado', description: report.title ?? undefined });
       queryClient.invalidateQueries({ queryKey: ['owner-reports'] });
@@ -473,14 +474,16 @@ export function OwnerDetailPage() {
         <div className="tab-content">
           <CommunicationTimeline
             communications={communications}
-onEdit={(_comm) => {
-               // TODO: Edit communication
-             }}
-onDelete={(_commId) => {
-               if (window.confirm('¿Eliminar esta comunicación?')) {
-                 // TODO: Delete communication
-               }
-             }}
+            onEdit={(comm) => {
+              // TODO: Implement edit communication modal
+              console.log('Edit communication:', comm);
+            }}
+            onDelete={(commId) => {
+              if (window.confirm('¿Eliminar esta comunicación?')) {
+                // TODO: Implement delete communication
+                console.log('Delete communication:', commId);
+              }
+            }}
             onResend={(commId) => handleSendCommunication(communications.find(c => c.id === commId)!)}
           />
           <div className="tab-footer">

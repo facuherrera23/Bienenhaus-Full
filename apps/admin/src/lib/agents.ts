@@ -283,18 +283,8 @@ export async function permanentDeleteAgent(id: string): Promise<void> {
 }
 
 // ============================================================
-// ⚠️ FUNCIONES DESACTIVADAS - Columnas no existen en la DB
+// Agent Permissions, Commission & Schedule
 // ============================================================
-
-// Las siguientes funciones están comentadas porque las columnas
-// 'permissions', 'commission' y 'schedule' NO existen en la tabla 'agents'.
-// 
-// Para habilitarlas, ejecuta en la base de datos:
-//   ALTER TABLE agents ADD COLUMN permissions JSONB DEFAULT '{}';
-//   ALTER TABLE agents ADD COLUMN commission JSONB DEFAULT '{}';
-//   ALTER TABLE agents ADD COLUMN schedule JSONB DEFAULT '[]';
-//
-// Luego descomenta las funciones que necesites.
 
 export async function updateAgentPermissions(id: string, permissions: Partial<AgentPermissions>): Promise<void> {
   const agent = await fetchAgent(id);

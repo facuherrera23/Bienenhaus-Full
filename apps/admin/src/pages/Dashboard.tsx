@@ -1,4 +1,4 @@
-import { ArrowUpRight, Building2, Users, TrendingUp, DollarSign, Activity, Home, AlertCircle, FileText, Clock, UserCheck, Target } from 'lucide-preact';
+import { ArrowUpRight, Building2, Users, TrendingUp, DollarSign, Activity, Home, FileText, UserCheck } from 'lucide-preact';
 import { Link } from 'wouter-preact';
 import { QuickPropertyActions } from '../components/QuickPropertyActions';
 import { RecentActivity } from '../components/RecentActivity';
@@ -25,21 +25,27 @@ export function Dashboard() {
   const newLeads = leads?.filter(l => l.status === 'nuevo').length ?? 0;
   const activeLeads = leads?.filter(l => ['nuevo', 'contactado', 'calificado', 'en_proceso'].includes(l.status)).length ?? 0;
   const wonLeads = leads?.filter(l => l.status === 'cerrado_ganado').length ?? 0;
-  const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : '0';
+  const lostLeads = leads?.filter(l => l.status === 'cerrado_perdido').length ?? 0;
+  const closedLeads = wonLeads + lostLeads;
+  const conversionRate = closedLeads > 0 ? ((wonLeads / closedLeads) * 100).toFixed(1) : '0';
 
   const totalProps = properties?.length ?? 0;
   const publishedProps = properties?.filter(p => p.status === 'publicada').length ?? 0;
   const featuredProps = properties?.filter(p => p.featured).length ?? 0;
-  const pipelineValue = properties?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
+  const pipelineValue = properties
+    ?.filter(p => p.listing_type === 'venta' && p.currency === 'USD')
+    ?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
+  const pipelineValueARS = properties
+    ?.filter(p => p.listing_type === 'venta' && p.currency === 'ARS')
+    ?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
 
   const totalOwners = owners?.length ?? 0;
   const ownersWithProps = owners?.filter(o => o.property_count > 0).length ?? 0;
 
-  const now = new Date();
+const now = new Date();
   const overdueTasks = actionPlans?.reduce((count, plan) => {
-    // Use ActionPlanDetail type which includes tasks
-    const planTasks = (plan as any).tasks ?? [];
-    return count + planTasks.filter((t: any) => 
+    const planTasks = plan.action_plan_tasks ?? [];
+    return count + planTasks.filter((t: { due_date: string | null; status: string }) =>
       t.due_date && new Date(t.due_date) < now && t.status !== 'completed'
     ).length;
   }, 0) ?? 0;
@@ -50,13 +56,10 @@ export function Dashboard() {
     { label: 'Leads Totales', value: totalLeads, delta: `${newLeads} nuevos`, icon: Users, tone: 'info' },
     { label: 'Leads Activos', value: activeLeads, delta: `Conversión ${conversionRate}%`, icon: TrendingUp, tone: 'success' },
     { label: 'Propiedades Publicadas', value: publishedProps, delta: `${featuredProps} destacadas`, icon: Building2, tone: 'warning' },
-    { label: 'Valor Pipeline', value: pipelineValue > 0 ? `$${pipelineValue.toLocaleString('es-AR')}` : '—', delta: `${totalProps} propiedades totales`, icon: DollarSign, tone: 'info' },
+    { label: 'Valor Pipeline (USD)', value: pipelineValue > 0 ? `$${pipelineValue.toLocaleString('es-AR')}` : '—', delta: `${totalProps} propiedades totales`, icon: DollarSign, tone: 'info' },
+    { label: 'Valor Pipeline (ARS)', value: pipelineValueARS > 0 ? `$${pipelineValueARS.toLocaleString('es-AR')}` : '—', delta: `solo venta`, icon: DollarSign, tone: 'info' },
     { label: 'Propietarios Totales', value: totalOwners, delta: `${ownersWithProps} con propiedades`, icon: UserCheck, tone: 'info' },
     { label: 'Planes de Acción Pendientes', value: pendingPlans, delta: `${overdueTasks} tareas vencidas`, icon: FileText, tone: 'warning' },
-    { label: 'Propietarios sin Contacto >30d', value: '—', delta: 'Requiere datos de comunicación', icon: Clock, tone: 'neutral' },
-    { label: 'Análisis de Precio Vencidos', value: '—', delta: 'Requiere análisis de precio', icon: AlertCircle, tone: 'neutral' },
-    { label: 'Propiedades Sobrevaloradas', value: '—', delta: 'Requiere análisis de precio', icon: TrendingUp, tone: 'danger' },
-    { label: 'Tareas Vencidas', value: overdueTasks, delta: `${pendingPlans} planes activos`, icon: Target, tone: 'danger' },
   ];
 
   return (
@@ -77,8 +80,13 @@ export function Dashboard() {
         <h3 id="kpi-title" className="section-title">Indicadores Clave</h3>
         <div className="kpi-grid">
           {kpis.map((kpi) => (
-            <article key={kpi.label} className={`kpi-card kpi-card--${kpi.tone}`}>
-              <span className="kpi-icon">
+            <article
+              key={kpi.label}
+              className={`kpi-card kpi-card--${kpi.tone}`}
+              role="region"
+              aria-label={`KPI: ${kpi.label}`}
+            >
+              <span className="kpi-icon" aria-hidden="true">
                 <kpi.icon size={22} strokeWidth={1.8} />
               </span>
               <div className="kpi-content">
@@ -105,7 +113,7 @@ export function Dashboard() {
           <h3 id="quick-title" className="section-title">Acciones Rápidas</h3>
           <Link href="/propiedades" className="section-link">Ver todas <Home size={14} /></Link>
         </div>
-        <QuickPropertyActions />
+        <QuickPropertyActions properties={properties} />
       </section>
 
       <section className="dashboard-section" aria-labelledby="activity-title">

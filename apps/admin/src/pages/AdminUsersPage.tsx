@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Loader2, Plus, Trash2, Unlock } from 'lucide-preact';
+import { useAuthUserId } from '../lib/auth';
 import {
   fetchAdminUsers,
   inviteAdminUser,
@@ -23,6 +24,7 @@ function formatDate(iso: string | null): string {
 export function AdminUsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', full_name: '', role: 'staff' as AdminRole });
+  const currentUserId = useAuthUserId();
 
   const { data, isPending, isError } = useQuery<AdminUserRow[]>({
     queryKey: ['admin-users'],
@@ -115,15 +117,6 @@ export function AdminUsersPage() {
       pushToast({ type: 'error', title: 'No se pudo eliminar el usuario' });
     }
   };
-
-  const currentUserId = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem('supabase.auth.token') ?? '{}');
-      return session.user?.id;
-    } catch {
-      return null;
-    }
-  })();
 
   return (
     <div className="page">

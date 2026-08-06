@@ -73,8 +73,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     setUploading(true);
     try {
       const newImages = await uploadPropertyImages(propertyId, validFiles);
-      setImages((prev) => [...prev, ...newImages]);
-      onImagesChange?.([...images, ...newImages]);
+      setImages((prev) => {
+        const updated = [...prev, ...newImages];
+        onImagesChange?.(updated);
+        return updated;
+      });
       pushToast({ type: 'success', title: `${newImages.length} imagen${newImages.length === 1 ? '' : 'es'} subida${newImages.length === 1 ? '' : 's'}` });
     } catch {
       pushToast({ type: 'error', title: 'Error subiendo imágenes' });
@@ -119,8 +122,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     if (!propertyId) return;
     try {
       await deletePropertyImage(imageId);
-      setImages((prev) => prev.filter((i) => i.id !== imageId));
-      onImagesChange?.(images.filter((i) => i.id !== imageId));
+      setImages((prev) => {
+        const updated = prev.filter((i) => i.id !== imageId);
+        onImagesChange?.(updated);
+        return updated;
+      });
       pushToast({ type: 'success', title: 'Imagen eliminada' });
     } catch {
       pushToast({ type: 'error', title: 'No se pudo eliminar' });
@@ -131,10 +137,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     if (!propertyId) return;
     try {
       await setPropertyCover(propertyId, imageId);
-      setImages((prev) =>
-        prev.map((i) => ({ ...i, is_cover: i.id === imageId }))
-      );
-      onImagesChange?.(images.map((i) => ({ ...i, is_cover: i.id === imageId })));
+      setImages((prev) => {
+        const updated = prev.map((i) => ({ ...i, is_cover: i.id === imageId }));
+        onImagesChange?.(updated);
+        return updated;
+      });
       pushToast({ type: 'success', title: 'Portada actualizada' });
     } catch {
       pushToast({ type: 'error', title: 'No se pudo actualizar portada' });
@@ -157,19 +164,21 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
       setDraggedId(null);
       return;
     }
-    const newOrder = [...images];
-    const fromIndex = newOrder.findIndex((i) => i.id === draggedId);
-    const toIndex = newOrder.findIndex((i) => i.id === targetId);
-    if (fromIndex === -1 || toIndex === -1) return;
-    const [moved] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, moved);
-    setImages(newOrder);
-    // Actualizar positions en BD
-    reorderPropertyImages(propertyId!, newOrder.map((i) => i.id)).catch(() => {
-      pushToast({ type: 'error', title: 'No se pudo reordenar' });
-      loadImages(); // revert
+    setImages((prev) => {
+      const newOrder = [...prev];
+      const fromIndex = newOrder.findIndex((i) => i.id === draggedId);
+      const toIndex = newOrder.findIndex((i) => i.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+      const [moved] = newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, moved);
+      // Actualizar positions en BD
+      reorderPropertyImages(propertyId!, newOrder.map((i) => i.id)).catch(() => {
+        pushToast({ type: 'error', title: 'No se pudo reordenar' });
+        loadImages(); // revert
+      });
+      onImagesChange?.(newOrder);
+      return newOrder;
     });
-    onImagesChange?.(newOrder);
     setDraggedId(null);
   };
 

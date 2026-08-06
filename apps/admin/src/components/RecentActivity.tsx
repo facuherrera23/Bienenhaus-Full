@@ -76,8 +76,13 @@ function timeAgo(iso: string): string {
   const h = Math.floor(m / 60);
   if (h < 24) return `hace ${h} h`;
   const d = Math.floor(h / 24);
-  if (d < 30) return d === 1 ? 'hace 1 día' : `hace ${d} días`;
-  return new Date(iso).toLocaleDateString('es-AR');
+  if (d < 7) return d === 1 ? 'hace 1 día' : `hace ${d} días`;
+  const w = Math.floor(d / 7);
+  if (w < 4) return w === 1 ? 'hace 1 semana' : `hace ${w} semanas`;
+  const mo = Math.floor(d / 30);
+  if (mo < 12) return mo === 1 ? 'hace 1 mes' : `hace ${mo} meses`;
+  const y = Math.floor(d / 365);
+  return y === 1 ? 'hace 1 año' : `hace ${y} años`;
 }
 
 export function RecentActivity() {

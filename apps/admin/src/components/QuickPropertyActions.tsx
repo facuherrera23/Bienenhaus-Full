@@ -1,10 +1,10 @@
 import { Building2 } from 'lucide-preact';
 import { Link } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'preact/hooks';
 import {
   STATUS_LABEL,
   STATUS_TONE,
-  useProperties,
   useUpdateProperty,
   type PropertyRow,
   type PropertyStatus,
@@ -13,12 +13,16 @@ import { pushToast } from '../store/app';
 
 const STATUSES = Object.keys(STATUS_LABEL) as PropertyStatus[];
 
-export function QuickPropertyActions() {
-  const { data, isPending, isError } = useProperties({ pageSize: 6 });
-  const recent = data?.data ?? [];
+interface QuickPropertyActionsProps {
+  properties: PropertyRow[];
+}
+
+export function QuickPropertyActions({ properties }: QuickPropertyActionsProps) {
+  const recent = properties.slice(0, 6);
 
   const updateProperty = useUpdateProperty();
   const queryClient = useQueryClient();
+  const lastErrorToastRef = useRef<number>(0);
 
   const handleStatus = async (p: PropertyRow, status: PropertyStatus) => {
     try {
@@ -30,11 +34,15 @@ export function QuickPropertyActions() {
         description: `${p.title} → ${STATUS_LABEL[status]}`,
       });
     } catch {
-      pushToast({ type: 'error', title: 'No se pudo actualizar el estado' });
+      const now = Date.now();
+      if (now - lastErrorToastRef.current > 3000) {
+        lastErrorToastRef.current = now;
+        pushToast({ type: 'error', title: 'No se pudo actualizar el estado' });
+      }
     }
   };
 
-  return (
+return (
     <div className="card">
       <div className="card-head">
         <h3>Acciones rápidas</h3>
@@ -43,14 +51,11 @@ export function QuickPropertyActions() {
         </Link>
       </div>
 
-      {isPending && <div className="placeholder-card">Cargando propiedades…</div>}
-      {isError && <div className="placeholder-card">No se pudieron cargar las propiedades.</div>}
-
-      {!isPending && !isError && recent.length === 0 && (
+      {recent.length === 0 && (
         <div className="placeholder-card">Todavía no hay propiedades.</div>
       )}
 
-      {!isPending && !isError && recent.length > 0 && (
+      {recent.length > 0 && (
         <ul className="quick-list">
           {recent.map((p) => (
             <li className="quick-item" key={p.id}>

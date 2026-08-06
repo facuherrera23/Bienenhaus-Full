@@ -1,5 +1,6 @@
 import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
+import { useMemo } from 'preact/hooks';
 import {
   BarChart,
   Bar,
@@ -57,38 +58,57 @@ export function DashboardCharts() {
   const leads = leadsResult?.data ?? [];
   const properties = propertiesResult?.data ?? [];
 
-  // Leads by status
-  const leadsByStatus = leads?.reduce((acc, l) => {
-    acc[l.status] = (acc[l.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) ?? {};
+  const leadsByStatus = useMemo(() => {
+    return leads?.reduce((acc, l) => {
+      acc[l.status] = (acc[l.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) ?? {};
+  }, [leads]);
 
-  // Properties by status
-  const propsByStatus = properties?.reduce((acc, p) => {
-    acc[p.status] = (acc[p.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) ?? {};
+  const propsByStatus = useMemo(() => {
+    return properties?.reduce((acc, p) => {
+      acc[p.status] = (acc[p.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) ?? {};
+  }, [properties]);
 
-  // Leads by source
-  const leadsBySource = leads?.reduce((acc, l) => {
-    acc[l.source] = (acc[l.source] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) ?? {};
+  const leadsBySource = useMemo(() => {
+    return leads?.reduce((acc, l) => {
+      acc[l.source] = (acc[l.source] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) ?? {};
+  }, [leads]);
 
-  // Leads by month (last 6 months)
-  const leadsByMonth = leads?.reduce((acc, l) => {
-    const month = formatMonth(l.created_at);
-    acc[month] = (acc[month] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) ?? {};
+  const sixMonthsAgo = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 6);
+    return d.toISOString();
+  }, []);
 
-  const monthOrder = Object.keys(leadsByMonth).sort((a, b) => {
-    const [ma, ya] = a.split(' ');
-    const [mb, yb] = b.split(' ');
-    const monthNum = (m: string) => ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'].indexOf(m.toLowerCase());
-    return monthNum(ma) - monthNum(mb) || parseInt(ya) - parseInt(yb);
-  });
-  const leadsByMonthSorted = monthOrder.map(m => ({ month: m, count: leadsByMonth[m] }));
+  const leadsByMonth = useMemo(() => {
+    return leads
+      ?.filter(l => l.created_at >= sixMonthsAgo)
+      ?.reduce((acc, l) => {
+        const month = formatMonth(l.created_at);
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) ?? {};
+  }, [leads, sixMonthsAgo]);
+
+  const monthOrder = useMemo(() => {
+    return Object.keys(leadsByMonth).sort((a, b) => {
+      const [ma, ya] = a.split(' ');
+      const [mb, yb] = b.split(' ');
+      const monthNum = (m: string) => ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'].indexOf(m.toLowerCase());
+      const yearA = parseInt(ya, 10) + 2000;
+      const yearB = parseInt(yb, 10) + 2000;
+      return yearA - yearB || monthNum(ma) - monthNum(mb);
+    });
+  }, [leadsByMonth]);
+
+  const leadsByMonthSorted = useMemo(() => {
+    return monthOrder.map(m => ({ month: m, count: leadsByMonth[m] }));
+  }, [monthOrder, leadsByMonth]);
 
   if (leadsPending || propsPending) {
     return (
@@ -100,33 +120,52 @@ export function DashboardCharts() {
     );
   }
 
+  if ((leads?.length ?? 0) === 0 && (properties?.length ?? 0) === 0) {
+    return (
+      <div className="charts-grid">
+        <div className="chart-card placeholder-card">
+          <p>Sin datos disponibles</p>
+          <p className="muted">Agrega propiedades y leads para ver los gráficos.</p>
+        </div>
+      </div>
+    );
+  }
+
   const totalLeads = leads?.length ?? 0;
   const totalProps = properties?.length ?? 0;
   const publishedProps = propsByStatus.publicada ?? 0;
   const wonLeads = leadsByStatus.cerrado_ganado ?? 0;
-  const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : '0';
+  const lostLeads = leadsByStatus.cerrado_perdido ?? 0;
+  const closedLeads = wonLeads + lostLeads;
+  const conversionRate = closedLeads > 0 ? ((wonLeads / closedLeads) * 100).toFixed(1) : '0';
+  const pipelineValueUSD = properties
+    ?.filter(p => p.listing_type === 'venta' && p.currency === 'USD')
+    ?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
+  const pipelineValueARS = properties
+    ?.filter(p => p.listing_type === 'venta' && p.currency === 'ARS')
+    ?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
 
   return (
     <div className="charts-section">
       <div className="kpi-grid charts-kpi">
-        <div className="kpi-card">
-          <span className="kpi-icon"><Users size={20} strokeWidth={1.8} /></span>
+        <div className="kpi-card" role="region" aria-label="KPI: Total Leads">
+          <span className="kpi-icon" aria-hidden="true"><Users size={20} strokeWidth={1.8} /></span>
           <div>
             <p className="kpi-label">Total Leads</p>
             <p className="kpi-value">{totalLeads}</p>
             <p className="kpi-delta">En el sistema</p>
           </div>
         </div>
-        <div className="kpi-card">
-          <span className="kpi-icon"><Building2 size={20} strokeWidth={1.8} /></span>
+        <div className="kpi-card" role="region" aria-label="KPI: Propiedades Publicadas">
+          <span className="kpi-icon" aria-hidden="true"><Building2 size={20} strokeWidth={1.8} /></span>
           <div>
             <p className="kpi-label">Propiedades Publicadas</p>
             <p className="kpi-value">{publishedProps}</p>
             <p className="kpi-delta">De {totalProps} totales</p>
           </div>
         </div>
-        <div className="kpi-card">
-          <span className="kpi-icon"><TrendingUp size={20} strokeWidth={1.8} /></span>
+        <div className="kpi-card" role="region" aria-label="KPI: Conversión (Ganados)">
+          <span className="kpi-icon" aria-hidden="true"><TrendingUp size={20} strokeWidth={1.8} /></span>
           <div>
             <p className="kpi-label">Conversión (Ganados)</p>
             <p className="kpi-value">{conversionRate}%</p>
@@ -136,9 +175,17 @@ export function DashboardCharts() {
         <div className="kpi-card">
           <span className="kpi-icon"><DollarSign size={20} strokeWidth={1.8} /></span>
           <div>
-            <p className="kpi-label">Valor Pipeline</p>
-            <p className="kpi-value">{properties?.reduce((sum, p) => sum + (p.price ?? 0), 0).toLocaleString('es-AR')}</p>
-            <p className="kpi-delta">USD estimado</p>
+            <p className="kpi-label">Valor Pipeline (USD)</p>
+            <p className="kpi-value">{pipelineValueUSD > 0 ? `$${pipelineValueUSD.toLocaleString('es-AR')}` : '—'}</p>
+            <p className="kpi-delta">solo venta</p>
+          </div>
+        </div>
+        <div className="kpi-card" role="region" aria-label="KPI: Valor Pipeline (ARS)">
+          <span className="kpi-icon" aria-hidden="true"><DollarSign size={20} strokeWidth={1.8} /></span>
+          <div>
+            <p className="kpi-label">Valor Pipeline (ARS)</p>
+            <p className="kpi-value">{pipelineValueARS > 0 ? `$${pipelineValueARS.toLocaleString('es-AR')}` : '—'}</p>
+            <p className="kpi-delta">solo venta</p>
           </div>
         </div>
       </div>
@@ -161,11 +208,11 @@ export function DashboardCharts() {
                 <YAxis stroke="#6b7280" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    background: '#1a1e23',
-                    border: '1px solid #2a2e35',
+                    background: 'var(--bh-bg-card)',
+                    border: '1px solid var(--bh-border)',
                     borderRadius: '8px',
                   }}
-                  labelStyle={{ color: '#f4f4f4' }}
+                  labelStyle={{ color: 'var(--bh-text-primary)' }}
                 />
                 <Legend />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
@@ -207,8 +254,8 @@ export function DashboardCharts() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: '#1a1e23',
-                    border: '1px solid #2a2e35',
+                    background: 'var(--bh-bg-card)',
+                    border: '1px solid var(--bh-border)',
                     borderRadius: '8px',
                   }}
                 />
@@ -237,8 +284,8 @@ export function DashboardCharts() {
                 <YAxis dataKey="source" type="category" stroke="#6b7280" fontSize={12} width={100} />
                 <Tooltip
                   contentStyle={{
-                    background: '#1a1e23',
-                    border: '1px solid #2a2e35',
+                    background: 'var(--bh-bg-card)',
+                    border: '1px solid var(--bh-border)',
                     borderRadius: '8px',
                   }}
                 />
@@ -271,8 +318,8 @@ export function DashboardCharts() {
                 <YAxis stroke="#6b7280" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    background: '#1a1e23',
-                    border: '1px solid #2a2e35',
+                    background: 'var(--bh-bg-card)',
+                    border: '1px solid var(--bh-border)',
                     borderRadius: '8px',
                   }}
                 />
