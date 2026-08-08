@@ -9,29 +9,36 @@
  *   const { data } = await supabase.from('properties').select('*');
  */
 
-import { createClient, type SupabaseClient, type User, type AuthChangeEvent, type Session } from '@supabase/supabase-js';
+import {
+    type AuthChangeEvent,
+    createClient,
+    type Session,
+    type SupabaseClient,
+    type User,
+} from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://rnldqiwwzhjnurkguihu.supabase.co';
+const SUPABASE_URL =
+    import.meta.env.VITE_SUPABASE_URL || 'https://rnldqiwwzhjnurkguihu.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 let _supabase: SupabaseClient | null = null;
 
 function getClient(): SupabaseClient {
-  if (!_supabase) {
-    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    });
-  }
-  return _supabase;
+    if (!_supabase) {
+        _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+            },
+            realtime: {
+                params: {
+                    eventsPerSecond: 10,
+                },
+            },
+        });
+    }
+    return _supabase;
 }
 
 export const supabase = getClient();
@@ -39,41 +46,41 @@ export const supabase = getClient();
 export type { SupabaseClient, User, AuthChangeEvent, Session };
 
 export function createServerClient(
-  accessToken: string,
-  options?: { serviceRole?: boolean }
+    accessToken: string,
+    options?: { serviceRole?: boolean },
 ): SupabaseClient {
-  const key = options?.serviceRole
-    ? import.meta.env.SUPABASE_SERVICE_ROLE_KEY
-    : SUPABASE_ANON_KEY;
+    const key = options?.serviceRole
+        ? import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+        : SUPABASE_ANON_KEY;
 
-  return createClient(SUPABASE_URL, key, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+    return createClient(SUPABASE_URL, key, {
+        global: {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        },
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+        },
+    });
 }
 
 export async function getAuthUser(): Promise<User | null> {
-  const { data } = await supabase.auth.getUser();
-  return data.user ?? null;
+    const { data } = await supabase.auth.getUser();
+    return data.user ?? null;
 }
 
 export function getSession() {
-  return supabase.auth.getSession();
+    return supabase.auth.getSession();
 }
 
 export function signOut() {
-  return supabase.auth.signOut();
+    return supabase.auth.signOut();
 }
 
 export function onAuthStateChange(
-  callback: (event: AuthChangeEvent, session: Session | null) => void
+    callback: (event: AuthChangeEvent, session: Session | null) => void,
 ) {
-  return supabase.auth.onAuthStateChange(callback);
+    return supabase.auth.onAuthStateChange(callback);
 }
