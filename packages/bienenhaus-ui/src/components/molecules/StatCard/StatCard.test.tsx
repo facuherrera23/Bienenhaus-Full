@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { fireEvent, render, screen } from '@testing-library/preact';
 import { StatCard } from './StatCard';
 import type { StatCardProps } from './StatCard';
 import styles from './StatCard.module.css';

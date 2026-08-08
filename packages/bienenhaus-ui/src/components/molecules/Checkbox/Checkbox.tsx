@@ -1,4 +1,4 @@
-import { forwardRef, type ChangeEvent, type ReactNode } from 'preact/compat';
+import { type ChangeEvent, forwardRef, type ReactNode } from 'preact/compat';
 import { useCallback, useEffect, useId, useRef, useState } from 'preact/hooks';
 
 export type CheckboxSize = 'sm' | 'md';

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Badge } from './Badge';
-import type { BadgeVariant, BadgeSize } from './Badge';
+import type { BadgeSize, BadgeVariant } from './Badge';
 
 const meta: Meta<typeof Badge> = {
   title: 'Atoms/Badge',

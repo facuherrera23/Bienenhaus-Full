@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { fireEvent, render, screen } from '@testing-library/preact';
 import { Select } from './Select';
 import type { SelectOption } from './Select';
 

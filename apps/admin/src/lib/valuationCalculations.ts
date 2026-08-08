@@ -5,21 +5,21 @@
 // ============================================================================
 
 import type {
+  Ambientes,
   Comparable,
   Servicios,
-  Ambientes,
-  ValuacionFormValues,
+  TipoInmueble,
   ValuacionCalculadaFormValues,
-  TipoInmueble
+  ValuacionFormValues
 } from '../types/valuationTypes';
 
 import {
-  PESOS,
-  SLOT_ORDER,
+  AMBIENTE_IDS,
   NIVELES,
+  PESOS,
   RUBROS,
   SERVICIOS_MAP,
-  AMBIENTE_IDS
+  SLOT_ORDER
 } from '../schemas/valuationSchemas';
 
 // ============================================================================

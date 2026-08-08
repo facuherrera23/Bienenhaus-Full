@@ -4,6 +4,7 @@ import {
     Bell,
     CheckCheck,
     LogOut,
+    type LucideIcon,
     Menu,
     Moon,
     Plus,
@@ -12,7 +13,6 @@ import {
     Sun,
     User,
     X,
-    type LucideIcon,
 } from 'lucide-preact';
 import { Avatar, Badge, Dropdown, IconButton, SearchInput, Spinner } from '@bienenhaus/ui';
 import {

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { fireEvent, render, screen } from '@testing-library/preact';
 import { createRef } from 'preact';
 import { Input } from './Input';
 import styles from './Input.module.css';

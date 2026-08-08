@@ -1,4 +1,4 @@
-import { forwardRef, type ChangeEvent } from 'preact/compat';
+import { type ChangeEvent, forwardRef } from 'preact/compat';
 import { useCallback, useId, useState } from 'preact/hooks';
 
 export type RadioGroupLayout = 'stacked' | 'inline';

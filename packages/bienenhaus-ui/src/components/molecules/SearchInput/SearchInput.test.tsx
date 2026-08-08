@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/preact';
+import { act, fireEvent, render, screen } from '@testing-library/preact';
 import { SearchInput } from './SearchInput';
 
 describe('SearchInput', () => {

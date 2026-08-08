@@ -1,10 +1,7 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { from } from '../../test/setup';
 import {
     CONDITION_LABEL,
-    LISTING_TYPE_LABEL,
-    STATUS_LABEL,
-    STATUS_TONE,
     createProperty,
     deletePropertyImage,
     duplicateProperty,
@@ -16,12 +13,15 @@ import {
     fetchPropertiesByStatus,
     fetchProperty,
     fetchPropertyImages,
+    LISTING_TYPE_LABEL,
     permanentDeleteProperty,
     reorderPropertyImages,
     restoreProperty,
     setPropertyCover,
     slugify,
     softDeleteProperty,
+    STATUS_LABEL,
+    STATUS_TONE,
     toFormValues,
     toNumeric,
     updateProperty,

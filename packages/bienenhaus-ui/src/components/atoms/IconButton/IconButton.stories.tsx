@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { IconButton } from './IconButton';
-import type { IconButtonVariant, IconButtonSize } from './IconButton';
+import type { IconButtonSize, IconButtonVariant } from './IconButton';
 
 /** A representative icon used across stories. */
 const PlusIcon = () => (

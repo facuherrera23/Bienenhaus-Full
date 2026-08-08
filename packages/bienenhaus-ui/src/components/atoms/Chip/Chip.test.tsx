@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { fireEvent, render, screen } from '@testing-library/preact';
 import { Chip } from './Chip';
 
 /** A minimal SVG icon used as the `icon` prop across tests. */

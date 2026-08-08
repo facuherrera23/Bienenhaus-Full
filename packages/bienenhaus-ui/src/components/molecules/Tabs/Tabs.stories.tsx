@@ -7,7 +7,7 @@
  * `Meta`/`StoryObj` from `@storybook/preact` — the story bodies stay identical.
  */
 import { useState } from 'preact/hooks';
-import { Tabs, type TabItem, type TabsVariant } from './Tabs';
+import { type TabItem, Tabs, type TabsVariant } from './Tabs';
 
 interface LocalStoryArgs {
   variant?: TabsVariant;

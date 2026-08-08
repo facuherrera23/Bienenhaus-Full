@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabase, supabaseUrl } from '../supabase';
 import { api, apiRequest, queryKeys, rpcCall } from '../api/client';
 

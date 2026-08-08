@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { fireEvent, render, screen } from '@testing-library/preact';
 import { IconButton } from './IconButton';
 
 /** A minimal SVG icon used as children across tests. */

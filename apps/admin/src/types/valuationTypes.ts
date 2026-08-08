@@ -3,39 +3,13 @@
 // Uso en componentes, hooks, servicios — SIN lógica, solo tipos
 // ============================================================================
 
-import { z } from 'zod';
+import type { z } from 'zod';
 
 // ============================================================================
 // IMPORTS — valores runtime (enums, constantes, schema de validación)
 // ============================================================================
 
 import {
-  // Enums (Zod schemas — se usan con `typeof XEnum`)
-  TipoInmuebleEnum,
-  DestinoEnum,
-  NivelCalidadEnum,
-  NivelLuminosidadEnum,
-  OrientacionEnum,
-  TipoConstruccionEnum,
-  TipoTechoEnum,
-  EstacionamientoEnum,
-  SiNoNAEnum,
-  ServicioNivelEnum,
-  RubroNivelEnum,
-  TipologiaEdiliciaEnum,
-  CalidadPredomEnum,
-  PrevalenciaEnum,
-  NivelSocioEnum,
-  BarrioTipoEnum,
-  ConstruidoPctEnum,
-  IndiceCrecimientoEnum,
-  VigilanciaEnum,
-  TendenciaValoresEnum,
-  DemandaOfertaEnum,
-  TiempoComercializacionEnum,
-  CambiosUsoEnum,
-  FacilidadesEstacionamientoEnum,
-  NivelesComparacionEnum,
 
   // Constantes
   PESOS,
@@ -80,7 +54,33 @@ import type {
   ValuacionInputData,
   ValuacionResultadosData,
   ValuacionConValidaciones
-} from '../schemas/valuationSchemas';
+,
+  // Enums (Zod schemas — se usan con `typeof XEnum`)
+  TipoInmuebleEnum,
+  DestinoEnum,
+  NivelCalidadEnum,
+  NivelLuminosidadEnum,
+  OrientacionEnum,
+  TipoConstruccionEnum,
+  TipoTechoEnum,
+  EstacionamientoEnum,
+  SiNoNAEnum,
+  ServicioNivelEnum,
+  RubroNivelEnum,
+  TipologiaEdiliciaEnum,
+  CalidadPredomEnum,
+  PrevalenciaEnum,
+  NivelSocioEnum,
+  BarrioTipoEnum,
+  ConstruidoPctEnum,
+  IndiceCrecimientoEnum,
+  VigilanciaEnum,
+  TendenciaValoresEnum,
+  DemandaOfertaEnum,
+  TiempoComercializacionEnum,
+  CambiosUsoEnum,
+  FacilidadesEstacionamientoEnum,
+  NivelesComparacionEnum} from '../schemas/valuationSchemas';
 
 // ============================================================================
 // RE-EXPORTS — Enums y Constantes

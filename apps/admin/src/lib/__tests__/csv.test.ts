@@ -1,4 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach, Mock } from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     downloadCsv,
     downloadCsvFile,

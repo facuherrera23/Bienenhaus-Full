@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
-import { Tabs, type TabItem } from './Tabs';
+import { fireEvent, render, screen } from '@testing-library/preact';
+import { type TabItem, Tabs } from './Tabs';
 
 const baseTabs: TabItem[] = [
   { id: 'overview', label: 'Overview', content: 'Overview content' },

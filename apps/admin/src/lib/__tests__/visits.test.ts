@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabaseUrl } from '../supabase';
 import { from } from '../../test/setup';
 import {
@@ -7,6 +8,8 @@ import {
     createRecurringVisit,
     createReminders,
     createVisit,
+    DAY_LABELS,
+    DEFAULT_REMINDERS,
     deleteAgentAvailability,
     embedVisitEmail,
     embedVisitName,
@@ -24,6 +27,7 @@ import {
     generateOccurrences,
     generateQrCode,
     getQrCode,
+    MEETING_TYPE_LABEL,
     permanentDeleteVisit,
     processReminders,
     restoreVisit,
@@ -32,9 +36,6 @@ import {
     updateAgentAvailability,
     updateVisit,
     updateVisitStatus,
-    DAY_LABELS,
-    DEFAULT_REMINDERS,
-    MEETING_TYPE_LABEL,
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
     VISITS_SELECT,

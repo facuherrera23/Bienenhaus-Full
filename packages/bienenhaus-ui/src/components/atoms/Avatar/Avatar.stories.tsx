@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Avatar } from './Avatar';
-import type { AvatarSize, AvatarShape, AvatarStatus } from './Avatar';
+import type { AvatarShape, AvatarSize, AvatarStatus } from './Avatar';
 
 const meta: Meta<typeof Avatar> = {
   title: 'Atoms/Avatar',
