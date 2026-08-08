@@ -12,198 +12,210 @@
    COLOR — Core Palette
    ============================================================ */
 :root {
-  /* ---- Surfaces (Dark-first) ---- */
-  --bh-bg-primary: #050607;        /* Page background, hero, main sections */
-  --bh-bg-secondary: #0A0D10;      /* Navbar scrolled, elevated panels */
-  --bh-bg-card: #1A1E23;           /* Cards, modals, forms, dropdowns */
-  --bh-bg-raised: #1D2229;         /* Elevated cards, popovers, tooltips */
-  --bh-bg-overlay: rgba(4, 5, 6, 0.72);  /* Modal overlays, scrims */
-  --bh-bg-input: #12161B;          /* Input/select/textarea backgrounds */
-  --bh-bg-hover: rgba(255, 255, 255, 0.03); /* Hover on cards, rows, buttons */
-  --bh-bg-active: rgba(255, 255, 255, 0.06); /* Active/pressed state */
+    /* ---- Surfaces (Dark-first) ---- */
+    --bh-bg-primary: #050607; /* Page background, hero, main sections */
+    --bh-bg-secondary: #0a0d10; /* Navbar scrolled, elevated panels */
+    --bh-bg-card: #1a1e23; /* Cards, modals, forms, dropdowns */
+    --bh-bg-raised: #1d2229; /* Elevated cards, popovers, tooltips */
+    --bh-bg-overlay: rgba(4, 5, 6, 0.72); /* Modal overlays, scrims */
+    --bh-bg-input: #12161b; /* Input/select/textarea backgrounds */
+    --bh-bg-hover: rgba(255, 255, 255, 0.03); /* Hover on cards, rows, buttons */
+    --bh-bg-active: rgba(255, 255, 255, 0.06); /* Active/pressed state */
 
-  /* Admin-specific surface aliases */
-  --bh-bg-app: var(--bh-bg-primary);
-  --bh-bg-sidebar: var(--bh-bg-secondary);
-  --bh-bg-overlay: var(--bh-bg-overlay);
+    /* Admin-specific surface aliases */
+    --bh-bg-app: var(--bh-bg-primary);
+    --bh-bg-sidebar: var(--bh-bg-secondary);
+    --bh-bg-overlay: var(--bh-bg-overlay);
 
-  /* ---- Borders ---- */
-  --bh-border: rgba(255, 255, 255, 0.06);       /* Default card/divider borders */
-  --bh-border-input: rgba(255, 255, 255, 0.08); /* Input/select focus borders */
-  --bh-border-strong: rgba(255, 255, 255, 0.12); /* Stronger separations */
-  --bh-border-focus: rgba(32, 184, 171, 0.6);    /* Focus rings, accent borders */
+    /* ---- Borders ---- */
+    --bh-border: rgba(255, 255, 255, 0.06); /* Default card/divider borders */
+    --bh-border-input: rgba(255, 255, 255, 0.08); /* Input/select focus borders */
+    --bh-border-strong: rgba(255, 255, 255, 0.12); /* Stronger separations */
+    --bh-border-focus: rgba(32, 184, 171, 0.6); /* Focus rings, accent borders */
 
-  /* ---- Accent (Teal/Cyan — Brand Signature) ---- */
-  --bh-accent: #1FC8C3;              /* Primary accent: CTAs, links, focus, badges */
-  --bh-accent-hover: #2DDDD5;        /* Hover state for accent elements */
-  --bh-accent-soft: rgba(31, 200, 195, 0.12);  /* Subtle accent backgrounds */
-  --bh-accent-glow: #56E7DE;         /* Glow color for shadows */
-  --bh-accent-glow-soft: rgba(31, 200, 195, 0.15); /* Subtle glow shadows */
+    /* ---- Accent (Teal/Cyan — Brand Signature) ---- */
+    --bh-accent: #1fc8c3; /* Primary accent: CTAs, links, focus, badges */
+    --bh-accent-hover: #2dddd5; /* Hover state for accent elements */
+    --bh-accent-soft: rgba(31, 200, 195, 0.12); /* Subtle accent backgrounds */
+    --bh-accent-glow: #56e7de; /* Glow color for shadows */
+    --bh-accent-glow-soft: rgba(31, 200, 195, 0.15); /* Subtle glow shadows */
 
-  /* Admin accent alias (slightly different hue) — mapped to unified value */
-  --bh-accent: var(--bh-accent);
-  --bh-accent-hover: var(--bh-accent-hover);
-  --bh-accent-soft: var(--bh-accent-soft);
-  --bh-accent-glow: var(--bh-accent-glow);
+    /* Admin accent alias (slightly different hue) — mapped to unified value */
+    --bh-accent: var(--bh-accent);
+    --bh-accent-hover: var(--bh-accent-hover);
+    --bh-accent-soft: var(--bh-accent-soft);
+    --bh-accent-glow: var(--bh-accent-glow);
 
-  /* ---- Text ---- */
-  --bh-text-primary: #F4F4F4;        /* Headlines, body, primary content */
-  --bh-text-secondary: #BFC6CC;      /* Descriptions, meta, secondary info */
-  --bh-text-tertiary: #8A949C;       /* Captions, placeholders, disabled, muted */
-  --bh-text-disabled: #5B646B;       /* Explicit disabled text */
+    /* ---- Text ---- */
+    --bh-text-primary: #f4f4f4; /* Headlines, body, primary content */
+    --bh-text-secondary: #bfc6cc; /* Descriptions, meta, secondary info */
+    --bh-text-tertiary: #8a949c; /* Captions, placeholders, disabled, muted */
+    --bh-text-disabled: #5b646b; /* Explicit disabled text */
 
-  /* ---- Status Colors ---- */
-  --bh-success: #4ADE80;             /* Success states, confirmations */
-  --bh-success-soft: rgba(74, 222, 128, 0.12);
-  --bh-warning: #FACC15;             /* Warnings, cautions */
-  --bh-warning-soft: rgba(250, 204, 21, 0.12);
-  --bh-danger: #F87171;              /* Errors, destructive actions */
-  --bh-danger-soft: rgba(248, 113, 113, 0.12);
-  --bh-info: #60A5FA;                /* Informational */
-  --bh-info-soft: rgba(96, 165, 250, 0.12);
+    /* ---- Status Colors ---- */
+    --bh-success: #4ade80; /* Success states, confirmations */
+    --bh-success-soft: rgba(74, 222, 128, 0.12);
+    --bh-warning: #facc15; /* Warnings, cautions */
+    --bh-warning-soft: rgba(250, 204, 21, 0.12);
+    --bh-danger: #f87171; /* Errors, destructive actions */
+    --bh-danger-soft: rgba(248, 113, 113, 0.12);
+    --bh-info: #60a5fa; /* Informational */
+    --bh-info-soft: rgba(96, 165, 250, 0.12);
 
-  /* ============================================================
+    /* ============================================================
      TYPOGRAPHY
      ============================================================ */
-  /* Font Stacks */
-  --bh-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --bh-font-display: 'Playfair Display', 'Georgia', serif;
-  --bh-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    /* Font Stacks */
+    --bh-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --bh-font-display: 'Playfair Display', 'Georgia', serif;
+    --bh-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-  /* Legacy landing font aliases */
-  --font-body: var(--bh-font-sans);
-  --font-heading: var(--bh-font-display);
+    /* Legacy landing font aliases */
+    --font-body: var(--bh-font-sans);
+    --font-heading: var(--bh-font-display);
 
-  /* Type Scale (4px baseline) */
-  --bh-text-xs: 12px;      /* 0.75rem  — Captions, metadata */
-  --bh-text-sm: 13px;      /* 0.8125rem — Labels, button text, nav */
-  --bh-text-md: 14px;      /* 0.875rem  — Body default, inputs */
-  --bh-text-lg: 16px;      /* 1rem      — Body large, lead paragraphs */
-  --bh-text-xl: 20px;      /* 1.25rem   — H3, card titles */
-  --bh-text-2xl: 24px;     /* 1.5rem    — H2, section subtitles */
-  --bh-text-3xl: 28px;     /* 1.75rem   — H1 small */
-  --bh-text-4xl: 36px;     /* 2.25rem   — H1 */
-  --bh-text-5xl: 48px;     /* 3rem      — Display small */
-  --bh-text-6xl: 64px;     /* 4rem      — Display */
-  --bh-text-7xl: 72px;     /* 4.5rem    — Display large (hero) */
-  --bh-text-8xl: 96px;     /* 6rem      — Stat numbers */
-  --bh-text-9xl: 120px;    /* 7.5rem    — Stat numbers featured */
+    /* Type Scale (4px baseline) */
+    --bh-text-xs: 12px; /* 0.75rem  — Captions, metadata */
+    --bh-text-sm: 13px; /* 0.8125rem — Labels, button text, nav */
+    --bh-text-md: 14px; /* 0.875rem  — Body default, inputs */
+    --bh-text-lg: 16px; /* 1rem      — Body large, lead paragraphs */
+    --bh-text-xl: 20px; /* 1.25rem   — H3, card titles */
+    --bh-text-2xl: 24px; /* 1.5rem    — H2, section subtitles */
+    --bh-text-3xl: 28px; /* 1.75rem   — H1 small */
+    --bh-text-4xl: 36px; /* 2.25rem   — H1 */
+    --bh-text-5xl: 48px; /* 3rem      — Display small */
+    --bh-text-6xl: 64px; /* 4rem      — Display */
+    --bh-text-7xl: 72px; /* 4.5rem    — Display large (hero) */
+    --bh-text-8xl: 96px; /* 6rem      — Stat numbers */
+    --bh-text-9xl: 120px; /* 7.5rem    — Stat numbers featured */
 
-  /* Line Heights */
-  --bh-leading-tight: 1.1;
-  --bh-leading-snug: 1.2;
-  --bh-leading-normal: 1.5;
-  --bh-leading-relaxed: 1.6;
-  --bh-leading-loose: 1.7;
+    /* Line Heights */
+    --bh-leading-tight: 1.1;
+    --bh-leading-snug: 1.2;
+    --bh-leading-normal: 1.5;
+    --bh-leading-relaxed: 1.6;
+    --bh-leading-loose: 1.7;
 
-  /* Tracking */
-  --bh-tracking-tight: -0.02em;
-  --bh-tracking-normal: 0;
-  --bh-tracking-wide: 0.02em;
-  --bh-tracking-wider: 0.08em;
+    /* Tracking */
+    --bh-tracking-tight: -0.02em;
+    --bh-tracking-normal: 0;
+    --bh-tracking-wide: 0.02em;
+    --bh-tracking-wider: 0.08em;
 
-  /* Font Weights */
-  --bh-weight-normal: 400;
-  --bh-weight-medium: 500;
-  --bh-weight-semibold: 600;
-  --bh-weight-bold: 700;
-  --bh-weight-extrabold: 800;
+    /* Font Weights */
+    --bh-weight-normal: 400;
+    --bh-weight-medium: 500;
+    --bh-weight-semibold: 600;
+    --bh-weight-bold: 700;
+    --bh-weight-extrabold: 800;
 
-  /* ============================================================
+    /* ============================================================
      SPACING (4px base unit)
      ============================================================ */
-  --bh-space-1: 4px;    /* 0.25rem — Icon-to-label, tight gaps */
-  --bh-space-2: 8px;    /* 0.5rem  — Compact gaps, pill spacing */
-  --bh-space-3: 12px;   /* 0.75rem — Form field padding, card features */
-  --bh-space-4: 16px;   /* 1rem    — Standard padding, input height */
-  --bh-space-5: 20px;   /* 1.25rem — Comfortable section spacing */
-  --bh-space-6: 24px;   /* 1.5rem  — Generous card padding */
-  --bh-space-8: 32px;   /* 2rem    — Separated groups, grid gaps */
-  --bh-space-10: 40px;  /* 2.5rem  — Section inner, container pad (tablet) */
-  --bh-space-12: 48px;  /* 3rem    — Major section breaks */
-  --bh-space-16: 64px;  /* 4rem    — Page vertical rhythm */
-  --bh-space-20: 80px;  /* 5rem    — Hero, major section padding */
-  --bh-space-24: 96px;  /* 6rem    — Maximum separation */
+    --bh-space-1: 4px; /* 0.25rem — Icon-to-label, tight gaps */
+    --bh-space-2: 8px; /* 0.5rem  — Compact gaps, pill spacing */
+    --bh-space-3: 12px; /* 0.75rem — Form field padding, card features */
+    --bh-space-4: 16px; /* 1rem    — Standard padding, input height */
+    --bh-space-5: 20px; /* 1.25rem — Comfortable section spacing */
+    --bh-space-6: 24px; /* 1.5rem  — Generous card padding */
+    --bh-space-8: 32px; /* 2rem    — Separated groups, grid gaps */
+    --bh-space-10: 40px; /* 2.5rem  — Section inner, container pad (tablet) */
+    --bh-space-12: 48px; /* 3rem    — Major section breaks */
+    --bh-space-16: 64px; /* 4rem    — Page vertical rhythm */
+    --bh-space-20: 80px; /* 5rem    — Hero, major section padding */
+    --bh-space-24: 96px; /* 6rem    — Maximum separation */
 
-  /* Legacy landing container tokens */
-  --container-max: 1440px;
-  --container-pad: 70px;           /* Desktop — overridden by media queries */
-  --navbar-height: 90px;           /* Desktop — overridden by media queries */
+    /* Legacy landing container tokens */
+    --container-max: 1440px;
+    --container-pad: 70px; /* Desktop — overridden by media queries */
+    --navbar-height: 90px; /* Desktop — overridden by media queries */
 
-  /* Admin layout tokens */
-  --bh-sidebar-w: 248px;
-  --bh-topbar-h: 56px;
+    /* Admin layout tokens (spec §24: 280/88/72/56) */
+    --bh-sidebar-w: 280px;
+    --bh-sidebar-w-collapsed: 88px;
+    --bh-topbar-h: 72px;
+    --bh-breadcrumb-h: 56px;
+    --bh-sidebar-logo-h: 64px; /* Spec §32: logo height */
+    --bh-main-pad: 32px; /* Spec §24/§49: main content padding */
+    --bh-main-gap: 32px; /* Spec §49: main content vertical gap */
 
-  /* ============================================================
+    /* ============================================================
      RADII
      ============================================================ */
-  --bh-radius-sm: 6px;      /* Small elements: badges, pills */
-  --bh-radius-md: 10px;     /* Buttons, inputs, dropdowns */
-  --bh-radius-lg: 14px;     /* Cards (mobile), larger inputs */
-  --bh-radius-xl: 20px;     /* Cards (desktop), modals */
-  --bh-radius-2xl: 24px;    /* Large cards, panels */
-  --bh-radius-3xl: 28px;    /* Featured cards, hero panels */
-  --bh-radius-4xl: 30px;    /* Stat cards, hero stats panel */
-  --bh-radius-full: 999px;  /* Pills, avatars, icon buttons */
+    --bh-radius-sm: 6px; /* Small elements: badges, pills */
+    --bh-radius-md: 10px; /* Buttons, inputs, dropdowns */
+    --bh-radius-lg: 14px; /* Cards (mobile), larger inputs */
+    --bh-radius-xl: 20px; /* Cards (desktop), modals */
+    --bh-radius-2xl: 24px; /* Large cards, panels */
+    --bh-radius-3xl: 28px; /* Featured cards, hero panels */
+    --bh-radius-4xl: 30px; /* Stat cards, hero stats panel */
+    --bh-radius-full: 999px; /* Pills, avatars, icon buttons */
 
-  /* Legacy landing radius aliases */
-  --radius-card: var(--bh-radius-3xl);   /* 26px → mapped to 28px */
-  --radius-input: var(--bh-radius-lg);   /* 22px → mapped to 14px */
-  --radius-btn: var(--bh-radius-full);   /* 60px → mapped to 999px */
+    /* Legacy landing radius aliases */
+    --radius-card: var(--bh-radius-3xl); /* 26px → mapped to 28px */
+    --radius-input: var(--bh-radius-lg); /* 22px → mapped to 14px */
+    --radius-btn: var(--bh-radius-full); /* 60px → mapped to 999px */
 
-  /* ============================================================
+    /* ============================================================
      SHADOWS & GLOWS
      ============================================================ */
-  --bh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --bh-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --bh-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
-  --bh-shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.45);
-  --bh-shadow-glow: 0 0 24px var(--bh-accent-glow-soft);
-  --bh-shadow-glow-lg: 0 0 40px var(--bh-accent-glow-soft), 0 20px 60px rgba(0, 0, 0, 0.3);
+    --bh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --bh-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --bh-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --bh-shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.45);
+    --bh-shadow-glow: 0 0 24px var(--bh-accent-glow-soft);
+    --bh-shadow-glow-lg: 0 0 40px var(--bh-accent-glow-soft), 0 20px 60px rgba(0, 0, 0, 0.3);
 
-  /* ============================================================
+    /* ============================================================
      MOTION
      ============================================================ */
-  --bh-ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1);  /* Signature easing */
-  --bh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);           /* Emphasis exits */
-  --bh-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);         /* Standard */
+    --bh-ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1); /* Signature easing */
+    --bh-ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* Emphasis exits */
+    --bh-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* Standard */
 
-  --bh-dur-fast: 140ms;   /* Micro: button press, toggle */
-  --bh-dur-med: 240ms;    /* Standard: hover, panel, dropdown */
-  --bh-dur-slow: 400ms;   /* Emphasis: modal, hero entry */
-  --bh-dur-xslow: 600ms;  /* Hero image scale, complex sequences */
+    --bh-dur-fast: 140ms; /* Micro: button press, toggle */
+    --bh-dur-med: 240ms; /* Standard: hover, panel, dropdown */
+    --bh-dur-slow: 400ms; /* Emphasis: modal, hero entry */
+    --bh-dur-xslow: 600ms; /* Hero image scale, complex sequences */
+    --bh-dur-sidebar: 200ms; /* Spec §56 sidebar expand/collapse */
+    --bh-dur-dropdown: 150ms; /* Spec §56 dropdown/popover */
+    --bh-dur-drawer: 250ms; /* Spec §56 mobile drawer slide-in */
+    --bh-dur-modal: 200ms; /* Spec §56 modal open/close */
+    --bh-dur-hover: 150ms; /* Spec §56 hover states */
 
-  /* Legacy landing motion aliases */
-  --ease-premium: var(--bh-ease-premium);
-  --dur-fast: var(--bh-dur-med);      /* 350ms → 240ms */
-  --dur-med: var(--bh-dur-slow);      /* 350ms → 400ms */
-  --dur-slow: var(--bh-dur-xslow);    /* 600ms → 600ms */
+    /* Legacy landing motion aliases */
+    --ease-premium: var(--bh-ease-premium);
+    --dur-fast: var(--bh-dur-med); /* 350ms → 240ms */
+    --dur-med: var(--bh-dur-slow); /* 350ms → 400ms */
+    --dur-slow: var(--bh-dur-xslow); /* 600ms → 600ms */
 
-  /* ============================================================
+    /* ============================================================
      Z-INDEX
      ============================================================ */
-  --bh-z-dropdown: 50;
-  --bh-z-sticky: 100;
-  --bh-z-navbar: 999;
-  --bh-z-mobile-menu: 998;
-  --bh-z-modal-overlay: 10000;
-  --bh-z-modal: 10001;
-  --bh-z-toast: 11000;
-  --bh-z-tooltip: 12000;
-  --bh-z-command: 13000;
+    --bh-z-dropdown: 50;
+    --bh-z-sticky: 100;
+    --bh-z-navbar: 999;
+    --bh-z-mobile-menu: 998;
+    --bh-z-modal-overlay: 10000;
+    --bh-z-modal: 10001;
+    --bh-z-toast: 11000;
+    --bh-z-tooltip: 12000;
+    --bh-z-command: 13000;
+    --bh-z-drawer: 9999; /* Mobile sidebar drawer (spec §54: Drawer layer below Modal) */
+    --bh-z-scrim: 9998; /* Sidebar scrim (spec §54: below Drawer 9999) */
 
-  /* Admin z-index aliases */
-  --bh-z-sidebar: 40;
-  --bh-z-topbar: 50;
+    /* Admin z-index aliases */
+    --bh-z-sidebar: 40;
+    --bh-z-topbar: 50;
 
-  /* ============================================================
+    /* ============================================================
      BREAKPOINTS (for reference — use in media queries, not as tokens)
      ============================================================ */
-  --bh-bp-sm: 640px;
-  --bh-bp-md: 768px;
-  --bh-bp-lg: 1024px;
-  --bh-bp-xl: 1280px;
-  --bh-bp-2xl: 1536px;
+    --bh-bp-sm: 640px;
+    --bh-bp-md: 768px;
+    --bh-bp-lg: 1024px;
+    --bh-bp-xl: 1280px;
+    --bh-bp-2xl: 1536px;
 }
 
 /* ============================================================
@@ -214,45 +226,45 @@
    all landing CSS is migrated to CSS Modules with --bh-* tokens.
    ============================================================ */
 :root {
-  /* Colors */
-  --accent: var(--bh-accent);
-  --accent-hover: var(--bh-accent-hover);
-  --glow: var(--bh-accent-glow);
-  --glow-soft: var(--bh-accent-glow-soft);
+    /* Colors */
+    --accent: var(--bh-accent);
+    --accent-hover: var(--bh-accent-hover);
+    --glow: var(--bh-accent-glow);
+    --glow-soft: var(--bh-accent-glow-soft);
 
-  --bg-primary: var(--bh-bg-primary);
-  --bg-secondary: var(--bh-bg-secondary);
-  --card-bg: var(--bh-bg-card);
-  --border-color: var(--bh-border);
-  --border-input: var(--bh-border-input);
+    --bg-primary: var(--bh-bg-primary);
+    --bg-secondary: var(--bh-bg-secondary);
+    --card-bg: var(--bh-bg-card);
+    --border-color: var(--bh-border);
+    --border-input: var(--bh-border-input);
 
-  --text: var(--bh-text-primary);
-  --text-secondary: var(--bh-text-secondary);
-  --text-tertiary: var(--bh-text-tertiary);
+    --text: var(--bh-text-primary);
+    --text-secondary: var(--bh-text-secondary);
+    --text-tertiary: var(--bh-text-tertiary);
 
-  /* Typography */
-  --font-body: var(--bh-font-sans);
-  --font-heading: var(--bh-font-display);
+    /* Typography */
+    --font-body: var(--bh-font-sans);
+    --font-heading: var(--bh-font-display);
 
-  /* Spacing & Layout */
-  --container-max: 1440px;
-  --container-pad: 70px;
-  --navbar-height: 90px;
+    /* Spacing & Layout */
+    --container-max: 1440px;
+    --container-pad: 70px;
+    --navbar-height: 90px;
 
-  /* Radii */
-  --radius-card: 26px;
-  --radius-input: 22px;
-  --radius-btn: 60px;
+    /* Radii */
+    --radius-card: 26px;
+    --radius-input: 22px;
+    --radius-btn: 60px;
 
-  /* Motion */
-  --ease-premium: var(--bh-ease-premium);
-  --dur-fast: 200ms;
-  --dur-med: 350ms;
-  --dur-slow: 600ms;
+    /* Motion */
+    --ease-premium: var(--bh-ease-premium);
+    --dur-fast: 200ms;
+    --dur-med: 350ms;
+    --dur-slow: 600ms;
 
-  /* Focus */
-  --focus-outline: 2px solid var(--bh-accent);
-  --focus-offset: 3px;
+    /* Focus */
+    --focus-outline: 2px solid var(--bh-accent);
+    --focus-offset: 3px;
 }
 
 /* ============================================================
@@ -264,60 +276,60 @@
 
 /* Tablet (≤1280px) */
 @media (max-width: 1280px) {
-  :root {
-    --container-pad: 40px;
-    --navbar-height: 90px;
-  }
+    :root {
+        --container-pad: 40px;
+        --navbar-height: 90px;
+    }
 }
 
 /* Tablet (≤1024px) */
 @media (max-width: 1024px) {
-  :root {
-    --container-pad: 40px;
-    --navbar-height: 90px;
-  }
+    :root {
+        --container-pad: 40px;
+        --navbar-height: 90px;
+    }
 }
 
 /* Mobile (≤768px) */
 @media (max-width: 768px) {
-  :root {
-    --container-pad: 24px;
-    --navbar-height: 74px;
-  }
+    :root {
+        --container-pad: 24px;
+        --navbar-height: 74px;
+    }
 }
 
 /* Small Mobile (≤390px) */
 @media (max-width: 390px) {
-  :root {
-    --container-pad: 16px;
-    --navbar-height: 74px;
-  }
+    :root {
+        --container-pad: 16px;
+        --navbar-height: 74px;
+    }
 }
 
 /* ============================================================
    ACCESSIBILITY — Reduced Motion
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    /* Disable all non-essential animations properly */
-    --bh-dur-fast: 0s;
-    --bh-dur-med: 0s;
-    --bh-dur-slow: 0s;
-    --bh-dur-xslow: 0s;
+    :root {
+        /* Disable all non-essential animations properly */
+        --bh-dur-fast: 0s;
+        --bh-dur-med: 0s;
+        --bh-dur-slow: 0s;
+        --bh-dur-xslow: 0s;
 
-    --dur-fast: 0s;
-    --dur-med: 0s;
-    --dur-slow: 0s;
-  }
+        --dur-fast: 0s;
+        --dur-med: 0s;
+        --dur-slow: 0s;
+    }
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0s !important;
-    scroll-behavior: auto !important;
-  }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0s !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* ============================================================
@@ -326,91 +338,91 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 16px; /* 1rem = 16px baseline */
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px; /* 1rem = 16px baseline */
 }
 
 body {
-  background: var(--bh-bg-primary);
-  color: var(--bh-text-primary);
-  font-family: var(--bh-font-sans);
-  font-weight: var(--bh-weight-normal);
-  line-height: var(--bh-leading-relaxed);
-  overflow-x: hidden;
-  min-height: 100vh;
+    background: var(--bh-bg-primary);
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-sans);
+    font-weight: var(--bh-weight-normal);
+    line-height: var(--bh-leading-relaxed);
+    overflow-x: hidden;
+    min-height: 100vh;
 }
 
 img {
-  max-width: 100%;
-  display: block;
+    max-width: 100%;
+    display: block;
 }
 
 button {
-  font-family: inherit;
-  cursor: pointer;
-  background: none;
-  border: none;
-  color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+    color: inherit;
+    text-decoration: none;
 }
 
 ul {
-  list-style: none;
+    list-style: none;
 }
 
 /* Focus Visible — Global */
 :focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 3px);
-  border-radius: 4px;
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 3px);
+    border-radius: 4px;
 }
 
 /* Skip Link */
 .skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  background: var(--bh-accent);
-  color: var(--bh-bg-primary);
-  padding: 12px 24px;
-  z-index: 10000;
-  font-weight: var(--bh-weight-semibold);
-  border-radius: 0 0 8px 0;
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--bh-accent);
+    color: var(--bh-bg-primary);
+    padding: 12px 24px;
+    z-index: 10000;
+    font-weight: var(--bh-weight-semibold);
+    border-radius: 0 0 8px 0;
 }
 .skip-link:focus {
-  left: 0;
+    left: 0;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+    width: 6px;
+    height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bh-bg-primary);
+    background: var(--bh-bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bh-accent);
-  border-radius: 10px;
+    background: var(--bh-accent);
+    border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--bh-accent-hover);
+    background: var(--bh-accent-hover);
 }
 
 /* Selection */
 ::selection {
-  background: var(--bh-accent);
-  color: var(--bh-bg-primary);
+    background: var(--bh-accent);
+    color: var(--bh-bg-primary);
 }

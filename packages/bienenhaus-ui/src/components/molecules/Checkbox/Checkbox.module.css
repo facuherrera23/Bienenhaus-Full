@@ -1,0 +1,170 @@
+/**
+ * Checkbox Component Styles
+ * Uses only --bh-* design tokens from @bienenhaus/ui/tokens.css
+ *
+ * Anatomy:
+ *   .checkbox            — root wrapper (inline-flex, aligns box + label)
+ *   .checkbox__input     — visually-hidden native checkbox
+ *   .checkbox__box       — custom visual box (24×24 md / 18×18 sm)
+ *   .checkbox__icon      — inline SVG check/dash, hidden until checked/indeterminate
+ *   .checkbox__label     — clickable <label> bound via htmlFor
+ */
+
+.checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--bh-space-2);
+  font-family: var(--bh-font-sans);
+  color: var(--bh-text-primary);
+  vertical-align: middle;
+}
+
+/* ============================================================
+   NATIVE INPUT — visually hidden but focusable
+   ============================================================ */
+.checkbox__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+}
+
+/* ============================================================
+   BOX — custom visual, transparent bg + border; accent fill on state
+   ============================================================ */
+.checkbox__box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--bh-border-strong);
+  border-radius: var(--bh-radius-sm);
+  background-color: transparent;
+  color: var(--bh-bg-primary);
+  cursor: pointer;
+  transition:
+    background-color var(--bh-dur-fast) var(--bh-ease-premium),
+    border-color var(--bh-dur-fast) var(--bh-ease-premium),
+    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+/* CHECKED / INDETERMINATE — accent fill, driven by data attributes on wrapper */
+.checkbox[data-checked='true'] .checkbox__box,
+.checkbox[data-indeterminate='true'] .checkbox__box {
+  background-color: var(--bh-accent);
+  border-color: var(--bh-accent);
+}
+
+/* Hover affordance (only when enabled) */
+.checkbox:not(.checkbox--disabled):hover .checkbox__box {
+  border-color: var(--bh-accent-hover);
+}
+.checkbox:not(.checkbox--disabled):hover[data-checked='true'] .checkbox__box,
+.checkbox:not(.checkbox--disabled):hover[data-indeterminate='true'] .checkbox__box {
+  background-color: var(--bh-accent-hover);
+  border-color: var(--bh-accent-hover);
+}
+
+/* ============================================================
+   ICON — inline SVG check/dash, hidden until state is active
+   ============================================================ */
+.checkbox__icon {
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--bh-dur-fast) var(--bh-ease-premium),
+    transform var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.checkbox[data-checked='true'] .checkbox__icon,
+.checkbox[data-indeterminate='true'] .checkbox__icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================================
+   SIZES
+   ============================================================ */
+
+/* md (default) — box 24×24 */
+.checkbox--md .checkbox__box {
+  width: 24px;
+  height: 24px;
+}
+
+/* sm — box 18×18 */
+.checkbox--sm .checkbox__box {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================
+   FOCUS-VISIBLE — accent ring on the box (input is visually hidden)
+   ============================================================ */
+.checkbox__input:focus-visible + .checkbox__box {
+  outline: 2px solid var(--bh-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--bh-accent-soft);
+}
+
+/* ============================================================
+   DISABLED — dim, no hover, no pointer
+   ============================================================ */
+.checkbox--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.checkbox--disabled .checkbox__box,
+.checkbox--disabled .checkbox__label {
+  cursor: not-allowed;
+}
+.checkbox--disabled:hover .checkbox__box {
+  border-color: var(--bh-border-strong);
+  background-color: transparent;
+}
+.checkbox--disabled:hover[data-checked='true'] .checkbox__box,
+.checkbox--disabled:hover[data-indeterminate='true'] .checkbox__box {
+  background-color: var(--bh-accent);
+  border-color: var(--bh-accent);
+}
+
+/* ============================================================
+   LABEL
+   ============================================================ */
+.checkbox__label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--bh-space-1);
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--bh-text-sm);
+  line-height: var(--bh-leading-snug);
+  color: var(--bh-text-primary);
+  font-weight: var(--bh-weight-medium);
+  padding-top: 1px;
+}
+
+.checkbox--disabled .checkbox__label {
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   REDUCED MOTION — disable transitions
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .checkbox__box,
+  .checkbox__icon {
+    transition: none;
+  }
+}

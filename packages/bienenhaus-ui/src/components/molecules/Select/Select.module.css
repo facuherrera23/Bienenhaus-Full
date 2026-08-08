@@ -1,0 +1,409 @@
+/**
+ * Select Component Styles
+ * Searchable + multi-select dropdown molecule. Uses ONLY --bh-* design tokens.
+ *
+ * Anatomy:
+ *   .select                 — root wrapper (column: label + container)
+ *   .select__label          — optional visible label above the trigger
+ *   .select__container      — relative positioning context for the panel
+ *   .select__trigger        — styled like Input molecule (border, radius-md, focus ring)
+ *   .select__value          — flex container for selected text / chips / placeholder
+ *   .select__placeholder    — tertiary-colored placeholder text
+ *   .select__selectedText   — primary-colored selected label (single mode)
+ *   .select__chips          — flex-wrap row of Chip atoms (multi mode)
+ *   .select__chevron        — inline SVG that rotates 180deg when open
+ *   .select__panel          — absolutely positioned dropdown below the trigger
+ *   .select__search         — search input row at the top of the panel
+ *   .select__searchIcon     — leading magnifier SVG
+ *   .select__searchInput    — transparent text input
+ *   .select__listbox        — <ul role="listbox"> scrollable option list
+ *   .select__option         — <li role="option"> row
+ *   .select__optionLabel    — text label of an option
+ *   .select__check          — check SVG shown on selected options
+ *   .select__empty          — "Sin resultados" empty state
+ *
+ * Sizes: sm | md | lg (default md)
+ */
+
+.select {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--bh-space-2);
+  font-family: var(--bh-font-sans);
+  color: var(--bh-text-primary);
+  width: 100%;
+  min-width: 0;
+}
+
+/* ============================================================
+   LABEL
+   ============================================================ */
+.select__label {
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-medium);
+  line-height: var(--bh-leading-snug);
+  color: var(--bh-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ============================================================
+   CONTAINER — relative context for the absolute panel
+   ============================================================ */
+.select__container {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* ============================================================
+   TRIGGER — styled like the Input molecule wrapper
+   ============================================================ */
+.select__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--bh-space-3);
+  border: 1px solid var(--bh-border-input);
+  border-radius: var(--bh-radius-md);
+  background-color: var(--bh-bg-input);
+  color: var(--bh-text-primary);
+  font-family: var(--bh-font-sans);
+  font-size: var(--bh-text-md);
+  line-height: var(--bh-leading-normal);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--bh-dur-fast) var(--bh-ease-premium),
+    background-color var(--bh-dur-fast) var(--bh-ease-premium),
+    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.select__trigger:focus-visible {
+  outline: none;
+  border-color: var(--bh-border-focus);
+  box-shadow: 0 0 0 2px var(--bh-accent-soft);
+}
+
+/* ============================================================
+   SIZES — height + horizontal padding scale (matches Input)
+   ============================================================ */
+.select--sm .select__trigger {
+  min-height: 32px;
+  padding: 0 var(--bh-space-2);
+  font-size: var(--bh-text-sm);
+}
+
+.select--md .select__trigger {
+  min-height: 40px;
+  padding: 0 var(--bh-space-3);
+  font-size: var(--bh-text-md);
+}
+
+.select--lg .select__trigger {
+  min-height: 48px;
+  padding: 0 var(--bh-space-4);
+  font-size: var(--bh-text-lg);
+}
+
+/* ============================================================
+   ERROR — danger border + danger-soft tint
+   ============================================================ */
+.select--error .select__trigger,
+.select__trigger--error {
+  border-color: var(--bh-danger);
+  background-color: color-mix(in srgb, var(--bh-bg-input) 85%, var(--bh-danger-soft));
+}
+
+.select--error .select__trigger:focus-visible,
+.select__trigger--error:focus-visible {
+  border-color: var(--bh-danger);
+  box-shadow: 0 0 0 2px var(--bh-danger-soft);
+}
+
+/* ============================================================
+   DISABLED
+   ============================================================ */
+.select--disabled,
+.select__trigger--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================================
+   VALUE AREA — placeholder / selected text / chips
+   ============================================================ */
+.select__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  overflow: hidden;
+}
+
+.select__placeholder {
+  color: var(--bh-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select__selectedText {
+  color: var(--bh-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select__chips {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bh-space-1);
+  padding: var(--bh-space-1) 0;
+}
+
+.select__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  padding: 2px var(--bh-space-1);
+  border-radius: var(--bh-radius-full);
+  background-color: var(--bh-accent-soft);
+  color: var(--bh-accent);
+  font-size: var(--bh-text-xs);
+  line-height: var(--bh-leading-snug);
+  font-weight: var(--bh-weight-medium);
+}
+
+.select__chipLabel {
+  white-space: nowrap;
+}
+
+.select__chipClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: var(--bh-radius-full);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.select__chipClose:hover {
+  background-color: var(--bh-bg-active);
+}
+
+.select__chipClose:focus-visible {
+  outline: 2px solid var(--bh-accent);
+  outline-offset: 1px;
+}
+
+.select__selectedIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--bh-text-secondary);
+}
+
+.select__required {
+  color: var(--bh-danger);
+  margin-left: var(--bh-space-1);
+}
+
+/* ============================================================
+   CHEVRON — rotates 180deg when open
+   ============================================================ */
+.select__chevron {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  display: block;
+  color: var(--bh-text-tertiary);
+  transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.select--open .select__chevron {
+  transform: rotate(180deg);
+}
+
+/* ============================================================
+   PANEL — absolutely positioned dropdown below the trigger
+   ============================================================ */
+.select__panel {
+  position: absolute;
+  top: calc(100% + var(--bh-space-1));
+  left: 0;
+  right: 0;
+  z-index: var(--bh-z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  max-height: 280px;
+  border: 1px solid var(--bh-border-strong);
+  border-radius: var(--bh-radius-md);
+  background-color: var(--bh-bg-raised);
+  box-shadow: var(--bh-shadow-lg);
+  overflow: hidden;
+}
+
+/* ============================================================
+   SEARCH — input row at the top of the panel
+   ============================================================ */
+.select__search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  padding: var(--bh-space-2) var(--bh-space-3);
+  border-bottom: 1px solid var(--bh-border);
+  background-color: var(--bh-bg-input);
+}
+
+.select__searchIcon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: var(--bh-text-tertiary);
+  pointer-events: none;
+}
+
+.select__searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--bh-text-primary);
+  font-family: var(--bh-font-sans);
+  font-size: var(--bh-text-sm);
+  line-height: var(--bh-leading-normal);
+  padding: 0;
+}
+
+.select__searchInput::placeholder {
+  color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   LISTBOX — scrollable option list
+   ============================================================ */
+.select__listbox {
+  list-style: none;
+  margin: 0;
+  padding: var(--bh-space-1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   OPTION — row with label + check icon
+   ============================================================ */
+.select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  padding: var(--bh-space-2) var(--bh-space-3);
+  border-radius: var(--bh-radius-sm);
+  color: var(--bh-text-primary);
+  font-size: var(--bh-text-sm);
+  line-height: var(--bh-leading-snug);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--bh-dur-fast) var(--bh-ease-premium),
+    color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.select__option:hover {
+  background-color: var(--bh-bg-hover);
+}
+
+.select__option--active {
+  background-color: var(--bh-bg-active);
+}
+
+.select__option--selected {
+  color: var(--bh-accent);
+  font-weight: var(--bh-weight-medium);
+}
+
+.select__option--disabled {
+  color: var(--bh-text-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.select__optionLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select__optionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--bh-text-secondary);
+}
+
+.select__option--selected .select__optionIcon {
+  color: var(--bh-accent);
+}
+
+.select__check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: var(--bh-accent);
+}
+
+/* ============================================================
+   EMPTY STATE — "Sin resultados"
+   ============================================================ */
+.select__empty {
+  padding: var(--bh-space-3) var(--bh-space-3);
+  color: var(--bh-text-tertiary);
+  font-size: var(--bh-text-sm);
+  text-align: center;
+  user-select: none;
+}
+
+/* ============================================================
+   ERROR MESSAGE — role="alert" text below the trigger
+   ============================================================ */
+.select__errorMessage {
+  font-size: var(--bh-text-xs);
+  line-height: var(--bh-leading-snug);
+  color: var(--bh-danger);
+  font-weight: var(--bh-weight-medium);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .select__trigger,
+  .select__chevron,
+  .select__option {
+    transition: none;
+  }
+}

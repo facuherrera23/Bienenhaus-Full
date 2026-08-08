@@ -1,9 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "noEmit": true
-  },
-  "include": ["src"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
+        "types": ["vitest/globals", "@testing-library/jest-dom"],
+        "noEmit": true
+    },
+    "include": ["src"],
+    "exclude": ["src/**/*.stories.tsx"]
 }
