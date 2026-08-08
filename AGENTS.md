@@ -152,6 +152,7 @@ bienenhaus/
 | **Bundle Size (Landing)**       | `@supabase/supabase-js` (47kb gz) for 2 RPCs only                     | 🟡 Medium | Replace with lightweight fetch client or RPC-only wrapper                 |
 | **Design Token Drift**          | Landing (`--accent`) vs Admin (`--bh-accent`)                         | 🟡 Medium | Unify in `@bienenhaus/ui/tokens.css`                                      |
 | **Edge Function Duplication**   | CORS, auth, `respond()` repeated 14×                                  | 🟡 Medium | Extract to `_shared/http.ts`, `_shared/auth.ts`                           |
+| **ESLint debt**                 | 258 errores pre-existentes (114 `no-explicit-any`, 75 `no-duplicate-imports`, 30 `no-alert` en stories) en 91 archivos; `eslint .` NO pasa | 🟡 Medium | CI lint gate = **diff-scoped** (solo archivos cambiados, job `lint` en ci.yml). Limpiar deuda por categorías: `--fix` ya aplicado (48); luego `any`→generics, unificar imports, `alert`→toasts en stories |
 | **Documentation**               | No ADRs, no API docs, no runbooks                                     | 🟡 Medium | Add `docs/adr/`, `docs/api/`, `docs/runbooks/`                            |
 
 ---
