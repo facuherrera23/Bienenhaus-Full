@@ -10,11 +10,11 @@ import logoIcon from '../../../../assets/images/logos/pwa-512x512.png';
 import favicon from '../../../../assets/images/logos/favicon.ico';
 
 export const images = {
-  logo: logoMain,
-  logoIcon,
-  favicon,
-  team: {
-    maria: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=400&h=500&fit=crop&crop=center',
-    juan: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=500&fit=crop&crop=center',
-  },
+    logo: logoMain,
+    logoIcon,
+    favicon,
+    team: {
+        maria: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=400&h=500&fit=crop&crop=center',
+        juan: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=500&fit=crop&crop=center',
+    },
 } as const;

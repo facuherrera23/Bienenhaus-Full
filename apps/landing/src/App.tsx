@@ -9,33 +9,37 @@ import { Services } from './components/Services';
 import { Stats } from './components/Stats';
 import { Team } from './components/Team';
 import { TransitionStrip } from './components/TransitionStrip';
-import { WebSiteSchema, OrganizationSchema, RealEstateAgencySchema } from './components/JsonLd';
+import { OrganizationSchema, RealEstateAgencySchema, WebSiteSchema } from './components/JsonLd';
 
 export function App() {
-  const spotlightRef = useSpotlight<HTMLDivElement>(
-    '.service-card, .team-card, .step-card, .stat-card, .contact-info',
-  );
+    const spotlightRef = useSpotlight<HTMLDivElement>(
+        '.service-card, .team-card, .step-card, .stat-card, .contact-info',
+    );
 
-  return (
-    <div ref={spotlightRef}>
-      <WebSiteSchema />
-      <OrganizationSchema />
-      <RealEstateAgencySchema />
-      <a href="#main-content" className="skip-link" aria-label="Saltar al contenido principal">
-        Saltar al contenido principal
-      </a>
-      <Navbar />
-      <Hero />
-      <main id="main-content" role="main">
-        <Catalog />
-        <Services />
-        <Team />
-        <Stats />
-        <Process />
-        <Contact />
-      </main>
-      <TransitionStrip />
-      <Footer />
-    </div>
-  );
+    return (
+        <div ref={spotlightRef}>
+            <WebSiteSchema />
+            <OrganizationSchema />
+            <RealEstateAgencySchema />
+            <a
+                href="#main-content"
+                className="skip-link"
+                aria-label="Saltar al contenido principal"
+            >
+                Saltar al contenido principal
+            </a>
+            <Navbar />
+            <Hero />
+            <main id="main-content" role="main">
+                <Catalog />
+                <Services />
+                <Team />
+                <Stats />
+                <Process />
+                <Contact />
+            </main>
+            <TransitionStrip />
+            <Footer />
+        </div>
+    );
 }
