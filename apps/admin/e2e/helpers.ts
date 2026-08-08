@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
 export const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-test@bienenhaus.local';
-export const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'e2e-test-pass-2026x';
+export const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'E2eTestPass2026x';
 
 /**
  * Loguea en el admin (idempotente: si ya hay sesión activa, no re-loguea).

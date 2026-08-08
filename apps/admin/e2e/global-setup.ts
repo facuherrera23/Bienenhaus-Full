@@ -22,7 +22,7 @@ import { execSync } from 'node:child_process';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-test@bienenhaus.local';
-const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'e2e-test-pass-2026x';
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'E2eTestPass2026x';
 const TEST_FULL_NAME = 'E2E Test User';
 
 /** Replica exacta de los fixtures del antiguo supabase/seed.sql. */
