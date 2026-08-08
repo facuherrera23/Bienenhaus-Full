@@ -26,13 +26,13 @@ Authorization: Bearer {ACCESS_TOKEN}
 
 Tópicos usados por la integración:
 
-| Topic       | Qué genera                                  | Handler            |
-|-------------|---------------------------------------------|--------------------|
-| `questions` | Preguntas de compradores sobre publicaciones | `handleQuestions` |
-| `orders`    | Cambios de estado de órdenes (nueva, pagada, enviada, entregada) | `handleOrders` |
-| `items`     | Cambios en publicaciones (re-sync del item)  | `handleItems`      |
-| `payments`  | Pagos                                          | `handlePayments`   |
-| `shipments` | Envíos                                         | `handleShipments`  |
+| Topic       | Qué genera                                                       | Handler           |
+| ----------- | ---------------------------------------------------------------- | ----------------- |
+| `questions` | Preguntas de compradores sobre publicaciones                     | `handleQuestions` |
+| `orders`    | Cambios de estado de órdenes (nueva, pagada, enviada, entregada) | `handleOrders`    |
+| `items`     | Cambios en publicaciones (re-sync del item)                      | `handleItems`     |
+| `payments`  | Pagos                                                            | `handlePayments`  |
+| `shipments` | Envíos                                                           | `handleShipments` |
 
 Listar registrados: `GET /users/{USER_ID}/topics/{topic}`.
 Baja: `DELETE /users/{USER_ID}/topics/{topic}`.
