@@ -2,42 +2,42 @@ import { useEffect, useState } from 'preact/hooks';
 import { authSession } from '../store/app';
 
 export function useAuthUserId(): string | null {
-  const [userId, setUserId] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const session = authSession.value;
-    setUserId(session?.user?.id ?? null);
+    useEffect(() => {
+        const session = authSession.value;
+        setUserId(session?.user?.id ?? null);
 
-    authSession.subscribe(() => {
-      const session = authSession.value;
-      setUserId(session?.user?.id ?? null);
-    });
+        authSession.subscribe(() => {
+            const session = authSession.value;
+            setUserId(session?.user?.id ?? null);
+        });
 
-    return () => {};
-  }, []);
+        return () => {};
+    }, []);
 
-  // Also read current value for initial render
-  const currentUserId = authSession.value?.user?.id ?? null;
+    // Also read current value for initial render
+    const currentUserId = authSession.value?.user?.id ?? null;
 
-  return userId ?? currentUserId;
+    return userId ?? currentUserId;
 }
 
 export function useAuthAccessToken(): string | null {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const session = authSession.value;
-    setAccessToken(session?.access_token ?? null);
+    useEffect(() => {
+        const session = authSession.value;
+        setAccessToken(session?.access_token ?? null);
 
-    authSession.subscribe(() => {
-      const session = authSession.value;
-      setAccessToken(session?.access_token ?? null);
-    });
+        authSession.subscribe(() => {
+            const session = authSession.value;
+            setAccessToken(session?.access_token ?? null);
+        });
 
-    return () => {};
-  }, []);
+        return () => {};
+    }, []);
 
-  const currentAccessToken = authSession.value?.access_token ?? null;
+    const currentAccessToken = authSession.value?.access_token ?? null;
 
-  return accessToken ?? currentAccessToken;
+    return accessToken ?? currentAccessToken;
 }

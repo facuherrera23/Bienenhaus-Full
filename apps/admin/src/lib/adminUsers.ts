@@ -1,32 +1,32 @@
 /**
  * @deprecated Este archivo ha sido unificado con admin.ts
  * Por favor, importa desde './admin' en lugar de './adminUsers'
- * 
+ *
  * Este archivo se mantiene por compatibilidad con imports existentes
  * y será eliminado en una versión futura.
  */
 
 import {
-  type AdminRole,
-  type AdminUserRow,
-  ROLE_LABEL,
-  ROLE_TONE,
-  fetchAdminUsers,
-  fetchAdminUser,
-  fetchMyUserId,
-  fetchMyAdminUser,
-  updateAdminUser,
-  updateAdminUserRole,
-  toggleAdminUserActive,
-  deleteAdminUser,
-  inviteAdminUser,
-  resetAdminUserPassword,
-  removeAdminUser,
-  updateAdminLastLogin,
-  isAdmin,
-  isSuperAdmin,
-  hasRole,
-  syncAdminUserWithAuth,
+    type AdminRole,
+    type AdminUserRow,
+    deleteAdminUser,
+    fetchAdminUser,
+    fetchAdminUsers,
+    fetchMyAdminUser,
+    fetchMyUserId,
+    hasRole,
+    inviteAdminUser,
+    isAdmin,
+    isSuperAdmin,
+    removeAdminUser,
+    resetAdminUserPassword,
+    ROLE_LABEL,
+    ROLE_TONE,
+    syncAdminUserWithAuth,
+    toggleAdminUserActive,
+    updateAdminLastLogin,
+    updateAdminUser,
+    updateAdminUserRole,
 } from './admin';
 
 // ============================================================
@@ -37,22 +37,22 @@ export type { AdminRole, AdminUserRow };
 export { ROLE_LABEL, ROLE_TONE };
 
 export {
-  fetchAdminUsers,
-  fetchAdminUser,
-  fetchMyUserId,
-  fetchMyAdminUser,
-  updateAdminUser,
-  updateAdminUserRole,
-  toggleAdminUserActive,
-  deleteAdminUser,
-  inviteAdminUser,
-  resetAdminUserPassword,
-  removeAdminUser,
-  updateAdminLastLogin,
-  isAdmin,
-  isSuperAdmin,
-  hasRole,
-  syncAdminUserWithAuth,
+    fetchAdminUsers,
+    fetchAdminUser,
+    fetchMyUserId,
+    fetchMyAdminUser,
+    updateAdminUser,
+    updateAdminUserRole,
+    toggleAdminUserActive,
+    deleteAdminUser,
+    inviteAdminUser,
+    resetAdminUserPassword,
+    removeAdminUser,
+    updateAdminLastLogin,
+    isAdmin,
+    isSuperAdmin,
+    hasRole,
+    syncAdminUserWithAuth,
 };
 
 // ============================================================
@@ -60,7 +60,7 @@ export {
 // ============================================================
 
 if (import.meta.env.DEV) {
-  console.warn(
-    '[adminUsers.ts] ⚠️ Este archivo está obsoleto. Por favor, importa desde "./admin" en su lugar.'
-  );
+    console.warn(
+        '[adminUsers.ts] ⚠️ Este archivo está obsoleto. Por favor, importa desde "./admin" en su lugar.',
+    );
 }

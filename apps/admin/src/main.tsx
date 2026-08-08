@@ -9,28 +9,31 @@ import { initSentry } from './lib/sentry';
 import { queryClient } from './lib/query/client';
 import '@bienenhaus/ui/tokens.css';
 import './styles.css';
+import './styles/shell.css';
+import './styles/sidebar.css';
+import './styles/topbar.css';
 
 initSentry({
-  dsn: import.meta.env.VITE_SENTRY_DSN || '',
-  environment: import.meta.env.MODE,
-  release: import.meta.env.VITE_APP_VERSION || 'dev',
+    dsn: import.meta.env.VITE_SENTRY_DSN || '',
+    environment: import.meta.env.MODE,
+    release: import.meta.env.VITE_APP_VERSION || 'dev',
 });
 
 await initAuth();
 
 function Root() {
-  if (authLoading.value) {
-    return <div className="app-loading">Cargando…</div>;
-  }
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <Router hook={useHashLocation}>
-          <App />
-        </Router>
-      </ErrorBoundary>
-    </QueryClientProvider>
-  );
+    if (authLoading.value) {
+        return <div className="app-loading">Cargando…</div>;
+    }
+    return (
+        <QueryClientProvider client={queryClient}>
+            <ErrorBoundary>
+                <Router hook={useHashLocation}>
+                    <App />
+                </Router>
+            </ErrorBoundary>
+        </QueryClientProvider>
+    );
 }
 
 render(<Root />, document.getElementById('app')!);

@@ -1,165 +1,185 @@
-import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
-import { Search, X, ChevronRight, type LucideIcon } from 'lucide-preact';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { ChevronRight, type LucideIcon, Search, X } from 'lucide-preact';
 
 interface CommandItem {
-  id: string;
-  label: string;
-  description?: string;
-  icon?: LucideIcon;
-  keywords?: string[];
-  action: () => void;
-  section?: string;
+    id: string;
+    label: string;
+    description?: string;
+    icon?: LucideIcon;
+    keywords?: string[];
+    action: () => void;
+    section?: string;
 }
 
 interface CommandPaletteProps {
-  items: CommandItem[];
-  isOpen: boolean;
-  onClose: () => void;
-  placeholder?: string;
+    items: CommandItem[];
+    isOpen: boolean;
+    onClose: () => void;
+    placeholder?: string;
 }
 
-export function CommandPalette({ items, isOpen, onClose, placeholder = 'Buscar comandos...' }: CommandPaletteProps) {
-  const [query, setQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+export function CommandPalette({
+    items,
+    isOpen,
+    onClose,
+    placeholder = 'Buscar comandos...',
+}: CommandPaletteProps) {
+    const [query, setQuery] = useState('');
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filter items based on query
-  const filteredItems = items
-    .filter(item => {
-      if (!query) return true;
-      const q = query.toLowerCase();
-      return (
-        item.label.toLowerCase().includes(q) ||
-        item.description?.toLowerCase().includes(q) ||
-        item.keywords?.some(k => k.toLowerCase().includes(q))
-      );
-    })
-    .slice(0, 8);
+    // Filter items based on query
+    const filteredItems = items
+        .filter((item) => {
+            if (!query) return true;
+            const q = query.toLowerCase();
+            return (
+                item.label.toLowerCase().includes(q) ||
+                item.description?.toLowerCase().includes(q) ||
+                item.keywords?.some((k) => k.toLowerCase().includes(q))
+            );
+        })
+        .slice(0, 8);
 
-  // Reset selection when query changes
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
+    // Reset selection when query changes
+    useEffect(() => {
+        setSelectedIndex(0);
+    }, [query]);
 
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
-  }, [isOpen]);
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (!isOpen) return;
-    
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => Math.min(prev + 1, filteredItems.length - 1));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => Math.max(prev - 1, 0));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (filteredItems[selectedIndex]) {
-          filteredItems[selectedIndex].action();
-          onClose();
+    // Focus input when opened
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => inputRef.current?.focus(), 0);
         }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        onClose();
-        break;
-    }
-  };
+    }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (!isOpen) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex((prev) => Math.min(prev + 1, filteredItems.length - 1));
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex((prev) => Math.max(prev - 1, 0));
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (filteredItems[selectedIndex]) {
+                    filteredItems[selectedIndex].action();
+                    onClose();
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                onClose();
+                break;
+        }
     };
-  }, [isOpen]);
 
-  if (!isOpen) return null;
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
 
-  return (
-    <div className="command-palette-overlay" onClick={onClose}>
-      <div className="command-palette" onClick={e => e.stopPropagation()}>
-        <div className="command-palette-input-wrapper">
-          <Search size={18} className="command-palette-search-icon" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.currentTarget.value)}
-            placeholder={placeholder}
-            className="command-palette-input"
-            onKeyDown={handleKeyDown}
-          />
-          <kbd className="command-palette-shortcut">⌘K</kbd>
-        </div>
+    if (!isOpen) return null;
 
-        {filteredItems.length > 0 ? (
-          <ul className="command-palette-list" role="listbox">
-            {filteredItems.map((item, index) => (
-              <li
-                key={item.id}
-                className={`command-palette-item${index === selectedIndex ? ' selected' : ''}`}
-                role="option"
-                aria-selected={index === selectedIndex}
-                onClick={() => {
-                  item.action();
-                  onClose();
-                }}
-              >
-                {item.icon && <item.icon size={16} className="command-palette-item-icon" />}
-                <div className="command-palette-item-content">
-                  <span className="command-palette-item-label">{item.label}</span>
-                  {item.description && <span className="command-palette-item-description">{item.description}</span>}
+    return (
+        <div className="command-palette-overlay" onClick={onClose}>
+            <div className="command-palette" onClick={(e) => e.stopPropagation()}>
+                <div className="command-palette-input-wrapper">
+                    <Search size={18} className="command-palette-search-icon" />
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.currentTarget.value)}
+                        placeholder={placeholder}
+                        className="command-palette-input"
+                        onKeyDown={handleKeyDown}
+                    />
+                    <kbd className="command-palette-shortcut">⌘K</kbd>
                 </div>
-                {item.section && <span className="command-palette-item-section">{item.section}</span>}
-                {index === selectedIndex && <ChevronRight size={14} className="command-palette-selected-indicator" />}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="command-palette-empty">
-            <X size={24} />
-            <p>No se encontraron comandos</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+
+                {filteredItems.length > 0 ? (
+                    <ul className="command-palette-list" role="listbox">
+                        {filteredItems.map((item, index) => (
+                            <li
+                                key={item.id}
+                                className={`command-palette-item${index === selectedIndex ? ' selected' : ''}`}
+                                role="option"
+                                aria-selected={index === selectedIndex}
+                                onClick={() => {
+                                    item.action();
+                                    onClose();
+                                }}
+                            >
+                                {item.icon && (
+                                    <item.icon size={16} className="command-palette-item-icon" />
+                                )}
+                                <div className="command-palette-item-content">
+                                    <span className="command-palette-item-label">{item.label}</span>
+                                    {item.description && (
+                                        <span className="command-palette-item-description">
+                                            {item.description}
+                                        </span>
+                                    )}
+                                </div>
+                                {item.section && (
+                                    <span className="command-palette-item-section">
+                                        {item.section}
+                                    </span>
+                                )}
+                                {index === selectedIndex && (
+                                    <ChevronRight
+                                        size={14}
+                                        className="command-palette-selected-indicator"
+                                    />
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <div className="command-palette-empty">
+                        <X size={24} />
+                        <p>No se encontraron comandos</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 }
 
 // Hook para usar la paleta de comandos globalmente
 export function useCommandPalette() {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const open = useCallback(() => setIsOpen(true), []);
-  const close = useCallback(() => setIsOpen(false), []);
-  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+    const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        toggle();
-      }
-      if (e.key === 'Escape') {
-        close();
-      }
-    };
+    const open = useCallback(() => setIsOpen(true), []);
+    const close = useCallback(() => setIsOpen(false), []);
+    const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [toggle, close]);
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                toggle();
+            }
+            if (e.key === 'Escape') {
+                close();
+            }
+        };
 
-  return { isOpen, open, close, toggle };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [toggle, close]);
+
+    return { isOpen, open, close, toggle };
 }

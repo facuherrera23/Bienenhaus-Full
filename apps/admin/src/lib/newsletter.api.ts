@@ -1,28 +1,31 @@
-import { useList, useItem, useCreate, useUpdate, useDelete, useMutation, useExport, queryKeys, type ExportColumn } from './api';
-import type {
-  NewsletterSource,
-  NewsletterStatus,
-  NewsletterSubscriber,
-} from '../types/newsletter';
 import {
-  NEWSLETTER_SOURCE_LABEL,
-  NEWSLETTER_STATUS_LABEL,
-} from '../types/newsletter';
+    type ExportColumn,
+    queryKeys,
+    useCreate,
+    useDelete,
+    useExport,
+    useItem,
+    useList,
+    useMutation,
+    useUpdate,
+} from './api';
+import type { NewsletterSource, NewsletterStatus, NewsletterSubscriber } from '../types/newsletter';
+import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL } from '../types/newsletter';
 import {
-  fetchSubscribers,
-  fetchSubscriber,
-  fetchDeletedSubscribers,
-  createSubscriber,
-  updateSubscriber,
-  deleteSubscriber,
-  restoreSubscriber,
-  countSubscribers,
-  bulkCreateSubscribers,
-  bulkUpdateSubscribers,
-  bulkDeleteSubscribers,
-  exportSubscribersToCSV,
-  subscribeFromLanding,
-  unsubscribeSubscriber,
+    bulkCreateSubscribers,
+    bulkDeleteSubscribers,
+    bulkUpdateSubscribers,
+    countSubscribers,
+    createSubscriber,
+    deleteSubscriber,
+    exportSubscribersToCSV,
+    fetchDeletedSubscribers,
+    fetchSubscriber,
+    fetchSubscribers,
+    restoreSubscriber,
+    subscribeFromLanding,
+    unsubscribeSubscriber,
+    updateSubscriber,
 } from './newsletter';
 
 const NEWSLETTER_PATH = 'newsletter_subscribers';
@@ -32,62 +35,62 @@ const NEWSLETTER_PATH = 'newsletter_subscribers';
 // ============================================================
 
 export function useSubscribers(filters?: {
-  status?: NewsletterStatus;
-  source?: NewsletterSource;
-  search?: string;
-  page?: number;
-  pageSize?: number;
+    status?: NewsletterStatus;
+    source?: NewsletterSource;
+    search?: string;
+    page?: number;
+    pageSize?: number;
 }) {
-  const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
 
-  if (filters?.status) apiFilters.status = `eq.${filters.status}`;
-  if (filters?.source) apiFilters.source = `eq.${filters.source}`;
-  if (filters?.search) apiFilters.email = `ilike.*${filters.search}*`;
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+    if (filters?.source) apiFilters.source = `eq.${filters.source}`;
+    if (filters?.search) apiFilters.email = `ilike.*${filters.search}*`;
 
-  return useList<NewsletterSubscriber>({
-    queryKey: queryKeys.leads([{ newsletter: filters }]),
-    path: NEWSLETTER_PATH,
-    select: 'id,email,source,status,created_at',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 20,
-    orderBy: 'created_at',
-    ascending: false,
-  });
+    return useList<NewsletterSubscriber>({
+        queryKey: queryKeys.leads([{ newsletter: filters }]),
+        path: NEWSLETTER_PATH,
+        select: 'id,email,source,status,created_at',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 20,
+        orderBy: 'created_at',
+        ascending: false,
+    });
 }
 
 export function useSubscriber(id: string | null) {
-  return useItem<NewsletterSubscriber>(
-    queryKeys.leads([{ newsletter: id }]),
-    NEWSLETTER_PATH,
-    id,
-    !!id
-  );
+    return useItem<NewsletterSubscriber>(
+        queryKeys.leads([{ newsletter: id }]),
+        NEWSLETTER_PATH,
+        id,
+        !!id,
+    );
 }
 
 export function useFetchDeletedSubscribers() {
-  return useList<NewsletterSubscriber>({
-    queryKey: queryKeys.leads([{ newsletter: { deleted: true } }]),
-    path: NEWSLETTER_PATH,
-    select: 'id,email,source,status,created_at',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
-  });
+    return useList<NewsletterSubscriber>({
+        queryKey: queryKeys.leads([{ newsletter: { deleted: true } }]),
+        path: NEWSLETTER_PATH,
+        select: 'id,email,source,status,created_at',
+        filters: { deleted_at: 'not.is.null' },
+        page: 1,
+        pageSize: 50,
+        orderBy: 'deleted_at',
+        ascending: false,
+    });
 }
 
 export function useCountSubscribers(options?: {
-  status?: NewsletterStatus;
-  source?: NewsletterSource;
-  includeDeleted?: boolean;
+    status?: NewsletterStatus;
+    source?: NewsletterSource;
+    includeDeleted?: boolean;
 }) {
-  return useMutation({
-    mutationFn: async () => {
-      return countSubscribers(options);
-    },
-  });
+    return useMutation({
+        mutationFn: async () => {
+            return countSubscribers(options);
+        },
+    });
 }
 
 // ============================================================
@@ -95,33 +98,29 @@ export function useCountSubscribers(options?: {
 // ============================================================
 
 export function useCreateSubscriber() {
-  return useCreate<NewsletterSubscriber, Partial<NewsletterSubscriber>>(
-    queryKeys.leads([{ newsletter: true }]),
-    NEWSLETTER_PATH,
-    {
-      invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
-    }
-  );
+    return useCreate<NewsletterSubscriber, Partial<NewsletterSubscriber>>(
+        queryKeys.leads([{ newsletter: true }]),
+        NEWSLETTER_PATH,
+        {
+            invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
+        },
+    );
 }
 
 export function useUpdateSubscriber() {
-  return useUpdate<NewsletterSubscriber, Partial<NewsletterSubscriber>>(
-    queryKeys.leads([{ newsletter: true }]),
-    NEWSLETTER_PATH,
-    {
-      invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
-    }
-  );
+    return useUpdate<NewsletterSubscriber, Partial<NewsletterSubscriber>>(
+        queryKeys.leads([{ newsletter: true }]),
+        NEWSLETTER_PATH,
+        {
+            invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
+        },
+    );
 }
 
 export function useDeleteSubscriber() {
-  return useDelete(
-    queryKeys.leads([{ newsletter: true }]),
-    NEWSLETTER_PATH,
-    {
-      invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
-    }
-  );
+    return useDelete(queryKeys.leads([{ newsletter: true }]), NEWSLETTER_PATH, {
+        invalidateKeys: [queryKeys.leads([{ newsletter: true }])],
+    });
 }
 
 // ============================================================
@@ -129,27 +128,27 @@ export function useDeleteSubscriber() {
 // ============================================================
 
 export function useSoftDeleteSubscriber() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return deleteSubscriber(id, false);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return deleteSubscriber(id, false);
+        },
+    });
 }
 
 export function usePermanentDeleteSubscriber() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return deleteSubscriber(id, true);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return deleteSubscriber(id, true);
+        },
+    });
 }
 
 export function useRestoreSubscriber() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return restoreSubscriber(id);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return restoreSubscriber(id);
+        },
+    });
 }
 
 // ============================================================
@@ -157,27 +156,33 @@ export function useRestoreSubscriber() {
 // ============================================================
 
 export function useBulkCreateSubscribers() {
-  return useMutation({
-    mutationFn: async ({ emails, source }: { emails: string[]; source?: NewsletterSource }) => {
-      return bulkCreateSubscribers(emails, source);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ emails, source }: { emails: string[]; source?: NewsletterSource }) => {
+            return bulkCreateSubscribers(emails, source);
+        },
+    });
 }
 
 export function useBulkUpdateSubscribers() {
-  return useMutation({
-    mutationFn: async ({ ids, params }: { ids: string[]; params: { status?: NewsletterStatus; source?: NewsletterSource } }) => {
-      return bulkUpdateSubscribers(ids, params);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({
+            ids,
+            params,
+        }: {
+            ids: string[];
+            params: { status?: NewsletterStatus; source?: NewsletterSource };
+        }) => {
+            return bulkUpdateSubscribers(ids, params);
+        },
+    });
 }
 
 export function useBulkDeleteSubscribers() {
-  return useMutation({
-    mutationFn: async ({ ids, permanent }: { ids: string[]; permanent?: boolean }) => {
-      return bulkDeleteSubscribers(ids, permanent ?? false);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ ids, permanent }: { ids: string[]; permanent?: boolean }) => {
+            return bulkDeleteSubscribers(ids, permanent ?? false);
+        },
+    });
 }
 
 // ============================================================
@@ -185,19 +190,19 @@ export function useBulkDeleteSubscribers() {
 // ============================================================
 
 export function useSubscribeFromLanding() {
-  return useMutation({
-    mutationFn: async ({ email, source }: { email: string; source?: NewsletterSource }) => {
-      return subscribeFromLanding({ email, source });
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ email, source }: { email: string; source?: NewsletterSource }) => {
+            return subscribeFromLanding({ email, source });
+        },
+    });
 }
 
 export function useUnsubscribeSubscriber() {
-  return useMutation({
-    mutationFn: async (email: string) => {
-      return unsubscribeSubscriber(email);
-    },
-  });
+    return useMutation({
+        mutationFn: async (email: string) => {
+            return unsubscribeSubscriber(email);
+        },
+    });
 }
 
 // ============================================================
@@ -205,28 +210,40 @@ export function useUnsubscribeSubscriber() {
 // ============================================================
 
 export const SUBSCRIBER_EXPORT_COLUMNS: ExportColumn<NewsletterSubscriber>[] = [
-  { key: 'email', label: 'Email' },
-  { key: 'source', label: 'Origen', format: (v) => NEWSLETTER_SOURCE_LABEL[v as NewsletterSource] ?? v },
-  { key: 'status', label: 'Estado', format: (v) => NEWSLETTER_STATUS_LABEL[v as NewsletterStatus] ?? v },
-  { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
+    { key: 'email', label: 'Email' },
+    {
+        key: 'source',
+        label: 'Origen',
+        format: (v) => NEWSLETTER_SOURCE_LABEL[v as NewsletterSource] ?? v,
+    },
+    {
+        key: 'status',
+        label: 'Estado',
+        format: (v) => NEWSLETTER_STATUS_LABEL[v as NewsletterStatus] ?? v,
+    },
+    {
+        key: 'created_at',
+        label: 'Creado',
+        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+    },
 ];
 
 export function useExportSubscribers() {
-  const { exportToCSV } = useExport<NewsletterSubscriber>();
-  const subscribers = useSubscribers({ pageSize: 1000 });
+    const { exportToCSV } = useExport<NewsletterSubscriber>();
+    const subscribers = useSubscribers({ pageSize: 1000 });
 
-  return {
-    exportToCSV: async (filename = 'newsletter') => {
-      if (subscribers.data?.data) {
-        await exportToCSV({
-          data: subscribers.data.data,
-          columns: SUBSCRIBER_EXPORT_COLUMNS,
-          filename,
-        });
-      }
-    },
-    isLoading: subscribers.isPending,
-  };
+    return {
+        exportToCSV: async (filename = 'newsletter') => {
+            if (subscribers.data?.data) {
+                await exportToCSV({
+                    data: subscribers.data.data,
+                    columns: SUBSCRIBER_EXPORT_COLUMNS,
+                    filename,
+                });
+            }
+        },
+        isLoading: subscribers.isPending,
+    };
 }
 
 // ============================================================
@@ -234,20 +251,20 @@ export function useExportSubscribers() {
 // ============================================================
 
 export {
-  fetchSubscribers,
-  fetchSubscriber,
-  fetchDeletedSubscribers,
-  createSubscriber,
-  updateSubscriber,
-  deleteSubscriber,
-  restoreSubscriber,
-  countSubscribers,
-  bulkCreateSubscribers,
-  bulkUpdateSubscribers,
-  bulkDeleteSubscribers,
-  exportSubscribersToCSV,
-  subscribeFromLanding,
-  unsubscribeSubscriber,
+    fetchSubscribers,
+    fetchSubscriber,
+    fetchDeletedSubscribers,
+    createSubscriber,
+    updateSubscriber,
+    deleteSubscriber,
+    restoreSubscriber,
+    countSubscribers,
+    bulkCreateSubscribers,
+    bulkUpdateSubscribers,
+    bulkDeleteSubscribers,
+    exportSubscribersToCSV,
+    subscribeFromLanding,
+    unsubscribeSubscriber,
 };
 
 // ============================================================

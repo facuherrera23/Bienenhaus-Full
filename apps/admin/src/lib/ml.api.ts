@@ -1,51 +1,54 @@
-import { useList as useListHook, useMutation, useRpc, useExport, queryKeys, type ExportColumn } from './api';
+import {
+    type ExportColumn,
+    queryKeys,
+    useExport,
+    useList as useListHook,
+    useMutation,
+    useRpc,
+} from './api';
 import { useQuery } from '@tanstack/react-query';
 import type {
-  MlOperation,
-  MlSyncStatus,
-  MlConnectionInfo,
-  MlOverview,
-  MlSettings,
-  MlQueueRow,
-  MlMetaRow,
-  MlCategory,
-  MlListingType,
-  MlQuestion,
-  MlOrder,
-  MlMetrics,
-  MlItemMetrics,
-  MlAutoReplyTemplate,
+    MlAutoReplyTemplate,
+    MlCategory,
+    MlConnectionInfo,
+    MlItemMetrics,
+    MlListingType,
+    MlMetaRow,
+    MlMetrics,
+    MlOperation,
+    MlOrder,
+    MlOverview,
+    MlQuestion,
+    MlQueueRow,
+    MlSettings,
+    MlSyncStatus,
 } from '../types/ml';
+import { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE } from '../types/ml';
 import {
-  ML_OPERATION_LABEL,
-  ML_SYNC_STATUS_LABEL,
-  ML_SYNC_STATUS_TONE,
-} from '../types/ml';
-import {
-  fetchMlOverview,
-  fetchMlSettings,
-  fetchMlQueue,
-  fetchMlMeta,
-  fetchMlCategories,
-  fetchMlListingTypes,
-  fetchMlQuestions,
-  fetchMlOrders,
-  fetchMlMetrics,
-  fetchMlAutoReplyTemplates,
-  createMlAutoReplyTemplate,
-  updateMlAutoReplyTemplate,
-  deleteMlAutoReplyTemplate,
-  answerMlQuestion,
-  setMlEnabled,
-  setMlAppId,
-  setMlDefaults,
-  buildAuthorizeUrl,
-  disconnectMl,
-  embedProperty,
-  toMlQueueRow,
-  toMlMetaRow,
-  type QueueApiRow,
-  type MetaApiRow,
+    answerMlQuestion,
+    buildAuthorizeUrl,
+    createMlAutoReplyTemplate,
+    deleteMlAutoReplyTemplate,
+    disconnectMl,
+    embedProperty,
+    fetchMlAutoReplyTemplates,
+    fetchMlCategories,
+    fetchMlListingTypes,
+    fetchMlMeta,
+    fetchMlMetrics,
+    fetchMlOrders,
+    fetchMlOverview,
+    fetchMlQuestions,
+    fetchMlQueue,
+    fetchMlSettings,
+    type MetaApiRow,
+    type QueueApiRow,
+    setMlAppId,
+    setMlDefaults,
+    setMlEnabled,
+    toMlMetaRow,
+    toMlQueueRow,
+    updateMlAutoReplyTemplate,
 } from './ml';
 
 // ============================================================
@@ -53,106 +56,94 @@ import {
 // ============================================================
 
 export function useMlOverview() {
-  return useRpc<MlOverview, Record<string, never>>('ml_get_connection');
+    return useRpc<MlOverview, Record<string, never>>('ml_get_connection');
 }
 
 export function useMlSettings() {
-  return useQuery({
-    queryKey: ['ml-settings'],
-    queryFn: () => fetchMlSettings(),
-  });
+    return useQuery({
+        queryKey: ['ml-settings'],
+        queryFn: () => fetchMlSettings(),
+    });
 }
 
 export function useMlQueue(filters?: {
-  status?: MlSyncStatus;
-  operation?: MlOperation;
-  page?: number;
-  pageSize?: number;
+    status?: MlSyncStatus;
+    operation?: MlOperation;
+    page?: number;
+    pageSize?: number;
 }) {
-  const apiFilters: Record<string, unknown> = {};
+    const apiFilters: Record<string, unknown> = {};
 
-  if (filters?.status) apiFilters.status = `eq.${filters.status}`;
-  if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+    if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
 
-  return useListHook<MlQueueRow, QueueApiRow>({
-    queryKey: queryKeys.mlQueue(filters),
-    path: 'ml_sync_queue',
-    select: 'id,property_id,operation,status,attempts,max_attempts,next_attempt_at,ml_item_id,last_error,created_at,property:properties(title,code)',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 50,
-    orderBy: 'created_at',
-    ascending: false,
-    transform: toMlQueueRow,
-  });
+    return useListHook<MlQueueRow, QueueApiRow>({
+        queryKey: queryKeys.mlQueue(filters),
+        path: 'ml_sync_queue',
+        select: 'id,property_id,operation,status,attempts,max_attempts,next_attempt_at,ml_item_id,last_error,created_at,property:properties(title,code)',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 50,
+        orderBy: 'created_at',
+        ascending: false,
+        transform: toMlQueueRow,
+    });
 }
 
-export function useMlMeta(filters?: {
-  property_id?: string;
-  page?: number;
-  pageSize?: number;
-}) {
-  const apiFilters: Record<string, unknown> = {};
+export function useMlMeta(filters?: { property_id?: string; page?: number; pageSize?: number }) {
+    const apiFilters: Record<string, unknown> = {};
 
-  if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
+    if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
 
-  return useListHook<MlMetaRow, MetaApiRow>({
-    queryKey: queryKeys.mlMeta(filters),
-    path: 'property_ml_meta',
-    select: 'property_id,ml_item_id,status,permalink,price,last_sync_at,last_sync_status,property:properties(title,code)',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 100,
-    orderBy: 'last_sync_at',
-    ascending: false,
-    transform: toMlMetaRow,
-  });
+    return useListHook<MlMetaRow, MetaApiRow>({
+        queryKey: queryKeys.mlMeta(filters),
+        path: 'property_ml_meta',
+        select: 'property_id,ml_item_id,status,permalink,price,last_sync_at,last_sync_status,property:properties(title,code)',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 100,
+        orderBy: 'last_sync_at',
+        ascending: false,
+        transform: toMlMetaRow,
+    });
 }
 
 // ============================================================
 // Query Hooks - Questions & Orders
 // ============================================================
 
-export function useMlQuestions(filters?: {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-}) {
-  const apiFilters: Record<string, unknown> = {};
+export function useMlQuestions(filters?: { status?: string; page?: number; pageSize?: number }) {
+    const apiFilters: Record<string, unknown> = {};
 
-  if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
-  return useListHook<MlQuestion>({
-    queryKey: queryKeys.mlQuestions(filters),
-    path: 'ml_questions',
-    select: '*',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 50,
-    orderBy: 'received_at',
-    ascending: false,
-  });
+    return useListHook<MlQuestion>({
+        queryKey: queryKeys.mlQuestions(filters),
+        path: 'ml_questions',
+        select: '*',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 50,
+        orderBy: 'received_at',
+        ascending: false,
+    });
 }
 
-export function useMlOrders(filters?: {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-}) {
-  const apiFilters: Record<string, unknown> = {};
+export function useMlOrders(filters?: { status?: string; page?: number; pageSize?: number }) {
+    const apiFilters: Record<string, unknown> = {};
 
-  if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
-  return useListHook<MlOrder>({
-    queryKey: queryKeys.mlOrders(filters),
-    path: 'ml_orders',
-    select: '*',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 50,
-    orderBy: 'received_at',
-    ascending: false,
-  });
+    return useListHook<MlOrder>({
+        queryKey: queryKeys.mlOrders(filters),
+        path: 'ml_orders',
+        select: '*',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 50,
+        orderBy: 'received_at',
+        ascending: false,
+    });
 }
 
 // ============================================================
@@ -160,17 +151,17 @@ export function useMlOrders(filters?: {
 // ============================================================
 
 export function useMlCategories() {
-  return useQuery({
-    queryKey: ['ml-categories'],
-    queryFn: () => fetchMlCategories(),
-  });
+    return useQuery({
+        queryKey: ['ml-categories'],
+        queryFn: () => fetchMlCategories(),
+    });
 }
 
 export function useMlListingTypes() {
-  return useQuery({
-    queryKey: ['ml-listing-types'],
-    queryFn: () => fetchMlListingTypes(),
-  });
+    return useQuery({
+        queryKey: ['ml-listing-types'],
+        queryFn: () => fetchMlListingTypes(),
+    });
 }
 
 // ============================================================
@@ -178,10 +169,10 @@ export function useMlListingTypes() {
 // ============================================================
 
 export function useMlMetrics() {
-  return useQuery({
-    queryKey: ['ml-metrics'],
-    queryFn: () => fetchMlMetrics(),
-  });
+    return useQuery({
+        queryKey: ['ml-metrics'],
+        queryFn: () => fetchMlMetrics(),
+    });
 }
 
 // ============================================================
@@ -189,40 +180,48 @@ export function useMlMetrics() {
 // ============================================================
 
 export function useMlAutoReplyTemplates() {
-  return useListHook<MlAutoReplyTemplate>({
-    queryKey: queryKeys.mlTemplates(),
-    path: 'ml_auto_reply_templates',
-    select: '*',
-    filters: {},
-    page: 1,
-    pageSize: 50,
-    orderBy: 'created_at',
-    ascending: false,
-  });
+    return useListHook<MlAutoReplyTemplate>({
+        queryKey: queryKeys.mlTemplates(),
+        path: 'ml_auto_reply_templates',
+        select: '*',
+        filters: {},
+        page: 1,
+        pageSize: 50,
+        orderBy: 'created_at',
+        ascending: false,
+    });
 }
 
 export function useCreateMlAutoReplyTemplate() {
-  return useMutation({
-    mutationFn: async (template: Omit<MlAutoReplyTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      return createMlAutoReplyTemplate(template);
-    },
-  });
+    return useMutation({
+        mutationFn: async (
+            template: Omit<MlAutoReplyTemplate, 'id' | 'created_at' | 'updated_at'>,
+        ) => {
+            return createMlAutoReplyTemplate(template);
+        },
+    });
 }
 
 export function useUpdateMlAutoReplyTemplate() {
-  return useMutation({
-    mutationFn: async ({ id, template }: { id: number; template: Partial<MlAutoReplyTemplate> }) => {
-      return updateMlAutoReplyTemplate(id, template);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({
+            id,
+            template,
+        }: {
+            id: number;
+            template: Partial<MlAutoReplyTemplate>;
+        }) => {
+            return updateMlAutoReplyTemplate(id, template);
+        },
+    });
 }
 
 export function useDeleteMlAutoReplyTemplate() {
-  return useMutation({
-    mutationFn: async (id: number) => {
-      return deleteMlAutoReplyTemplate(id);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: number) => {
+            return deleteMlAutoReplyTemplate(id);
+        },
+    });
 }
 
 // ============================================================
@@ -230,11 +229,11 @@ export function useDeleteMlAutoReplyTemplate() {
 // ============================================================
 
 export function useAnswerMlQuestion() {
-  return useMutation({
-    mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
-      return answerMlQuestion(questionId, answer);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
+            return answerMlQuestion(questionId, answer);
+        },
+    });
 }
 
 // ============================================================
@@ -242,43 +241,47 @@ export function useAnswerMlQuestion() {
 // ============================================================
 
 export function useSetMlEnabled() {
-  return useMutation({
-    mutationFn: async (enabled: boolean) => {
-      return setMlEnabled(enabled);
-    },
-  });
+    return useMutation({
+        mutationFn: async (enabled: boolean) => {
+            return setMlEnabled(enabled);
+        },
+    });
 }
 
 export function useSetMlAppId() {
-  return useMutation({
-    mutationFn: async (appId: string) => {
-      return setMlAppId(appId);
-    },
-  });
+    return useMutation({
+        mutationFn: async (appId: string) => {
+            return setMlAppId(appId);
+        },
+    });
 }
 
 export function useSetMlDefaults() {
-  return useMutation({
-    mutationFn: async (defaults: { category_id: string; listing_type_id: string; condition: string }) => {
-      return setMlDefaults(defaults);
-    },
-  });
+    return useMutation({
+        mutationFn: async (defaults: {
+            category_id: string;
+            listing_type_id: string;
+            condition: string;
+        }) => {
+            return setMlDefaults(defaults);
+        },
+    });
 }
 
 export function useBuildAuthorizeUrl() {
-  return useMutation({
-    mutationFn: async (appId: string) => {
-      return buildAuthorizeUrl(appId);
-    },
-  });
+    return useMutation({
+        mutationFn: async (appId: string) => {
+            return buildAuthorizeUrl(appId);
+        },
+    });
 }
 
 export function useDisconnectMl() {
-  return useMutation({
-    mutationFn: async () => {
-      return disconnectMl();
-    },
-  });
+    return useMutation({
+        mutationFn: async () => {
+            return disconnectMl();
+        },
+    });
 }
 
 // ============================================================
@@ -286,62 +289,82 @@ export function useDisconnectMl() {
 // ============================================================
 
 export const ML_QUEUE_EXPORT_COLUMNS: ExportColumn<MlQueueRow>[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
-  { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
-  { key: 'operation', label: 'Operación', format: (v) => ML_OPERATION_LABEL[v as MlOperation] ?? v },
-  { key: 'status', label: 'Estado', format: (v) => ML_SYNC_STATUS_LABEL[v as MlSyncStatus] ?? v },
-  { key: 'attempts', label: 'Intentos', format: (v, row) => `${v}/${(row as MlQueueRow).max_attempts}` },
-  { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
-  { key: 'last_error', label: 'Último error', format: (v) => v ?? '—' },
-  { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
+    { key: 'id', label: 'ID' },
+    { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
+    { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
+    {
+        key: 'operation',
+        label: 'Operación',
+        format: (v) => ML_OPERATION_LABEL[v as MlOperation] ?? v,
+    },
+    { key: 'status', label: 'Estado', format: (v) => ML_SYNC_STATUS_LABEL[v as MlSyncStatus] ?? v },
+    {
+        key: 'attempts',
+        label: 'Intentos',
+        format: (v, row) => `${v}/${(row as MlQueueRow).max_attempts}`,
+    },
+    { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
+    { key: 'last_error', label: 'Último error', format: (v) => v ?? '—' },
+    {
+        key: 'created_at',
+        label: 'Creado',
+        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+    },
 ];
 
 export const ML_META_EXPORT_COLUMNS: ExportColumn<MlMetaRow>[] = [
-  { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
-  { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
-  { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
-  { key: 'status', label: 'Estado' },
-  { key: 'permalink', label: 'Link ML', format: (v) => v ?? '—' },
-  { key: 'price', label: 'Precio ML', format: (v) => v ? `${v.toLocaleString('es-AR')}` : '—' },
-  { key: 'last_sync_at', label: 'Última sync', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
-  { key: 'last_sync_status', label: 'Estado sync', format: (v) => ML_SYNC_STATUS_LABEL[v as MlSyncStatus] ?? v },
+    { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
+    { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
+    { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
+    { key: 'status', label: 'Estado' },
+    { key: 'permalink', label: 'Link ML', format: (v) => v ?? '—' },
+    { key: 'price', label: 'Precio ML', format: (v) => (v ? `${v.toLocaleString('es-AR')}` : '—') },
+    {
+        key: 'last_sync_at',
+        label: 'Última sync',
+        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+    },
+    {
+        key: 'last_sync_status',
+        label: 'Estado sync',
+        format: (v) => ML_SYNC_STATUS_LABEL[v as MlSyncStatus] ?? v,
+    },
 ];
 
 export function useExportMlQueue() {
-  const { exportToCSV } = useExport<MlQueueRow>();
-  const queue = useMlQueue({ pageSize: 1000 });
+    const { exportToCSV } = useExport<MlQueueRow>();
+    const queue = useMlQueue({ pageSize: 1000 });
 
-  return {
-    exportToCSV: async (filename = 'ml-queue') => {
-      if (queue.data?.data) {
-        await exportToCSV({
-          data: queue.data.data,
-          columns: ML_QUEUE_EXPORT_COLUMNS,
-          filename,
-        });
-      }
-    },
-    isLoading: queue.isPending,
-  };
+    return {
+        exportToCSV: async (filename = 'ml-queue') => {
+            if (queue.data?.data) {
+                await exportToCSV({
+                    data: queue.data.data,
+                    columns: ML_QUEUE_EXPORT_COLUMNS,
+                    filename,
+                });
+            }
+        },
+        isLoading: queue.isPending,
+    };
 }
 
 export function useExportMlMeta() {
-  const { exportToCSV } = useExport<MlMetaRow>();
-  const meta = useMlMeta({ pageSize: 1000 });
+    const { exportToCSV } = useExport<MlMetaRow>();
+    const meta = useMlMeta({ pageSize: 1000 });
 
-  return {
-    exportToCSV: async (filename = 'ml-meta') => {
-      if (meta.data?.data) {
-        await exportToCSV({
-          data: meta.data.data,
-          columns: ML_META_EXPORT_COLUMNS,
-          filename,
-        });
-      }
-    },
-    isLoading: meta.isPending,
-  };
+    return {
+        exportToCSV: async (filename = 'ml-meta') => {
+            if (meta.data?.data) {
+                await exportToCSV({
+                    data: meta.data.data,
+                    columns: ML_META_EXPORT_COLUMNS,
+                    filename,
+                });
+            }
+        },
+        isLoading: meta.isPending,
+    };
 }
 
 // ============================================================
@@ -349,26 +372,26 @@ export function useExportMlMeta() {
 // ============================================================
 
 export {
-  fetchMlOverview,
-  fetchMlSettings,
-  fetchMlQueue,
-  fetchMlMeta,
-  fetchMlCategories,
-  fetchMlListingTypes,
-  fetchMlQuestions,
-  fetchMlOrders,
-  fetchMlMetrics,
-  fetchMlAutoReplyTemplates,
-  createMlAutoReplyTemplate,
-  updateMlAutoReplyTemplate,
-  deleteMlAutoReplyTemplate,
-  answerMlQuestion,
-  setMlEnabled,
-  setMlAppId,
-  setMlDefaults,
-  buildAuthorizeUrl,
-  disconnectMl,
-  embedProperty,
+    fetchMlOverview,
+    fetchMlSettings,
+    fetchMlQueue,
+    fetchMlMeta,
+    fetchMlCategories,
+    fetchMlListingTypes,
+    fetchMlQuestions,
+    fetchMlOrders,
+    fetchMlMetrics,
+    fetchMlAutoReplyTemplates,
+    createMlAutoReplyTemplate,
+    updateMlAutoReplyTemplate,
+    deleteMlAutoReplyTemplate,
+    answerMlQuestion,
+    setMlEnabled,
+    setMlAppId,
+    setMlDefaults,
+    buildAuthorizeUrl,
+    disconnectMl,
+    embedProperty,
 };
 
 // ============================================================
@@ -377,20 +400,20 @@ export {
 
 export { queryKeys };
 export type {
-  MlOperation,
-  MlSyncStatus,
-  MlConnectionInfo,
-  MlOverview,
-  MlSettings,
-  MlQueueRow,
-  MlMetaRow,
-  MlCategory,
-  MlListingType,
-  MlQuestion,
-  MlOrder,
-  MlMetrics,
-  MlItemMetrics,
-  MlAutoReplyTemplate,
+    MlOperation,
+    MlSyncStatus,
+    MlConnectionInfo,
+    MlOverview,
+    MlSettings,
+    MlQueueRow,
+    MlMetaRow,
+    MlCategory,
+    MlListingType,
+    MlQuestion,
+    MlOrder,
+    MlMetrics,
+    MlItemMetrics,
+    MlAutoReplyTemplate,
 };
 export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
 export type { QueueApiRow, MetaApiRow };

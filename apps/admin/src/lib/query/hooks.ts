@@ -1,20 +1,20 @@
 import {
-  MutationObserver,
-  QueryObserver,
-  type MutationObserverOptions,
-  type QueryKey,
-  type QueryObserverOptions,
-  type QueryObserverResult,
+    MutationObserver,
+    type MutationObserverOptions,
+    type QueryKey,
+    QueryObserver,
+    type QueryObserverOptions,
+    type QueryObserverResult,
 } from '@tanstack/query-core';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { useSyncExternalStore } from 'preact/compat';
 import { queryClient } from './client';
 
 export interface QueryOptions<TData> {
-  queryKey: QueryKey;
-  queryFn: () => Promise<TData>;
-  enabled?: boolean;
-  staleTime?: number;
+    queryKey: QueryKey;
+    queryFn: () => Promise<TData>;
+    enabled?: boolean;
+    staleTime?: number;
 }
 
 /**
@@ -22,66 +22,66 @@ export interface QueryOptions<TData> {
  * Usa @tanstack/query-core + useSyncExternalStore (sin necesidad de react).
  */
 export function useQuery<TData>(options: QueryOptions<TData>): QueryObserverResult<TData, Error> {
-  const optsRef = useRef<QueryObserverOptions<TData, Error, TData, TData>>();
-  optsRef.current = options;
+    const optsRef = useRef<QueryObserverOptions<TData, Error, TData, TData>>();
+    optsRef.current = options;
 
-  const [observer] = useState(
-    () => new QueryObserver<TData, Error, TData, TData>(queryClient, options),
-  );
+    const [observer] = useState(
+        () => new QueryObserver<TData, Error, TData, TData>(queryClient, options),
+    );
 
-  useEffect(() => {
-    observer.setOptions(options);
-  }, [observer, options]);
+    useEffect(() => {
+        observer.setOptions(options);
+    }, [observer, options]);
 
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => observer.subscribe(onStoreChange),
-    [observer],
-  );
-  const getSnapshot = useCallback(() => observer.getCurrentResult(), [observer]);
+    const subscribe = useCallback(
+        (onStoreChange: () => void) => observer.subscribe(onStoreChange),
+        [observer],
+    );
+    const getSnapshot = useCallback(() => observer.getCurrentResult(), [observer]);
 
-  return useSyncExternalStore(subscribe, getSnapshot);
+    return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 export interface MutationOptions<TData, TVariables> {
-  mutationFn: (variables: TVariables) => Promise<TData>;
-  onSuccess?: (data: TData, variables: TVariables) => void;
-  onError?: (error: unknown, variables: TVariables) => void;
+    mutationFn: (variables: TVariables) => Promise<TData>;
+    onSuccess?: (data: TData, variables: TVariables) => void;
+    onError?: (error: unknown, variables: TVariables) => void;
 }
 
 export function useMutation<TData = unknown, TVariables = void>(
-  options: MutationOptions<TData, TVariables>,
+    options: MutationOptions<TData, TVariables>,
 ) {
-  const [observer] = useState(
-    () => new MutationObserver<TData, Error, TVariables, unknown>(queryClient, options),
-  );
+    const [observer] = useState(
+        () => new MutationObserver<TData, Error, TVariables, unknown>(queryClient, options),
+    );
 
-  useEffect(() => {
-    observer.setOptions(options);
-  }, [observer, options]);
+    useEffect(() => {
+        observer.setOptions(options);
+    }, [observer, options]);
 
-  const [result, setResult] = useState(() => observer.getCurrentResult());
+    const [result, setResult] = useState(() => observer.getCurrentResult());
 
-  useEffect(() => observer.subscribe(setResult), [observer]);
+    useEffect(() => observer.subscribe(setResult), [observer]);
 
-  const mutate = useCallback(
-    (variables: TVariables) => {
-      observer.mutate(variables);
-    },
-    [observer],
-  );
+    const mutate = useCallback(
+        (variables: TVariables) => {
+            observer.mutate(variables);
+        },
+        [observer],
+    );
 
-  const mutateAsync = useCallback(
-    (variables: TVariables) =>
-      new Promise<TData>((resolve, reject) => {
-        observer.mutate(variables, {
-          onSuccess: resolve,
-          onError: reject,
-        });
-      }),
-    [observer],
-  );
+    const mutateAsync = useCallback(
+        (variables: TVariables) =>
+            new Promise<TData>((resolve, reject) => {
+                observer.mutate(variables, {
+                    onSuccess: resolve,
+                    onError: reject,
+                });
+            }),
+        [observer],
+    );
 
-  return { ...result, mutate, mutateAsync };
+    return { ...result, mutate, mutateAsync };
 }
 
 export type { MutationObserverOptions, QueryObserverResult };

@@ -1,82 +1,135 @@
 import type { ComponentChildren } from 'preact';
+import { useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { mobileMenuOpen } from '../store/app';
+import { Calendar, Plus, Settings, ShoppingBag, UserRound, Users } from 'lucide-preact';
+import { commandPaletteOpen, mobileMenuOpen } from '../store/app';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { CommandPalette, useCommandPalette } from './CommandPalette';
-import { Plus, Users, Calendar, UserRound, ShoppingBag, Settings } from 'lucide-preact';
+import { BreadcrumbNav } from './Breadcrumb';
+import { CommandPalette } from './CommandPalette';
 
 export function Shell({ children }: { children: ComponentChildren }) {
-  const { isOpen, close } = useCommandPalette();
-  const [, setLocation] = useLocation();
+    const [, setLocation] = useLocation();
 
-  const globalCommands = [
-    {
-      id: 'properties-new',
-      label: 'Nueva propiedad',
-      description: 'Crear una propiedad nueva',
-      icon: Plus,
-      section: 'Propiedades',
-      action: () => { setLocation('/propiedades/nueva'); },
-    },
-    {
-      id: 'leads-new',
-      label: 'Nuevo lead',
-      description: 'Registrar un nuevo lead',
-      icon: Users,
-      section: 'Leads',
-      action: () => { setLocation('/leads/nueva'); },
-    },
-    {
-      id: 'visits-new',
-      label: 'Nueva visita',
-      description: 'Programar una visita',
-      icon: Calendar,
-      section: 'Visitas',
-      action: () => { setLocation('/visitas'); },
-    },
-    {
-      id: 'agents-new',
-      label: 'Nuevo agente',
-      description: 'Registrar un nuevo agente',
-      icon: UserRound,
-      section: 'Agentes',
-      action: () => { setLocation('/agentes/nueva'); },
-    },
-    {
-      id: 'ml-sync',
-      label: 'Sincronizar Mercado Libre',
-      description: 'Ejecutar sincronizaci��n manual',
-      icon: ShoppingBag,
-      section: 'Mercado Libre',
-      action: () => { setLocation('/mercadolibre'); },
-    },
-    {
-      id: 'settings',
-      label: 'Configuraci��n',
-      description: 'Ajustes del panel',
-      icon: Settings,
-      section: 'Sistema',
-      action: () => { setLocation('/configuracion'); },
-    },
-  ];
+    const globalCommands = [
+        {
+            id: 'properties-new',
+            label: 'Nueva propiedad',
+            description: 'Crear una propiedad nueva',
+            icon: Plus,
+            section: 'Propiedades',
+            action: () => {
+                setLocation('/propiedades/nueva');
+            },
+        },
+        {
+            id: 'leads-new',
+            label: 'Nuevo lead',
+            description: 'Registrar un nuevo lead',
+            icon: Users,
+            section: 'Leads',
+            action: () => {
+                setLocation('/leads/nueva');
+            },
+        },
+        {
+            id: 'visits-new',
+            label: 'Nueva visita',
+            description: 'Programar una visita',
+            icon: Calendar,
+            section: 'Visitas',
+            action: () => {
+                setLocation('/visitas');
+            },
+        },
+        {
+            id: 'agents-new',
+            label: 'Nuevo agente',
+            description: 'Registrar un nuevo agente',
+            icon: UserRound,
+            section: 'Agentes',
+            action: () => {
+                setLocation('/agentes/nueva');
+            },
+        },
+        {
+            id: 'ml-sync',
+            label: 'Sincronizar Mercado Libre',
+            description: 'Ejecutar sincronización manual',
+            icon: ShoppingBag,
+            section: 'Mercado Libre',
+            action: () => {
+                setLocation('/mercadolibre');
+            },
+        },
+        {
+            id: 'settings',
+            label: 'Configuración',
+            description: 'Ajustes del panel',
+            icon: Settings,
+            section: 'Sistema',
+            action: () => {
+                setLocation('/configuracion');
+            },
+        },
+    ];
 
-  return (
-    <div className="shell">
-      <Sidebar />
-      <div
-        className={`sidebar-scrim${mobileMenuOpen.value ? ' show' : ''}`}
-        onClick={() => (mobileMenuOpen.value = false)}
-      />
-      <div className="shell-main">
-        <Topbar />
-        <main className="shell-content">{children}</main>
-      </div>
-      <CommandPalette
-        items={globalCommands}
-        isOpen={isOpen}
-        onClose={close}
-      />
-    </div>
-  );
+    // Ctrl/Cmd+K opens command palette; Escape closes palette then drawer (spec §45, §57).
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                commandPaletteOpen.value = true;
+            }
+            if (e.key === 'Escape') {
+                // CommandPalette handles its own Escape (preventDefault); if it
+                // already consumed the event, do not also close the drawer.
+                if (e.defaultPrevented) return;
+                if (commandPaletteOpen.value) {
+                    e.preventDefault();
+                    commandPaletteOpen.value = false;
+                } else if (mobileMenuOpen.value) {
+                    e.preventDefault();
+                    mobileMenuOpen.value = false;
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const closePalette = () => {
+        commandPaletteOpen.value = false;
+    };
+    const closeDrawer = () => {
+        mobileMenuOpen.value = false;
+    };
+
+    return (
+        <div className="shell">
+            <a href="#main-content" className="skip-link">
+                Saltar al contenido
+            </a>
+            <Sidebar />
+            <div
+                className={`sidebar-scrim${mobileMenuOpen.value ? ' is-visible' : ''}`}
+                onClick={closeDrawer}
+                aria-hidden={!mobileMenuOpen.value}
+            />
+            <div className="shell-main">
+                <Topbar />
+                <div className="breadcrumb-row">
+                    <BreadcrumbNav />
+                </div>
+                <main id="main-content" className="shell-content">
+                    {children}
+                </main>
+            </div>
+            <CommandPalette
+                items={globalCommands}
+                isOpen={commandPaletteOpen.value}
+                onClose={closePalette}
+            />
+        </div>
+    );
 }

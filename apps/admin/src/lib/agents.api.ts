@@ -1,38 +1,49 @@
-import { useList, useItem, useCreate, useUpdate, useDelete, useMutation, useUpload, useExport, queryKeys, type ExportColumn } from './api';
+import {
+    type ExportColumn,
+    queryKeys,
+    useCreate,
+    useDelete,
+    useExport,
+    useItem,
+    useList,
+    useMutation,
+    useUpdate,
+    useUpload,
+} from './api';
 import { supabase } from '../lib/supabase';
-import { useState, useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type {
-  AgentRow,
-  AgentFormValues,
-  AgentPermissions,
-  AgentCommission,
-  AgentSchedule,
-  AgentAvailability,
+    AgentAvailability,
+    AgentCommission,
+    AgentFormValues,
+    AgentPermissions,
+    AgentRow,
+    AgentSchedule,
 } from '../types/agents';
 import {
-  DEFAULT_PERMISSIONS,
-  DEFAULT_COMMISSION,
-  DEFAULT_SCHEDULE,
-  DAY_LABELS,
+    DAY_LABELS,
+    DEFAULT_COMMISSION,
+    DEFAULT_PERMISSIONS,
+    DEFAULT_SCHEDULE,
 } from '../types/agents';
 import {
-  fetchAgents,
-  fetchAgent,
-  fetchDeletedAgents,
-  createAgent,
-  updateAgent,
-  softDeleteAgent,
-  restoreAgent,
-  permanentDeleteAgent,
-  updateAgentPermissions,
-  updateAgentCommission,
-  updateAgentSchedule,
-  calculateCommission,
-  uploadAgentPhoto,
-  deleteAgentPhoto,
-  toRow,
-  toFormValues,
-  type AgentApiRow,
+    type AgentApiRow,
+    calculateCommission,
+    createAgent,
+    deleteAgentPhoto,
+    fetchAgent,
+    fetchAgents,
+    fetchDeletedAgents,
+    permanentDeleteAgent,
+    restoreAgent,
+    softDeleteAgent,
+    toFormValues,
+    toRow,
+    updateAgent,
+    updateAgentCommission,
+    updateAgentPermissions,
+    updateAgentSchedule,
+    uploadAgentPhoto,
 } from './agents';
 
 const AGENTS_PATH = 'agents';
@@ -42,58 +53,53 @@ const AGENTS_PATH = 'agents';
 // ============================================================
 
 export function useAgents(filters?: {
-  is_active?: boolean;
-  search?: string;
-  page?: number;
-  pageSize?: number;
+    is_active?: boolean;
+    search?: string;
+    page?: number;
+    pageSize?: number;
 }) {
-  const apiFilters: Record<string, any> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, any> = { deleted_at: 'is.null' };
 
-  if (filters?.is_active !== undefined) apiFilters.is_active = `eq.${filters.is_active}`;
+    if (filters?.is_active !== undefined) apiFilters.is_active = `eq.${filters.is_active}`;
 
-  const [enabled, setEnabled] = useState(false);
+    const [enabled, setEnabled] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: session } }) => {
-      setEnabled(!!session);
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session: session } }) => {
+            setEnabled(!!session);
+        });
+    }, []);
+
+    return useList<AgentRow, AgentApiRow>({
+        queryKey: queryKeys.agents(filters),
+        path: AGENTS_PATH,
+        select: '*',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 20,
+        orderBy: 'sort_order',
+        ascending: true,
+        transform: toRow,
+        enabled,
     });
-  }, []);
-
-  return useList<AgentRow, AgentApiRow>({
-    queryKey: queryKeys.agents(filters),
-    path: AGENTS_PATH,
-    select: '*',
-    filters: apiFilters,
-    page: filters?.page ?? 1,
-    pageSize: filters?.pageSize ?? 20,
-    orderBy: 'sort_order',
-    ascending: true,
-    transform: toRow,
-    enabled,
-  });
 }
 
 export function useAgent(id: string | null) {
-  return useItem<AgentRow>(
-    queryKeys.agent(id ?? ''),
-    AGENTS_PATH,
-    id,
-    !!id
-  );
+    return useItem<AgentRow>(queryKeys.agent(id ?? ''), AGENTS_PATH, id, !!id);
 }
 
 export function useFetchDeletedAgents() {
-  return useList<AgentRow, AgentApiRow>({
-    queryKey: queryKeys.agents({ deleted: true }),
-    path: AGENTS_PATH,
-    select: '*,leads(count)',
-    filters: { deleted_at: 'not.is.null' },
-    page: 1,
-    pageSize: 50,
-    orderBy: 'deleted_at',
-    ascending: false,
-    transform: toRow,
-  });
+    return useList<AgentRow, AgentApiRow>({
+        queryKey: queryKeys.agents({ deleted: true }),
+        path: AGENTS_PATH,
+        select: '*,leads(count)',
+        filters: { deleted_at: 'not.is.null' },
+        page: 1,
+        pageSize: 50,
+        orderBy: 'deleted_at',
+        ascending: false,
+        transform: toRow,
+    });
 }
 
 // ============================================================
@@ -101,33 +107,21 @@ export function useFetchDeletedAgents() {
 // ============================================================
 
 export function useCreateAgent() {
-  return useCreate<AgentRow, AgentFormValues>(
-    queryKeys.agents(),
-    AGENTS_PATH,
-    {
-      invalidateKeys: [queryKeys.agents()],
-    }
-  );
+    return useCreate<AgentRow, AgentFormValues>(queryKeys.agents(), AGENTS_PATH, {
+        invalidateKeys: [queryKeys.agents()],
+    });
 }
 
 export function useUpdateAgent() {
-  return useUpdate<AgentRow, AgentFormValues>(
-    queryKeys.agents(),
-    AGENTS_PATH,
-    {
-      invalidateKeys: [queryKeys.agents()],
-    }
-  );
+    return useUpdate<AgentRow, AgentFormValues>(queryKeys.agents(), AGENTS_PATH, {
+        invalidateKeys: [queryKeys.agents()],
+    });
 }
 
 export function useDeleteAgent() {
-  return useDelete(
-    queryKeys.agents(),
-    AGENTS_PATH,
-    {
-      invalidateKeys: [queryKeys.agents()],
-    }
-  );
+    return useDelete(queryKeys.agents(), AGENTS_PATH, {
+        invalidateKeys: [queryKeys.agents()],
+    });
 }
 
 // ============================================================
@@ -135,23 +129,23 @@ export function useDeleteAgent() {
 // ============================================================
 
 export function useAgentPhoto() {
-  return useUpload('agent-photos');
+    return useUpload('agent-photos');
 }
 
 export function useUploadAgentPhoto() {
-  return useMutation({
-    mutationFn: async (file: File) => {
-      return uploadAgentPhoto(file);
-    },
-  });
+    return useMutation({
+        mutationFn: async (file: File) => {
+            return uploadAgentPhoto(file);
+        },
+    });
 }
 
 export function useDeleteAgentPhoto() {
-  return useMutation({
-    mutationFn: async (url: string) => {
-      return deleteAgentPhoto(url);
-    },
-  });
+    return useMutation({
+        mutationFn: async (url: string) => {
+            return deleteAgentPhoto(url);
+        },
+    });
 }
 
 // ============================================================
@@ -159,12 +153,12 @@ export function useDeleteAgentPhoto() {
 // ============================================================
 
 export function useToggleAgentActive() {
-  return useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('agents').update({ is_active }).eq('id', id);
-      if (error) throw new Error(error.message);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+            const { error } = await supabase.from('agents').update({ is_active }).eq('id', id);
+            if (error) throw new Error(error.message);
+        },
+    });
 }
 
 // ============================================================
@@ -172,11 +166,17 @@ export function useToggleAgentActive() {
 // ============================================================
 
 export function useUpdateAgentPermissions() {
-  return useMutation({
-    mutationFn: async ({ id, permissions }: { id: string; permissions: Partial<AgentPermissions> }) => {
-      return updateAgentPermissions(id, permissions);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({
+            id,
+            permissions,
+        }: {
+            id: string;
+            permissions: Partial<AgentPermissions>;
+        }) => {
+            return updateAgentPermissions(id, permissions);
+        },
+    });
 }
 
 // ============================================================
@@ -184,27 +184,33 @@ export function useUpdateAgentPermissions() {
 // ============================================================
 
 export function useUpdateAgentCommission() {
-  return useMutation({
-    mutationFn: async ({ id, commission }: { id: string; commission: Partial<AgentCommission> }) => {
-      return updateAgentCommission(id, commission);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({
+            id,
+            commission,
+        }: {
+            id: string;
+            commission: Partial<AgentCommission>;
+        }) => {
+            return updateAgentCommission(id, commission);
+        },
+    });
 }
 
 export function useCalculateCommission() {
-  return useMutation({
-    mutationFn: async ({
-      agentId,
-      operationType,
-      amount,
-    }: {
-      agentId: string;
-      operationType: 'sale' | 'rental';
-      amount: number;
-    }) => {
-      return calculateCommission(agentId, operationType, amount);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({
+            agentId,
+            operationType,
+            amount,
+        }: {
+            agentId: string;
+            operationType: 'sale' | 'rental';
+            amount: number;
+        }) => {
+            return calculateCommission(agentId, operationType, amount);
+        },
+    });
 }
 
 // ============================================================
@@ -212,11 +218,11 @@ export function useCalculateCommission() {
 // ============================================================
 
 export function useUpdateAgentSchedule() {
-  return useMutation({
-    mutationFn: async ({ id, schedule }: { id: string; schedule: AgentSchedule[] }) => {
-      return updateAgentSchedule(id, schedule);
-    },
-  });
+    return useMutation({
+        mutationFn: async ({ id, schedule }: { id: string; schedule: AgentSchedule[] }) => {
+            return updateAgentSchedule(id, schedule);
+        },
+    });
 }
 
 // ============================================================
@@ -224,47 +230,42 @@ export function useUpdateAgentSchedule() {
 // ============================================================
 
 export function useAgentAvailability(agentId: string | null) {
-  return useList<AgentAvailability>({
-    queryKey: queryKeys.agents([{ availability: agentId }]),
-    path: 'agent_availability',
-    select: '*',
-    filters: { agent_id: `eq.${agentId}`, is_active: 'eq.true' },
-    page: 1,
-    pageSize: 7,
-    orderBy: 'day_of_week',
-    ascending: true,
-    enabled: !!agentId,
-  });
+    return useList<AgentAvailability>({
+        queryKey: queryKeys.agents([{ availability: agentId }]),
+        path: 'agent_availability',
+        select: '*',
+        filters: { agent_id: `eq.${agentId}`, is_active: 'eq.true' },
+        page: 1,
+        pageSize: 7,
+        orderBy: 'day_of_week',
+        ascending: true,
+        enabled: !!agentId,
+    });
 }
 
 export function useCreateAgentAvailability() {
-  return useCreate<AgentAvailability, Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>>(
-    queryKeys.agents([{ availability: '' }]),
-    'agent_availability',
-    {
-      invalidateKeys: [queryKeys.agents([{ availability: '' }])],
-    }
-  );
+    return useCreate<
+        AgentAvailability,
+        Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>
+    >(queryKeys.agents([{ availability: '' }]), 'agent_availability', {
+        invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+    });
 }
 
 export function useUpdateAgentAvailability() {
-  return useUpdate<AgentAvailability, Partial<AgentAvailability>>(
-    queryKeys.agents([{ availability: '' }]),
-    'agent_availability',
-    {
-      invalidateKeys: [queryKeys.agents([{ availability: '' }])],
-    }
-  );
+    return useUpdate<AgentAvailability, Partial<AgentAvailability>>(
+        queryKeys.agents([{ availability: '' }]),
+        'agent_availability',
+        {
+            invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+        },
+    );
 }
 
 export function useDeleteAgentAvailability() {
-  return useDelete(
-    queryKeys.agents([{ availability: '' }]),
-    'agent_availability',
-    {
-      invalidateKeys: [queryKeys.agents([{ availability: '' }])],
-    }
-  );
+    return useDelete(queryKeys.agents([{ availability: '' }]), 'agent_availability', {
+        invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+    });
 }
 
 // ============================================================
@@ -272,27 +273,27 @@ export function useDeleteAgentAvailability() {
 // ============================================================
 
 export function useSoftDeleteAgent() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return softDeleteAgent(id);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return softDeleteAgent(id);
+        },
+    });
 }
 
 export function useRestoreAgent() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return restoreAgent(id);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return restoreAgent(id);
+        },
+    });
 }
 
 export function usePermanentDeleteAgent() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return permanentDeleteAgent(id);
-    },
-  });
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return permanentDeleteAgent(id);
+        },
+    });
 }
 
 // ============================================================
@@ -300,33 +301,37 @@ export function usePermanentDeleteAgent() {
 // ============================================================
 
 export const AGENT_EXPORT_COLUMNS: ExportColumn<AgentRow>[] = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Teléfono', format: (v) => v ?? '—' },
-  { key: 'matricula', label: 'Matrícula', format: (v) => v ?? '—' },
-  { key: 'role', label: 'Rol', format: (v) => v ?? '—' },
-  { key: 'is_active', label: 'Activo', format: (v) => v ? 'Sí' : 'No' },
-  { key: 'lead_count', label: 'Leads asignados' },
-  { key: 'sort_order', label: 'Orden' },
-  { key: 'created_at', label: 'Creado', format: (v) => v ? new Date(v).toLocaleDateString('es-AR') : '—' },
+    { key: 'name', label: 'Nombre' },
+    { key: 'email', label: 'Email' },
+    { key: 'phone', label: 'Teléfono', format: (v) => v ?? '—' },
+    { key: 'matricula', label: 'Matrícula', format: (v) => v ?? '—' },
+    { key: 'role', label: 'Rol', format: (v) => v ?? '—' },
+    { key: 'is_active', label: 'Activo', format: (v) => (v ? 'Sí' : 'No') },
+    { key: 'lead_count', label: 'Leads asignados' },
+    { key: 'sort_order', label: 'Orden' },
+    {
+        key: 'created_at',
+        label: 'Creado',
+        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+    },
 ];
 
 export function useExportAgents() {
-  const { exportToCSV } = useExport<AgentRow>();
-  const agents = useAgents({ pageSize: 1000 });
+    const { exportToCSV } = useExport<AgentRow>();
+    const agents = useAgents({ pageSize: 1000 });
 
-  return {
-    exportToCSV: async (filename = 'agentes') => {
-      if (agents.data?.data) {
-        await exportToCSV({
-          data: agents.data.data,
-          columns: AGENT_EXPORT_COLUMNS,
-          filename,
-        });
-      }
-    },
-    isLoading: agents.isPending,
-  };
+    return {
+        exportToCSV: async (filename = 'agentes') => {
+            if (agents.data?.data) {
+                await exportToCSV({
+                    data: agents.data.data,
+                    columns: AGENT_EXPORT_COLUMNS,
+                    filename,
+                });
+            }
+        },
+        isLoading: agents.isPending,
+    };
 }
 
 // ============================================================
@@ -334,22 +339,22 @@ export function useExportAgents() {
 // ============================================================
 
 export {
-  fetchAgents,
-  fetchAgent,
-  fetchDeletedAgents,
-  createAgent,
-  updateAgent,
-  softDeleteAgent,
-  restoreAgent,
-  permanentDeleteAgent,
-  updateAgentPermissions,
-  updateAgentCommission,
-  updateAgentSchedule,
-  calculateCommission,
-  uploadAgentPhoto,
-  deleteAgentPhoto,
-  toRow,
-  toFormValues,
+    fetchAgents,
+    fetchAgent,
+    fetchDeletedAgents,
+    createAgent,
+    updateAgent,
+    softDeleteAgent,
+    restoreAgent,
+    permanentDeleteAgent,
+    updateAgentPermissions,
+    updateAgentCommission,
+    updateAgentSchedule,
+    calculateCommission,
+    uploadAgentPhoto,
+    deleteAgentPhoto,
+    toRow,
+    toFormValues,
 };
 
 // ============================================================
@@ -357,5 +362,12 @@ export {
 // ============================================================
 
 export { queryKeys };
-export type { AgentRow, AgentFormValues, AgentPermissions, AgentCommission, AgentSchedule, AgentAvailability };
+export type {
+    AgentRow,
+    AgentFormValues,
+    AgentPermissions,
+    AgentCommission,
+    AgentSchedule,
+    AgentAvailability,
+};
 export { DEFAULT_PERMISSIONS, DEFAULT_COMMISSION, DEFAULT_SCHEDULE, DAY_LABELS };

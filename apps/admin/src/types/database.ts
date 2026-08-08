@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -265,6 +245,45 @@ export type Database = {
           sort_order?: number
           specialties?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      agents_realtime: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          matricula: string | null
+          name: string
+          photo_url: string | null
+          role: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id: string
+          is_active?: boolean | null
+          matricula?: string | null
+          name: string
+          photo_url?: string | null
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          matricula?: string | null
+          name?: string
+          photo_url?: string | null
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -629,6 +648,36 @@ export type Database = {
           slug?: string
           sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      geocode_cache: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          lat: number | null
+          lon: number | null
+          query: string
+          raw: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          lat?: number | null
+          lon?: number | null
+          query: string
+          raw?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          lat?: number | null
+          lon?: number | null
+          query?: string
+          raw?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1999,6 +2048,279 @@ export type Database = {
           },
         ]
       }
+      property_valuations: {
+        Row: {
+          ac_dispersion: number | null
+          agua_caliente: string | null
+          aire_acondicionado: string | null
+          amb_balcon: number | null
+          amb_bano: number | null
+          amb_bano_servicio: number | null
+          amb_cocina: number | null
+          amb_cocina_comedor: number | null
+          amb_comedor: number | null
+          amb_cuarto_guardado: number | null
+          amb_dormit_vestidor: number | null
+          amb_dormitorios: number | null
+          amb_escritorio: number | null
+          amb_garage: number | null
+          amb_lavadero: number | null
+          amb_living: number | null
+          amb_living_comedor: number | null
+          amb_patio: number | null
+          amb_suite: number | null
+          amb_suite_vestidor: number | null
+          amb_terraza: number | null
+          amb_total_cuartos: number | null
+          anio_construccion: number | null
+          barrio: string | null
+          barrio_tipo: string | null
+          calefaccion: string | null
+          calidad_constructiva: string | null
+          calidad_constructiva_predom: string | null
+          calidad_mantenimiento: string | null
+          cambios_uso_terreno: string | null
+          caracteristicas_adversas: string | null
+          com_asador: string | null
+          com_doble_circulacion: string | null
+          com_piscina: string | null
+          construccion_altura_prevalencia: string | null
+          construido_pct: string | null
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          demanda_oferta: string | null
+          destino: string
+          detalles_terminacion: string | null
+          direccion: string
+          espacio_habitable: number | null
+          estacionamiento_tipo: string | null
+          facilidades_estacionamiento: string | null
+          fecha: string
+          finalized_at: string | null
+          foto_fachada_url: string | null
+          id: string
+          imp_inmobiliarios: number | null
+          indice_crecimiento: string | null
+          localidad: string | null
+          locked: boolean | null
+          luminosidad: string | null
+          nivel_socioeconomico_barrio: string | null
+          observaciones: string | null
+          orientacion: string | null
+          plantas: number | null
+          precio_dolar: number | null
+          provincia: string | null
+          serv_agua: string | null
+          serv_cloaca: string | null
+          serv_electricidad: string | null
+          serv_gas: string | null
+          serv_internet: string | null
+          serv_techos: string | null
+          serv_vigilancia: string | null
+          solicitante: string
+          sup_construida: number | null
+          sup_terreno: number | null
+          telefono: string | null
+          tendencia_valores: string | null
+          tiempo_comercializacion: string | null
+          tipo: string
+          tipo_construccion: string | null
+          tipo_techo: string | null
+          tipologias_edilicias: string | null
+          updated_at: string | null
+          updated_by: string | null
+          uso_comercial: number | null
+          uso_comercial_prevalencia: string | null
+          uso_industrial: number | null
+          uso_industrial_prevalencia: string | null
+          uso_otro: number | null
+          uso_residencial: number | null
+          v_terreno_precio: number | null
+          valor_uva: number | null
+        }
+        Insert: {
+          ac_dispersion?: number | null
+          agua_caliente?: string | null
+          aire_acondicionado?: string | null
+          amb_balcon?: number | null
+          amb_bano?: number | null
+          amb_bano_servicio?: number | null
+          amb_cocina?: number | null
+          amb_cocina_comedor?: number | null
+          amb_comedor?: number | null
+          amb_cuarto_guardado?: number | null
+          amb_dormit_vestidor?: number | null
+          amb_dormitorios?: number | null
+          amb_escritorio?: number | null
+          amb_garage?: number | null
+          amb_lavadero?: number | null
+          amb_living?: number | null
+          amb_living_comedor?: number | null
+          amb_patio?: number | null
+          amb_suite?: number | null
+          amb_suite_vestidor?: number | null
+          amb_terraza?: number | null
+          amb_total_cuartos?: number | null
+          anio_construccion?: number | null
+          barrio?: string | null
+          barrio_tipo?: string | null
+          calefaccion?: string | null
+          calidad_constructiva?: string | null
+          calidad_constructiva_predom?: string | null
+          calidad_mantenimiento?: string | null
+          cambios_uso_terreno?: string | null
+          caracteristicas_adversas?: string | null
+          com_asador?: string | null
+          com_doble_circulacion?: string | null
+          com_piscina?: string | null
+          construccion_altura_prevalencia?: string | null
+          construido_pct?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          demanda_oferta?: string | null
+          destino: string
+          detalles_terminacion?: string | null
+          direccion: string
+          espacio_habitable?: number | null
+          estacionamiento_tipo?: string | null
+          facilidades_estacionamiento?: string | null
+          fecha: string
+          finalized_at?: string | null
+          foto_fachada_url?: string | null
+          id?: string
+          imp_inmobiliarios?: number | null
+          indice_crecimiento?: string | null
+          localidad?: string | null
+          locked?: boolean | null
+          luminosidad?: string | null
+          nivel_socioeconomico_barrio?: string | null
+          observaciones?: string | null
+          orientacion?: string | null
+          plantas?: number | null
+          precio_dolar?: number | null
+          provincia?: string | null
+          serv_agua?: string | null
+          serv_cloaca?: string | null
+          serv_electricidad?: string | null
+          serv_gas?: string | null
+          serv_internet?: string | null
+          serv_techos?: string | null
+          serv_vigilancia?: string | null
+          solicitante: string
+          sup_construida?: number | null
+          sup_terreno?: number | null
+          telefono?: string | null
+          tendencia_valores?: string | null
+          tiempo_comercializacion?: string | null
+          tipo: string
+          tipo_construccion?: string | null
+          tipo_techo?: string | null
+          tipologias_edilicias?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          uso_comercial?: number | null
+          uso_comercial_prevalencia?: string | null
+          uso_industrial?: number | null
+          uso_industrial_prevalencia?: string | null
+          uso_otro?: number | null
+          uso_residencial?: number | null
+          v_terreno_precio?: number | null
+          valor_uva?: number | null
+        }
+        Update: {
+          ac_dispersion?: number | null
+          agua_caliente?: string | null
+          aire_acondicionado?: string | null
+          amb_balcon?: number | null
+          amb_bano?: number | null
+          amb_bano_servicio?: number | null
+          amb_cocina?: number | null
+          amb_cocina_comedor?: number | null
+          amb_comedor?: number | null
+          amb_cuarto_guardado?: number | null
+          amb_dormit_vestidor?: number | null
+          amb_dormitorios?: number | null
+          amb_escritorio?: number | null
+          amb_garage?: number | null
+          amb_lavadero?: number | null
+          amb_living?: number | null
+          amb_living_comedor?: number | null
+          amb_patio?: number | null
+          amb_suite?: number | null
+          amb_suite_vestidor?: number | null
+          amb_terraza?: number | null
+          amb_total_cuartos?: number | null
+          anio_construccion?: number | null
+          barrio?: string | null
+          barrio_tipo?: string | null
+          calefaccion?: string | null
+          calidad_constructiva?: string | null
+          calidad_constructiva_predom?: string | null
+          calidad_mantenimiento?: string | null
+          cambios_uso_terreno?: string | null
+          caracteristicas_adversas?: string | null
+          com_asador?: string | null
+          com_doble_circulacion?: string | null
+          com_piscina?: string | null
+          construccion_altura_prevalencia?: string | null
+          construido_pct?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          demanda_oferta?: string | null
+          destino?: string
+          detalles_terminacion?: string | null
+          direccion?: string
+          espacio_habitable?: number | null
+          estacionamiento_tipo?: string | null
+          facilidades_estacionamiento?: string | null
+          fecha?: string
+          finalized_at?: string | null
+          foto_fachada_url?: string | null
+          id?: string
+          imp_inmobiliarios?: number | null
+          indice_crecimiento?: string | null
+          localidad?: string | null
+          locked?: boolean | null
+          luminosidad?: string | null
+          nivel_socioeconomico_barrio?: string | null
+          observaciones?: string | null
+          orientacion?: string | null
+          plantas?: number | null
+          precio_dolar?: number | null
+          provincia?: string | null
+          serv_agua?: string | null
+          serv_cloaca?: string | null
+          serv_electricidad?: string | null
+          serv_gas?: string | null
+          serv_internet?: string | null
+          serv_techos?: string | null
+          serv_vigilancia?: string | null
+          solicitante?: string
+          sup_construida?: number | null
+          sup_terreno?: number | null
+          telefono?: string | null
+          tendencia_valores?: string | null
+          tiempo_comercializacion?: string | null
+          tipo?: string
+          tipo_construccion?: string | null
+          tipo_techo?: string | null
+          tipologias_edilicias?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          uso_comercial?: number | null
+          uso_comercial_prevalencia?: string | null
+          uso_industrial?: number | null
+          uso_industrial_prevalencia?: string | null
+          uso_otro?: number | null
+          uso_residencial?: number | null
+          v_terreno_precio?: number | null
+          valor_uva?: number | null
+        }
+        Relationships: []
+      }
       property_videos: {
         Row: {
           created_at: string
@@ -2231,6 +2553,157 @@ export type Database = {
         }
         Relationships: []
       }
+      valuation_comparables: {
+        Row: {
+          antiguedad: number | null
+          barrio: string | null
+          chars: Json
+          created_at: string | null
+          dias: number | null
+          direccion: string | null
+          foto_url: string | null
+          id: string
+          included: boolean | null
+          orden: number
+          precio: number | null
+          sup_cubierta: number | null
+          sup_terreno: number | null
+          tipo_construccion: string | null
+          updated_at: string | null
+          url_origen: string | null
+          valuation_id: string
+        }
+        Insert: {
+          antiguedad?: number | null
+          barrio?: string | null
+          chars?: Json
+          created_at?: string | null
+          dias?: number | null
+          direccion?: string | null
+          foto_url?: string | null
+          id?: string
+          included?: boolean | null
+          orden: number
+          precio?: number | null
+          sup_cubierta?: number | null
+          sup_terreno?: number | null
+          tipo_construccion?: string | null
+          updated_at?: string | null
+          url_origen?: string | null
+          valuation_id: string
+        }
+        Update: {
+          antiguedad?: number | null
+          barrio?: string | null
+          chars?: Json
+          created_at?: string | null
+          dias?: number | null
+          direccion?: string | null
+          foto_url?: string | null
+          id?: string
+          included?: boolean | null
+          orden?: number
+          precio?: number | null
+          sup_cubierta?: number | null
+          sup_terreno?: number | null
+          tipo_construccion?: string | null
+          updated_at?: string | null
+          url_origen?: string | null
+          valuation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_comparables_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "property_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_history: {
+        Row: {
+          action: string
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          valuation_id: string
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          valuation_id: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          valuation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_history_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "property_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_images: {
+        Row: {
+          comparable_id: string | null
+          created_at: string | null
+          id: string
+          orden: number | null
+          tipo: string
+          url: string
+          valuation_id: string
+        }
+        Insert: {
+          comparable_id?: string | null
+          created_at?: string | null
+          id?: string
+          orden?: number | null
+          tipo: string
+          url: string
+          valuation_id: string
+        }
+        Update: {
+          comparable_id?: string | null
+          created_at?: string | null
+          id?: string
+          orden?: number | null
+          tipo?: string
+          url?: string
+          valuation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_images_comparable_id_fkey"
+            columns: ["comparable_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_comparables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_images_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "property_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visit_reminders: {
         Row: {
           created_at: string
@@ -2391,7 +2864,6 @@ export type Database = {
       agents_public: {
         Row: {
           bio: string | null
-          email: string | null
           id: string | null
           is_active: boolean | null
           matricula: string | null
@@ -2402,7 +2874,6 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
-          email?: string | null
           id?: string | null
           is_active?: boolean | null
           matricula?: string | null
@@ -2413,7 +2884,6 @@ export type Database = {
         }
         Update: {
           bio?: string | null
-          email?: string | null
           id?: string | null
           is_active?: boolean | null
           matricula?: string | null
@@ -2430,31 +2900,7 @@ export type Database = {
         Args: { p_retention_days?: number }
         Returns: number
       }
-      create_admin_user: {
-        Args: {
-          p_email: string
-          p_full_name: string
-          p_role?: Database["public"]["Enums"]["admin_role"]
-          p_user_id: string
-        }
-        Returns: {
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          is_active: boolean
-          last_login_at: string | null
-          must_change_password: boolean
-          role: Database["public"]["Enums"]["admin_role"]
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "admin_users"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      complete_password_change: { Args: never; Returns: undefined }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["admin_role"] }
         Returns: boolean
@@ -2485,45 +2931,24 @@ export type Database = {
         Returns: number
       }
       ml_get_connection: { Args: never; Returns: Json }
-      submit_contact:
-        | {
-            Args: {
-              p_city?: string
-              p_data?: Json
-              p_email: string
-              p_files?: Json
-              p_intent?: Database["public"]["Enums"]["lead_intent"]
-              p_last_name: string
-              p_message?: string
-              p_name: string
-              p_phone?: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_city?: string
-              p_data?: Json
-              p_email: string
-              p_files?: Json
-              p_hp?: string
-              p_intent?: Database["public"]["Enums"]["lead_intent"]
-              p_last_name: string
-              p_message?: string
-              p_name: string
-              p_phone?: string
-            }
-            Returns: string
-          }
-      subscribe_newsletter:
-        | { Args: { p_email: string; p_source?: string }; Returns: boolean }
-        | {
-            Args: { p_email: string; p_hp?: string; p_source?: string }
-            Returns: boolean
-          }
-      update_admin_last_login: {
-        Args: { p_user_id: string }
-        Returns: undefined
+      submit_contact: {
+        Args: {
+          p_city?: string
+          p_data?: Json
+          p_email: string
+          p_files?: Json
+          p_hp?: string
+          p_intent?: Database["public"]["Enums"]["lead_intent"]
+          p_last_name: string
+          p_message?: string
+          p_name: string
+          p_phone?: string
+        }
+        Returns: string
+      }
+      subscribe_newsletter: {
+        Args: { p_email: string; p_hp?: string; p_source?: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -2757,9 +3182,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       action_plan_category: [
@@ -2882,4 +3304,3 @@ export const Constants = {
     },
   },
 } as const
-
