@@ -44,6 +44,7 @@ supabase/.temp/
 
 # Scratch / backups
 Fix/
+ADMIN_*.md
 
 # OpenCode session artifacts
 .omo/

@@ -1,9 +1,11 @@
 # Runbook: Rollback de Deploy
 
 ## Objetivo
+
 Revertir un deploy problemático a versión anterior funcional.
 
 ## Cuándo Usar
+
 - Bug crítico en producción (login roto, data loss, UI rota)
 - Deploy fallido parcial
 - Performance regression severa
@@ -11,6 +13,7 @@ Revertir un deploy problemático a versión anterior funcional.
 ## Procedimiento
 
 ### Opción 1: Git Revert (Recomendado)
+
 ```bash
 # 1. Identificar commit problemático
 git log --oneline -10
@@ -25,6 +28,7 @@ git push origin main
 ```
 
 ### Opción 2: Revertir a Tag Anterior
+
 ```bash
 # Ver tags disponibles
 git tag -l "v*" --sort=-v:refname
@@ -41,6 +45,7 @@ git push origin hotfix/rollback-v1.2.3
 ```
 
 ### Opción 3: GitHub Pages - Re-deploy Anterior
+
 ```bash
 # En GitHub Actions → Deployments
 # Seleccionar deployment anterior exitoso
@@ -48,6 +53,7 @@ git push origin hotfix/rollback-v1.2.3
 ```
 
 ## Verificación Post-Rollback
+
 - [ ] Login funciona
 - [ ] Dashboard carga
 - [ ] CRUD operaciones básicas
@@ -55,10 +61,12 @@ git push origin hotfix/rollback-v1.2.3
 - [ ] Supabase conexiones OK
 
 ## Comunicación
+
 - [ ] Notificar al equipo en Slack/Email
 - [ ] Documentar incidente en issue tracker
 - [ ] Programar post-mortem si fue incidente severo
 
 ## Contactos
+
 - Deploy Owner: Facundo Herrera
 - Supabase: Dashboard project `rnldqiwwzhjnurkguihu`

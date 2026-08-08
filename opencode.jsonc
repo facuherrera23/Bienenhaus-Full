@@ -1,43 +1,49 @@
 {
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["oh-my-openagent@latest"],
-  "mcp": {
-    "github": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
-      "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
-      "enabled": true,
-      "timeout": 30000
+    "$schema": "https://opencode.ai/config.json",
+    "plugin": ["oh-my-openagent@latest"],
+    "mcp": {
+        "github": {
+            "type": "local",
+            "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+            "environment": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}",
+            },
+            "enabled": true,
+            "timeout": 30000,
+        },
+        "playwright": {
+            "type": "local",
+            "command": ["npx", "-y", "@playwright/mcp@latest"],
+            "enabled": true,
+            "timeout": 60000,
+        },
+        "supabase": {
+            "type": "remote",
+            "url": "https://mcp.supabase.com/mcp?project_ref=rnldqiwwzhjnurkguihu",
+            "enabled": true,
+            "oauth": {},
+            "timeout": 30000,
+        },
+        "filesystem": {
+            "type": "local",
+            "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+            "environment": {
+                "NODE_ENV": "production",
+            },
+            "enabled": true,
+            "timeout": 15000,
+        },
+        "docker": {
+            "type": "local",
+            "command": [
+                "npx",
+                "-y",
+                "@thelord/mcp-server-docker-npx@latest",
+                "--docker-host",
+                "npipe:////./pipe/docker_engine",
+            ],
+            "enabled": true,
+            "timeout": 30000,
+        },
     },
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@latest"],
-      "enabled": true,
-      "timeout": 60000
-    },
-    "supabase": {
-      "type": "remote",
-      "url": "https://mcp.supabase.com/mcp?project_ref=rnldqiwwzhjnurkguihu",
-      "enabled": true,
-      "oauth": {},
-      "timeout": 30000
-    },
-    "filesystem": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
-      "environment": {
-        "NODE_ENV": "production"
-      },
-      "enabled": true,
-      "timeout": 15000
-    },
-    "docker": {
-      "type": "local",
-      "command": ["npx", "-y", "@thelord/mcp-server-docker-npx@latest", "--docker-host", "npipe:////./pipe/docker_engine"],
-      "enabled": true,
-      "timeout": 30000
-    }
-  }
 }

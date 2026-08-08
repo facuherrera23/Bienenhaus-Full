@@ -1,215 +1,226 @@
 name: CI
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
 
 env:
-  NODE_VERSION: '22'
-  PNPM_VERSION: '11.20.0'
+    NODE_VERSION: '22'
+    PNPM_VERSION: '11.20.0'
 
 jobs:
-  typecheck:
-    name: TypeCheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    typecheck:
+        name: TypeCheck
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: TypeCheck all packages
-        run: pnpm typecheck
+            - name: TypeCheck all packages
+              run: pnpm typecheck
 
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    test:
+        name: Tests
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test
+            - name: Run tests (admin + @bienenhaus/ui)
+              run: pnpm test
 
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: [typecheck, test]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+            - name: Run coverage gate (admin)
+              run: pnpm test:coverage
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+    e2e:
+        name: E2E Tests
+        runs-on: ubuntu-latest
+        needs: [typecheck, test]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install Playwright browsers
-        run: pnpm --filter @bienenhaus/admin exec playwright install --with-deps chromium
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
+            - name: Install Playwright browsers
+              run: pnpm --filter @bienenhaus/admin exec playwright install --with-deps chromium
 
-      - name: Start Supabase local
-        run: supabase start
-        working-directory: ./supabase
+            - name: Setup Supabase CLI
+              uses: supabase/setup-cli@v1
+              with:
+                  version: latest
 
-      - name: Reset DB with seed
-        run: supabase db reset
-        working-directory: ./supabase
+            - name: Start Supabase local
+              run: supabase start
+              working-directory: ./supabase
 
-      - name: Create E2E test user
-        run: |
-          # Obtener TODAS las keys reales del stack local
-          STATUS_JSON=$(supabase status --output json)
-          echo "Status JSON length: ${#STATUS_JSON}"
-          
-          # El JSON tiene las keys en la raíz con estos nombres exactos
-          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.SERVICE_ROLE_KEY // empty')
-          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.ANON_KEY // empty')
-          API_URL=$(echo "$STATUS_JSON" | jq -r '.API_URL // empty')
-          
-          # Fallback: si jq falla, intentar con grep/sed
-          if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "null" ] || [ "$SERVICE_ROLE_KEY" = "" ]; then
-            echo "Trying alternative extraction..."
-            SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | grep -o '"SERVICE_ROLE_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"SERVICE_ROLE_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-            ANON_KEY=$(echo "$STATUS_JSON" | grep -o '"ANON_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"ANON_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-            API_URL=$(echo "$STATUS_JSON" | grep -o '"API_URL"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"API_URL"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-          fi
-          
-          echo "SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-NOT_FOUND}"
-          echo "ANON_KEY=${ANON_KEY:-NOT_FOUND}"
-          echo "API_URL=${API_URL:-NOT_FOUND}"
-          
-          if [ -z "$SERVICE_ROLE_KEY" ] || [ "$SERVICE_ROLE_KEY" = "NOT_FOUND" ] || [ "$SERVICE_ROLE_KEY" = "null" ]; then
-            echo "ERROR: Could not extract SERVICE_ROLE_KEY from supabase status"
-            exit 1
-          fi
-          
-          echo "SUPABASE_LOCAL_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
-          echo "SUPABASE_LOCAL_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
-          echo "SUPABASE_LOCAL_API_URL=$API_URL" >> "$GITHUB_ENV"
-          
-          E2E_TEST_PASSWORD="e2e-test-pass-2026x"
-          echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
-          
-          echo "Using service_role_key: ${SERVICE_ROLE_KEY:0:20}..."
-          echo "Using anon_key: ${ANON_KEY:0:20}..."
-          echo "Using API URL: $API_URL"
-          
-          # Crear/actualizar usuario via Admin API
-          HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/admin/users" \
-            -H "apikey: $SERVICE_ROLE_KEY" \
-            -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"E2E Test User\"}}")
-          
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
-            echo "admin create user ok (HTTP $HTTP_CODE)"
-          elif [ "$HTTP_CODE" = "422" ] || [ "$HTTP_CODE" = "409" ]; then
-            echo "user already existed (HTTP $HTTP_CODE) - continuing"
-            # Actualizar password por si cambió
-            USER_ID=$(curl -sS -X GET "http://127.0.0.1:54321/auth/v1/admin/users" \
-              -H "apikey: $SERVICE_ROLE_KEY" \
-              -H "Authorization: Bearer $SERVICE_ROLE_KEY" | jq -r '.users[] | select(.email=="e2e-test@bienenhaus.local") | .id')
-            if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
-              curl -sS -X PUT "http://127.0.0.1:54321/auth/v1/admin/users/$USER_ID" \
-                -H "apikey: $SERVICE_ROLE_KEY" \
-                -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
-                -H "Content-Type: application/json" \
-                -d "{\"password\":\"$E2E_TEST_PASSWORD\"}" > /dev/null
-              echo "password updated for existing user"
-            fi
-          else
-            echo "admin create user failed with HTTP $HTTP_CODE"
-            cat /tmp/signup.json
-            exit 1
-          fi
-          
-          supabase db query --local "insert into public.admin_users (id, email, full_name, role, is_active, must_change_password) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin', true, false from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do update set role = 'admin', is_active = true, must_change_password = false;"
-        working-directory: ./supabase
+            - name: Reset DB with seed
+              run: supabase db reset
+              working-directory: ./supabase
 
-      - name: Run E2E tests
-        run: pnpm test:e2e
-        env:
-          VITE_SUPABASE_URL: ${{ env.SUPABASE_LOCAL_API_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ env.SUPABASE_LOCAL_ANON_KEY }}
-          E2E_TEST_EMAIL: e2e-test@bienenhaus.local
-          E2E_TEST_PASSWORD: ${{ env.E2E_TEST_PASSWORD }}
+            - name: Create E2E test user
+              run: |
+                  # Obtener TODAS las keys reales del stack local
+                  STATUS_JSON=$(supabase status --output json)
+                  echo "Status JSON length: ${#STATUS_JSON}"
 
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: apps/admin/playwright-report/
-          retention-days: 14
+                  # El JSON tiene las keys en la raíz con estos nombres exactos
+                  SECRET_KEY=$(echo "$STATUS_JSON" | jq -r '.SECRET_KEY // empty')
+                  PUBLISHABLE_KEY=$(echo "$STATUS_JSON" | jq -r '.PUBLISHABLE_KEY // empty')
+                  API_URL=$(echo "$STATUS_JSON" | jq -r '.API_URL // empty')
 
-      - name: Stop Supabase
-        if: always()
-        run: supabase stop
-        working-directory: ./supabase
+                  # Fallback: si jq falla, intentar con grep/sed
+                  if [ -z "$SECRET_KEY" ] || [ "$SECRET_KEY" = "null" ] || [ "$SECRET_KEY" = "" ]; then
+                    echo "Trying alternative extraction..."
+                    SECRET_KEY=$(echo "$STATUS_JSON" | grep -o '"SECRET_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"SECRET_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+                    PUBLISHABLE_KEY=$(echo "$STATUS_JSON" | grep -o '"PUBLISHABLE_KEY"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"PUBLISHABLE_KEY"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+                    API_URL=$(echo "$STATUS_JSON" | grep -o '"API_URL"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"API_URL"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+                  fi
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [typecheck, test, e2e]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+                  echo "SECRET_KEY=${SECRET_KEY:-NOT_FOUND}"
+                  echo "PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-NOT_FOUND}"
+                  echo "API_URL=${API_URL:-NOT_FOUND}"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+                  if [ -z "$SECRET_KEY" ] || [ "$SECRET_KEY" = "NOT_FOUND" ] || [ "$SECRET_KEY" = "null" ]; then
+                    echo "ERROR: Could not extract SECRET_KEY from supabase status"
+                    exit 1
+                  fi
+                  if [ -z "$PUBLISHABLE_KEY" ] || [ "$PUBLISHABLE_KEY" = "NOT_FOUND" ] || [ "$PUBLISHABLE_KEY" = "null" ]; then
+                    echo "ERROR: Could not extract PUBLISHABLE_KEY from supabase status"
+                    exit 1
+                  fi
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+                  echo "SUPABASE_LOCAL_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+                  echo "SUPABASE_LOCAL_PUBLISHABLE_KEY=$PUBLISHABLE_KEY" >> "$GITHUB_ENV"
+                  echo "SUPABASE_LOCAL_API_URL=$API_URL" >> "$GITHUB_ENV"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+                  E2E_TEST_PASSWORD="e2e-test-pass-2026x"
+                  echo "E2E_TEST_PASSWORD=$E2E_TEST_PASSWORD" >> "$GITHUB_ENV"
 
-      - name: Build all packages
-        run: pnpm build
+                  echo "Using secret_key: ${SECRET_KEY:0:20}..."
+                  echo "Using publishable_key: ${PUBLISHABLE_KEY:0:20}..."
+                  echo "Using API URL: $API_URL"
+
+                  # Crear/actualizar usuario via Admin API
+                  # GoTrue moderno (v2.194+) rechaza la legacy service_role JWT en /auth/v1/admin/*
+                  # con 403; exige la nueva SECRET_KEY (sb_secret_...) en el header apikey.
+                  HTTP_CODE=$(curl -sS -o /tmp/signup.json -w "%{http_code}" -X POST "http://127.0.0.1:54321/auth/v1/admin/users" \
+                    -H "apikey: $SECRET_KEY" \
+                    -H "Authorization: Bearer $SECRET_KEY" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"email\":\"e2e-test@bienenhaus.local\",\"password\":\"$E2E_TEST_PASSWORD\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"E2E Test User\"}}")
+
+                  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+                    echo "admin create user ok (HTTP $HTTP_CODE)"
+                  elif [ "$HTTP_CODE" = "422" ] || [ "$HTTP_CODE" = "409" ]; then
+                    echo "user already existed (HTTP $HTTP_CODE) - continuing"
+                    # Actualizar password por si cambió
+                    USER_ID=$(curl -sS -X GET "http://127.0.0.1:54321/auth/v1/admin/users" \
+                      -H "apikey: $SECRET_KEY" \
+                      -H "Authorization: Bearer $SECRET_KEY" | jq -r '.users[] | select(.email=="e2e-test@bienenhaus.local") | .id')
+                    if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
+                      curl -sS -X PUT "http://127.0.0.1:54321/auth/v1/admin/users/$USER_ID" \
+                        -H "apikey: $SECRET_KEY" \
+                        -H "Authorization: Bearer $SECRET_KEY" \
+                        -H "Content-Type: application/json" \
+                        -d "{\"password\":\"$E2E_TEST_PASSWORD\"}" > /dev/null
+                      echo "password updated for existing user"
+                    fi
+                  else
+                    echo "admin create user failed with HTTP $HTTP_CODE"
+                    cat /tmp/signup.json
+                    exit 1
+                  fi
+
+                  supabase db query --local "insert into public.admin_users (id, email, full_name, role, is_active, must_change_password) select id, 'e2e-test@bienenhaus.local', 'E2E Test User', 'admin', true, false from auth.users where email = 'e2e-test@bienenhaus.local' on conflict (email) do update set role = 'admin', is_active = true, must_change_password = false;"
+              working-directory: ./supabase
+
+            - name: Run E2E tests
+              run: pnpm test:e2e
+              env:
+                  VITE_SUPABASE_URL: ${{ env.SUPABASE_LOCAL_API_URL }}
+                  VITE_SUPABASE_ANON_KEY: ${{ env.SUPABASE_LOCAL_PUBLISHABLE_KEY }}
+                  SUPABASE_LOCAL_API_URL: ${{ env.SUPABASE_LOCAL_API_URL }}
+                  SUPABASE_LOCAL_SECRET_KEY: ${{ env.SUPABASE_LOCAL_SECRET_KEY }}
+                  E2E_TEST_EMAIL: e2e-test@bienenhaus.local
+                  E2E_TEST_PASSWORD: ${{ env.E2E_TEST_PASSWORD }}
+
+            - name: Upload Playwright report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-report
+                  path: apps/admin/playwright-report/
+                  retention-days: 14
+
+            - name: Stop Supabase
+              if: always()
+              run: supabase stop
+              working-directory: ./supabase
+
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        needs: [typecheck, test, e2e]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build all packages
+              run: pnpm build

@@ -1,10 +1,13 @@
 # ADR 002: Autenticación y Autorización — Supabase Auth + RLS + Roles
 
 ## Status
+
 Accepted
 
 ## Context
+
 El panel admin requiere:
+
 - Autenticación segura (email/password, MFA TOTP)
 - Autorización granular por roles (super_admin, admin, staff, viewer)
 - Sesiones persistentes con refresh automático
@@ -15,6 +18,7 @@ El panel admin requiere:
 ## Decision
 
 ### Autenticación: Supabase Auth (GoTrue)
+
 - **Provider:** Email/password nativo (sin OAuth por ahora)
 - **Flow:** PKCE + refresh token rotation (30 min access, 7 días refresh)
 - **MFA:** TOTP opcional (configurado en `config.toml`)
@@ -22,6 +26,7 @@ El panel admin requiere:
 - **Client-side rate limit:** 5 intentos / 15 min lockout (localStorage)
 
 ### Autorización: RLS + Roles en `admin_users`
+
 ```sql
 -- Tabla de roles
 CREATE TYPE admin_role AS ENUM ('super_admin', 'admin', 'staff', 'viewer');
@@ -54,6 +59,7 @@ CREATE POLICY "public_select" ON properties
 ```
 
 ### Client-side Auth State (`store/app.ts`)
+
 ```typescript
 export const authSession = signal<Session | null>(null);
 export const authLoading = signal(true);
@@ -63,6 +69,7 @@ export const authSigningOut = signal(false);
 ```
 
 ### Password Change Flow
+
 1. Login exitoso → `authMustChangePassword.value` = true
 2. Redirect a `/cambiar-contrasena` (nueva página `ChangePassword`)
 3. Validación: contraseña actual + nueva (min 8 chars, distinta a actual)
@@ -70,6 +77,7 @@ export const authSigningOut = signal(false);
 5. Redirect a dashboard
 
 ### Rate Limiting (Client-side)
+
 ```typescript
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000; // 15 min
@@ -77,6 +85,7 @@ const LOCKOUT_MS = 15 * 60 * 1000; // 15 min
 ```
 
 ### Edge Function: `admin-user-invite`
+
 - `action: 'invite'` → crea usuario en Auth + `admin_users` + genera recovery link
 - `action: 'reset'` → genera recovery link para password reset
 - `action: 'remove'` → soft delete en `admin_users` + hard delete en Auth
@@ -84,6 +93,7 @@ const LOCKOUT_MS = 15 * 60 * 1000; // 15 min
 ## Consequences
 
 ### Positivos
+
 - Supabase Auth maneja todo: sessions, refresh, MFA, rate limits server-side
 - RLS en DB → seguridad a nivel de fila, imposible de bypass desde cliente
 - Roles simples pero suficientes para inmobiliaria
@@ -91,24 +101,28 @@ const LOCKOUT_MS = 15 * 60 * 1000; // 15 min
 - Password change flow obligatorio mejora seguridad
 
 ### Negativos
+
 - RLS policies complejas de debuggear (requiere `supabase db diff`)
 - No hay OAuth social (Google, Microsoft) configurado aún
 - Rate limit client-side es bypassable (defensa en profundidad, no absoluta)
 - No hay SSO / SAML para enterprise
 
 ### Riesgos
+
 - RLS policy mal escrita → data leak o lockout
 - Supabase Auth breaking changes (major version)
 - Rate limit client-side bypassable (devtools)
 
 ## Alternatives Considered
-| Opción | Por qué no |
-|--------|------------|
-| Auth0 / Clerk / Clerk | Costo alto, vendor lock-in adicional |
-| Custom JWT + custom middleware | Reinventar rueda, más bugs, más mantenimiento |
-| NextAuth.js | Requiere Next.js, no compatible con Preact + Vite puro |
+
+| Opción                         | Por qué no                                             |
+| ------------------------------ | ------------------------------------------------------ |
+| Auth0 / Clerk / Clerk          | Costo alto, vendor lock-in adicional                   |
+| Custom JWT + custom middleware | Reinventar rueda, más bugs, más mantenimiento          |
+| NextAuth.js                    | Requiere Next.js, no compatible con Preact + Vite puro |
 
 ## References
+
 - [Supabase Auth Docs](https://supabase.com/docs/guides/auth)
 - [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
 - [OWASP Auth Cheatsheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
