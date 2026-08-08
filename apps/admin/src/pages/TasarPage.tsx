@@ -1,0 +1,1581 @@
+import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Building2,
+    ClipboardList,
+    FileCheck2,
+    FileText,
+    Home,
+    Loader2,
+    Lock,
+    MapPin,
+    PencilLine,
+    Plus,
+    Ruler,
+    Save,
+    Sparkles,
+    Trash2,
+    User,
+} from 'lucide-preact';
+import { Link, useLocation, useRoute } from 'wouter-preact';
+import {
+    useEnableEditValuation,
+    useFinalizeValuation,
+    useSaveValuationDraft,
+    useValuation,
+} from '../lib/valuationApi';
+import { fetchDrafts, loadDraft } from '../lib/valuationService';
+import { pushToast } from '../store/app';
+import type {
+    ComparableData,
+    NivelesComparacion,
+    ValuacionDraftData,
+    ValuacionFormData,
+} from '../types/valuationTypes';
+import {
+    AMBIENTE_IDS,
+    BarrioTipoEnum,
+    CalidadPredomEnum,
+    CambiosUsoEnum,
+    ConstruidoPctEnum,
+    DemandaOfertaEnum,
+    DestinoEnum,
+    EstacionamientoEnum,
+    FacilidadesEstacionamientoEnum,
+    IndiceCrecimientoEnum,
+    NivelCalidadEnum,
+    NivelLuminosidadEnum,
+    NivelSocioEnum,
+    NIVELES_LIST,
+    OrientacionEnum,
+    PrevalenciaEnum,
+    RubroNivelEnum,
+    SERVICIOS_MAP,
+    ServicioNivelEnum,
+    SiNoNAEnum,
+    TendenciaValoresEnum,
+    TiempoComercializacionEnum,
+    TipoConstruccionEnum,
+    TipoInmuebleEnum,
+    TipoTechoEnum,
+    TipologiaEdiliciaEnum,
+    ValuacionConValidacionesSchema,
+    VigilanciaEnum,
+} from '../schemas/valuationSchemas';
+
+// ============================================================
+// Paso 6 — Pasada 2: WIZARD COMPLETO con campos reales
+// Wizard de 8 pasos + auto-save a DB + carga de draft + routing.
+// Cada paso renderiza sus campos (form-grid) según el schema Zod.
+// ============================================================
+
+const AUTOSAVE_DELAY = 2000;
+
+const CHAR_LABELS = [
+    'Calidad de ubicación',
+    'Cantidad de habitaciones',
+    'Superficie',
+    'Estado / mantenimiento',
+    'Antigüedad',
+    'Comodidades',
+];
+
+const EMPTY_CHARS: ComparableData['chars'] = [
+    'Igual',
+    'Igual',
+    'Igual',
+    'Igual',
+    'Igual',
+    'Igual',
+];
+
+const AMBIENTE_LABELS: Record<(typeof AMBIENTE_IDS)[number], string> = {
+    f_ambCocina: 'Cocina',
+    f_ambDormitorios: 'Dormitorios',
+    f_ambTerraza: 'Terraza',
+    f_ambComedor: 'Comedor',
+    f_ambSuite: 'Suite',
+    f_ambPatio: 'Patio',
+    f_ambCocinaComedor: 'Cocina comedor',
+    f_ambSuiteVestidor: 'Suite con vestidor',
+    f_ambBalcon: 'Balcón',
+    f_ambLiving: 'Living',
+    f_ambDormitVestidor: 'Dormitorio con vestidor',
+    f_ambLavadero: 'Lavadero',
+    f_ambLivingComedor: 'Living comedor',
+    f_ambBanoServicio: 'Baño de servicio',
+    f_ambCuartoGuardado: 'Cuarto de guardado',
+    f_ambEscritorio: 'Escritorio',
+    f_ambBano: 'Baño',
+    f_ambGarage: 'Garage',
+};
+
+// ------------------------------------------------------------
+// Formato vacío (todos los campos del schema ValuacionInputSchema)
+// ------------------------------------------------------------
+
+const EMPTY: ValuacionFormData = {
+    // Datos cliente
+    f_solicitante: '',
+    f_fecha: new Date().toISOString().slice(0, 10),
+    f_telefono: '',
+    f_destino: 'Venta',
+    f_fotoFachada: '',
+    // Datos inmueble
+    f_direccion: '',
+    f_barrio: '',
+    f_localidad: '',
+    f_provincia: '',
+    f_supTerreno: undefined,
+    f_supConstruida: undefined,
+    f_tipo: 'OTRO',
+    f_precioDolar: undefined,
+    f_valorUva: undefined,
+    // Descripción propiedad
+    f_tipoConstruccion: '',
+    f_espacioHabitable: undefined,
+    f_plantas: undefined,
+    f_anioConstruccion: undefined,
+    f_impInmobiliarios: undefined,
+    f_tipoTecho: '',
+    f_orientacion: '',
+    f_luminosidad: '',
+    f_calidadConstructiva: '',
+    f_calidadMantenimiento: '',
+    f_detallesTerminacion: '',
+    f_estacionamientoTipo: '',
+    // Ambientes (18)
+    f_ambCocina: undefined,
+    f_ambDormitorios: undefined,
+    f_ambTerraza: undefined,
+    f_ambComedor: undefined,
+    f_ambSuite: undefined,
+    f_ambPatio: undefined,
+    f_ambCocinaComedor: undefined,
+    f_ambSuiteVestidor: undefined,
+    f_ambBalcon: undefined,
+    f_ambLiving: undefined,
+    f_ambDormitVestidor: undefined,
+    f_ambLavadero: undefined,
+    f_ambLivingComedor: undefined,
+    f_ambBanoServicio: undefined,
+    f_ambCuartoGuardado: undefined,
+    f_ambEscritorio: undefined,
+    f_ambBano: undefined,
+    f_ambGarage: undefined,
+    // Comodidades
+    f_comDobleCirculacion: '',
+    f_comAsador: '',
+    f_comPiscina: '',
+    // Servicios básicos (ServicioNivelEnum: sin opción vacía → default 'N/A')
+    f_calefaccion: 'N/A',
+    f_aireAcondicionado: 'N/A',
+    f_aguaCaliente: 'N/A',
+    // Adversas
+    f_caracteristicasAdversas: '',
+    // Servicios (6 rubros — RubroNivelEnum: sin opción vacía → default 'Optimo')
+    electricidad: 'Optimo / Impecable (Listo para Habitar)',
+    gas: 'Optimo / Impecable (Listo para Habitar)',
+    internet: 'Optimo / Impecable (Listo para Habitar)',
+    agua: 'Optimo / Impecable (Listo para Habitar)',
+    cloaca: 'Optimo / Impecable (Listo para Habitar)',
+    techos: 'Optimo / Impecable (Listo para Habitar)',
+    // Barrio — características
+    f_tipologiasEdilicias: '',
+    f_calidadConstructivaPredom: '',
+    f_construccionAlturaPrevalencia: '',
+    f_usoComercialPrevalencia: '',
+    f_usoIndustrialPrevalencia: '',
+    f_nivelSocioeconomicoBarrio: '',
+    f_barrioTipo: '',
+    f_construidoPct: '',
+    f_indiceCrecimiento: '',
+    // Barrio — descripción + % uso suelo
+    f_servVigilancia: '',
+    f_tendenciaValores: '',
+    f_demandaOferta: '',
+    f_tiempoComercializacion: '',
+    f_cambiosUsoTerreno: '',
+    f_facilidadesEstacionamiento: '',
+    f_usoResidencial: undefined,
+    f_usoComercial: undefined,
+    f_usoIndustrial: undefined,
+    // Análisis comparativo
+    ac_dispersion: 10,
+    // Valuación
+    v_terrenoPrecio: undefined,
+    // Observaciones
+    f_observaciones: '',
+    // Comparables + estado
+    comparables: [],
+    locked: false,
+};
+
+// ------------------------------------------------------------
+// Definición de los 8 pasos del wizard
+// ------------------------------------------------------------
+
+interface WizardStep {
+    id: string;
+    label: string;
+    icon: typeof User;
+    description: string;
+}
+
+const STEPS: WizardStep[] = [
+    {
+        id: 'cliente',
+        label: 'Datos del cliente',
+        icon: User,
+        description: 'Solicitante, fecha, teléfono, destino y foto de fachada.',
+    },
+    {
+        id: 'inmueble',
+        label: 'Datos del inmueble',
+        icon: Home,
+        description: 'Ubicación, superficies, tipo y valores de referencia.',
+    },
+    {
+        id: 'descripcion',
+        label: 'Descripción propiedad',
+        icon: Building2,
+        description: 'Construcción, antigüedad, estado, terminación y orientación.',
+    },
+    {
+        id: 'ambientes',
+        label: 'Ambientes',
+        icon: Ruler,
+        description: 'Cantidad de ambientes (18 categorías).',
+    },
+    {
+        id: 'comodidades',
+        label: 'Comodidades y servicios',
+        icon: ClipboardList,
+        description: 'Comodidades, servicios básicos y características adversas.',
+    },
+    {
+        id: 'servicios',
+        label: 'Servicios (rubros)',
+        icon: Sparkles,
+        description: 'Estado de los 6 rubros de servicios.',
+    },
+    {
+        id: 'barrio',
+        label: 'Barrio',
+        icon: MapPin,
+        description: 'Características del barrio, descripción y % uso de suelo.',
+    },
+    {
+        id: 'analisis',
+        label: 'Análisis y valuación',
+        icon: FileText,
+        description: 'Comparables, dispersión, terreno y observaciones.',
+    },
+];
+
+// ------------------------------------------------------------
+// Componentes de campo reutilizables
+// ------------------------------------------------------------
+
+function TextInput({
+    id,
+    label,
+    value,
+    placeholder,
+    disabled,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: string;
+    placeholder?: string;
+    disabled?: boolean;
+    onChange: (v: string) => void;
+}) {
+    return (
+        <label className="field" htmlFor={id}>
+            <span>{label}</span>
+            <input
+                id={id}
+                type="text"
+                value={value}
+                placeholder={placeholder}
+                disabled={disabled}
+                onInput={(e) => onChange((e.currentTarget as HTMLInputElement).value)}
+            />
+        </label>
+    );
+}
+
+function NumInput({
+    id,
+    label,
+    value,
+    placeholder,
+    min,
+    max,
+    step,
+    disabled,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: number | undefined;
+    placeholder?: string;
+    min?: number;
+    max?: number;
+    step?: string;
+    disabled?: boolean;
+    onChange: (n: number | undefined) => void;
+}) {
+    return (
+        <label className="field" htmlFor={id}>
+            <span>{label}</span>
+            <input
+                id={id}
+                type="number"
+                min={min ?? 0}
+                max={max}
+                step={step ?? 'any'}
+                placeholder={placeholder}
+                value={value ?? ''}
+                disabled={disabled}
+                onInput={(e) => onChange(toNumeric((e.currentTarget as HTMLInputElement).value))}
+            />
+        </label>
+    );
+}
+
+function SelectInput<T extends string>({
+    id,
+    label,
+    value,
+    options,
+    disabled,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: T;
+    options: readonly T[];
+    disabled?: boolean;
+    onChange: (v: T) => void;
+}) {
+    return (
+        <label className="field" htmlFor={id}>
+            <span>{label}</span>
+            <select
+                id={id}
+                className="select"
+                value={value}
+                disabled={disabled}
+                onChange={(e) => onChange((e.currentTarget as HTMLSelectElement).value as T)}
+            >
+                {options.map((o) => (
+                    <option key={o} value={o}>
+                        {o === '' ? '— Seleccionar —' : o}
+                    </option>
+                ))}
+            </select>
+        </label>
+    );
+}
+
+function TextAreaInput({
+    id,
+    label,
+    value,
+    rows,
+    disabled,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: string;
+    rows?: number;
+    disabled?: boolean;
+    onChange: (v: string) => void;
+}) {
+    return (
+        <label className="field field--wide" htmlFor={id}>
+            <span>{label}</span>
+            <textarea
+                id={id}
+                rows={rows ?? 3}
+                value={value}
+                disabled={disabled}
+                onInput={(e) => onChange((e.currentTarget as HTMLTextAreaElement).value)}
+            />
+        </label>
+    );
+}
+
+// ------------------------------------------------------------
+// Editor de comparables (bloque dinámico)
+// ------------------------------------------------------------
+
+function ComparablesEditor({
+    comparables,
+    disabled,
+    onChange,
+}: {
+    comparables: ComparableData[];
+    disabled: boolean;
+    onChange: (next: ComparableData[]) => void;
+}) {
+    function addComparable() {
+        const next: ComparableData = {
+            orden: comparables.length + 1,
+            direccion: '',
+            barrio: '',
+            precio: undefined,
+            supTerreno: undefined,
+            supCubierta: undefined,
+            dias: undefined,
+            tipoConstruccion: '',
+            antiguedad: undefined,
+            fotoUrl: '',
+            urlOrigen: '',
+            chars: [...EMPTY_CHARS],
+            included: true,
+        };
+        onChange([...comparables, next]);
+    }
+
+    function updateComparable(index: number, patch: Partial<ComparableData>) {
+        onChange(comparables.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+    }
+
+    function removeComparable(index: number) {
+        onChange(
+            comparables.filter((_, i) => i !== index).map((c, i) => ({ ...c, orden: i + 1 })),
+        );
+    }
+
+    function updateChar(index: number, charIndex: number, value: NivelesComparacion) {
+        const chars = [...comparables[index].chars];
+        chars[charIndex] = value;
+        updateComparable(index, { chars });
+    }
+
+    return (
+        <div className="comparable-section field--wide">
+            <div className="comparable-section-head">
+                <span>Comparables</span>
+                <button type="button" className="btn btn--sm btn--secondary" onClick={addComparable} disabled={disabled}>
+                    <Plus size={14} /> Agregar comparable
+                </button>
+            </div>
+
+            {comparables.length === 0 ? (
+                <p className="comparable-empty">
+                    Sin comparables cargados. Agregá al menos uno para el análisis comparativo.
+                </p>
+            ) : (
+                comparables.map((c, i) => (
+                    <div className="comparable-card" key={i}>
+                        <div className="comparable-card-head">
+                            <span className="comparable-card-title">Comparable #{c.orden}</span>
+                            <button
+                                type="button"
+                                className="btn btn--sm btn--danger"
+                                onClick={() => removeComparable(i)}
+                                disabled={disabled}
+                                aria-label={`Quitar comparable ${c.orden}`}
+                            >
+                                <Trash2 size={13} /> Quitar
+                            </button>
+                        </div>
+                        <div className="form-grid">
+                            <TextInput
+                                id={`cmp-dir-${i}`}
+                                label="Dirección"
+                                value={c.direccion ?? ''}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { direccion: v })}
+                            />
+                            <TextInput
+                                id={`cmp-barrio-${i}`}
+                                label="Barrio"
+                                value={c.barrio ?? ''}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { barrio: v })}
+                            />
+                            <NumInput
+                                id={`cmp-precio-${i}`}
+                                label="Precio (USD)"
+                                value={c.precio}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { precio: v })}
+                            />
+                            <NumInput
+                                id={`cmp-supterr-${i}`}
+                                label="Sup. terreno (m²)"
+                                value={c.supTerreno}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { supTerreno: v })}
+                            />
+                            <NumInput
+                                id={`cmp-supcub-${i}`}
+                                label="Sup. cubierta (m²)"
+                                value={c.supCubierta}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { supCubierta: v })}
+                            />
+                            <NumInput
+                                id={`cmp-dias-${i}`}
+                                label="Días publicado"
+                                value={c.dias}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { dias: v })}
+                            />
+                            <SelectInput
+                                id={`cmp-tipo-${i}`}
+                                label="Tipo construcción"
+                                value={c.tipoConstruccion}
+                                options={TipoConstruccionEnum.options}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { tipoConstruccion: v })}
+                            />
+                            <NumInput
+                                id={`cmp-antig-${i}`}
+                                label="Antigüedad (años)"
+                                value={c.antiguedad}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { antiguedad: v })}
+                            />
+                            <TextInput
+                                id={`cmp-foto-${i}`}
+                                label="Foto URL"
+                                value={c.fotoUrl ?? ''}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { fotoUrl: v })}
+                            />
+                            <TextInput
+                                id={`cmp-url-${i}`}
+                                label="URL de origen"
+                                value={c.urlOrigen ?? ''}
+                                disabled={disabled}
+                                onChange={(v) => updateComparable(i, { urlOrigen: v })}
+                            />
+                        </div>
+                        <div className="comparable-chars">
+                            {c.chars.map((char, ci) => (
+                                <SelectInput
+                                    key={ci}
+                                    id={`cmp-char-${i}-${ci}`}
+                                    label={CHAR_LABELS[ci]}
+                                    value={char}
+                                    options={NIVELES_LIST}
+                                    disabled={disabled}
+                                    onChange={(v) => updateChar(i, ci, v)}
+                                />
+                            ))}
+                        </div>
+                        <label className="checkbox comparable-included">
+                            <input
+                                type="checkbox"
+                                checked={c.included}
+                                disabled={disabled}
+                                onChange={(e) =>
+                                    updateComparable(i, {
+                                        included: (e.currentTarget as HTMLInputElement).checked,
+                                    })
+                                }
+                            />
+                            Incluir en el análisis
+                        </label>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+}
+
+// ------------------------------------------------------------
+// Utilidades
+// ------------------------------------------------------------
+
+function toNumeric(raw: string): number | undefined {
+    if (raw.trim() === '') return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+}
+
+/** Convierte un draft/row en ValuacionFormData (strip de metadatos). */
+function toFormData(draft: ValuacionDraftData): ValuacionFormData {
+    const { id: _id, createdAt: _c, updatedAt: _u, version: _v, ...form } = draft;
+    return { ...form, comparables: draft.comparables ?? [] };
+}
+
+// ============================================================
+// Componente
+// ============================================================
+
+export function TasarPage() {
+    const [, setLocation] = useLocation();
+    const [, params] = useRoute('/tasar/:id');
+    const editId = params?.id && params.id !== 'nueva' ? params.id : null;
+
+    // ---- Estado del formulario ----
+    const [values, setValues] = useState<ValuacionFormData>(EMPTY);
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [loaded, setLoaded] = useState(false);
+    const [loadError, setLoadError] = useState('');
+    const [stepIndex, setStepIndex] = useState(0);
+    const [saving, setSaving] = useState(false);
+    const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+    const [dirty, setDirty] = useState(false);
+    const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // ---- Hooks API ----
+    const existing = useValuation(editId);
+    const saveDraftMutation = useSaveValuationDraft();
+    const finalizeMutation = useFinalizeValuation();
+    const enableEditMutation = useEnableEditValuation();
+
+    const step = STEPS[stepIndex];
+    const isLastStep = stepIndex === STEPS.length - 1;
+    const isLocked = existing.data?.locked ?? false;
+    const ambientTotal = AMBIENTE_IDS.reduce((acc, id) => acc + (values[id] ?? 0), 0);
+
+    // ------------------------------------------------------------
+    // Carga inicial: edición existente o draft más reciente
+    // ------------------------------------------------------------
+    useEffect(() => {
+        let cancelled = false;
+
+        async function init() {
+            if (editId) {
+                // La carga la maneja useValuation (existing)
+                setLoaded(true);
+                return;
+            }
+            try {
+                const drafts = await fetchDrafts();
+                if (cancelled) return;
+                if (drafts.length > 0) {
+                    const latest = await loadDraft(drafts[0].id);
+                    if (cancelled || !latest) {
+                        setLoaded(true);
+                        return;
+                    }
+                    setValues(toFormData(latest));
+                    setDraftId(latest.id ?? null);
+                    pushToast({
+                        type: 'info',
+                        title: 'Borrador cargado',
+                        description: `Continuás la tasación de ${latest.f_solicitante || 'sin solicitante'}.`,
+                    });
+                }
+            } catch (e) {
+                if (cancelled) return;
+                setLoadError(e instanceof Error ? e.message : 'Error al cargar borrador');
+            } finally {
+                if (!cancelled) setLoaded(true);
+            }
+        }
+
+        init();
+        return () => {
+            cancelled = true;
+        };
+    }, [editId]);
+
+    // Hidratar formulario cuando llega la tasación existente
+    useEffect(() => {
+        if (existing.data) {
+            setValues(toFormData(existing.data as unknown as ValuacionDraftData));
+            setDraftId(existing.data.id);
+        }
+    }, [existing.data]);
+
+    // ------------------------------------------------------------
+    // Auto-save (debounce 2s → saveDraft)
+    // ------------------------------------------------------------
+    useEffect(() => {
+        return () => {
+            if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!loaded || !dirty || isLocked) return;
+
+        if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+        autosaveTimer.current = setTimeout(() => {
+            setSaving(true);
+            saveDraftMutation.mutate(
+                { form: values, id: draftId ?? undefined },
+                {
+                    onSuccess: (savedId) => {
+                        setDraftId(savedId);
+                        setDirty(false);
+                        setLastSavedAt(new Date());
+                        setSaving(false);
+                    },
+                    onError: (err) => {
+                        setSaving(false);
+                        pushToast({
+                            type: 'error',
+                            title: 'Error al guardar borrador',
+                            description: err instanceof Error ? err.message : 'Error desconocido',
+                        });
+                    },
+                },
+            );
+        }, AUTOSAVE_DELAY);
+    }, [values, dirty, loaded, isLocked]);
+
+    // Aviso al salir con cambios sin guardar
+    useEffect(() => {
+        function onBeforeUnload(e: BeforeUnloadEvent) {
+            if (!dirty) return;
+            e.preventDefault();
+        }
+        window.addEventListener('beforeunload', onBeforeUnload);
+        return () => window.removeEventListener('beforeunload', onBeforeUnload);
+    }, [dirty]);
+
+    // ------------------------------------------------------------
+    // Handlers
+    // ------------------------------------------------------------
+
+    function setField<K extends keyof ValuacionFormData>(key: K, value: ValuacionFormData[K]) {
+        setValues((prev) => {
+            const next = { ...prev };
+            next[key] = value;
+            return next;
+        });
+    }
+
+    function validateStep(index: number): boolean {
+        const v = STEPS[index];
+        if (!v) return true;
+        if (v.id === 'inmueble') {
+            const hasSurface = (values.f_supTerreno ?? 0) > 0 || (values.f_supConstruida ?? 0) > 0;
+            if (!hasSurface) {
+                pushToast({
+                    type: 'error',
+                    title: 'Falta superficie',
+                    description: 'Ingresá al menos Superficie terreno o Superficie construida.',
+                });
+                return false;
+            }
+        }
+        if (v.id === 'barrio') {
+            const sum =
+                (values.f_usoResidencial ?? 0) +
+                (values.f_usoComercial ?? 0) +
+                (values.f_usoIndustrial ?? 0);
+            if (sum > 100) {
+                pushToast({
+                    type: 'error',
+                    title: '% uso de suelo inválido',
+                    description: 'La suma de los % de uso de suelo no puede superar 100%.',
+                });
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function goToStep(index: number) {
+        if (index < 0 || index >= STEPS.length) return;
+        if (index > stepIndex && !validateStep(stepIndex)) return;
+        setStepIndex(index);
+    }
+
+    function handleSaveNow() {
+        if (!loaded) return;
+        setSaving(true);
+        saveDraftMutation.mutate(
+            { form: values, id: draftId ?? undefined },
+            {
+                onSuccess: (savedId) => {
+                    setDraftId(savedId);
+                    setDirty(false);
+                    setLastSavedAt(new Date());
+                    setSaving(false);
+                    pushToast({
+                        type: 'success',
+                        title: 'Borrador guardado',
+                        description: 'La tasación se guardó como borrador.',
+                    });
+                },
+                onError: (err) => {
+                    setSaving(false);
+                    pushToast({
+                        type: 'error',
+                        title: 'Error al guardar',
+                        description: err instanceof Error ? err.message : 'Error desconocido',
+                    });
+                },
+            },
+        );
+    }
+
+    function handleFinalize() {
+        if (!draftId) {
+            pushToast({
+                type: 'error',
+                title: 'No hay borrador',
+                description: 'Guardá primero el borrador para poder finalizar.',
+            });
+            return;
+        }
+        const parsed = ValuacionConValidacionesSchema.safeParse(values);
+        if (!parsed.success) {
+            const issue = parsed.error.issues[0];
+            pushToast({
+                type: 'error',
+                title: 'Datos incompletos',
+                description: issue?.message ?? 'Revisá los datos ingresados en los pasos.',
+            });
+            return;
+        }
+        finalizeMutation.mutate(draftId, {
+            onSuccess: () => {
+                pushToast({
+                    type: 'success',
+                    title: 'Tasación finalizada',
+                    description: 'La tasación quedó bloqueada como definitiva.',
+                });
+                setLocation('/tasar');
+            },
+            onError: (err) => {
+                pushToast({
+                    type: 'error',
+                    title: 'Error al finalizar',
+                    description: err instanceof Error ? err.message : 'Error desconocido',
+                });
+            },
+        });
+    }
+
+    function handleEnableEdit() {
+        if (!editId) return;
+        enableEditMutation.mutate(editId, {
+            onSuccess: () => {
+                pushToast({
+                    type: 'success',
+                    title: 'Edición habilitada',
+                    description: 'La tasación volvió a estado borrador.',
+                });
+            },
+            onError: (err) => {
+                pushToast({
+                    type: 'error',
+                    title: 'Error al desbloquear',
+                    description: err instanceof Error ? err.message : 'Error desconocido',
+                });
+            },
+        });
+    }
+
+    function handleNewValuation() {
+        if (dirty && !confirm('Hay cambios sin guardar. ¿Descartar y empezar una tasación nueva?')) {
+            return;
+        }
+        setValues(EMPTY);
+        setDraftId(null);
+        setDirty(false);
+        setLastSavedAt(null);
+        setStepIndex(0);
+        setLocation('/tasar/nueva');
+    }
+
+    // ------------------------------------------------------------
+    // Contenido por paso
+    // ------------------------------------------------------------
+
+    function renderStepContent() {
+        switch (step.id) {
+            case 'cliente':
+                return (
+                    <div className="form-grid">
+                        <TextInput
+                            id="cliente-solicitante"
+                            label="Solicitante"
+                            value={values.f_solicitante ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_solicitante', v)}
+                        />
+                        <TextInput
+                            id="cliente-fecha"
+                            label="Fecha"
+                            value={values.f_fecha ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_fecha', v)}
+                        />
+                        <TextInput
+                            id="cliente-telefono"
+                            label="Teléfono"
+                            value={values.f_telefono ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_telefono', v)}
+                        />
+                        <SelectInput
+                            id="cliente-destino"
+                            label="Destino"
+                            value={values.f_destino}
+                            options={DestinoEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_destino', v)}
+                        />
+                        <TextInput
+                            id="cliente-foto"
+                            label="Foto fachada (URL)"
+                            value={values.f_fotoFachada ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_fotoFachada', v)}
+                        />
+                    </div>
+                );
+
+            case 'inmueble':
+                return (
+                    <div className="form-grid">
+                        <TextInput
+                            id="inm-direccion"
+                            label="Dirección"
+                            value={values.f_direccion ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_direccion', v)}
+                        />
+                        <TextInput
+                            id="inm-barrio"
+                            label="Barrio"
+                            value={values.f_barrio ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_barrio', v)}
+                        />
+                        <TextInput
+                            id="inm-localidad"
+                            label="Localidad"
+                            value={values.f_localidad ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_localidad', v)}
+                        />
+                        <TextInput
+                            id="inm-provincia"
+                            label="Provincia"
+                            value={values.f_provincia ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_provincia', v)}
+                        />
+                        <NumInput
+                            id="inm-supterreno"
+                            label="Sup. terreno (m²)"
+                            value={values.f_supTerreno}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_supTerreno', v)}
+                        />
+                        <NumInput
+                            id="inm-supconstruida"
+                            label="Sup. construida (m²)"
+                            value={values.f_supConstruida}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_supConstruida', v)}
+                        />
+                        <SelectInput
+                            id="inm-tipo"
+                            label="Tipo"
+                            value={values.f_tipo}
+                            options={TipoInmuebleEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_tipo', v)}
+                        />
+                        <NumInput
+                            id="inm-precio"
+                            label="Precio USD"
+                            value={values.f_precioDolar}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_precioDolar', v)}
+                        />
+                        <NumInput
+                            id="inm-uva"
+                            label="Valor UVA"
+                            value={values.f_valorUva}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_valorUva', v)}
+                        />
+                    </div>
+                );
+
+            case 'descripcion':
+                return (
+                    <div className="form-grid">
+                        <SelectInput
+                            id="des-tipoconstr"
+                            label="Tipo construcción"
+                            value={values.f_tipoConstruccion}
+                            options={TipoConstruccionEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_tipoConstruccion', v)}
+                        />
+                        <NumInput
+                            id="des-espacio"
+                            label="Espacio habitable (m²)"
+                            value={values.f_espacioHabitable}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_espacioHabitable', v)}
+                        />
+                        <NumInput
+                            id="des-plantas"
+                            label="Plantas"
+                            value={values.f_plantas}
+                            min={0}
+                            step="1"
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_plantas', v)}
+                        />
+                        <NumInput
+                            id="des-anio"
+                            label="Año construcción"
+                            value={values.f_anioConstruccion}
+                            min={1800}
+                            step="1"
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_anioConstruccion', v)}
+                        />
+                        <NumInput
+                            id="des-imp"
+                            label="Imp. inmobiliarios (USD)"
+                            value={values.f_impInmobiliarios}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_impInmobiliarios', v)}
+                        />
+                        <SelectInput
+                            id="des-techo"
+                            label="Tipo techo"
+                            value={values.f_tipoTecho}
+                            options={TipoTechoEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_tipoTecho', v)}
+                        />
+                        <SelectInput
+                            id="des-orientacion"
+                            label="Orientación"
+                            value={values.f_orientacion}
+                            options={OrientacionEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_orientacion', v)}
+                        />
+                        <SelectInput
+                            id="des-luminosidad"
+                            label="Luminosidad"
+                            value={values.f_luminosidad}
+                            options={NivelLuminosidadEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_luminosidad', v)}
+                        />
+                        <SelectInput
+                            id="des-calidad"
+                            label="Calidad constructiva"
+                            value={values.f_calidadConstructiva}
+                            options={NivelCalidadEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_calidadConstructiva', v)}
+                        />
+                        <SelectInput
+                            id="des-mant"
+                            label="Calidad mantenimiento"
+                            value={values.f_calidadMantenimiento}
+                            options={NivelCalidadEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_calidadMantenimiento', v)}
+                        />
+                        <SelectInput
+                            id="des-terminacion"
+                            label="Detalles terminación"
+                            value={values.f_detallesTerminacion}
+                            options={NivelCalidadEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_detallesTerminacion', v)}
+                        />
+                        <SelectInput
+                            id="des-estacionamiento"
+                            label="Estacionamiento"
+                            value={values.f_estacionamientoTipo}
+                            options={EstacionamientoEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_estacionamientoTipo', v)}
+                        />
+                    </div>
+                );
+
+            case 'ambientes':
+                return (
+                    <div className="form-grid">
+                        {AMBIENTE_IDS.map((id) => (
+                            <NumInput
+                                key={id}
+                                id={`amb-${id}`}
+                                label={AMBIENTE_LABELS[id]}
+                                value={values[id]}
+                                min={0}
+                                step="1"
+                                disabled={isLocked}
+                                onChange={(v) => setField(id, v)}
+                            />
+                        ))}
+                        <div className="ambient-total">
+                            <span>Total de ambientes</span>
+                            <strong>{ambientTotal}</strong>
+                        </div>
+                    </div>
+                );
+
+            case 'comodidades':
+                return (
+                    <div className="form-grid">
+                        <SelectInput
+                            id="com-doble"
+                            label="Doble circulación"
+                            value={values.f_comDobleCirculacion}
+                            options={SiNoNAEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_comDobleCirculacion', v)}
+                        />
+                        <SelectInput
+                            id="com-asador"
+                            label="Asador"
+                            value={values.f_comAsador}
+                            options={SiNoNAEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_comAsador', v)}
+                        />
+                        <SelectInput
+                            id="com-piscina"
+                            label="Piscina"
+                            value={values.f_comPiscina}
+                            options={SiNoNAEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_comPiscina', v)}
+                        />
+                        <SelectInput
+                            id="com-calefaccion"
+                            label="Calefacción"
+                            value={values.f_calefaccion}
+                            options={ServicioNivelEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_calefaccion', v)}
+                        />
+                        <SelectInput
+                            id="com-aire"
+                            label="Aire acondicionado"
+                            value={values.f_aireAcondicionado}
+                            options={ServicioNivelEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_aireAcondicionado', v)}
+                        />
+                        <SelectInput
+                            id="com-agua"
+                            label="Agua caliente"
+                            value={values.f_aguaCaliente}
+                            options={ServicioNivelEnum.options}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_aguaCaliente', v)}
+                        />
+                        <TextAreaInput
+                            id="com-adversas"
+                            label="Características adversas"
+                            value={values.f_caracteristicasAdversas ?? ''}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_caracteristicasAdversas', v)}
+                        />
+                    </div>
+                );
+
+            case 'servicios':
+                return (
+                    <div className="form-grid">
+                        {SERVICIOS_MAP.map((s) => (
+                            <SelectInput
+                                key={s.key}
+                                id={`serv-${s.key}`}
+                                label={s.label}
+                                value={values[s.key]}
+                                options={RubroNivelEnum.options}
+                                disabled={isLocked}
+                                onChange={(v) => setField(s.key, v)}
+                            />
+                        ))}
+                    </div>
+                );
+
+            case 'barrio':
+                return (
+                    <>
+                        <div className="form-section">
+                            <div className="form-section-head">
+                                <h3>Características del barrio</h3>
+                                <p>Tipologías, calidad predominante, usos y nivel socioeconómico.</p>
+                            </div>
+                            <div className="form-grid">
+                                <SelectInput
+                                    id="bar-tipologia"
+                                    label="Tipologías edilicias"
+                                    value={values.f_tipologiasEdilicias}
+                                    options={TipologiaEdiliciaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_tipologiasEdilicias', v)}
+                                />
+                                <SelectInput
+                                    id="bar-calidad"
+                                    label="Calidad constructiva predom."
+                                    value={values.f_calidadConstructivaPredom}
+                                    options={CalidadPredomEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_calidadConstructivaPredom', v)}
+                                />
+                                <SelectInput
+                                    id="bar-altura"
+                                    label="Altura prevalencia"
+                                    value={values.f_construccionAlturaPrevalencia}
+                                    options={PrevalenciaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_construccionAlturaPrevalencia', v)}
+                                />
+                                <SelectInput
+                                    id="bar-comprev"
+                                    label="Uso comercial prevalencia"
+                                    value={values.f_usoComercialPrevalencia}
+                                    options={PrevalenciaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_usoComercialPrevalencia', v)}
+                                />
+                                <SelectInput
+                                    id="bar-indprev"
+                                    label="Uso industrial prevalencia"
+                                    value={values.f_usoIndustrialPrevalencia}
+                                    options={PrevalenciaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_usoIndustrialPrevalencia', v)}
+                                />
+                                <SelectInput
+                                    id="bar-socio"
+                                    label="Nivel socioeconómico"
+                                    value={values.f_nivelSocioeconomicoBarrio}
+                                    options={NivelSocioEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_nivelSocioeconomicoBarrio', v)}
+                                />
+                                <SelectInput
+                                    id="bar-tipo"
+                                    label="Tipo de barrio"
+                                    value={values.f_barrioTipo}
+                                    options={BarrioTipoEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_barrioTipo', v)}
+                                />
+                                <SelectInput
+                                    id="bar-construido"
+                                    label="% construido"
+                                    value={values.f_construidoPct}
+                                    options={ConstruidoPctEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_construidoPct', v)}
+                                />
+                                <SelectInput
+                                    id="bar-crecimiento"
+                                    label="Índice crecimiento"
+                                    value={values.f_indiceCrecimiento}
+                                    options={IndiceCrecimientoEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_indiceCrecimiento', v)}
+                                />
+                            </div>
+                        </div>
+                        <div className="form-section">
+                            <div className="form-section-head">
+                                <h3>Descripción y % de uso de suelo</h3>
+                                <p>Vigilancia, tendencia, demanda, tiempo de venta y usos del terreno.</p>
+                            </div>
+                            <div className="form-grid">
+                                <SelectInput
+                                    id="bar-vigilancia"
+                                    label="Vigilancia"
+                                    value={values.f_servVigilancia}
+                                    options={VigilanciaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_servVigilancia', v)}
+                                />
+                                <SelectInput
+                                    id="bar-tendencia"
+                                    label="Tendencia valores"
+                                    value={values.f_tendenciaValores}
+                                    options={TendenciaValoresEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_tendenciaValores', v)}
+                                />
+                                <SelectInput
+                                    id="bar-demanda"
+                                    label="Demanda / oferta"
+                                    value={values.f_demandaOferta}
+                                    options={DemandaOfertaEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_demandaOferta', v)}
+                                />
+                                <SelectInput
+                                    id="bar-tiempo"
+                                    label="Tiempo comercialización"
+                                    value={values.f_tiempoComercializacion}
+                                    options={TiempoComercializacionEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_tiempoComercializacion', v)}
+                                />
+                                <SelectInput
+                                    id="bar-cambios"
+                                    label="Cambios uso terreno"
+                                    value={values.f_cambiosUsoTerreno}
+                                    options={CambiosUsoEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_cambiosUsoTerreno', v)}
+                                />
+                                <SelectInput
+                                    id="bar-estacionamiento"
+                                    label="Facilidades estacionamiento"
+                                    value={values.f_facilidadesEstacionamiento}
+                                    options={FacilidadesEstacionamientoEnum.options}
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_facilidadesEstacionamiento', v)}
+                                />
+                                <NumInput
+                                    id="bar-uso-res"
+                                    label="% uso residencial"
+                                    value={values.f_usoResidencial}
+                                    min={0}
+                                    max={100}
+                                    step="1"
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_usoResidencial', v)}
+                                />
+                                <NumInput
+                                    id="bar-uso-com"
+                                    label="% uso comercial"
+                                    value={values.f_usoComercial}
+                                    min={0}
+                                    max={100}
+                                    step="1"
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_usoComercial', v)}
+                                />
+                                <NumInput
+                                    id="bar-uso-ind"
+                                    label="% uso industrial"
+                                    value={values.f_usoIndustrial}
+                                    min={0}
+                                    max={100}
+                                    step="1"
+                                    disabled={isLocked}
+                                    onChange={(v) => setField('f_usoIndustrial', v)}
+                                />
+                            </div>
+                        </div>
+                    </>
+                );
+
+            case 'analisis':
+                return (
+                    <>
+                        <ComparablesEditor
+                            comparables={values.comparables}
+                            disabled={isLocked}
+                            onChange={(next) => setField('comparables', next)}
+                        />
+                        <div className="form-grid">
+                            <NumInput
+                                id="ana-dispersion"
+                                label="Dispersión (%)"
+                                value={values.ac_dispersion}
+                                min={0}
+                                max={100}
+                                disabled={isLocked}
+                                onChange={(v) => setField('ac_dispersion', v ?? 10)}
+                            />
+                            <NumInput
+                                id="ana-terreno"
+                                label="Terreno (USD/m²)"
+                                value={values.v_terrenoPrecio}
+                                disabled={isLocked}
+                                onChange={(v) => setField('v_terrenoPrecio', v)}
+                            />
+                        </div>
+                        <TextAreaInput
+                            id="ana-observaciones"
+                            label="Observaciones"
+                            value={values.f_observaciones ?? ''}
+                            rows={4}
+                            disabled={isLocked}
+                            onChange={(v) => setField('f_observaciones', v)}
+                        />
+                    </>
+                );
+
+            default:
+                return null;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Render
+    // ------------------------------------------------------------
+
+    if (!loaded) {
+        return (
+            <div className="page">
+                <div className="page-loader" role="status" aria-label="Cargando tasación…">
+                    <div className="spinner" aria-hidden="true"></div>
+                    <p>Cargando…</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="page">
+            {/* Header */}
+            <div className="page-head">
+                <div>
+                    <div className="breadcrumbs">
+                        <Link href="/tasar">Tasar</Link>
+                        <span className="breadcrumb-sep">/</span>
+                        <span>{editId ? 'Editar tasación' : 'Nueva tasación'}</span>
+                    </div>
+                    <h1 className="page-title">{editId ? 'Editar tasación' : 'Nueva tasación'}</h1>
+                    <p className="page-subtitle">
+                        {isLocked
+                            ? 'Tasación finalizada — modo solo lectura.'
+                            : 'Completá los pasos; el borrador se guarda automáticamente.'}
+                    </p>
+                </div>
+
+                <div className="page-actions">
+                    <button className="btn btn--ghost" onClick={handleNewValuation}>
+                        <FileCheck2 size={16} /> Nueva
+                    </button>
+                    {!isLocked && (
+                        <button className="btn btn--secondary" onClick={handleSaveNow} disabled={saving}>
+                            {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+                            {saving ? 'Guardando…' : 'Guardar borrador'}
+                        </button>
+                    )}
+                    {isLocked && editId && (
+                        <button className="btn btn--secondary" onClick={handleEnableEdit}>
+                            <PencilLine size={16} /> Habilitar edición
+                        </button>
+                    )}
+                    {!isLocked && isLastStep && (
+                        <button className="btn btn--primary" onClick={handleFinalize}>
+                            <Lock size={16} /> Finalizar tasación
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Banner de estado (locked / autosave) */}
+            {isLocked && (
+                <div className="valuation-banner valuation-banner--locked">
+                    <Lock size={16} />
+                    <span>
+                        Esta tasación está finalizada. Para modificarla, usá «Habilitar edición».
+                    </span>
+                </div>
+            )}
+            {!isLocked && (
+                <div className="valuation-banner">
+                    {saving ? (
+                        <Loader2 className="spin" size={14} />
+                    ) : dirty ? (
+                        <span className="valuation-status-dot valuation-status-dot--dirty" />
+                    ) : (
+                        <span className="valuation-status-dot valuation-status-dot--saved" />
+                    )}
+                    <span>
+                        {saving
+                            ? 'Guardando…'
+                            : dirty
+                              ? 'Cambios sin guardar'
+                              : lastSavedAt
+                                ? `Guardado ${lastSavedAt.toLocaleTimeString('es-AR')}`
+                                : 'Borrador automático activo'}
+                    </span>
+                </div>
+            )}
+
+            {loadError && (
+                <div className="valuation-banner valuation-banner--error">{loadError}</div>
+            )}
+
+            {/* Stepper */}
+            <nav className="wizard-stepper" aria-label="Pasos de la tasación">
+                {STEPS.map((s, i) => {
+                    const Icon = s.icon;
+                    const isActive = i === stepIndex;
+                    const isDone = i < stepIndex;
+                    return (
+                        <button
+                            key={s.id}
+                            className={`wizard-step${isActive ? ' wizard-step--active' : ''}${
+                                isDone ? ' wizard-step--done' : ''
+                            }`}
+                            onClick={() => goToStep(i)}
+                            aria-current={isActive ? 'step' : undefined}
+                        >
+                            <span className="wizard-step-icon">
+                                {isDone ? <FileCheck2 size={15} /> : <Icon size={15} />}
+                            </span>
+                            <span className="wizard-step-label">{s.label}</span>
+                            <span className="wizard-step-num">{i + 1}</span>
+                        </button>
+                    );
+                })}
+            </nav>
+
+            {/* Contenido del paso */}
+            <section className="card valuation-step-card">
+                <div className="valuation-step-head">
+                    <div>
+                        <h2 className="valuation-step-title">
+                            {stepIndex + 1}. {step.label}
+                        </h2>
+                        <p className="valuation-step-desc">{step.description}</p>
+                    </div>
+                    <span className="valuation-step-count">
+                        Paso {stepIndex + 1} de {STEPS.length}
+                    </span>
+                </div>
+
+                <div className="valuation-step-body">{renderStepContent()}</div>
+
+                {/* Navegación */}
+                <div className="valuation-nav">
+                    <button
+                        className="btn btn--ghost"
+                        onClick={() => goToStep(stepIndex - 1)}
+                        disabled={stepIndex === 0}
+                    >
+                        <ArrowLeft size={16} /> Anterior
+                    </button>
+                    {!isLastStep ? (
+                        <button
+                            className="btn btn--primary"
+                            onClick={() => goToStep(stepIndex + 1)}
+                        >
+                            Siguiente <ArrowRight size={16} />
+                        </button>
+                    ) : (
+                        !isLocked && (
+                            <button className="btn btn--primary" onClick={handleFinalize}>
+                                <Lock size={16} /> Finalizar tasación
+                            </button>
+                        )
+                    )}
+                </div>
+            </section>
+        </div>
+    );
+}
