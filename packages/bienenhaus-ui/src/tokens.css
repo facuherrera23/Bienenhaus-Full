@@ -25,7 +25,6 @@
     /* Admin-specific surface aliases */
     --bh-bg-app: var(--bh-bg-primary);
     --bh-bg-sidebar: var(--bh-bg-secondary);
-    --bh-bg-overlay: var(--bh-bg-overlay);
 
     /* ---- Borders ---- */
     --bh-border: rgba(255, 255, 255, 0.06); /* Default card/divider borders */
@@ -39,12 +38,6 @@
     --bh-accent-soft: rgba(31, 200, 195, 0.12); /* Subtle accent backgrounds */
     --bh-accent-glow: #56e7de; /* Glow color for shadows */
     --bh-accent-glow-soft: rgba(31, 200, 195, 0.15); /* Subtle glow shadows */
-
-    /* Admin accent alias (slightly different hue) — mapped to unified value */
-    --bh-accent: var(--bh-accent);
-    --bh-accent-hover: var(--bh-accent-hover);
-    --bh-accent-soft: var(--bh-accent-soft);
-    --bh-accent-glow: var(--bh-accent-glow);
 
     /* ---- Text ---- */
     --bh-text-primary: #f4f4f4; /* Headlines, body, primary content */
@@ -172,6 +165,7 @@
     --bh-ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1); /* Signature easing */
     --bh-ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* Emphasis exits */
     --bh-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* Standard */
+    --bh-ease: var(--bh-ease-premium); /* Default easing (admin components) */
 
     --bh-dur-fast: 140ms; /* Micro: button press, toggle */
     --bh-dur-med: 240ms; /* Standard: hover, panel, dropdown */
