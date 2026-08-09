@@ -63,10 +63,6 @@
     --bh-font-display: 'Playfair Display', 'Georgia', serif;
     --bh-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-    /* Legacy landing font aliases */
-    --font-body: var(--bh-font-sans);
-    --font-heading: var(--bh-font-display);
-
     /* Type Scale (4px baseline) */
     --bh-text-xs: 12px; /* 0.75rem  — Captions, metadata */
     --bh-text-sm: 13px; /* 0.8125rem — Labels, button text, nav */
@@ -118,11 +114,6 @@
     --bh-space-20: 80px; /* 5rem    — Hero, major section padding */
     --bh-space-24: 96px; /* 6rem    — Maximum separation */
 
-    /* Legacy landing container tokens */
-    --container-max: 1440px;
-    --container-pad: 70px; /* Desktop — overridden by media queries */
-    --navbar-height: 90px; /* Desktop — overridden by media queries */
-
     /* Admin layout tokens (spec §24: 280/88/72/56) */
     --bh-sidebar-w: 280px;
     --bh-sidebar-w-collapsed: 88px;
@@ -143,11 +134,6 @@
     --bh-radius-3xl: 28px; /* Featured cards, hero panels */
     --bh-radius-4xl: 30px; /* Stat cards, hero stats panel */
     --bh-radius-full: 999px; /* Pills, avatars, icon buttons */
-
-    /* Legacy landing radius aliases */
-    --radius-card: var(--bh-radius-3xl); /* 26px → mapped to 28px */
-    --radius-input: var(--bh-radius-lg); /* 22px → mapped to 14px */
-    --radius-btn: var(--bh-radius-full); /* 60px → mapped to 999px */
 
     /* ============================================================
      SHADOWS & GLOWS
@@ -176,12 +162,6 @@
     --bh-dur-drawer: 250ms; /* Spec §56 mobile drawer slide-in */
     --bh-dur-modal: 200ms; /* Spec §56 modal open/close */
     --bh-dur-hover: 150ms; /* Spec §56 hover states */
-
-    /* Legacy landing motion aliases */
-    --ease-premium: var(--bh-ease-premium);
-    --dur-fast: var(--bh-dur-med); /* 350ms → 240ms */
-    --dur-med: var(--bh-dur-slow); /* 350ms → 400ms */
-    --dur-slow: var(--bh-dur-xslow); /* 600ms → 600ms */
 
     /* ============================================================
      Z-INDEX
@@ -215,9 +195,17 @@
 /* ============================================================
    LEGACY LANDING ALIASES — Gradual Migration
    ============================================================
-   These map old token names (--accent, --bg-primary, etc.) to new --bh-* tokens.
-   Components can use either during migration. Goal: remove these aliases once
-   all landing CSS is migrated to CSS Modules with --bh-* tokens.
+   SINGLE SOURCE OF TRUTH for legacy landing token names (--accent,
+   --bg-primary, etc.). Components can use either these or the --bh-*
+   tokens during migration.
+
+   IMPORTANT: radii (26px/22px/60px) and durations (200ms/350ms/600ms)
+   intentionally keep LEGACY literal values for visual parity with the
+   pre-tokens landing. They are NOT mapped to the --bh-* scale yet;
+   align them in Fase 10.3 when landing.css fully migrates to --bh-*.
+
+   Goal: remove these aliases once all landing CSS is migrated to CSS
+   Modules with --bh-* tokens.
    ============================================================ */
 :root {
     /* Colors */
