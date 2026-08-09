@@ -1,0 +1,648 @@
+/**
+ * Sidebar — FASE 3 enterprise redesign (spec §25-40, §52-57).
+ *
+ * Migrated verbatim from styles/sidebar.css into CSS Modules (scoped to
+ * Sidebar.tsx). No design changes: values, colors, media queries, hover and
+ * focus states are copied as-is. Every measurement references a --bh-* token.
+ *
+ * Classes used only by this component are hashed. Classes owned by other
+ * components/styles are wrapped in :global() so the hash cannot break them:
+ *   - .sidebar-footer-link  (defined in the global sidebar.css; not rendered
+ *     by Sidebar.tsx, kept only because collapsed/tablet/mobile compound
+ *     selectors reference it)
+ *   - .sidebar-scrim        (owned by Shell.tsx / shell.css)
+ */
+
+/* ============================================================
+   SIDEBAR ROOT
+   ============================================================ */
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--bh-z-sidebar);
+    display: flex;
+    flex-direction: column;
+    width: var(--bh-sidebar-w);
+    background: var(--bh-bg-sidebar);
+    border-right: 1px solid var(--bh-border);
+    transition:
+        width var(--bh-dur-sidebar) var(--bh-ease-premium),
+        transform var(--bh-dur-drawer) var(--bh-ease-premium);
+    overflow: hidden;
+}
+
+.sidebar.is-collapsed {
+    width: var(--bh-sidebar-w-collapsed);
+}
+
+/* ============================================================
+   LOGO / BRAND HEADER (spec §32) — pinned top
+   ============================================================ */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    height: var(--bh-sidebar-logo-h);
+    padding: 0 var(--bh-space-4);
+    border-bottom: 1px solid var(--bh-border);
+    white-space: nowrap;
+    overflow: hidden;
+    flex: none;
+}
+
+.sidebar-brand-link {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    width: 100%;
+    color: inherit;
+}
+
+.sidebar-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--bh-radius-sm);
+    background: linear-gradient(135deg, var(--bh-accent), #0f8577);
+    color: #fff;
+    font-weight: var(--bh-weight-extrabold);
+    font-size: var(--bh-text-sm);
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: var(--bh-leading-tight);
+    overflow: hidden;
+}
+
+.sidebar-brand-text strong {
+    font-size: var(--bh-text-sm);
+    letter-spacing: var(--bh-tracking-wider);
+    color: var(--bh-text-primary);
+}
+
+.sidebar-brand-text span {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   WORKSPACE SECTION (spec §26/§33) — under logo
+   ============================================================ */
+.sidebar-workspace {
+    flex: none;
+    padding: var(--bh-space-2) var(--bh-space-2);
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.sidebar-workspace-item {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    width: 100%;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border: none;
+    border-radius: var(--bh-radius-sm);
+    background: transparent;
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-workspace-item:hover {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.sidebar-workspace-item.is-active {
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+}
+
+.sidebar-workspace-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-bg-card);
+    color: var(--bh-accent);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-bold);
+}
+
+.sidebar-workspace-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-workspace-check {
+    flex: none;
+    color: var(--bh-accent);
+}
+
+/* ============================================================
+   QUICK SEARCH (spec §30)
+   ============================================================ */
+.sidebar-search {
+    flex: none;
+    padding: var(--bh-space-3) var(--bh-space-2);
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.sidebar-search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-search-input {
+    width: 100%;
+    padding: var(--bh-space-2) var(--bh-space-3) var(--bh-space-2) var(--bh-space-8);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    background: var(--bh-bg-input);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-sm);
+    font-family: inherit;
+    transition:
+        border-color var(--bh-dur-hover) var(--bh-ease-premium),
+        box-shadow var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-search-input::placeholder {
+    color: var(--bh-text-tertiary);
+}
+
+.sidebar-search-input:focus {
+    outline: none;
+    border-color: var(--bh-border-focus);
+    box-shadow: 0 0 0 3px var(--bh-accent-glow-soft);
+}
+
+.sidebar-search-icon {
+    position: absolute;
+    left: var(--bh-space-2);
+    display: flex;
+    align-items: center;
+    color: var(--bh-text-tertiary);
+    pointer-events: none;
+}
+
+.sidebar-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: var(--bh-space-2);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    background: var(--bh-bg-input);
+    color: var(--bh-text-tertiary);
+    cursor: pointer;
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-search-btn:hover {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   NAV AREA — independent scroll (spec §40)
+   ============================================================ */
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-3) var(--bh-space-2);
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
+    margin-top: var(--bh-space-3);
+}
+
+.sidebar-section:first-child {
+    margin-top: 0;
+}
+
+.sidebar-section-title {
+    padding: var(--bh-space-2) var(--bh-space-3) var(--bh-space-1);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    letter-spacing: var(--bh-tracking-wider);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ============================================================
+   NAV LINKS (spec §29/§35-37)
+   ============================================================ */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-link:hover {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.sidebar-link:focus-visible {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: 2px;
+}
+
+.sidebar-link.is-active {
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+    font-weight: var(--bh-weight-semibold);
+    box-shadow: inset 3px 0 0 var(--bh-accent);
+}
+
+.sidebar-link-icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-link-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-link svg {
+    flex: none;
+}
+
+/* ============================================================
+   BADGES (spec §29/§38)
+   ============================================================ */
+.sidebar-badge {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 var(--bh-space-2);
+    border-radius: var(--bh-radius-full);
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    line-height: 1;
+}
+
+.sidebar-badge.is-dot {
+    width: 8px;
+    min-width: 8px;
+    height: 8px;
+    padding: 0;
+    background: var(--bh-accent);
+}
+
+/* ============================================================
+   SUBMENUS (spec §28)
+   ============================================================ */
+.sidebar-submenu-group {
+    /* No rules in sidebar.css — class preserved for the module className import. */
+}
+
+.sidebar-submenu-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    width: 100%;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border: none;
+    border-radius: var(--bh-radius-md);
+    background: transparent;
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-submenu-toggle:hover {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.sidebar-submenu-toggle:focus-visible {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: 2px;
+}
+
+.sidebar-submenu-toggle.is-active {
+    color: var(--bh-accent);
+}
+
+.sidebar-submenu-chevron {
+    flex: none;
+    display: flex;
+    align-items: center;
+    transition: transform var(--bh-dur-dropdown) var(--bh-ease-premium);
+}
+
+.sidebar-submenu-chevron.is-open {
+    transform: rotate(90deg);
+}
+
+.sidebar-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
+    padding-left: var(--bh-space-8);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition:
+        max-height var(--bh-dur-dropdown) var(--bh-ease-premium),
+        opacity var(--bh-dur-dropdown) var(--bh-ease-premium);
+}
+
+.sidebar-submenu.is-open {
+    max-height: 500px;
+    opacity: 1;
+}
+
+.sidebar-submenu .sidebar-link {
+    padding-top: var(--bh-space-1);
+    padding-bottom: var(--bh-space-1);
+    font-size: var(--bh-text-xs);
+}
+
+/* ============================================================
+   FOOTER (spec §38) — version, pinned bottom
+   ============================================================ */
+.sidebar-footer {
+    flex: none;
+    padding: var(--bh-space-2) var(--bh-space-2);
+    border-top: 1px solid var(--bh-border);
+}
+
+.sidebar-version {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-xs);
+    font-family: var(--bh-font-mono);
+    letter-spacing: var(--bh-tracking-wide);
+}
+
+.sidebar-version-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: var(--bh-space-2);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-xs);
+    font-family: var(--bh-font-mono);
+    cursor: pointer;
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.sidebar-version-btn:hover {
+    background: var(--bh-bg-hover);
+}
+
+/* ============================================================
+   COLLAPSED MODE (spec §30/§33/§34)
+   ============================================================ */
+.sidebar.is-collapsed .sidebar-brand {
+    justify-content: center;
+    padding: 0;
+}
+
+.sidebar.is-collapsed .sidebar-brand-text,
+.sidebar.is-collapsed .sidebar-section-title,
+.sidebar.is-collapsed .sidebar-link-label,
+.sidebar.is-collapsed .sidebar-badge,
+.sidebar.is-collapsed .sidebar-workspace-name,
+.sidebar.is-collapsed .sidebar-workspace-check,
+.sidebar.is-collapsed .sidebar-version,
+.sidebar.is-collapsed .sidebar-search-input,
+.sidebar.is-collapsed .sidebar-submenu,
+.sidebar.is-collapsed .sidebar-submenu-chevron {
+    display: none;
+}
+
+.sidebar.is-collapsed .sidebar-workspace {
+    padding: var(--bh-space-2);
+}
+
+.sidebar.is-collapsed .sidebar-workspace-item {
+    justify-content: center;
+    padding: var(--bh-space-2);
+}
+
+.sidebar.is-collapsed .sidebar-workspace-item:not(.is-active) {
+    display: none;
+}
+
+.sidebar.is-collapsed .sidebar-search {
+    padding: var(--bh-space-2);
+}
+
+.sidebar.is-collapsed .sidebar-link,
+.sidebar.is-collapsed .sidebar-submenu-toggle,
+.sidebar.is-collapsed :global(.sidebar-footer-link) {
+    justify-content: center;
+    padding: var(--bh-space-2);
+}
+
+.sidebar.is-collapsed .sidebar-badge.is-dot {
+    display: inline-flex;
+    position: absolute;
+    top: var(--bh-space-1);
+    right: var(--bh-space-2);
+}
+
+.sidebar.is-collapsed .sidebar-link,
+.sidebar.is-collapsed .sidebar-submenu-toggle,
+.sidebar.is-collapsed :global(.sidebar-footer-link),
+.sidebar.is-collapsed .sidebar-workspace-item,
+.sidebar.is-collapsed .sidebar-search-btn,
+.sidebar.is-collapsed .sidebar-version-btn {
+    position: relative;
+}
+
+/* ============================================================
+   RESPONSIVE — Tablet (spec §28: collapsed by default)
+   ============================================================ */
+@media (max-width: 1023px) {
+    .sidebar {
+        width: var(--bh-sidebar-w-collapsed);
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-brand-text,
+    .sidebar:not(.is-mobile-open) .sidebar-section-title,
+    .sidebar:not(.is-mobile-open) .sidebar-link-label,
+    .sidebar:not(.is-mobile-open) .sidebar-badge:not(.is-dot),
+    .sidebar:not(.is-mobile-open) .sidebar-workspace-name,
+    .sidebar:not(.is-mobile-open) .sidebar-workspace-check,
+    .sidebar:not(.is-mobile-open) .sidebar-version,
+    .sidebar:not(.is-mobile-open) .sidebar-search-input,
+    .sidebar:not(.is-mobile-open) .sidebar-submenu,
+    .sidebar:not(.is-mobile-open) .sidebar-submenu-chevron {
+        display: none;
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-brand {
+        justify-content: center;
+        padding: 0;
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-workspace {
+        padding: var(--bh-space-2);
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-workspace-item {
+        justify-content: center;
+        padding: var(--bh-space-2);
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-workspace-item:not(.is-active) {
+        display: none;
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-search {
+        padding: var(--bh-space-2);
+    }
+
+    .sidebar:not(.is-mobile-open) .sidebar-link,
+    .sidebar:not(.is-mobile-open) .sidebar-submenu-toggle,
+    .sidebar:not(.is-mobile-open) :global(.sidebar-footer-link) {
+        justify-content: center;
+        padding: var(--bh-space-2);
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile drawer (spec §31)
+   ============================================================ */
+@media (max-width: 767px) {
+    .sidebar {
+        width: var(--bh-sidebar-w);
+        transform: translateX(-100%);
+        z-index: var(--bh-z-drawer);
+        box-shadow: var(--bh-shadow-lg);
+    }
+
+    .sidebar.is-mobile-open {
+        transform: translateX(0);
+    }
+
+    /* When the drawer is open, show all labels regardless of is-collapsed */
+    .sidebar.is-mobile-open .sidebar-brand-text,
+    .sidebar.is-mobile-open .sidebar-section-title,
+    .sidebar.is-mobile-open .sidebar-link-label,
+    .sidebar.is-mobile-open .sidebar-badge:not(.is-dot),
+    .sidebar.is-mobile-open .sidebar-workspace-name,
+    .sidebar.is-mobile-open .sidebar-workspace-check,
+    .sidebar.is-mobile-open .sidebar-version,
+    .sidebar.is-mobile-open .sidebar-search-input,
+    .sidebar.is-mobile-open .sidebar-submenu-chevron {
+        display: revert;
+    }
+
+    .sidebar.is-mobile-open .sidebar-brand {
+        justify-content: flex-start;
+        padding: 0 var(--bh-space-4);
+    }
+
+    .sidebar.is-mobile-open .sidebar-workspace {
+        padding: var(--bh-space-2);
+    }
+
+    .sidebar.is-mobile-open .sidebar-workspace-item {
+        justify-content: flex-start;
+        padding: var(--bh-space-2) var(--bh-space-3);
+    }
+
+    .sidebar.is-mobile-open .sidebar-workspace-item:not(.is-active) {
+        display: flex;
+    }
+
+    .sidebar.is-mobile-open .sidebar-search {
+        padding: var(--bh-space-3) var(--bh-space-2);
+    }
+
+    .sidebar.is-mobile-open .sidebar-search .sidebar-search-btn {
+        display: none;
+    }
+
+    .sidebar.is-mobile-open .sidebar-search .sidebar-search-field {
+        display: flex;
+    }
+
+    .sidebar.is-mobile-open .sidebar-link,
+    .sidebar.is-mobile-open .sidebar-submenu-toggle,
+    .sidebar.is-mobile-open :global(.sidebar-footer-link) {
+        justify-content: flex-start;
+        padding: var(--bh-space-2) var(--bh-space-3);
+    }
+
+    .sidebar.is-mobile-open .sidebar-submenu {
+        display: flex;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-link,
+    .sidebar-submenu-toggle,
+    .sidebar-submenu,
+    .sidebar-submenu-chevron,
+    :global(.sidebar-scrim) {
+        transition: none;
+    }
+}

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { Shell } from '../Shell';
+import styles from '../Shell.module.css';
 import { commandPaletteOpen, mobileMenuOpen, sidebarCollapsed } from '../../store/app';
 
 // Mock Sidebar/Topbar (owned by other agents) to isolate Shell layout tests
@@ -69,11 +70,12 @@ describe('Shell', () => {
                 </Shell>,
             );
 
-            expect(document.querySelector('.shell')).toBeInTheDocument();
+            expect(screen.getByTestId('shell')).toBeInTheDocument();
             expect(screen.getByText('Saltar al contenido')).toBeInTheDocument();
-            expect(document.querySelector('.sidebar-scrim')).toBeInTheDocument();
-            expect(document.querySelector('.shell-main')).toBeInTheDocument();
+            expect(screen.getByTestId('sidebar-scrim')).toBeInTheDocument();
+            expect(screen.getByTestId('shell-main')).toBeInTheDocument();
             expect(document.getElementById('main-content')).toBeInTheDocument();
+            expect(screen.getByTestId('shell-content')).toBeInTheDocument();
             expect(screen.getByText('contenido de prueba')).toBeInTheDocument();
         });
 
@@ -84,9 +86,9 @@ describe('Shell', () => {
             expect(sidebar).toBeInTheDocument();
             expect(topbar).toBeInTheDocument();
             // Sidebar is a direct child of .shell, before the scrim
-            expect(sidebar.parentElement?.classList.contains('shell')).toBe(true);
+            expect(sidebar.parentElement).toBe(screen.getByTestId('shell'));
             // Topbar is inside .shell-main
-            expect(topbar.parentElement?.classList.contains('shell-main')).toBe(true);
+            expect(topbar.parentElement).toBe(screen.getByTestId('shell-main'));
         });
 
         it('skip-link targets #main-content', () => {
@@ -104,30 +106,30 @@ describe('Shell', () => {
 
         it('renders the breadcrumb row inside shell-main', () => {
             render(<Shell><p>contenido</p></Shell>);
-            expect(document.querySelector('.breadcrumb-row')).toBeInTheDocument();
+            expect(screen.getByTestId('breadcrumb-row')).toBeInTheDocument();
         });
     });
 
     describe('sidebar scrim', () => {
         it('is not visible when mobileMenuOpen is false', () => {
             render(<Shell><p>contenido</p></Shell>);
-            const scrim = document.querySelector('.sidebar-scrim');
-            expect(scrim?.classList.contains('is-visible')).toBe(false);
-            expect(scrim?.getAttribute('aria-hidden')).toBe('true');
+            const scrim = screen.getByTestId('sidebar-scrim');
+            expect(scrim.classList.contains(styles['is-visible'])).toBe(false);
+            expect(scrim.getAttribute('aria-hidden')).toBe('true');
         });
 
         it('becomes visible when mobileMenuOpen is true', () => {
             mobileMenuOpen.value = true;
             render(<Shell><p>contenido</p></Shell>);
-            const scrim = document.querySelector('.sidebar-scrim');
-            expect(scrim?.classList.contains('is-visible')).toBe(true);
-            expect(scrim?.getAttribute('aria-hidden')).toBe('false');
+            const scrim = screen.getByTestId('sidebar-scrim');
+            expect(scrim.classList.contains(styles['is-visible'])).toBe(true);
+            expect(scrim.getAttribute('aria-hidden')).toBe('false');
         });
 
         it('closes the drawer when clicked', () => {
             mobileMenuOpen.value = true;
             render(<Shell><p>contenido</p></Shell>);
-            const scrim = document.querySelector('.sidebar-scrim') as HTMLElement;
+            const scrim = screen.getByTestId('sidebar-scrim');
             expect(mobileMenuOpen.value).toBe(true);
             fireEvent.click(scrim);
             expect(mobileMenuOpen.value).toBe(false);

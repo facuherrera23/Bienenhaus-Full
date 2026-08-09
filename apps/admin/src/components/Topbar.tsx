@@ -15,6 +15,7 @@ import {
     X,
 } from 'lucide-preact';
 import { Avatar, Badge, Dropdown, IconButton, SearchInput, Spinner } from '@bienenhaus/ui';
+import styles from './Topbar.module.css';
 import {
     authSession,
     authSigningOut,
@@ -230,10 +231,10 @@ export function Topbar() {
     };
 
     return (
-        <header className="topbar" role="banner">
+        <header className={styles['topbar']} role="banner">
             {/* Left: hamburger (spec §42) */}
-            <div className="topbar-left">
-                <div className="topbar-burger topbar-burger--desktop">
+            <div className={styles['topbar-left']}>
+                <div className={`${styles['topbar-burger']} ${styles['topbar-burger--desktop']}`}>
                     <IconButton
                         aria-label="Contraer menú lateral"
                         variant="ghost"
@@ -243,7 +244,7 @@ export function Topbar() {
                         <Menu size={18} />
                     </IconButton>
                 </div>
-                <div className="topbar-burger topbar-burger--mobile">
+                <div className={`${styles['topbar-burger']} ${styles['topbar-burger--mobile']}`}>
                     <IconButton
                         aria-label="Abrir menú lateral"
                         variant="ghost"
@@ -256,8 +257,8 @@ export function Topbar() {
             </div>
 
             {/* Center: global search (spec §43, §45) */}
-            <div className="topbar-search">
-                <div className="topbar-search-input">
+            <div className={styles['topbar-search']}>
+                <div className={styles['topbar-search-input']}>
                     <SearchInput
                         placeholder="Buscar… (Ctrl+K)"
                         shortcut="Ctrl+K"
@@ -267,7 +268,7 @@ export function Topbar() {
                         onFocus={openCommandPalette}
                     />
                 </div>
-                <div className="topbar-search-icon">
+                <div className={styles['topbar-search-icon']}>
                     <IconButton
                         aria-label="Buscar"
                         variant="ghost"
@@ -280,7 +281,7 @@ export function Topbar() {
             </div>
 
             {/* Right: quick actions | notifications | avatar (spec §42) */}
-            <div className="topbar-right">
+            <div className={styles['topbar-right']}>
                 <QuickActions
                     open={quickOpen}
                     onOpenChange={setQuickOpen}
@@ -317,7 +318,7 @@ interface QuickActionsProps {
 
 function QuickActions({ open, onOpenChange, onNavigate }: QuickActionsProps) {
     const trigger = (
-        <div className="topbar-badge-wrap">
+        <div className={styles['topbar-badge-wrap']}>
             <IconButton aria-label="Acciones rápidas" variant="ghost" size="md">
                 <Plus size={18} />
             </IconButton>
@@ -338,15 +339,15 @@ function QuickActions({ open, onOpenChange, onNavigate }: QuickActionsProps) {
                         key={action.id}
                         type="button"
                         role="menuitem"
-                        className="topbar-quick-item"
+                        className={styles['topbar-quick-item']}
                         onClick={() => onNavigate(action.route)}
                     >
-                        <span className="topbar-quick-item-icon">
+                        <span className={styles['topbar-quick-item-icon']}>
                             <action.icon size={16} />
                         </span>
-                        <span className="topbar-quick-item-body">
-                            <span className="topbar-quick-item-label">{action.label}</span>
-                            <span className="topbar-quick-item-desc">{action.description}</span>
+                        <span className={styles['topbar-quick-item-body']}>
+                            <span className={styles['topbar-quick-item-label']}>{action.label}</span>
+                            <span className={styles['topbar-quick-item-desc']}>{action.description}</span>
                         </span>
                     </button>
                 ))}
@@ -389,12 +390,14 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
     };
 
     const trigger = (
-        <div className="topbar-badge-wrap">
+        <div className={styles['topbar-badge-wrap']}>
             <IconButton aria-label="Notificaciones" variant="ghost" size="md">
                 <Bell size={18} />
             </IconButton>
             {unreadCount > 0 && (
-                <span className={`topbar-badge${unreadCount > 9 ? ' topbar-badge--danger' : ''}`}>
+                <span
+                    className={`${styles['topbar-badge']}${unreadCount > 9 ? ` ${styles['topbar-badge--danger']}` : ''}`}
+                >
                     {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
             )}
@@ -409,10 +412,10 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
             open={open}
             onOpenChange={onOpenChange}
         >
-            <div className="topbar-notif">
-                <div className="topbar-notif-header">
-                    <div className="topbar-notif-title-row">
-                        <span className="topbar-notif-title">Notificaciones</span>
+            <div className={styles['topbar-notif']}>
+                <div className={styles['topbar-notif-header']}>
+                    <div className={styles['topbar-notif-title-row']}>
+                        <span className={styles['topbar-notif-title']}>Notificaciones</span>
                         {unreadCount > 0 && (
                             <Badge variant="primary" size="sm">
                                 {unreadCount}
@@ -421,7 +424,7 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                     </div>
                     <button
                         type="button"
-                        className="topbar-notif-mark-all"
+                        className={styles['topbar-notif-mark-all']}
                         onClick={markAllRead}
                         disabled={unreadCount === 0}
                         aria-label="Marcar todas como leídas"
@@ -431,10 +434,10 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                     </button>
                 </div>
 
-                <div className="topbar-notif-filters" role="group" aria-label="Filtrar por tipo">
+                <div className={styles['topbar-notif-filters']} role="group" aria-label="Filtrar por tipo">
                     <button
                         type="button"
-                        className={`topbar-notif-chip${activeFilter === 'all' ? ' topbar-notif-chip--active' : ''}`}
+                        className={`${styles['topbar-notif-chip']}${activeFilter === 'all' ? ` ${styles['topbar-notif-chip--active']}` : ''}`}
                         onClick={() => setActiveFilter('all')}
                     >
                         Todas
@@ -443,7 +446,7 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                         <button
                             key={type}
                             type="button"
-                            className={`topbar-notif-chip${activeFilter === type ? ' topbar-notif-chip--active' : ''}`}
+                            className={`${styles['topbar-notif-chip']}${activeFilter === type ? ` ${styles['topbar-notif-chip--active']}` : ''}`}
                             onClick={() => setActiveFilter(type)}
                         >
                             {NOTIF_TYPE_META[type].label}
@@ -451,33 +454,33 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                     ))}
                 </div>
 
-                <div className="topbar-notif-list" role="list">
+                <div className={styles['topbar-notif-list']} role="list">
                     {filtered.length === 0 ? (
-                        <div className="topbar-notif-empty">No hay notificaciones</div>
+                        <div className={styles['topbar-notif-empty']}>No hay notificaciones</div>
                     ) : (
                         filtered.map((item) => (
                             <div
                                 key={item.id}
-                                className={`topbar-notif-item${!item.read ? ' topbar-notif-item--unread' : ''}`}
+                                className={`${styles['topbar-notif-item']}${!item.read ? ` ${styles['topbar-notif-item--unread']}` : ''}`}
                                 role="listitem"
                             >
                                 <span
-                                    className="topbar-notif-item-dot"
+                                    className={styles['topbar-notif-item-dot']}
                                     style={{ background: NOTIF_TYPE_META[item.type].color }}
                                     aria-hidden="true"
                                 />
-                                <div className="topbar-notif-item-body">
-                                    <span className="topbar-notif-item-title">{item.title}</span>
+                                <div className={styles['topbar-notif-item-body']}>
+                                    <span className={styles['topbar-notif-item-title']}>{item.title}</span>
                                     {item.description && (
-                                        <span className="topbar-notif-item-desc">
+                                        <span className={styles['topbar-notif-item-desc']}>
                                             {item.description}
                                         </span>
                                     )}
-                                    <span className="topbar-notif-item-time">{item.time}</span>
+                                    <span className={styles['topbar-notif-item-time']}>{item.time}</span>
                                 </div>
                                 <button
                                     type="button"
-                                    className="topbar-notif-item-dismiss"
+                                    className={styles['topbar-notif-item-dismiss']}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         dismiss(item.id);
@@ -491,8 +494,8 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                     )}
                 </div>
 
-                <div className="topbar-notif-footer">
-                    <button type="button" className="topbar-notif-footer-link">
+                <div className={styles['topbar-notif-footer']}>
+                    <button type="button" className={styles['topbar-notif-footer-link']}>
                         Ver todas
                     </button>
                 </div>
@@ -535,11 +538,11 @@ function AvatarMenu({
     }, [open]);
 
     const trigger = (
-        <div className="topbar-avatar-trigger">
+        <div className={styles['topbar-avatar-trigger']}>
             <Avatar fallback={initials} size="sm" status="online" alt={displayName} />
-            <div className="topbar-avatar-info">
-                <span className="topbar-avatar-name">{displayName}</span>
-                {email && <span className="topbar-avatar-email">{email}</span>}
+            <div className={styles['topbar-avatar-info']}>
+                <span className={styles['topbar-avatar-name']}>{displayName}</span>
+                {email && <span className={styles['topbar-avatar-email']}>{email}</span>}
             </div>
         </div>
     );
@@ -552,60 +555,60 @@ function AvatarMenu({
             open={open}
             onOpenChange={onOpenChange}
         >
-            <div className="topbar-avatar-menu" role="menu">
-                <div className="topbar-avatar-menu-header">
-                    <span className="topbar-avatar-menu-name">{displayName}</span>
-                    {email && <span className="topbar-avatar-menu-email">{email}</span>}
+            <div className={styles['topbar-avatar-menu']} role="menu">
+                <div className={styles['topbar-avatar-menu-header']}>
+                    <span className={styles['topbar-avatar-menu-name']}>{displayName}</span>
+                    {email && <span className={styles['topbar-avatar-menu-email']}>{email}</span>}
                 </div>
 
                 <button
                     type="button"
                     role="menuitem"
-                    className="topbar-avatar-menu-item"
+                    className={styles['topbar-avatar-menu-item']}
                     onClick={() => {
                         onNavigate('/configuracion');
                         onOpenChange(false);
                     }}
                 >
-                    <span className="topbar-avatar-menu-item-icon">
+                    <span className={styles['topbar-avatar-menu-item-icon']}>
                         <Settings size={16} />
                     </span>
-                    <span className="topbar-avatar-menu-item-label">Configuración</span>
+                    <span className={styles['topbar-avatar-menu-item-label']}>Configuración</span>
                 </button>
 
                 <button
                     type="button"
                     role="menuitem"
-                    className="topbar-avatar-menu-item"
+                    className={styles['topbar-avatar-menu-item']}
                     onClick={() => {
                         toggleTheme();
                         forceTick((t) => t + 1);
                     }}
                 >
-                    <span className="topbar-avatar-menu-item-icon">{themeIcon}</span>
-                    <span className="topbar-avatar-menu-item-label">Tema</span>
+                    <span className={styles['topbar-avatar-menu-item-icon']}>{themeIcon}</span>
+                    <span className={styles['topbar-avatar-menu-item-label']}>Tema</span>
                 </button>
 
-                <div className="topbar-avatar-menu-divider" />
+                <div className={styles['topbar-avatar-menu-divider']} />
 
                 <button
                     type="button"
                     role="menuitem"
-                    className="topbar-avatar-menu-item topbar-avatar-menu-item--danger"
+                    className={`${styles['topbar-avatar-menu-item']} ${styles['topbar-avatar-menu-item--danger']}`}
                     onClick={onSignOut}
                     disabled={signingOut}
                     aria-busy={signingOut}
                 >
-                    <span className="topbar-avatar-menu-item-icon">
+                    <span className={styles['topbar-avatar-menu-item-icon']}>
                         {signingOut ? (
-                            <span className="topbar-avatar-menu-item-spinner">
+                            <span className={styles['topbar-avatar-menu-item-spinner']}>
                                 <Spinner size="sm" inline />
                             </span>
                         ) : (
                             <LogOut size={16} />
                         )}
                     </span>
-                    <span className="topbar-avatar-menu-item-label">
+                    <span className={styles['topbar-avatar-menu-item-label']}>
                         {signingOut ? 'Cerrando…' : 'Cerrar Sesión'}
                     </span>
                 </button>

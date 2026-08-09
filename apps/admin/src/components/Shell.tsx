@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { BreadcrumbNav } from './Breadcrumb';
 import { CommandPalette } from './CommandPalette';
+import styles from './Shell.module.css';
 
 export function Shell({ children }: { children: ComponentChildren }) {
     const [, setLocation] = useLocation();
@@ -106,22 +107,23 @@ export function Shell({ children }: { children: ComponentChildren }) {
     };
 
     return (
-        <div className="shell">
-            <a href="#main-content" className="skip-link">
+        <div className={styles.shell} data-testid="shell">
+            <a href="#main-content" className={styles['skip-link']}>
                 Saltar al contenido
             </a>
             <Sidebar />
             <div
-                className={`sidebar-scrim${mobileMenuOpen.value ? ' is-visible' : ''}`}
+                className={`${styles['sidebar-scrim']}${mobileMenuOpen.value ? ` ${styles['is-visible']}` : ''}`}
                 onClick={closeDrawer}
                 aria-hidden={!mobileMenuOpen.value}
+                data-testid="sidebar-scrim"
             />
-            <div className="shell-main">
+            <div className={styles['shell-main']} data-testid="shell-main">
                 <Topbar />
-                <div className="breadcrumb-row">
+                <div className={styles['breadcrumb-row']} data-testid="breadcrumb-row">
                     <BreadcrumbNav />
                 </div>
-                <main id="main-content" className="shell-content">
+                <main id="main-content" className={styles['shell-content']} data-testid="shell-content">
                     {children}
                 </main>
             </div>

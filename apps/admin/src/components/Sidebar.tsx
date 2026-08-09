@@ -22,6 +22,7 @@ import {
 import { useState } from 'preact/hooks';
 import { Link, useRoute } from 'wouter-preact';
 import { Tooltip } from '@bienenhaus/ui';
+import styles from './Sidebar.module.css';
 import { authUserRole, mobileMenuOpen, sidebarCollapsed } from '../store/app';
 import type { AdminRole } from '../types/admin';
 
@@ -157,18 +158,20 @@ function NavLink({ item, collapsed, onNavigate }: NavLinkProps) {
     const linkContent = (
         <Link
             href={item.href}
-            className={`sidebar-link${active ? ' is-active' : ''}`}
+            className={`${styles['sidebar-link']}${active ? ` ${styles['is-active']}` : ''}`}
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
         >
-            <span className="sidebar-link-icon">
+            <span className={styles['sidebar-link-icon']}>
                 <item.icon size={18} strokeWidth={1.8} />
             </span>
-            {!collapsed && <span className="sidebar-link-label">{item.label}</span>}
+            {!collapsed && <span className={styles['sidebar-link-label']}>{item.label}</span>}
             {!collapsed && item.badge != null && (
-                <span className="sidebar-badge">{item.badge}</span>
+                <span className={styles['sidebar-badge']}>{item.badge}</span>
             )}
-            {collapsed && item.badge != null && <span className="sidebar-badge is-dot" />}
+            {collapsed && item.badge != null && (
+                <span className={`${styles['sidebar-badge']} ${styles['is-dot']}`} />
+            )}
         </Link>
     );
 
@@ -192,11 +195,11 @@ function SubmenuChild({ child, onNavigate }: SubmenuChildProps) {
     return (
         <Link
             href={child.href}
-            className={`sidebar-link${active ? ' is-active' : ''}`}
+            className={`${styles['sidebar-link']}${active ? ` ${styles['is-active']}` : ''}`}
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
         >
-            <span className="sidebar-link-label">{child.label}</span>
+            <span className={styles['sidebar-link-label']}>{child.label}</span>
         </Link>
     );
 }
@@ -215,14 +218,16 @@ function Submenu({ item, collapsed, onNavigate }: SubmenuProps) {
         const linkContent = (
             <Link
                 href={item.href}
-                className={`sidebar-link${selfActive ? ' is-active' : ''}`}
+                className={`${styles['sidebar-link']}${selfActive ? ` ${styles['is-active']}` : ''}`}
                 onClick={onNavigate}
                 aria-current={selfActive ? 'page' : undefined}
             >
-                <span className="sidebar-link-icon">
+                <span className={styles['sidebar-link-icon']}>
                     <item.icon size={18} strokeWidth={1.8} />
                 </span>
-                {item.badge != null && <span className="sidebar-badge is-dot" />}
+                {item.badge != null && (
+                    <span className={`${styles['sidebar-badge']} ${styles['is-dot']}`} />
+                )}
             </Link>
         );
         return (
@@ -233,24 +238,28 @@ function Submenu({ item, collapsed, onNavigate }: SubmenuProps) {
     }
 
     return (
-        <div className="sidebar-submenu-group">
+        <div className={styles['sidebar-submenu-group']}>
             <button
                 type="button"
-                className={`sidebar-submenu-toggle${selfActive ? ' is-active' : ''}`}
+                className={`${styles['sidebar-submenu-toggle']}${selfActive ? ` ${styles['is-active']}` : ''}`}
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={open}
+                data-testid="sidebar-submenu-toggle"
             >
-                <span className="sidebar-link-icon">
+                <span className={styles['sidebar-link-icon']}>
                     <item.icon size={18} strokeWidth={1.8} />
                 </span>
-                <span className="sidebar-link-label">{item.label}</span>
-                {item.badge != null && <span className="sidebar-badge">{item.badge}</span>}
-                <span className={`sidebar-submenu-chevron${open ? ' is-open' : ''}`}>
+                <span className={styles['sidebar-link-label']}>{item.label}</span>
+                {item.badge != null && <span className={styles['sidebar-badge']}>{item.badge}</span>}
+                <span
+                    className={`${styles['sidebar-submenu-chevron']}${open ? ` ${styles['is-open']}` : ''}`}
+                    data-testid="sidebar-submenu-chevron"
+                >
                     <ChevronRight size={16} strokeWidth={1.8} />
                 </span>
             </button>
             {open && item.children && (
-                <div className="sidebar-submenu is-open">
+                <div className={`${styles['sidebar-submenu']} ${styles['is-open']}`}>
                     {item.children.map((child) => (
                         <SubmenuChild key={child.href} child={child} onNavigate={onNavigate} />
                     ))}
@@ -273,8 +282,8 @@ function NavSection({ title, items, collapsed, onNavigate, query }: NavSectionPr
     if (visible.length === 0) return null;
 
     return (
-        <div className="sidebar-section">
-            {!collapsed && <span className="sidebar-section-title">{title}</span>}
+        <div className={styles['sidebar-section']}>
+            {!collapsed && <span className={styles['sidebar-section-title']}>{title}</span>}
             {visible.map((item) =>
                 item.children && !collapsed ? (
                     <Submenu
@@ -309,10 +318,10 @@ function WorkspaceItem({ workspace, active, collapsed, onSelect }: WorkspaceItem
             <Tooltip content={workspace.name} position="right" delay={300} arrow={false}>
                 <button
                     type="button"
-                    className="sidebar-workspace-item is-active"
+                    className={`${styles['sidebar-workspace-item']} ${styles['is-active']}`}
                     aria-label={workspace.name}
                 >
-                    <span className="sidebar-workspace-glyph">{workspace.glyph}</span>
+                    <span className={styles['sidebar-workspace-glyph']}>{workspace.glyph}</span>
                 </button>
             </Tooltip>
         );
@@ -320,13 +329,13 @@ function WorkspaceItem({ workspace, active, collapsed, onSelect }: WorkspaceItem
     return (
         <button
             type="button"
-            className={`sidebar-workspace-item${active ? ' is-active' : ''}`}
+            className={`${styles['sidebar-workspace-item']}${active ? ` ${styles['is-active']}` : ''}`}
             onClick={() => onSelect(workspace.id)}
         >
-            <span className="sidebar-workspace-glyph">{workspace.glyph}</span>
-            <span className="sidebar-workspace-name">{workspace.name}</span>
+            <span className={styles['sidebar-workspace-glyph']}>{workspace.glyph}</span>
+            <span className={styles['sidebar-workspace-name']}>{workspace.name}</span>
             {active && (
-                <span className="sidebar-workspace-check">
+                <span className={styles['sidebar-workspace-check']} data-testid="sidebar-workspace-check">
                     <Check size={14} strokeWidth={2} />
                 </span>
             )}
@@ -353,16 +362,17 @@ export function Sidebar() {
 
     return (
         <aside
-            className={`sidebar${collapsed ? ' is-collapsed' : ''}${mobileOpen ? ' is-mobile-open' : ''}`}
+            className={`${styles.sidebar}${collapsed ? ` ${styles['is-collapsed']}` : ''}${mobileOpen ? ` ${styles['is-mobile-open']}` : ''}`}
             aria-label="Navegación del panel"
+            data-testid="sidebar"
         >
-            <div className="sidebar-brand">
-                <Link href="/" className="sidebar-brand-link" onClick={handleNavigate}>
-                    <span className="sidebar-logo" aria-hidden="true">
+            <div className={styles['sidebar-brand']}>
+                <Link href="/" className={styles['sidebar-brand-link']} onClick={handleNavigate}>
+                    <span className={styles['sidebar-logo']} aria-hidden="true">
                         B
                     </span>
                     {!collapsed && (
-                        <div className="sidebar-brand-text">
+                        <div className={styles['sidebar-brand-text']}>
                             <strong>BIENENHAUS</strong>
                             <span>Admin</span>
                         </div>
@@ -370,7 +380,7 @@ export function Sidebar() {
                 </Link>
             </div>
 
-            <div className="sidebar-workspace">
+            <div className={styles['sidebar-workspace']}>
                 {collapsed
                     ? WORKSPACES.filter((w) => w.id === activeWorkspace).map((w) => (
                           <WorkspaceItem
@@ -392,12 +402,12 @@ export function Sidebar() {
                       ))}
             </div>
 
-            <div className="sidebar-search">
+            <div className={styles['sidebar-search']}>
                 {collapsed ? (
                     <Tooltip content="Buscar" position="right" delay={300} arrow={false}>
                         <button
                             type="button"
-                            className="sidebar-search-btn"
+                            className={styles['sidebar-search-btn']}
                             aria-label="Buscar"
                             onClick={() => {
                                 sidebarCollapsed.value = false;
@@ -407,13 +417,13 @@ export function Sidebar() {
                         </button>
                     </Tooltip>
                 ) : (
-                    <div className="sidebar-search-field">
-                        <span className="sidebar-search-icon">
+                    <div className={styles['sidebar-search-field']}>
+                        <span className={styles['sidebar-search-icon']}>
                             <Search size={15} strokeWidth={1.8} />
                         </span>
                         <input
                             type="text"
-                            className="sidebar-search-input"
+                            className={styles['sidebar-search-input']}
                             placeholder="Buscar…"
                             aria-label="Buscar en navegación"
                             value={query}
@@ -423,7 +433,7 @@ export function Sidebar() {
                 )}
             </div>
 
-            <nav className="sidebar-nav" aria-label="Navegación principal">
+            <nav className={styles['sidebar-nav']} aria-label="Navegación principal">
                 <NavSection
                     title="Principal"
                     items={mainNav}
@@ -451,7 +461,7 @@ export function Sidebar() {
                 )}
             </nav>
 
-            <div className="sidebar-footer">
+            <div className={styles['sidebar-footer']} data-testid="sidebar-footer">
                 {settingsVisible && (
                     <NavLink
                         item={SETTINGS_NAV}
@@ -461,12 +471,16 @@ export function Sidebar() {
                 )}
                 {collapsed ? (
                     <Tooltip content={`v${APP_VERSION}`} position="right" delay={300} arrow={false}>
-                        <button type="button" className="sidebar-version-btn" aria-label="Versión">
+                        <button
+                            type="button"
+                            className={styles['sidebar-version-btn']}
+                            aria-label="Versión"
+                        >
                             v
                         </button>
                     </Tooltip>
                 ) : (
-                    <div className="sidebar-version">v{APP_VERSION}</div>
+                    <div className={styles['sidebar-version']}>v{APP_VERSION}</div>
                 )}
             </div>
         </aside>

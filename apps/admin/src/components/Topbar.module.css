@@ -1,0 +1,573 @@
+/* ==========================================================================
+   Topbar — FASE 3 (spec §41-48, §52-57)
+   CSS Modules scoped to Topbar.tsx. All values reference --bh-* tokens
+   (tokens.css, imported globally in main.tsx).
+   ========================================================================== */
+
+/* --- Root container (spec §42, §43) ------------------------------------- */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--bh-z-topbar);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--bh-space-4);
+    height: var(--bh-topbar-h);
+    padding: 0 var(--bh-space-6);
+    background: rgba(8, 9, 11, 0.86);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--bh-border);
+}
+
+/* --- Left: hamburger (spec §42) ----------------------------------------- */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    min-width: 0;
+}
+
+.topbar-burger {
+    display: inline-flex;
+}
+
+/* Desktop hamburger hidden below lg (spec §28: mobile/tablet uses drawer) */
+@media (max-width: calc(var(--bh-bp-lg) - 1px)) {
+    .topbar-burger--desktop {
+        display: none;
+    }
+}
+
+/* Mobile hamburger hidden at lg+ (desktop uses collapse toggle) */
+@media (min-width: var(--bh-bp-lg)) {
+    .topbar-burger--mobile {
+        display: none;
+    }
+}
+
+/* --- Center: global search (spec §43, §45) ------------------------------ */
+.topbar-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.topbar-search-input {
+    width: 100%;
+    max-width: 480px;
+    cursor: pointer;
+}
+
+.topbar-search-input input {
+    cursor: pointer;
+}
+
+/* Mobile: collapse search to icon button (below md) */
+@media (max-width: calc(var(--bh-bp-md) - 1px)) {
+    .topbar-search-input {
+        display: none;
+    }
+    .topbar-search-icon {
+        display: inline-flex;
+    }
+}
+
+@media (min-width: var(--bh-bp-md)) {
+    .topbar-search-icon {
+        display: none;
+    }
+}
+
+/* --- Right cluster: quick actions | notifications | avatar (spec §42) --- */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+}
+
+/* --- Badge overlays on icon buttons ------------------------------------- */
+.topbar-badge-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.topbar-badge {
+    position: absolute;
+    top: calc(var(--bh-space-1) * -1);
+    right: calc(var(--bh-space-1) * -1);
+    min-width: var(--bh-space-5);
+    height: var(--bh-space-5);
+    padding: 0 var(--bh-space-1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    line-height: 1;
+    border-radius: var(--bh-radius-full);
+    background: var(--bh-accent);
+    color: var(--bh-bg-primary);
+    pointer-events: none;
+}
+
+.topbar-badge--danger {
+    background: var(--bh-danger);
+    color: var(--bh-bg-primary);
+}
+
+/* --- Dropdown menu overrides inside topbar (spec §54) ------------------- */
+/* Kit Dropdown .menu is position:absolute; ensure it floats above topbar. */
+/* .bh-dropdown-root / .menu / .alignEnd are plain classes emitted by the
+   @bienenhaus/ui Dropdown — wrapped in :global() so the hash keeps them. */
+.topbar :global(.bh-dropdown-root) {
+    position: relative;
+}
+
+.topbar :global(.bh-dropdown-root .menu) {
+    z-index: calc(var(--bh-z-topbar) + 10);
+    min-width: 240px;
+    max-width: 380px;
+    background: var(--bh-bg-raised);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    box-shadow: var(--bh-shadow-lg);
+    padding: var(--bh-space-1);
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.topbar :global(.bh-dropdown-root.alignEnd .menu) {
+    right: 0;
+    left: auto;
+}
+
+/* --- Quick Actions menu items (spec §46) --------------------------------- */
+.topbar-quick-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-3) var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+    cursor: pointer;
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.topbar-quick-item:hover,
+.topbar-quick-item:focus-visible {
+    background: var(--bh-bg-hover);
+    outline: none;
+}
+
+.topbar-quick-item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+    flex-shrink: 0;
+}
+
+.topbar-quick-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.topbar-quick-item-label {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+    white-space: nowrap;
+}
+
+.topbar-quick-item-desc {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Notification Center (spec §47) ------------------------------------- */
+.topbar-notif {
+    width: 360px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar-notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bh-space-2);
+    padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-2);
+}
+
+.topbar-notif-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+}
+
+.topbar-notif-title {
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+}
+
+.topbar-notif-mark-all {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--bh-space-1) var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium);
+    white-space: nowrap;
+}
+
+.topbar-notif-mark-all:hover {
+    background: var(--bh-accent-soft);
+}
+
+.topbar-notif-mark-all:disabled {
+    color: var(--bh-text-disabled);
+    cursor: not-allowed;
+    background: none;
+}
+
+.topbar-notif-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bh-space-1);
+    padding: 0 var(--bh-space-3) var(--bh-space-2);
+}
+
+.topbar-notif-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-secondary);
+    background: var(--bh-bg-input);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-full);
+    cursor: pointer;
+    transition: all var(--bh-dur-hover) var(--bh-ease-premium);
+    white-space: nowrap;
+}
+
+.topbar-notif-chip:hover {
+    border-color: var(--bh-border-strong);
+    color: var(--bh-text-primary);
+}
+
+.topbar-notif-chip--active {
+    background: var(--bh-accent-soft);
+    border-color: var(--bh-accent);
+    color: var(--bh-accent);
+}
+
+.topbar-notif-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    border-top: 1px solid var(--bh-border);
+}
+
+.topbar-notif-item {
+    display: flex;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-3);
+    cursor: pointer;
+    border-bottom: 1px solid var(--bh-border);
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium);
+    position: relative;
+}
+
+.topbar-notif-item:last-child {
+    border-bottom: none;
+}
+
+.topbar-notif-item:hover {
+    background: var(--bh-bg-hover);
+}
+
+.topbar-notif-item--unread {
+    background: var(--bh-accent-soft);
+}
+
+.topbar-notif-item--unread:hover {
+    background: rgba(31, 200, 195, 0.18);
+}
+
+.topbar-notif-item-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--bh-radius-full);
+    flex-shrink: 0;
+    margin-top: var(--bh-space-1);
+}
+
+.topbar-notif-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.topbar-notif-item-title {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+}
+
+.topbar-notif-item-desc {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.topbar-notif-item-time {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    white-space: nowrap;
+}
+
+.topbar-notif-item-dismiss {
+    position: absolute;
+    top: var(--bh-space-2);
+    right: var(--bh-space-2);
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--bh-radius-sm);
+    color: var(--bh-text-tertiary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--bh-dur-hover) var(--bh-ease-premium),
+        background var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.topbar-notif-item:hover .topbar-notif-item-dismiss {
+    opacity: 1;
+}
+
+.topbar-notif-item-dismiss:hover {
+    background: var(--bh-bg-active);
+    color: var(--bh-text-primary);
+}
+
+.topbar-notif-empty {
+    padding: var(--bh-space-8) var(--bh-space-4);
+    text-align: center;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
+}
+
+.topbar-notif-footer {
+    border-top: 1px solid var(--bh-border);
+    padding: var(--bh-space-2) var(--bh-space-3);
+    text-align: center;
+}
+
+.topbar-notif-footer-link {
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--bh-space-1) var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.topbar-notif-footer-link:hover {
+    background: var(--bh-accent-soft);
+}
+
+/* --- Avatar dropdown (spec §48) ------------------------------------------ */
+.topbar-avatar-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    padding: var(--bh-space-1) var(--bh-space-2) var(--bh-space-1) var(--bh-space-1);
+    border-radius: var(--bh-radius-full);
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+        border-color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.topbar-avatar-trigger:hover,
+.topbar-avatar-trigger:focus-visible {
+    background: var(--bh-bg-hover);
+    border-color: var(--bh-border);
+    outline: none;
+}
+
+.topbar-avatar-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 0;
+    max-width: 140px;
+}
+
+.topbar-avatar-name {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.topbar-avatar-email {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+@media (max-width: calc(var(--bh-bp-md) - 1px)) {
+    .topbar-avatar-info {
+        display: none;
+    }
+}
+
+/* Avatar menu items (kit Dropdown items rendered via children) */
+.topbar-avatar-menu {
+    min-width: 220px;
+    padding: var(--bh-space-1);
+}
+
+.topbar-avatar-menu-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-bottom: 1px solid var(--bh-border);
+    margin-bottom: var(--bh-space-1);
+}
+
+.topbar-avatar-menu-name {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-avatar-menu-email {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-avatar-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    width: 100%;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-radius: var(--bh-radius-sm);
+    cursor: pointer;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+    background: none;
+    border: none;
+    text-align: left;
+    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+        color var(--bh-dur-hover) var(--bh-ease-premium);
+}
+
+.topbar-avatar-menu-item:hover,
+.topbar-avatar-menu-item:focus-visible {
+    background: var(--bh-bg-hover);
+    outline: none;
+}
+
+.topbar-avatar-menu-item:disabled {
+    color: var(--bh-text-disabled);
+    cursor: not-allowed;
+}
+
+.topbar-avatar-menu-item--danger {
+    color: var(--bh-danger);
+}
+
+.topbar-avatar-menu-item--danger:hover {
+    background: var(--bh-danger-soft);
+}
+
+.topbar-avatar-menu-item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--bh-text-tertiary);
+}
+
+.topbar-avatar-menu-item--danger .topbar-avatar-menu-item-icon {
+    color: var(--bh-danger);
+}
+
+.topbar-avatar-menu-item-label {
+    flex: 1;
+}
+
+.topbar-avatar-menu-item-spinner {
+    display: inline-flex;
+    align-items: center;
+}
+
+.topbar-avatar-menu-divider {
+    height: 1px;
+    background: var(--bh-border);
+    margin: var(--bh-space-1) 0;
+}
+
+/* --- Reduced motion (spec §57) ------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .topbar,
+    .topbar-quick-item,
+    .topbar-notif-item,
+    .topbar-notif-chip,
+    .topbar-avatar-trigger,
+    .topbar-avatar-menu-item,
+    .topbar-notif-mark-all,
+    .topbar-notif-footer-link,
+    .topbar-notif-item-dismiss {
+        transition: none;
+    }
+}

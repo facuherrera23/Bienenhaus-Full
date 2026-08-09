@@ -8,9 +8,7 @@ vi.mock('@bienenhaus/ui', () => ({
 }));
 
 function getSidebar(): HTMLElement {
-    const el = document.querySelector('.sidebar');
-    if (!el) throw new Error('sidebar not rendered');
-    return el as HTMLElement;
+    return screen.getByTestId('sidebar');
 }
 
 describe('Sidebar', () => {
@@ -20,7 +18,7 @@ describe('Sidebar', () => {
         authUserRole.value = 'super_admin';
     });
 
-    it('renderiza el aside con clase sidebar', () => {
+    it('renderiza el aside del sidebar', () => {
         render(<Sidebar />);
         expect(getSidebar()).toBeInTheDocument();
     });
@@ -115,22 +113,22 @@ describe('Sidebar', () => {
 
     it('renderiza Configuración en el footer para super_admin', () => {
         render(<Sidebar />);
-        const footer = getSidebar().querySelector('.sidebar-footer');
+        const footer = screen.getByTestId('sidebar-footer');
         expect(footer).toBeInTheDocument();
-        expect(within(footer as HTMLElement).getByText('Configuración')).toBeInTheDocument();
+        expect(within(footer).getByText('Configuración')).toBeInTheDocument();
     });
 
     it('oculta Configuración para rol viewer', () => {
         authUserRole.value = 'viewer';
         render(<Sidebar />);
-        const footer = getSidebar().querySelector('.sidebar-footer');
-        expect(within(footer as HTMLElement).queryByText('Configuración')).not.toBeInTheDocument();
+        const footer = screen.getByTestId('sidebar-footer');
+        expect(within(footer).queryByText('Configuración')).not.toBeInTheDocument();
     });
 
     it('renderiza la versión en el footer', () => {
         render(<Sidebar />);
-        const footer = getSidebar().querySelector('.sidebar-footer');
-        expect(within(footer as HTMLElement).getByText(/v.*dev/)).toBeInTheDocument();
+        const footer = screen.getByTestId('sidebar-footer');
+        expect(within(footer).getByText(/v.*dev/)).toBeInTheDocument();
     });
 
     it('renderiza los títulos de sección cuando está expandido', () => {
@@ -150,7 +148,7 @@ describe('Sidebar', () => {
         render(<Sidebar />);
         const propiedadesBtn = screen.getByText('Propiedades').closest('button');
         expect(propiedadesBtn).toBeInTheDocument();
-        expect(propiedadesBtn?.querySelector('.sidebar-submenu-chevron')).toBeInTheDocument();
+        expect(within(propiedadesBtn!).getByTestId('sidebar-submenu-chevron')).toBeInTheDocument();
     });
 
     it('expande el submenú al hacer click en el toggle', () => {
@@ -189,7 +187,7 @@ describe('Sidebar', () => {
 
     it('preserva todos los hrefs de navegación', () => {
         render(<Sidebar />);
-        const submenuToggles = document.querySelectorAll('.sidebar-submenu-toggle');
+        const submenuToggles = screen.getAllByTestId('sidebar-submenu-toggle');
         submenuToggles.forEach((btn) => fireEvent.click(btn));
         const anchors = document.querySelectorAll('a[href]');
         const hrefs = Array.from(anchors)
@@ -234,8 +232,7 @@ describe('Sidebar', () => {
         render(<Sidebar />);
         const produccionBtn = screen.getByText('Producción').closest('button');
         fireEvent.click(produccionBtn!);
-        const check = produccionBtn?.querySelector('.sidebar-workspace-check');
-        expect(check).toBeInTheDocument();
+        expect(screen.getByTestId('sidebar-workspace-check')).toBeInTheDocument();
     });
 
     it('el botón de búsqueda colapsado expande el sidebar', () => {
