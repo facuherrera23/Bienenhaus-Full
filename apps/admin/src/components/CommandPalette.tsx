@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { ChevronRight, type LucideIcon, Search, X } from 'lucide-preact';
+import styles from './CommandPalette.module.css';
 
 interface CommandItem {
     id: string;
@@ -93,28 +94,32 @@ export function CommandPalette({
     if (!isOpen) return null;
 
     return (
-        <div className="command-palette-overlay" onClick={onClose}>
-            <div className="command-palette" onClick={(e) => e.stopPropagation()}>
-                <div className="command-palette-input-wrapper">
-                    <Search size={18} className="command-palette-search-icon" />
+        <div
+            className={styles['command-palette-overlay']}
+            onClick={onClose}
+            data-testid="command-palette-overlay"
+        >
+            <div className={styles['command-palette']} onClick={(e) => e.stopPropagation()}>
+                <div className={styles['command-palette-input-wrapper']}>
+                    <Search size={18} className={styles['command-palette-search-icon']} />
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.currentTarget.value)}
                         placeholder={placeholder}
-                        className="command-palette-input"
+                        className={styles['command-palette-input']}
                         onKeyDown={handleKeyDown}
                     />
-                    <kbd className="command-palette-shortcut">⌘K</kbd>
+                    <kbd className={styles['command-palette-shortcut']}>⌘K</kbd>
                 </div>
 
                 {filteredItems.length > 0 ? (
-                    <ul className="command-palette-list" role="listbox">
+                    <ul className={styles['command-palette-list']} role="listbox">
                         {filteredItems.map((item, index) => (
                             <li
                                 key={item.id}
-                                className={`command-palette-item${index === selectedIndex ? ' selected' : ''}`}
+                                className={`${styles['command-palette-item']}${index === selectedIndex ? ` ${styles['selected']}` : ''}`}
                                 role="option"
                                 aria-selected={index === selectedIndex}
                                 onClick={() => {
@@ -123,32 +128,37 @@ export function CommandPalette({
                                 }}
                             >
                                 {item.icon && (
-                                    <item.icon size={16} className="command-palette-item-icon" />
+                                    <item.icon
+                                        size={16}
+                                        className={styles['command-palette-item-icon']}
+                                    />
                                 )}
-                                <div className="command-palette-item-content">
-                                    <span className="command-palette-item-label">{item.label}</span>
+                                <div className={styles['command-palette-item-content']}>
+                                    <span className={styles['command-palette-item-label']}>
+                                        {item.label}
+                                    </span>
                                     {item.description && (
-                                        <span className="command-palette-item-description">
+                                        <span className={styles['command-palette-item-description']}>
                                             {item.description}
                                         </span>
                                     )}
                                 </div>
                                 {item.section && (
-                                    <span className="command-palette-item-section">
+                                    <span className={styles['command-palette-item-section']}>
                                         {item.section}
                                     </span>
                                 )}
                                 {index === selectedIndex && (
                                     <ChevronRight
                                         size={14}
-                                        className="command-palette-selected-indicator"
+                                        className={styles['command-palette-selected-indicator']}
                                     />
                                 )}
                             </li>
                         ))}
                     </ul>
                 ) : (
-                    <div className="command-palette-empty">
+                    <div className={styles['command-palette-empty']}>
                         <X size={24} />
                         <p>No se encontraron comandos</p>
                     </div>

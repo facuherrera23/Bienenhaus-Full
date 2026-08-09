@@ -58,5 +58,5 @@ function decodeSegment(seg: string): string {
 export function BreadcrumbNav() {
     const [location] = useLocation();
     const items = buildItems(location);
-    return <Breadcrumb items={items} maxItems={4} className="shell-breadcrumb" />;
+    return <Breadcrumb items={items} maxItems={4} />;
 }

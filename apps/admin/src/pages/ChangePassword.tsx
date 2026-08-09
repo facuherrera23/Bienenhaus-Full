@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword } from '../store/app';
+import styles from './Login.module.css';
 
 export function ChangePassword() {
     const [, setLocation] = useLocation();
@@ -68,10 +69,10 @@ export function ChangePassword() {
     };
 
     return (
-        <div className="login-page">
-            <form className="login-card" onSubmit={handleSubmit}>
-                <div className="login-brand">
-                    <span className="sidebar-logo" aria-hidden="true">
+        <div className={styles['login-page']}>
+            <form className={styles['login-card']} onSubmit={handleSubmit}>
+                <div className={styles['login-brand']}>
+                    <span className={styles['sidebar-logo']} aria-hidden="true">
                         B
                     </span>
                     <div>
@@ -81,7 +82,7 @@ export function ChangePassword() {
                 </div>
 
                 <h1>Cambiar contraseña</h1>
-                <p className="login-hint">
+                <p className={styles['login-hint']}>
                     Tu primera contraseña debe ser cambiada antes de continuar.
                 </p>
 
@@ -126,10 +127,10 @@ export function ChangePassword() {
                     />
                 </label>
 
-                {error && <p className="login-error">{error}</p>}
+                {error && <p className={styles['login-error']}>{error}</p>}
 
                 {success && (
-                    <p className="login-success">
+                    <p className={styles['login-success']}>
                         Contraseña actualizada correctamente. Redirigiendo…
                     </p>
                 )}

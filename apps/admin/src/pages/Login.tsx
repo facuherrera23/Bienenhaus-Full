@@ -3,6 +3,7 @@ import { useLocation } from 'wouter-preact';
 import { AlertTriangle } from 'lucide-preact';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword, authSession } from '../store/app';
+import styles from './Login.module.css';
 
 const RATE_LIMIT_KEY = 'bh_login_attempts';
 const MAX_ATTEMPTS = 5;
@@ -145,10 +146,10 @@ export function Login() {
     }, [lockout]);
 
     return (
-        <div className="login-page">
-            <form className="login-card" onSubmit={handleSubmit}>
-                <div className="login-brand">
-                    <span className="sidebar-logo" aria-hidden="true">
+        <div className={styles['login-page']}>
+            <form className={styles['login-card']} onSubmit={handleSubmit}>
+                <div className={styles['login-brand']}>
+                    <span className={styles['sidebar-logo']} aria-hidden="true">
                         B
                     </span>
                     <div>
@@ -158,7 +159,7 @@ export function Login() {
                 </div>
 
                 <h1>Iniciar sesión</h1>
-                <p className="login-hint">
+                <p className={styles['login-hint']}>
                     {authSession.value
                         ? 'Ya tenés una sesión activa.'
                         : 'Ingresá con tu usuario del panel.'}
@@ -186,19 +187,19 @@ export function Login() {
                     />
                 </label>
 
-                {error && <p className="login-error">{error}</p>}
+                {error && <p className={styles['login-error']}>{error}</p>}
 
                 {lockout && (
-                    <div className="login-lockout" role="alert" aria-live="assertive">
-                        <span className="login-lockout__icon" aria-hidden="true">
+                    <div className={styles['login-lockout']} role="alert" aria-live="assertive">
+                        <span className={styles['login-lockout__icon']} aria-hidden="true">
                             <AlertTriangle size={18} strokeWidth={2.25} />
                         </span>
-                        <div className="login-lockout__body">
-                            <strong className="login-lockout__title">Cuenta bloqueada</strong>
-                            <span className="login-lockout__text">
+                        <div className={styles['login-lockout__body']}>
+                            <strong className={styles['login-lockout__title']}>Cuenta bloqueada</strong>
+                            <span className={styles['login-lockout__text']}>
                                 Probá de nuevo en{' '}
                                 <span
-                                    className="login-lockout__timer"
+                                    className={styles['login-lockout__timer']}
                                     aria-label={`Tiempo restante: ${formatCountdown(lockoutRemaining)}`}
                                 >
                                     {formatCountdown(lockoutRemaining)}
@@ -216,7 +217,7 @@ export function Login() {
                     {loading ? 'Ingresando…' : 'Entrar'}
                 </button>
 
-                <p className="login-legal">
+                <p className={styles['login-legal']}>
                     Primer acceso: usá las credenciales del seed. El sistema te pedirá cambiar la
                     contraseña.
                 </p>

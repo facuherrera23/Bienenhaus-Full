@@ -181,13 +181,13 @@ describe('Shell', () => {
     describe('command palette rendering', () => {
         it('does not render the command palette overlay when closed', () => {
             render(<Shell><p>contenido</p></Shell>);
-            expect(document.querySelector('.command-palette-overlay')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('command-palette-overlay')).not.toBeInTheDocument();
         });
 
         it('renders the command palette overlay when commandPaletteOpen is true', () => {
             commandPaletteOpen.value = true;
             render(<Shell><p>contenido</p></Shell>);
-            expect(document.querySelector('.command-palette-overlay')).toBeInTheDocument();
+            expect(screen.getByTestId('command-palette-overlay')).toBeInTheDocument();
         });
     });
 
