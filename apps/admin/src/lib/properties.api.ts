@@ -32,19 +32,21 @@ import {
     uploadPropertyImages,
 } from './properties';
 import { embedProperty, type MetaApiRow, type QueueApiRow } from './ml';
-import type {
-    ListingType,
-    LocationOption,
-    MlMetaRow,
-    MlOperation,
-    MlQueueRow,
-    PropertyDetail,
-    PropertyFormValues,
-    PropertyImage,
-    PropertyRow,
-    PropertyStatus,
+import {
+    LISTING_TYPE_LABEL,
+    type ListingType,
+    type LocationOption,
+    type MlMetaRow,
+    type MlOperation,
+    type MlQueueRow,
+    type PropertyDetail,
+    type PropertyFormValues,
+    type PropertyImage,
+    type PropertyRow,
+    type PropertyStatus,
+    STATUS_LABEL,
+    STATUS_TONE,
 } from '../types';
-import { LISTING_TYPE_LABEL, STATUS_LABEL, STATUS_TONE } from '../types';
 
 const PROPERTIES_PATH = 'properties';
 
@@ -139,7 +141,7 @@ export function useProperties(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.listing_type) apiFilters.listing_type = `eq.${filters.listing_type}`;
@@ -451,23 +453,23 @@ export const PROPERTY_EXPORT_COLUMNS: ExportColumn<PropertyRow>[] = [
     {
         key: 'price',
         label: 'Precio',
-        format: (v) => (v ? `${v.toLocaleString('es-AR')} USD` : '—'),
+        format: (v) => (v ? `${(v as number).toLocaleString('es-AR')} USD` : '—'),
     },
     { key: 'currency', label: 'Moneda' },
     { key: 'location', label: 'Ubicación' },
-    { key: 'area_total', label: 'Sup. total (m²)', format: (v) => v ?? '—' },
-    { key: 'bedrooms', label: 'Dormitorios', format: (v) => v ?? '—' },
-    { key: 'bathrooms', label: 'Baños', format: (v) => v ?? '—' },
+    { key: 'area_total', label: 'Sup. total (m²)', format: (v) => String(v ?? '—') },
+    { key: 'bedrooms', label: 'Dormitorios', format: (v) => String(v ?? '—') },
+    { key: 'bathrooms', label: 'Baños', format: (v) => String(v ?? '—') },
     { key: 'featured', label: 'Destacada', format: (v) => (v ? 'Sí' : 'No') },
     {
         key: 'published_at',
         label: 'Publicada',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
     {
         key: 'updated_at',
         label: 'Actualizada',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
 ];
 

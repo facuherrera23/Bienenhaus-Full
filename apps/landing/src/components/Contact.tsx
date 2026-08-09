@@ -15,6 +15,7 @@ import {
     Image,
     Key,
     Loader2,
+    type LucideIcon,
     Mail,
     MapPin,
     MessageSquare,
@@ -45,7 +46,7 @@ interface AttachedFile {
 }
 
 function getLucideIcon(name: string) {
-    const iconMap: Record<string, any> = {
+    const iconMap: Record<string, LucideIcon> = {
         'fa-home': Home,
         'fa-hand-holding-usd': DollarSign,
         'fa-key': Key,
@@ -113,6 +114,8 @@ export function Contact() {
     const [submitted, setSubmitted] = useState(false);
     const [files, setFiles] = useState<AttachedFile[]>([]);
     const [dragOver, setDragOver] = useState(false);
+    const [fileError, setFileError] = useState('');
+    const [submitError, setSubmitError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const config = contactFieldConfigs[intent] ?? contactFieldConfigs.otro;
@@ -129,16 +132,19 @@ export function Contact() {
         const next: AttachedFile[] = [];
         Array.from(list).forEach((file) => {
             if (file.size > 10 * 1024 * 1024) {
-                alert('El archivo excede el tamaño máximo de 10MB');
+                setFileError('El archivo excede el tamaño máximo de 10MB');
                 return;
             }
             if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
-                alert('Solo se permiten archivos PDF, JPG o PNG');
+                setFileError('Solo se permiten archivos PDF, JPG o PNG');
                 return;
             }
             next.push({ name: file.name, size: file.size, type: file.type });
         });
-        if (next.length) setFiles((prev) => [...prev, ...next]);
+        if (next.length) {
+            setFileError('');
+            setFiles((prev) => [...prev, ...next]);
+        }
     };
 
     const removeFile = (name: string) => setFiles((prev) => prev.filter((f) => f.name !== name));
@@ -174,6 +180,7 @@ export function Contact() {
         const honeypot = nextValues['website'] || '';
 
         setLoading(true);
+        setSubmitError('');
         try {
             const res = await fetch(
                 `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-submit`,
@@ -205,9 +212,9 @@ export function Contact() {
 
             setLoading(false);
             setSubmitted(true);
-        } catch (err: any) {
+        } catch (err) {
             setLoading(false);
-            alert(err.message || 'Error de conexión. Intente nuevamente.');
+            setSubmitError(err instanceof Error ? err.message : 'Error de conexión. Intente nuevamente.');
         }
     };
 
@@ -225,7 +232,7 @@ export function Contact() {
                 </header>
 
                 <div className={styles.contactLayout}>
-                    <div className={styles.contactInfo} id="contactInfo">
+                    <div className={`${styles.contactInfo} ${styles.visible}`} id="contactInfo">
                         <h3 className={styles.contactInfoTitle}>Contacto directo</h3>
                         {contactInfo.map((item) => {
                             const ContactIcon = getLucideIcon(item.icon);
@@ -311,7 +318,7 @@ export function Contact() {
                         </div>
                     </div>
 
-                    <div className={styles.contactFormWrapper} id="contactFormWrapper">
+                    <div className={`${styles.contactFormWrapper} ${styles.visible}`} id="contactFormWrapper">
                         {submitted ? (
                             <div
                                 className={`${styles.submitSuccess} ${styles.show}`}
@@ -683,6 +690,11 @@ export function Contact() {
                                                 })}
                                             </div>
                                         )}
+                                        {fileError && (
+                                            <span className={styles.formError} role="alert">
+                                                {fileError}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div
@@ -710,6 +722,12 @@ export function Contact() {
                                         autoComplete="off"
                                         aria-hidden="true"
                                     />
+
+                                    {submitError && (
+                                        <span className={styles.formError} role="alert">
+                                            {submitError}
+                                        </span>
+                                    )}
 
                                     <button
                                         type="submit"

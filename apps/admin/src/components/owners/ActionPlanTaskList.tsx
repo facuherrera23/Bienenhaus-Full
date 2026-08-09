@@ -1,6 +1,12 @@
 import { Calendar, Check, Clock, MoreVertical, User } from 'lucide-preact';
-import type { ActionPlanStatus, ActionPlanTaskRow } from '../../types/owners';
-import { ACTION_PLAN_STATUS_LABEL, ACTION_PLAN_STATUS_TONE } from '../../types/owners';
+import { useState } from 'preact/hooks';
+import {
+    ACTION_PLAN_STATUS_LABEL,
+    ACTION_PLAN_STATUS_TONE,
+    type ActionPlanStatus,
+    type ActionPlanTaskRow,
+} from '../../types/owners';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface ActionPlanTaskListProps {
     tasks: ActionPlanTaskRow[];
@@ -17,6 +23,8 @@ export function ActionPlanTaskList({
     onDelete,
     canEdit = true,
 }: ActionPlanTaskListProps) {
+    const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+
     const getStatusOptions = (currentStatus: ActionPlanStatus): ActionPlanStatus[] => {
         switch (currentStatus) {
             case 'pending':
@@ -126,11 +134,7 @@ export function ActionPlanTaskList({
                                     <button
                                         type="button"
                                         className="icon-btn icon-btn--danger"
-                                        onClick={() => {
-                                            if (window.confirm('¿Eliminar esta tarea?')) {
-                                                onDelete(task.id);
-                                            }
-                                        }}
+                                        onClick={() => setDeleteTaskId(task.id)}
                                         title="Eliminar tarea"
                                     >
                                         <MoreVertical size={14} />
@@ -141,6 +145,19 @@ export function ActionPlanTaskList({
                     </li>
                 ))}
             </ul>
+
+            <ConfirmDialog
+                open={deleteTaskId !== null}
+                title="Eliminar tarea"
+                message="¿Eliminar esta tarea?"
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (deleteTaskId) onDelete?.(deleteTaskId);
+                    setDeleteTaskId(null);
+                }}
+                onCancel={() => setDeleteTaskId(null)}
+            />
         </div>
     );
 }

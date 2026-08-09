@@ -48,8 +48,9 @@ test.describe('Performance Audit', () => {
                                     entry.startTime;
                             }
                             if (entry.entryType === 'layout-shift') {
-                                if (!(entry as any).hadRecentInput) {
-                                    metrics['cls'] = (metrics['cls'] || 0) + (entry as any).value;
+                                const shift = entry as PerformanceLayoutShift;
+                                if (!shift.hadRecentInput) {
+                                    metrics['cls'] = (metrics['cls'] || 0) + shift.value;
                                 }
                             }
                         }
@@ -63,50 +64,6 @@ test.describe('Performance Audit', () => {
                     observer.observe({ type: 'layout-shift', buffered: true });
                 });
             });
-
-            // Measure bundle sizes
-            const resources = await pwPage.evaluate(() => {
-                const entries = performance.getEntriesByType('resource');
-                return entries.map((r) => ({
-                    name: r.name,
-                    type: r.initiatorType,
-                    size: (r as any).transferSize || 0,
-                    duration: r.duration,
-                }));
-            });
-
-            console.log(`\n=== ${pg.name} (${pg.path}) ===`);
-            console.log('Core Web Vitals:', JSON.stringify(metrics, null, 2));
-
-            const totalJS = resources
-                .filter((r) => r.type === 'script')
-                .reduce((sum, r) => sum + r.size, 0);
-            const totalCSS = resources
-                .filter((r) => r.type === 'style' || r.name.endsWith('.css'))
-                .reduce((sum, r) => sum + r.size, 0);
-            const totalSize = resources.reduce((sum, r) => sum + r.size, 0);
-
-            console.log(
-                `Bundle - JS: ${(totalJS / 1024).toFixed(1)}KB, CSS: ${(totalCSS / 1024).toFixed(1)}KB, Total: ${(totalSize / 1024).toFixed(1)}KB`,
-            );
-
-            // Check for large resources
-            const largeResources = resources.filter((r) => r.size > 100000);
-            if (largeResources.length > 0) {
-                console.log('Large resources (>100KB):');
-                for (const r of largeResources) {
-                    console.log(`  ${r.name}: ${(r.size / 1024).toFixed(1)}KB (${r.type})`);
-                }
-            }
-
-            // React hydration check
-            const hydration = await pwPage.evaluate(() => {
-                return {
-                    hasReact: !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__,
-                    hydrationMarkers: document.querySelectorAll('[data-hydration]').length,
-                };
-            });
-            console.log('React:', hydration);
 
             expect(metrics.fcp).toBeLessThan(1800); // FCP < 1.8s
             expect(metrics.lcp).toBeLessThan(2500); // LCP < 2.5s

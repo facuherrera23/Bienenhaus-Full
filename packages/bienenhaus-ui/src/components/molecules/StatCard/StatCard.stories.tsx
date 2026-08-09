@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { StatCard } from './StatCard';
-import type { StatCardSize } from './StatCard';
+import { StatCard, type StatCardSize } from './StatCard';
 
 /* Inline icon helpers (no icon dependency — mirrors IconButton approach). */
 const HomeIcon = () => (
@@ -200,7 +199,7 @@ export const WithAction: Story = {
     trend: { value: '+12%', direction: 'up' },
     action: {
       label: 'Ver detalle de propiedades',
-      onClick: () => alert('Navegar al listado'),
+      onClick: () => console.warn('Navegar al listado'),
     },
   },
 };
@@ -227,7 +226,7 @@ export const ActionAndLoading: Story = {
     icon: <UsersIcon />,
     action: {
       label: 'Configurar',
-      onClick: () => alert('Abrir configuración'),
+      onClick: () => console.warn('Abrir configuración'),
     },
     loading: true,
   },
@@ -258,7 +257,7 @@ export const FullFeatured: Story = {
     sparkline: [20, 24, 22, 30, 28, 36, 34, 44, 42, 56, 60, 72],
     action: {
       label: 'Ver reporte completo',
-      onClick: () => alert('Abrir reporte'),
+      onClick: () => console.warn('Abrir reporte'),
     },
   },
 };

@@ -14,6 +14,7 @@ import {
 } from '../lib/admin';
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { authUserRole, pushToast } from '../store/app';
 
 function formatDate(iso: string | null): string {
@@ -28,6 +29,7 @@ export function AdminUsersPage() {
         full_name: '',
         role: 'staff' as AdminRole,
     });
+    const [removeTarget, setRemoveTarget] = useState<string | null>(null);
     const currentUserId = useAuthUserId();
     const canManage = authUserRole.value === 'super_admin';
 
@@ -125,8 +127,6 @@ export function AdminUsersPage() {
     };
 
     const handleRemove = async (email: string) => {
-        if (!window.confirm(`¿Eliminar usuario ${email}? Esta acción no se puede deshacer.`))
-            return;
         try {
             await removeAdminUser(email);
             pushToast({ type: 'success', title: 'Usuario eliminado', description: email });
@@ -244,7 +244,7 @@ export function AdminUsersPage() {
                                                         className="icon-btn icon-btn--danger"
                                                         title="Eliminar usuario"
                                                         disabled={u.id === currentUserId}
-                                                        onClick={() => handleRemove(u.email)}
+                                                        onClick={() => setRemoveTarget(u.email)}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -370,6 +370,23 @@ export function AdminUsersPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={removeTarget !== null}
+                title="Eliminar usuario"
+                message={
+                    removeTarget
+                        ? `¿Eliminar usuario ${removeTarget}? Esta acción no se puede deshacer.`
+                        : ''
+                }
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (removeTarget) void handleRemove(removeTarget);
+                    setRemoveTarget(null);
+                }}
+                onCancel={() => setRemoveTarget(null)}
+            />
         </div>
     );
 }

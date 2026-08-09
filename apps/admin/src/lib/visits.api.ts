@@ -9,23 +9,21 @@ import {
     useMutation,
     useUpdate,
 } from './api';
-import type {
-    AgentAvailability,
-    QrCheckin,
-    RecurrenceRule,
-    RecurringVisit,
-    ReminderConfig,
-    VisitFormValues,
-    VisitRow,
-    VisitStatus,
-    VisitType,
-} from '../types/visits';
 import {
+    type AgentAvailability,
     DAY_LABELS,
     DEFAULT_REMINDERS,
     MEETING_TYPE_LABEL,
+    type QrCheckin,
+    type RecurrenceRule,
+    type RecurringVisit,
+    type ReminderConfig,
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
+    type VisitFormValues,
+    type VisitRow,
+    type VisitStatus,
+    type VisitType,
 } from '../types/visits';
 import {
     checkInWithQr,
@@ -70,7 +68,7 @@ export function useVisits(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
 
     if (filters?.agent_id) apiFilters.agent_id = `eq.${filters.agent_id}`;
     if (filters?.lead_id) apiFilters.lead_id = `eq.${filters.lead_id}`;
@@ -362,23 +360,23 @@ export function useGetQrCode(visitId: string | null) {
 
 export const VISIT_EXPORT_COLUMNS: ExportColumn<VisitRow>[] = [
     { key: 'title', label: 'Título' },
-    { key: 'lead_name', label: 'Lead', format: (v) => v ?? '—' },
-    { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
+    { key: 'lead_name', label: 'Lead', format: (v) => String(v ?? '—') },
+    { key: 'property_title', label: 'Propiedad', format: (v) => String(v ?? '—') },
     { key: 'agent_name', label: 'Agente' },
     {
         key: 'starts_at',
         label: 'Inicio',
-        format: (v) => (v ? new Date(v).toLocaleString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleString('es-AR') : '—'),
     },
     {
         key: 'ends_at',
         label: 'Fin',
-        format: (v) => (v ? new Date(v).toLocaleString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleString('es-AR') : '—'),
     },
     { key: 'status', label: 'Estado', format: (v) => VISIT_STATUS_LABEL[v as VisitStatus] ?? v },
-    { key: 'location', label: 'Ubicación', format: (v) => v ?? '—' },
+    { key: 'location', label: 'Ubicación', format: (v) => String(v ?? '—') },
     { key: 'meeting_type', label: 'Tipo', format: (v) => MEETING_TYPE_LABEL[v as VisitType] ?? v },
-    { key: 'meeting_link', label: 'Link', format: (v) => v ?? '—' },
+    { key: 'meeting_link', label: 'Link', format: (v) => String(v ?? '—') },
 ];
 
 export function useExportVisits() {

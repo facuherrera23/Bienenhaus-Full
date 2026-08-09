@@ -197,6 +197,7 @@ function resolveSupabaseConfig(): SupabaseConfig {
         'global-setup: no se pudo resolver la config de Supabase. ' +
           'En CI exportá SUPABASE_LOCAL_API_URL + SUPABASE_LOCAL_SECRET_KEY; ' +
           `en local corré \`supabase start\` (error: ${err instanceof Error ? err.message : String(err)})`,
+        { cause: err },
       );
     }
   }

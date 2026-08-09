@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
     Building2,
     ClipboardList,
+    type LucideIcon,
     Mail,
     RotateCcw,
     Trash2,
@@ -29,20 +30,19 @@ import {
     restoreSubscriber,
 } from '../lib/newsletter';
 import {
-    fetchDeletedOwners,
-    type OwnerRow,
-    permanentDeleteOwner,
-    restoreOwner,
-} from '../lib/owners/api';
-import {
     type ActionPlanRow,
     fetchDeletedActionPlans,
+    fetchDeletedOwners,
+    type OwnerRow,
     permanentDeleteActionPlan,
+    permanentDeleteOwner,
     restoreActionPlan,
+    restoreOwner,
 } from '../lib/owners/api';
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 type TabType = 'properties' | 'leads' | 'agents' | 'newsletter' | 'owners' | 'action_plans';
 
@@ -65,7 +65,25 @@ function tabToType(
     }
 }
 
-const TABS: { id: TabType; label: string; icon: any; count: number }[] = [
+interface TrashRenderItem {
+    id: string;
+    title?: string | null;
+    name?: string | null;
+    last_name?: string | null;
+    full_name?: string | null;
+    email?: string | null;
+    location?: string | null;
+    status?: string | null;
+    role?: string | null;
+    property_count?: number | null;
+    property_title?: string | null;
+    source?: string | null;
+    cover_url?: string | null;
+    photo_url?: string | null;
+    deleted_at?: string | null;
+}
+
+const TABS: { id: TabType; label: string; icon: LucideIcon; count: number }[] = [
     { id: 'properties', label: 'Propiedades', icon: Building2, count: 0 },
     { id: 'leads', label: 'Leads', icon: Users, count: 0 },
     { id: 'agents', label: 'Agentes', icon: UserRound, count: 0 },
@@ -81,6 +99,11 @@ function formatDate(iso: string | null): string {
 
 export function TrashPage() {
     const [activeTab, setActiveTab] = useState<TabType>('properties');
+const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan';
+    id: string;
+    name: string;
+} | null>(null);
 
     const { data: deletedProperties, isPending: propsPending } = useQuery<PropertyRow[]>({
         queryKey: ['deleted-properties'],
@@ -198,12 +221,6 @@ export function TrashPage() {
         id: string,
         name: string,
     ) => {
-        if (
-            !window.confirm(
-                `¿Eliminar permanentemente "${name}"? Esta acción no se puede deshacer.`,
-            )
-        )
-            return;
         try {
             if (type === 'property') await permanentDeleteProperty(id);
             else if (type === 'lead') await permanentDeleteLead(id);
@@ -220,7 +237,7 @@ export function TrashPage() {
     };
 
     const renderRow = (
-        item: any,
+        item: TrashRenderItem,
         type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan',
     ) => {
         const name =
@@ -259,15 +276,15 @@ export function TrashPage() {
                             <img src={item.photo_url} alt="" loading="lazy" />
                         ) : type === 'owner' ? (
                             <span className="cell-thumb" aria-hidden="true">
-                                {item.full_name.charAt(0).toUpperCase()}
+                                {(item.full_name ?? '').charAt(0).toUpperCase()}
                             </span>
                         ) : type === 'action_plan' ? (
                             <span className="cell-thumb" aria-hidden="true">
-                                {item.title.charAt(0).toUpperCase()}
+                                {(item.title ?? '').charAt(0).toUpperCase()}
                             </span>
                         ) : (
                             <span className="cell-thumb" aria-hidden="true">
-                                {(name[0] ?? '?').toUpperCase()}
+                                {((name ?? '')[0] ?? '?').toUpperCase()}
                             </span>
                         )}
                         <div>
@@ -276,20 +293,22 @@ export function TrashPage() {
                         </div>
                     </div>
                 </td>
-                <td className="muted">{formatDate(item.deleted_at)}</td>
+                <td className="muted">{formatDate(item.deleted_at ?? '')}</td>
                 <td>
                     <div className="row-actions">
                         <button
                             className="icon-btn"
                             title="Restaurar"
-                            onClick={() => handleRestore(type, item.id, name)}
+                            onClick={() => handleRestore(type, item.id, name ?? '')}
                         >
                             <RotateCcw size={14} />
                         </button>
                         <button
                             className="icon-btn icon-btn--danger"
                             title="Eliminar permanentemente"
-                            onClick={() => handlePermanentDelete(type, item.id, name)}
+                            onClick={() =>
+                                setDeleteTarget({ type, id: item.id, name: name ?? '' })
+                            }
                         >
                             <Trash2 size={14} />
                         </button>
@@ -385,6 +404,25 @@ export function TrashPage() {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                title="Eliminar permanentemente"
+                message={
+                    deleteTarget
+                        ? `¿Eliminar permanentemente "${deleteTarget.name}"? Esta acción no se puede deshacer.`
+                        : ''
+                }
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (!deleteTarget) return;
+                    const { type, id, name } = deleteTarget;
+                    setDeleteTarget(null);
+                    void handlePermanentDelete(type, id, name);
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

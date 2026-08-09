@@ -17,11 +17,11 @@ export interface ApiResponse<T> {
 }
 
 export interface RequestOptions extends RequestInit {
-    params?: Record<string, string | number | boolean | undefined>;
+    params?: Record<string, unknown>;
     requireAuth?: boolean;
 }
 
-function buildUrl(path: string, params?: Record<string, any>): string {
+function buildUrl(path: string, params?: Record<string, unknown>): string {
     const url = new URL(`${supabaseUrl}/rest/v1/${path.replace(/^\/+/, '')}`);
     if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -123,7 +123,7 @@ export const api = {
 // Wrapper para Supabase RPC calls
 export async function rpcCall<T>(
     functionName: string,
-    params: Record<string, any> = {},
+    params: Record<string, unknown> = {},
 ): Promise<ApiResponse<T>> {
     const {
         data: { session },
@@ -167,25 +167,25 @@ export async function rpcCall<T>(
 
 // Query key factory para React Query
 export const queryKeys = {
-    properties: (filters?: Record<string, any>) => ['properties', filters] as const,
+    properties: (filters?: unknown) => ['properties', filters] as const,
     property: (id: string) => ['property', id] as const,
-    leads: (filters?: Record<string, any>) => ['leads', filters] as const,
+    leads: (filters?: unknown) => ['leads', filters] as const,
     lead: (id: string) => ['lead', id] as const,
-    owners: (filters?: Record<string, any>) => ['owners', filters] as const,
-    agents: (filters?: Record<string, any>) => ['agents', filters] as const,
+    owners: (filters?: unknown) => ['owners', filters] as const,
+    agents: (filters?: unknown) => ['agents', filters] as const,
     agent: (id: string) => ['agent', id] as const,
-    visits: (filters?: Record<string, any>) => ['visits', filters] as const,
-    chat: (filters?: Record<string, any>) => ['chat', filters] as const,
-    mlQueue: (filters?: Record<string, any>) => ['ml-queue', filters] as const,
-    mlMeta: (filters?: Record<string, any>) => ['ml-meta', filters] as const,
+    visits: (filters?: unknown) => ['visits', filters] as const,
+    chat: (filters?: unknown) => ['chat', filters] as const,
+    mlQueue: (filters?: unknown) => ['ml-queue', filters] as const,
+    mlMeta: (filters?: unknown) => ['ml-meta', filters] as const,
     mlOverview: () => ['ml-overview'] as const,
-    mlQuestions: (filters?: Record<string, any>) => ['ml-questions', filters] as const,
-    mlOrders: (filters?: Record<string, any>) => ['ml-orders', filters] as const,
+    mlQuestions: (filters?: unknown) => ['ml-questions', filters] as const,
+    mlOrders: (filters?: unknown) => ['ml-orders', filters] as const,
     mlTemplates: () => ['ml-templates'] as const,
     siteSettings: (key?: string) => ['site-settings', key] as const,
     siteContent: (section?: string, locale?: string) => ['site-content', section, locale] as const,
-    valuations: (filters?: Record<string, any>) => ['valuations', filters] as const,
+    valuations: (filters?: unknown) => ['valuations', filters] as const,
     valuation: (id: string) => ['valuation', id] as const,
-    valuationDrafts: (filters?: Record<string, any>) => ['valuation-drafts', filters] as const,
+    valuationDrafts: (filters?: unknown) => ['valuation-drafts', filters] as const,
     valuationDraft: (id: string | null) => ['valuation-draft', id] as const,
 };

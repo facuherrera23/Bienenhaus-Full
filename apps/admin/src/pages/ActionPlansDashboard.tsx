@@ -11,13 +11,16 @@ import {
     useSoftDeleteActionPlan,
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
-import type { ActionPlanCategory, ActionPlanPriority, ActionPlanStatus } from '@/types/owners';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,
     ACTION_PLAN_PRIORITY_TONE,
     ACTION_PLAN_STATUS_LABEL,
     ACTION_PLAN_STATUS_TONE,
+    type ActionPlanCategory,
+    type ActionPlanPriority,
+    type ActionPlanStatus,
 } from '@/types/owners';
 
 function formatDate(iso: string | null): string {
@@ -35,6 +38,13 @@ export function ActionPlansDashboard() {
     const [assignedFilter, setAssignedFilter] = useState<'todos' | 'mine' | 'unassigned'>('todos');
     const [showFilters, setShowFilters] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        message: string;
+        confirmLabel?: string;
+        danger?: boolean;
+        onConfirm: () => void;
+    } | null>(null);
     const queryClient = useQueryClient();
 
     const assignedToFilter =
@@ -104,7 +114,6 @@ export function ActionPlansDashboard() {
     };
 
     const handleSoftDelete = async (id: string, title: string) => {
-        if (!window.confirm(`¿Enviar a papelera "${title}"?`)) return;
         try {
             await softDeleteActionPlan.mutateAsync(id);
             pushToast({ type: 'success', title: 'Enviado a papelera', description: title });
@@ -125,7 +134,6 @@ export function ActionPlansDashboard() {
     };
 
     const handlePermanentDelete = async (id: string, title: string) => {
-        if (!window.confirm(`¿Eliminar permanentemente "${title}"?`)) return;
         try {
             await permanentDeleteActionPlan.mutateAsync(id);
             pushToast({ type: 'success', title: 'Eliminado permanentemente', description: title });
@@ -208,13 +216,22 @@ export function ActionPlansDashboard() {
                                 <button
                                     type="button"
                                     className="btn btn--danger btn--sm"
-                                    onClick={() => {
-                                        selectedIds.forEach((id) => {
-                                            const plan = filtered.find((p) => p.id === id);
-                                            if (plan) handleSoftDelete(id, plan.title);
-                                        });
-                                        clearSelection();
-                                    }}
+                                    onClick={() =>
+                                        setConfirmAction({
+                                            title: 'Enviar a papelera',
+                                            message: `¿Enviar a papelera ${selectedIds.size} plan${selectedIds.size === 1 ? '' : 'es'}?`,
+                                            confirmLabel: 'Enviar',
+                                            danger: true,
+                                            onConfirm: () => {
+                                                selectedIds.forEach((id) => {
+                                                    const plan = filtered.find((p) => p.id === id);
+                                                    if (plan)
+                                                        void handleSoftDelete(id, plan.title);
+                                                });
+                                                clearSelection();
+                                            },
+                                        })
+                                    }
                                 >
                                     <Trash2 size={14} /> A papelera
                                 </button>
@@ -238,13 +255,22 @@ export function ActionPlansDashboard() {
                                 <button
                                     type="button"
                                     className="btn btn--danger btn--sm"
-                                    onClick={() => {
-                                        selectedIds.forEach((id) => {
-                                            const plan = filtered.find((p) => p.id === id);
-                                            if (plan) handlePermanentDelete(id, plan.title);
-                                        });
-                                        clearSelection();
-                                    }}
+                                    onClick={() =>
+                                        setConfirmAction({
+                                            title: 'Eliminar permanentemente',
+                                            message: `¿Eliminar permanentemente ${selectedIds.size} plan${selectedIds.size === 1 ? '' : 'es'}?`,
+                                            confirmLabel: 'Eliminar',
+                                            danger: true,
+                                            onConfirm: () => {
+                                                selectedIds.forEach((id) => {
+                                                    const plan = filtered.find((p) => p.id === id);
+                                                    if (plan)
+                                                        void handlePermanentDelete(id, plan.title);
+                                                });
+                                                clearSelection();
+                                            },
+                                        })
+                                    }
                                 >
                                     <Trash2 size={14} /> Eliminar
                                 </button>
@@ -308,7 +334,8 @@ export function ActionPlansDashboard() {
                                 value={categoryFilter}
                                 onChange={(e) =>
                                     setCategoryFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | ActionPlanCategory,
                                     )
                                 }
                             >
@@ -333,7 +360,8 @@ export function ActionPlansDashboard() {
                                 value={priorityFilter}
                                 onChange={(e) =>
                                     setPriorityFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | ActionPlanPriority,
                                     )
                                 }
                             >
@@ -351,7 +379,8 @@ export function ActionPlansDashboard() {
                                 value={assignedFilter}
                                 onChange={(e) =>
                                     setAssignedFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | 'mine' | 'unassigned',
                                     )
                                 }
                             >
@@ -487,8 +516,19 @@ export function ActionPlansDashboard() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (activeTab === 'active')
-                                                            handleSoftDelete(plan.id, plan.title);
-                                                        else handleRestore(plan.id, plan.title);
+                                                            setConfirmAction({
+                                                                title: 'Enviar a papelera',
+                                                                message: `¿Enviar a papelera "${plan.title}"?`,
+                                                                confirmLabel: 'Enviar',
+                                                                danger: true,
+                                                                onConfirm: () =>
+                                                                    void handleSoftDelete(
+                                                                        plan.id,
+                                                                        plan.title,
+                                                                    ),
+                                                            });
+                                                        else
+                                                            handleRestore(plan.id, plan.title);
                                                     }}
                                                 >
                                                     {activeTab === 'active' ? (
@@ -503,10 +543,17 @@ export function ActionPlansDashboard() {
                                                         title="Eliminar permanentemente"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handlePermanentDelete(
-                                                                plan.id,
-                                                                plan.title,
-                                                            );
+                                                            setConfirmAction({
+                                                                title: 'Eliminar permanentemente',
+                                                                message: `¿Eliminar permanentemente "${plan.title}"?`,
+                                                                confirmLabel: 'Eliminar',
+                                                                danger: true,
+                                                                onConfirm: () =>
+                                                                    void handlePermanentDelete(
+                                                                        plan.id,
+                                                                        plan.title,
+                                                                    ),
+                                                            });
                                                         }}
                                                     >
                                                         <Trash2 size={14} />
@@ -521,6 +568,19 @@ export function ActionPlansDashboard() {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmAction !== null}
+                title={confirmAction?.title ?? ''}
+                message={confirmAction?.message ?? ''}
+                confirmLabel={confirmAction?.confirmLabel}
+                danger={confirmAction?.danger}
+                onConfirm={() => {
+                    confirmAction?.onConfirm();
+                    setConfirmAction(null);
+                }}
+                onCancel={() => setConfirmAction(null)}
+            />
         </div>
     );
 }

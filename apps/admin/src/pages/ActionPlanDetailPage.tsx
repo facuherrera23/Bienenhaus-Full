@@ -13,7 +13,6 @@ import {
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-    actionPlanSchema,
     useActionPlan,
     useActionPlanTasks,
     useCompleteActionPlan,
@@ -25,19 +24,25 @@ import {
     useUpdateActionPlan,
     useUpdateActionPlanTask,
 } from '@lib/owners/api';
-import { actionPlanTaskSchema } from '@lib/owners/schemas';
+import {
+    type ActionPlanFormValues,
+    actionPlanSchema,
+    actionPlanTaskSchema,
+} from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ActionPlanStatus } from '@/types/owners';
+import type { z } from 'zod';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,
     ACTION_PLAN_PRIORITY_TONE,
     ACTION_PLAN_STATUS_LABEL,
     ACTION_PLAN_STATUS_TONE,
+    type ActionPlanStatus,
 } from '@/types/owners';
 import { pushToast } from '@/store/app';
 import { ActionPlanCard, ActionPlanTaskList } from '@components/owners';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—';
@@ -56,6 +61,13 @@ export function ActionPlanDetailPage() {
 
     const [showNewTask, setShowNewTask] = useState(false);
     const [editingPlan, setEditingPlan] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        message: string;
+        confirmLabel?: string;
+        danger?: boolean;
+        onConfirm: () => void;
+    } | null>(null);
     const queryClient = useQueryClient();
 
     const { data: plan, isLoading: planLoading, isError: planError } = useActionPlan(planId);
@@ -71,7 +83,7 @@ export function ActionPlanDetailPage() {
     const updateTask = useUpdateActionPlanTask();
     const deleteTask = useDeleteActionPlanTask();
 
-    const planMethods = useForm({
+    const planMethods = useForm<Partial<ActionPlanFormValues>>({
         resolver: zodResolver(actionPlanSchema.partial()),
         defaultValues: {
             title: '',
@@ -83,7 +95,7 @@ export function ActionPlanDetailPage() {
         },
     });
 
-    const taskMethods = useForm({
+    const taskMethods = useForm<z.input<typeof actionPlanTaskSchema>>({
         resolver: zodResolver(actionPlanTaskSchema),
         defaultValues: {
             plan_id: planId!,
@@ -95,9 +107,12 @@ export function ActionPlanDetailPage() {
         },
     });
 
-    const handlePlanSubmit = async (data: any) => {
+    const handlePlanSubmit = async (data: Partial<ActionPlanFormValues>) => {
         try {
-            await updateActionPlan.mutateAsync({ id: planId!, plan: data });
+            await updateActionPlan.mutateAsync({
+                id: planId!,
+                plan: { ...data, description: data.description ?? '' },
+            });
             pushToast({ type: 'success', title: 'Plan actualizado' });
             queryClient.invalidateQueries({ queryKey: ['action-plans'] });
             setEditingPlan(false);
@@ -106,11 +121,15 @@ export function ActionPlanDetailPage() {
         }
     };
 
-    const handleTaskSubmit = async (data: any) => {
+    const handleTaskSubmit = async (data: z.input<typeof actionPlanTaskSchema>) => {
         try {
             await createTask.mutateAsync({
                 ...data,
                 description: data.description ?? '',
+                due_date: data.due_date ?? null,
+                assigned_to: data.assigned_to ?? null,
+                completed_at: data.completed_at ?? null,
+                status: data.status ?? 'pending',
             });
             pushToast({ type: 'success', title: 'Tarea creada' });
             queryClient.invalidateQueries({ queryKey: ['action-plan-tasks', planId] });
@@ -140,7 +159,6 @@ export function ActionPlanDetailPage() {
     };
 
     const handleDeleteTask = async (taskId: string) => {
-        if (!window.confirm('¿Eliminar esta tarea?')) return;
         try {
             await deleteTask.mutateAsync(taskId);
             pushToast({ type: 'success', title: 'Tarea eliminada' });
@@ -153,7 +171,6 @@ export function ActionPlanDetailPage() {
 
     const handleCompletePlan = async () => {
         if (!plan) return;
-        if (!window.confirm('¿Marcar plan como completado?')) return;
         try {
             await completeActionPlan.mutateAsync(plan.id);
             pushToast({ type: 'success', title: 'Plan completado' });
@@ -165,7 +182,6 @@ export function ActionPlanDetailPage() {
 
     const handleSoftDelete = async () => {
         if (!plan) return;
-        if (!window.confirm(`¿Enviar a papelera el plan "${plan.title}"?`)) return;
         try {
             await softDeleteActionPlan.mutateAsync(plan.id);
             pushToast({ type: 'success', title: 'Enviado a papelera' });
@@ -188,7 +204,6 @@ export function ActionPlanDetailPage() {
 
     const handlePermanentDelete = async () => {
         if (!plan) return;
-        if (!window.confirm('¿Eliminar permanentemente?')) return;
         try {
             await permanentDeleteActionPlan.mutateAsync(plan.id);
             pushToast({ type: 'success', title: 'Eliminado permanentemente' });
@@ -271,7 +286,14 @@ export function ActionPlanDetailPage() {
                         <button
                             type="button"
                             className="btn btn--success"
-                            onClick={handleCompletePlan}
+                            onClick={() =>
+                                setConfirmAction({
+                                    title: 'Completar plan',
+                                    message: '¿Marcar plan como completado?',
+                                    confirmLabel: 'Completar',
+                                    onConfirm: () => void handleCompletePlan(),
+                                })
+                            }
                             disabled={completeActionPlan.isPending}
                         >
                             <Check size={16} /> Completar
@@ -300,7 +322,15 @@ export function ActionPlanDetailPage() {
                         <button
                             type="button"
                             className="btn btn--danger"
-                            onClick={handleSoftDelete}
+                            onClick={() =>
+                                setConfirmAction({
+                                    title: 'Enviar a papelera',
+                                    message: `¿Enviar a papelera el plan "${plan.title}"?`,
+                                    confirmLabel: 'Enviar',
+                                    danger: true,
+                                    onConfirm: () => void handleSoftDelete(),
+                                })
+                            }
                             disabled={softDeleteActionPlan.isPending}
                         >
                             <Trash2 size={16} /> Papelera
@@ -319,7 +349,15 @@ export function ActionPlanDetailPage() {
                             <button
                                 type="button"
                                 className="btn btn--danger"
-                                onClick={handlePermanentDelete}
+                                onClick={() =>
+                                    setConfirmAction({
+                                        title: 'Eliminar permanentemente',
+                                        message: '¿Eliminar permanentemente?',
+                                        confirmLabel: 'Eliminar',
+                                        danger: true,
+                                        onConfirm: () => void handlePermanentDelete(),
+                                    })
+                                }
                                 disabled={permanentDeleteActionPlan.isPending}
                             >
                                 <Trash2 size={16} /> Eliminar
@@ -621,6 +659,19 @@ export function ActionPlanDetailPage() {
                     onDelete={handleDeleteTask}
                 />
             </div>
+
+            <ConfirmDialog
+                open={confirmAction !== null}
+                title={confirmAction?.title ?? ''}
+                message={confirmAction?.message ?? ''}
+                confirmLabel={confirmAction?.confirmLabel}
+                danger={confirmAction?.danger}
+                onConfirm={() => {
+                    confirmAction?.onConfirm();
+                    setConfirmAction(null);
+                }}
+                onCancel={() => setConfirmAction(null)}
+            />
         </div>
     );
 }

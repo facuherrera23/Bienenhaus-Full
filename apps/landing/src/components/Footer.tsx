@@ -135,7 +135,7 @@ export function Footer() {
             </div>
 
             <div className="container">
-                <div className={styles.footerHero} id="footerHero">
+                <div className={`${styles.footerHero} ${styles.visible}`} id="footerHero">
                     <span className={styles.footerHeroLabel}>{siteName}</span>
                     <h2 className={styles.footerHeroTitle}>{footerTitle}</h2>
                     <p className={styles.footerHeroDesc}>
@@ -157,7 +157,7 @@ export function Footer() {
                 <div className={styles.footerDivider}></div>
 
                 <div className={styles.footerGrid}>
-                    <div className={`${styles.footerCol} ${styles.footerColLogo}`} data-delay="0">
+                    <div className={`${styles.footerCol} ${styles.footerColLogo} ${styles.visible}`} data-delay="0">
                         <div className={styles.footerLogo}>
                             <img
                                 src={images.logo}
@@ -190,7 +190,7 @@ export function Footer() {
                         </div>
                     </div>
 
-                    <div className={styles.footerCol} data-delay="100">
+                    <div className={`${styles.footerCol} ${styles.visible}`} data-delay="100">
                         <h4>Navegación</h4>
                         <ul>
                             {NAV_LINKS.map(([href, label]) => (
@@ -203,7 +203,7 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    <div className={styles.footerCol} data-delay="200">
+                    <div className={`${styles.footerCol} ${styles.visible}`} data-delay="200">
                         <h4>Servicios</h4>
                         <ul>
                             {SERVICE_LINKS.map(([href, label]) => (
@@ -216,7 +216,7 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    <div className={styles.footerCol} data-delay="400">
+                    <div className={`${styles.footerCol} ${styles.visible}`} data-delay="400">
                         <div className={styles.footerNewsletterTitle}>
                             Recibí nuevas oportunidades.
                         </div>
@@ -270,7 +270,7 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className={styles.footerBottom} id="footerBottom">
+                <div className={`${styles.footerBottom} ${styles.visible}`} id="footerBottom">
                     <div className={styles.footerBottomLeft}>
                         &copy; {new Date().getFullYear()}{' '}
                         <span className="highlight">

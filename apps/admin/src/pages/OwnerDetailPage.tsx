@@ -31,6 +31,7 @@ import {
     useSoftDeleteOwner,
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
     ActionPlanCard,
     CommunicationTimeline,
@@ -40,7 +41,12 @@ import {
     PriceAnalysisGauge,
     PropertyOwnerManager,
 } from '@components/owners';
-import type { CommunicationRow, ReportRow } from '@lib/owners/schemas';
+import type {
+    CommunicationRow,
+    OwnerFormValues,
+    ReportFormValues,
+    ReportRow,
+} from '@lib/owners/schemas';
 import {
     COMMUNICATION_STATUS_LABEL,
     COMMUNICATION_STATUS_TONE,
@@ -60,6 +66,8 @@ export function OwnerDetailPage() {
     const [showReportPreview, setShowReportPreview] = useState<ReportRow | null>(null);
     const [showReportGenerator, setShowReportGenerator] = useState(false);
     const [editing, setEditing] = useState(false);
+    const [confirmSoftDelete, setConfirmSoftDelete] = useState(false);
+    const [deleteCommId, setDeleteCommId] = useState<string | null>(null);
     const queryClient = useQueryClient();
 
     const { data: owner, isLoading, isError, error } = useOwner(ownerId ?? null);
@@ -80,7 +88,6 @@ export function OwnerDetailPage() {
 
     const handleSoftDelete = async () => {
         if (!ownerId || !owner) return;
-        if (!window.confirm(`¿Enviar a papelera a "${owner.full_name}"?`)) return;
         try {
             await softDeleteOwner.mutateAsync(ownerId);
             pushToast({
@@ -94,7 +101,7 @@ export function OwnerDetailPage() {
         }
     };
 
-    const handleSaveOwner = async (data: any) => {
+    const handleSaveOwner = async (data: OwnerFormValues) => {
         if (!ownerId) return;
         try {
             await updateOwner(ownerId, data);
@@ -115,13 +122,13 @@ export function OwnerDetailPage() {
         setEditing(false);
     };
 
-    const handleGenerateReport = async (reportData: any) => {
+    const handleGenerateReport = async (reportData: ReportFormValues) => {
         try {
             await createReport.mutateAsync(reportData);
             pushToast({
                 type: 'success',
                 title: 'Reporte generado',
-                description: reportData.title,
+                description: reportData.title ?? undefined,
             });
             queryClient.invalidateQueries({ queryKey: ['owner-reports'] });
             setShowReportGenerator(false);
@@ -183,7 +190,12 @@ export function OwnerDetailPage() {
         );
     }
 
-    const tabs = [
+    const tabs: {
+        id: 'profile' | 'properties' | 'analysis' | 'plans' | 'communications' | 'reports';
+        label: string;
+        icon: typeof UserCheck;
+        count: number | null;
+    }[] = [
         { id: 'profile', label: 'Perfil', icon: UserCheck, count: null },
         { id: 'properties', label: 'Propiedades', icon: Building2, count: owner.property_count },
         { id: 'analysis', label: 'Análisis', icon: AlertCircle, count: priceAnalysis ? 1 : 0 },
@@ -227,7 +239,11 @@ export function OwnerDetailPage() {
                             <Edit size={16} /> Editar
                         </button>
                     )}
-                    <button type="button" className="btn btn--danger" onClick={handleSoftDelete}>
+                    <button
+                        type="button"
+                        className="btn btn--danger"
+                        onClick={() => setConfirmSoftDelete(true)}
+                    >
                         <Trash2 size={16} /> Papelera
                     </button>
                 </div>
@@ -261,7 +277,7 @@ export function OwnerDetailPage() {
                         role="tab"
                         aria-selected={activeTab === tab.id}
                         className={`owner-tab${activeTab === tab.id ? ' active' : ''}${tab.count === 0 ? ' empty' : ''}`}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id)}
                     >
                         <tab.icon size={16} />
                         <span>{tab.label}</span>
@@ -567,16 +583,10 @@ export function OwnerDetailPage() {
                 <div className="tab-content">
                     <CommunicationTimeline
                         communications={communications}
-                        onEdit={(comm) => {
+                        onEdit={() => {
                             // TODO: Implement edit communication modal
-                            console.log('Edit communication:', comm);
                         }}
-                        onDelete={(commId) => {
-                            if (window.confirm('¿Eliminar esta comunicación?')) {
-                                // TODO: Implement delete communication
-                                console.log('Delete communication:', commId);
-                            }
-                        }}
+                        onDelete={(commId) => setDeleteCommId(commId)}
                         onResend={(commId) =>
                             handleSendCommunication(communications.find((c) => c.id === commId)!)
                         }
@@ -741,6 +751,32 @@ export function OwnerDetailPage() {
                     }}
                 />
             )}
+
+            <ConfirmDialog
+                open={confirmSoftDelete}
+                title="Enviar a papelera"
+                message={owner ? `¿Enviar a papelera a "${owner.full_name}"?` : ''}
+                confirmLabel="Enviar"
+                danger
+                onConfirm={() => {
+                    setConfirmSoftDelete(false);
+                    void handleSoftDelete();
+                }}
+                onCancel={() => setConfirmSoftDelete(false)}
+            />
+
+            <ConfirmDialog
+                open={deleteCommId !== null}
+                title="Eliminar comunicación"
+                message="¿Eliminar esta comunicación?"
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    // TODO: Implement delete communication
+                    setDeleteCommId(null);
+                }}
+                onCancel={() => setDeleteCommId(null)}
+            />
         </div>
     );
 }

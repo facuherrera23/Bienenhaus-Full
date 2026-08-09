@@ -1,4 +1,5 @@
 import type { Database } from './database';
+import { type LucideIcon, Minus, TrendingDown, TrendingUp } from 'lucide-preact';
 
 // ============================================================
 // Enums (from DB)
@@ -241,7 +242,7 @@ export interface ReportFormValues {
     property_id: string;
     owner_id: string;
     report_type: ReportType;
-    title: string;
+    title: string | null;
     content_json: Record<string, unknown>;
 }
 
@@ -300,10 +301,10 @@ export const MARKET_TREND_LABEL: Record<MarketTrend, string> = {
     falling: 'En baja',
 };
 
-export const MARKET_TREND_ICON: Record<MarketTrend, string> = {
-    rising: 'TrendingUp',
-    stable: 'Minus',
-    falling: 'TrendingDown',
+export const MARKET_TREND_ICON: Record<MarketTrend, LucideIcon> = {
+    rising: TrendingUp,
+    stable: Minus,
+    falling: TrendingDown,
 };
 
 export const ACTION_PLAN_CATEGORY_LABEL: Record<ActionPlanCategory, string> = {

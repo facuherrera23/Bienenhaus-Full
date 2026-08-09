@@ -5,11 +5,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCreateReport, useDeleteReport, useReports, useSendReport } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { OwnerReportGenerator, OwnerReportPreview } from '@components/owners';
-import type { ReportType } from '@lib/owners/schemas';
-import { type ReportFormValues } from '@lib/owners/schemas';
+import { ConfirmDialog } from '@components/ConfirmDialog';
+import { type ReportFormValues, type ReportType } from '@lib/owners/schemas';
 
-import type { ReportRow } from '@/types/owners';
-import { REPORT_TYPE_LABEL } from '@/types/owners';
+import { REPORT_TYPE_LABEL, type ReportRow } from '@/types/owners';
 
 function formatDateShort(iso: string): string {
     return new Date(iso).toLocaleDateString('es-AR');
@@ -25,6 +24,9 @@ export function ReportsPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [showGenerator, setShowGenerator] = useState(false);
     const [previewReport, setPreviewReport] = useState<ReportRow | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ reportId: string; title: string } | null>(
+        null,
+    );
     const queryClient = useQueryClient();
 
     const { data, isLoading } = useReports({
@@ -92,8 +94,7 @@ export function ReportsPage() {
         }
     };
 
-    const handleDelete = async (reportId: string, title: string) => {
-        if (!window.confirm(`¿Eliminar "${title}"?`)) return;
+    const handleDelete = async (reportId: string, _title: string) => {
         try {
             await deleteReport.mutateAsync(reportId);
             pushToast({ type: 'success', title: 'Eliminado' });
@@ -116,7 +117,7 @@ export function ReportsPage() {
         URL.revokeObjectURL(url);
     };
 
-    const tabs = [
+    const tabs: { id: 'all' | 'drafts' | 'sent'; label: string; count: number }[] = [
         { id: 'all', label: 'Todos', count: allReports.length },
         {
             id: 'drafts',
@@ -174,7 +175,7 @@ export function ReportsPage() {
                         role="tab"
                         aria-selected={activeTab === tab.id}
                         className={`tab${activeTab === tab.id ? ' active' : ''}`}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id)}
                     >
                         {tab.label} <span className="tab-count">{tab.count}</span>
                     </button>
@@ -210,7 +211,8 @@ export function ReportsPage() {
                                 value={typeFilter}
                                 onChange={(e) =>
                                     setTypeFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | ReportType,
                                     )
                                 }
                             >
@@ -230,7 +232,8 @@ export function ReportsPage() {
                                 value={statusFilter}
                                 onChange={(e) =>
                                     setStatusFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | 'draft' | 'sent' | 'delivered' | 'read' | 'failed',
                                     )
                                 }
                             >
@@ -335,10 +338,10 @@ export function ReportsPage() {
                                                 className="icon-btn icon-btn--danger"
                                                 title="Eliminar"
                                                 onClick={() =>
-                                                    handleDelete(
-                                                        report.id,
-                                                        report.title || 'Sin título',
-                                                    )
+                                                    setDeleteTarget({
+                                                        reportId: report.id,
+                                                        title: report.title || 'Sin título',
+                                                    })
                                                 }
                                             >
                                                 <Trash2 size={14} />
@@ -351,6 +354,21 @@ export function ReportsPage() {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                title="Eliminar reporte"
+                message={deleteTarget ? `¿Eliminar "${deleteTarget.title}"?` : ''}
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (!deleteTarget) return;
+                    const { reportId, title } = deleteTarget;
+                    setDeleteTarget(null);
+                    void handleDelete(reportId, title);
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

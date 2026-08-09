@@ -1,13 +1,14 @@
 import { queryKeys, useItem, useList, useMutation } from './api';
-import type {
-    ChatChannel,
-    ChatChannelType,
-    ChatMessage,
-    ChatMessageRead,
-    ChatParticipant,
-    MessageType,
+import {
+    CHANNEL_TYPE_LABEL,
+    type ChatChannel,
+    type ChatChannelType,
+    type ChatMessage,
+    type ChatMessageRead,
+    type ChatParticipant,
+    MESSAGE_TYPE_LABEL,
+    type MessageType,
 } from '../types/chat';
-import { CHANNEL_TYPE_LABEL, MESSAGE_TYPE_LABEL } from '../types/chat';
 import {
     addParticipant,
     createDirectChannel,
@@ -57,7 +58,7 @@ export function useChannels(agentId: string | null) {
     `,
         filters: {
             deleted_at: 'is.null',
-            chat_channel_participants: { agent_id: `eq.${agentId}` },
+            'chat_channel_participants.agent_id': `eq.${agentId}`,
         },
         page: 1,
         pageSize: 50,

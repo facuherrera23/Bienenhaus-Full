@@ -12,8 +12,14 @@ import {
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { OwnerCard } from '@components/owners';
-import type { OwnerPreferredContact, OwnerRow, OwnerType } from '@/types/owners';
-import { OWNER_PREFERRED_CONTACT_LABEL, OWNER_TYPE_LABEL } from '@/types/owners';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import {
+    OWNER_PREFERRED_CONTACT_LABEL,
+    OWNER_TYPE_LABEL,
+    type OwnerPreferredContact,
+    type OwnerRow,
+    type OwnerType,
+} from '@/types/owners';
 
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('es-AR');
@@ -61,6 +67,13 @@ export function OwnersPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [showTrash, setShowTrash] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        message: string;
+        confirmLabel?: string;
+        danger?: boolean;
+        onConfirm: () => void;
+    } | null>(null);
 
     const queryClient = useQueryClient();
 
@@ -118,7 +131,6 @@ export function OwnersPage() {
     };
 
     const handleSoftDelete = async (id: string, name: string) => {
-        if (!window.confirm(`¿Enviar a papelera a "${name}"?`)) return;
         try {
             await softDeleteOwner.mutateAsync(id);
             pushToast({ type: 'success', title: 'Enviado a papelera', description: name });
@@ -139,12 +151,6 @@ export function OwnersPage() {
     };
 
     const handlePermanentDelete = async (id: string, name: string) => {
-        if (
-            !window.confirm(
-                `¿Eliminar permanentemente "${name}"? Esta acción no se puede deshacer.`,
-            )
-        )
-            return;
         try {
             await permanentDeleteOwner.mutateAsync(id);
             pushToast({ type: 'success', title: 'Eliminado permanentemente', description: name });
@@ -222,19 +228,21 @@ export function OwnersPage() {
                         <button
                             type="button"
                             className="btn btn--danger btn--sm"
-                            onClick={() => {
-                                if (
-                                    window.confirm(
-                                        `¿Enviar a papelera ${selectedIds.size} propietario${selectedIds.size === 1 ? '' : 's'}?`,
-                                    )
-                                ) {
-                                    selectedIds.forEach((id) => {
-                                        const owner = owners.find((o) => o.id === id);
-                                        if (owner) handleSoftDelete(id, owner.full_name);
-                                    });
-                                    clearSelection();
-                                }
-                            }}
+                            onClick={() =>
+                                setConfirmAction({
+                                    title: 'Enviar a papelera',
+                                    message: `¿Enviar a papelera ${selectedIds.size} propietario${selectedIds.size === 1 ? '' : 's'}?`,
+                                    confirmLabel: 'Enviar',
+                                    danger: true,
+                                    onConfirm: () => {
+                                        selectedIds.forEach((id) => {
+                                            const owner = owners.find((o) => o.id === id);
+                                            if (owner) void handleSoftDelete(id, owner.full_name);
+                                        });
+                                        clearSelection();
+                                    },
+                                })
+                            }
                         >
                             <Trash2 size={14} /> A papelera
                         </button>
@@ -427,10 +435,17 @@ export function OwnersPage() {
                                                         className="icon-btn icon-btn--danger"
                                                         title="Eliminar permanentemente"
                                                         onClick={() =>
-                                                            handlePermanentDelete(
-                                                                owner.id,
-                                                                owner.full_name,
-                                                            )
+                                                            setConfirmAction({
+                                                                title: 'Eliminar permanentemente',
+                                                                message: `¿Eliminar permanentemente "${owner.full_name}"? Esta acción no se puede deshacer.`,
+                                                                confirmLabel: 'Eliminar',
+                                                                danger: true,
+                                                                onConfirm: () =>
+                                                                    void handlePermanentDelete(
+                                                                        owner.id,
+                                                                        owner.full_name,
+                                                                    ),
+                                                            })
                                                         }
                                                     >
                                                         <Trash2 size={14} />
@@ -445,6 +460,19 @@ export function OwnersPage() {
                     )}
                 </>
             )}
+
+            <ConfirmDialog
+                open={confirmAction !== null}
+                title={confirmAction?.title ?? ''}
+                message={confirmAction?.message ?? ''}
+                confirmLabel={confirmAction?.confirmLabel}
+                danger={confirmAction?.danger}
+                onConfirm={() => {
+                    confirmAction?.onConfirm();
+                    setConfirmAction(null);
+                }}
+                onCancel={() => setConfirmAction(null)}
+            />
         </div>
     );
 }

@@ -1,6 +1,4 @@
 import * as Sentry from '@sentry/browser';
-import { browserTracingIntegration } from '@sentry/browser';
-import { replayIntegration } from '@sentry/browser';
 
 // ============================================================
 // Types
@@ -81,12 +79,12 @@ export function initSentry(config: SentryConfig): void {
         const integrations = [];
 
         if (config.enableTracing !== false) {
-            integrations.push(browserTracingIntegration());
+            integrations.push(Sentry.browserTracingIntegration());
         }
 
         if (config.enableReplay !== false) {
             integrations.push(
-                replayIntegration({
+                Sentry.replayIntegration({
                     maskAllText: true,
                     blockAllMedia: true,
                     maskAllInputs: true,
@@ -107,7 +105,7 @@ export function initSentry(config: SentryConfig): void {
             beforeSend: (event) => {
                 // En desarrollo, loguear en consola
                 if (import.meta.env.DEV) {
-                    console.log('[Sentry] Evento:', {
+                    console.warn('[Sentry] Evento:', {
                         message: event.message,
                         exception: event.exception?.values?.[0]?.value,
                         level: event.level,
@@ -137,7 +135,7 @@ export function initSentry(config: SentryConfig): void {
         isInitialized = true;
 
         if (import.meta.env.DEV) {
-            console.log('[Sentry] Inicializado:', {
+            console.warn('[Sentry] Inicializado:', {
                 environment: config.environment,
                 release: config.release,
             });
@@ -156,7 +154,7 @@ export function initSentry(config: SentryConfig): void {
  */
 export function captureException(
     error: unknown,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
     level: SeverityLevel = 'error',
 ): string {
     if (!isInitialized) {
@@ -182,7 +180,7 @@ export function captureException(
 export function captureMessage(
     message: string,
     level: SeverityLevel = 'info',
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
 ): string {
     if (!isInitialized) {
         console.warn('[Sentry] No inicializado, mensaje capturado localmente:', message);
@@ -234,7 +232,7 @@ export function addBreadcrumb(
         message?: string;
         category?: string;
         level?: SeverityLevel;
-        data?: Record<string, any>;
+        data?: Record<string, unknown>;
         type?: string;
     },
     _maxBreadcrumbs: number = 30,
@@ -260,7 +258,7 @@ export function addBreadcrumb(
 /**
  * Establece el contexto de la aplicación
  */
-export function setAppContext(context: Record<string, any>): void {
+export function setAppContext(context: Record<string, unknown>): void {
     if (!isInitialized) {
         console.warn('[Sentry] No inicializado, contexto no establecido');
         return;
@@ -328,10 +326,12 @@ export function setSeverity(level: SeverityLevel): void {
 /**
  * Inicia un span para medir rendimiento
  */
+type SpanAttributes = NonNullable<Parameters<typeof Sentry.startSpan>[0]['attributes']>;
+
 export function startSpan<T>(
     name: string,
     operation: () => T,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, unknown>,
 ): T {
     if (!isInitialized || import.meta.env.DEV) {
         // En desarrollo, solo ejecutar la operación
@@ -339,7 +339,7 @@ export function startSpan<T>(
     }
 
     try {
-        return Sentry.startSpan({ name, attributes }, () => operation());
+        return Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () => operation());
     } catch (error) {
         console.error('[Sentry] Error en startSpan:', error);
         return operation();
@@ -352,14 +352,14 @@ export function startSpan<T>(
 export async function startSpanAsync<T>(
     name: string,
     operation: () => Promise<T>,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, unknown>,
 ): Promise<T> {
     if (!isInitialized || import.meta.env.DEV) {
         return await operation();
     }
 
     try {
-        return await Sentry.startSpan({ name, attributes }, () => operation());
+        return await Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () => operation());
     } catch (error) {
         console.error('[Sentry] Error en startSpanAsync:', error);
         return await operation();
@@ -372,7 +372,7 @@ export async function startSpanAsync<T>(
 export async function measurePerformance<T>(
     name: string,
     operation: () => Promise<T>,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, unknown>,
 ): Promise<T> {
     return startSpanAsync(name, operation, attributes);
 }

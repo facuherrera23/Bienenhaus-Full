@@ -7,23 +7,25 @@ import {
     useRpc,
 } from './api';
 import { useQuery } from '@tanstack/react-query';
-import type {
-    MlAutoReplyTemplate,
-    MlCategory,
-    MlConnectionInfo,
-    MlItemMetrics,
-    MlListingType,
-    MlMetaRow,
-    MlMetrics,
-    MlOperation,
-    MlOrder,
-    MlOverview,
-    MlQuestion,
-    MlQueueRow,
-    MlSettings,
-    MlSyncStatus,
+import {
+    ML_OPERATION_LABEL,
+    ML_SYNC_STATUS_LABEL,
+    ML_SYNC_STATUS_TONE,
+    type MlAutoReplyTemplate,
+    type MlCategory,
+    type MlConnectionInfo,
+    type MlItemMetrics,
+    type MlListingType,
+    type MlMetaRow,
+    type MlMetrics,
+    type MlOperation,
+    type MlOrder,
+    type MlOverview,
+    type MlQuestion,
+    type MlQueueRow,
+    type MlSettings,
+    type MlSyncStatus,
 } from '../types/ml';
-import { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE } from '../types/ml';
 import {
     answerMlQuestion,
     buildAuthorizeUrl,
@@ -72,7 +74,7 @@ export function useMlQueue(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, unknown> = {};
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
@@ -91,7 +93,7 @@ export function useMlQueue(filters?: {
 }
 
 export function useMlMeta(filters?: { property_id?: string; page?: number; pageSize?: number }) {
-    const apiFilters: Record<string, unknown> = {};
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
 
@@ -113,7 +115,7 @@ export function useMlMeta(filters?: { property_id?: string; page?: number; pageS
 // ============================================================
 
 export function useMlQuestions(filters?: { status?: string; page?: number; pageSize?: number }) {
-    const apiFilters: Record<string, unknown> = {};
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
@@ -130,7 +132,7 @@ export function useMlQuestions(filters?: { status?: string; page?: number; pageS
 }
 
 export function useMlOrders(filters?: { status?: string; page?: number; pageSize?: number }) {
-    const apiFilters: Record<string, unknown> = {};
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
 
@@ -290,8 +292,8 @@ export function useDisconnectMl() {
 
 export const ML_QUEUE_EXPORT_COLUMNS: ExportColumn<MlQueueRow>[] = [
     { key: 'id', label: 'ID' },
-    { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
-    { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
+    { key: 'property_title', label: 'Propiedad', format: (v) => String(v ?? '—') },
+    { key: 'property_code', label: 'Código', format: (v) => String(v ?? '—') },
     {
         key: 'operation',
         label: 'Operación',
@@ -303,26 +305,26 @@ export const ML_QUEUE_EXPORT_COLUMNS: ExportColumn<MlQueueRow>[] = [
         label: 'Intentos',
         format: (v, row) => `${v}/${(row as MlQueueRow).max_attempts}`,
     },
-    { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
-    { key: 'last_error', label: 'Último error', format: (v) => v ?? '—' },
+    { key: 'ml_item_id', label: 'Item ML', format: (v) => String(v ?? '—') },
+    { key: 'last_error', label: 'Último error', format: (v) => String(v ?? '—') },
     {
         key: 'created_at',
         label: 'Creado',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
 ];
 
 export const ML_META_EXPORT_COLUMNS: ExportColumn<MlMetaRow>[] = [
-    { key: 'property_title', label: 'Propiedad', format: (v) => v ?? '—' },
-    { key: 'property_code', label: 'Código', format: (v) => v ?? '—' },
-    { key: 'ml_item_id', label: 'Item ML', format: (v) => v ?? '—' },
+    { key: 'property_title', label: 'Propiedad', format: (v) => String(v ?? '—') },
+    { key: 'property_code', label: 'Código', format: (v) => String(v ?? '—') },
+    { key: 'ml_item_id', label: 'Item ML', format: (v) => String(v ?? '—') },
     { key: 'status', label: 'Estado' },
-    { key: 'permalink', label: 'Link ML', format: (v) => v ?? '—' },
-    { key: 'price', label: 'Precio ML', format: (v) => (v ? `${v.toLocaleString('es-AR')}` : '—') },
+    { key: 'permalink', label: 'Link ML', format: (v) => String(v ?? '—') },
+    { key: 'price', label: 'Precio ML', format: (v) => (v ? (v as number).toLocaleString('es-AR') : '—') },
     {
         key: 'last_sync_at',
         label: 'Última sync',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
     {
         key: 'last_sync_status',

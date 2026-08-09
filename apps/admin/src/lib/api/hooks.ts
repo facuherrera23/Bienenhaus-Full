@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef } from 'preact/hooks';
-import type { QueryKey } from '@tanstack/react-query';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ApiError, ApiResponse } from './client';
-import { api, rpcCall } from './client';
+import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, type ApiError, type ApiResponse, rpcCall } from './client';
 import { supabase } from '../supabase';
 
 // Re-export useMutation for convenience
@@ -15,10 +13,10 @@ export type { ApiResponse, ApiError };
 export interface ExportColumn<T> {
     key: keyof T | string;
     label: string;
-    format?: (value: any, row: T) => string;
+    format?: (value: unknown, row: T) => string;
 }
 
-export function useExport<T extends Record<string, any>>() {
+export function useExport<T extends object>() {
     const exportToCSV = async (options: {
         data: T[];
         columns: ExportColumn<T>[];
@@ -31,7 +29,7 @@ export function useExport<T extends Record<string, any>>() {
             columns
                 .map((col) => {
                     const key = col.key as keyof T;
-                    let value: any = row[key];
+                    let value: unknown = row[key];
                     if (col.format) value = col.format(value, row);
                     // Escape commas and quotes
                     if (
@@ -64,7 +62,7 @@ export interface ListOptions<T, TRaw = T> {
     queryKey: QueryKey;
     path: string;
     select?: string;
-    filters?: Record<string, any>;
+    filters?: Record<string, string | number | boolean | undefined>;
     page?: number;
     pageSize?: number;
     orderBy?: string;
@@ -99,7 +97,7 @@ export function useList<T, TRaw = T>(options: ListOptions<T, TRaw>) {
     } = options;
     const from = (page - 1) * pageSize;
 
-    const queryParams: Record<string, any> = {
+    const queryParams: Record<string, string | number | boolean | undefined> = {
         select,
         limit: pageSize,
         offset: from,
@@ -247,7 +245,7 @@ export function useRpc<T, TParams>(
 ) {
     return useMutation<T, ApiError, TParams>({
         mutationFn: async (params: TParams) => {
-            const { data, error } = await rpcCall<T>(functionName, params as Record<string, any>);
+            const { data, error } = await rpcCall<T>(functionName, params as Record<string, unknown>);
             if (error) throw error;
             return data as T;
         },
@@ -293,7 +291,7 @@ export interface UseRealtimeOptions<T> {
     enabled?: boolean;
 }
 
-export function useRealtime<T extends Record<string, any>>({
+export function useRealtime<T extends object>({
     table,
     filter,
     onInsert,
@@ -325,7 +323,7 @@ export function useRealtime<T extends Record<string, any>>({
                     table,
                     filter,
                 },
-                (payload: any) => {
+                (payload: { eventType: string; new: unknown; old: unknown }) => {
                     const { onInsert, onUpdate, onDelete, onChange } = callbacksRef.current;
                     const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
                     const newRecord = payload.new as T | null;

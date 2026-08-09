@@ -10,10 +10,12 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export function NewsletterPage() {
     const [search, setSearch] = useState('');
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string } | null>(null);
 
     const { data, isPending, isError } = useQuery<NewsletterSubscriber[]>({
         queryKey: ['newsletter-subscribers'],
@@ -50,7 +52,6 @@ export function NewsletterPage() {
     };
 
     const handleDelete = async (id: string, email: string) => {
-        if (!window.confirm(`¿Mover a papelera a ${email}?`)) return;
         setDeleting(id);
         try {
             await softDeleteSubscriber(id);
@@ -140,7 +141,9 @@ export function NewsletterPage() {
                                                 className="icon-btn icon-btn--danger"
                                                 title={`Eliminar ${s.email}`}
                                                 disabled={deleting === s.id}
-                                                onClick={() => handleDelete(s.id, s.email)}
+                                                onClick={() =>
+                                                    setDeleteTarget({ id: s.id, email: s.email })
+                                                }
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -159,6 +162,19 @@ export function NewsletterPage() {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                title="Mover a papelera"
+                message={deleteTarget ? `¿Mover a papelera a ${deleteTarget.email}?` : ''}
+                confirmLabel="Mover"
+                danger
+                onConfirm={() => {
+                    if (deleteTarget) void handleDelete(deleteTarget.id, deleteTarget.email);
+                    setDeleteTarget(null);
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

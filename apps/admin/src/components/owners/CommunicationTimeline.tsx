@@ -1,10 +1,13 @@
+import { useState } from 'preact/hooks';
 import { Calendar, FileText, Mail, MessageSquare, Phone, Send, X } from 'lucide-preact';
-import type { CommunicationRow, CommunicationType } from '../../types/owners';
 import {
     COMMUNICATION_STATUS_LABEL,
     COMMUNICATION_STATUS_TONE,
     COMMUNICATION_TYPE_LABEL,
+    type CommunicationRow,
+    type CommunicationType,
 } from '../../types/owners';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface CommunicationTimelineProps {
     communications: CommunicationRow[];
@@ -13,7 +16,7 @@ interface CommunicationTimelineProps {
     onResend?: (commId: string) => void;
 }
 
-const TYPE_ICONS: Record<CommunicationType, any> = {
+const TYPE_ICONS: Record<CommunicationType, typeof MessageSquare> = {
     whatsapp: MessageSquare,
     call: Phone,
     email: Mail,
@@ -28,6 +31,8 @@ export function CommunicationTimeline({
     onDelete,
     onResend,
 }: CommunicationTimelineProps) {
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return '—';
         const date = new Date(dateStr);
@@ -155,15 +160,7 @@ export function CommunicationTimeline({
                                             <button
                                                 type="button"
                                                 className="icon-btn icon-btn--danger"
-                                                onClick={() => {
-                                                    if (
-                                                        window.confirm(
-                                                            '¿Eliminar esta comunicación?',
-                                                        )
-                                                    ) {
-                                                        onDelete(comm.id);
-                                                    }
-                                                }}
+                                                onClick={() => setConfirmDeleteId(comm.id)}
                                                 title="Eliminar"
                                             >
                                                 <X size={14} />
@@ -176,6 +173,19 @@ export function CommunicationTimeline({
                     );
                 })}
             </ul>
+
+            <ConfirmDialog
+                open={confirmDeleteId !== null}
+                title="Eliminar comunicación"
+                message="¿Eliminar esta comunicación?"
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (confirmDeleteId && onDelete) onDelete(confirmDeleteId);
+                    setConfirmDeleteId(null);
+                }}
+                onCancel={() => setConfirmDeleteId(null)}
+            />
         </div>
     );
 }

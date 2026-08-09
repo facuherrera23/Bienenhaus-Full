@@ -27,6 +27,7 @@ import {
 } from '../lib/valuationApi';
 import { fetchDrafts, loadDraft } from '../lib/valuationService';
 import { pushToast } from '../store/app';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import type {
     ComparableData,
     NivelesComparacion,
@@ -627,6 +628,7 @@ export function TasarPage() {
     const [saving, setSaving] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
     const [dirty, setDirty] = useState(false);
+    const [confirmDiscard, setConfirmDiscard] = useState(false);
     const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ---- Hooks API ----
@@ -875,9 +877,14 @@ export function TasarPage() {
     }
 
     function handleNewValuation() {
-        if (dirty && !confirm('Hay cambios sin guardar. ¿Descartar y empezar una tasación nueva?')) {
+        if (dirty) {
+            setConfirmDiscard(true);
             return;
         }
+        doNewValuation();
+    }
+
+    function doNewValuation() {
         setValues(EMPTY);
         setDraftId(null);
         setDirty(false);
@@ -1576,6 +1583,19 @@ export function TasarPage() {
                     )}
                 </div>
             </section>
+
+            <ConfirmDialog
+                open={confirmDiscard}
+                title="Descartar cambios"
+                message="Hay cambios sin guardar. ¿Descartar y empezar una tasación nueva?"
+                confirmLabel="Descartar"
+                danger
+                onConfirm={() => {
+                    setConfirmDiscard(false);
+                    doNewValuation();
+                }}
+                onCancel={() => setConfirmDiscard(false)}
+            />
         </div>
     );
 }

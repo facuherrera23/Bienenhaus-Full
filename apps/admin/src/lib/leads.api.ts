@@ -9,22 +9,20 @@ import {
     useMutation,
     useUpdate,
 } from './api';
-import type {
-    AgentOption,
-    CsvLeadRow,
-    LeadDetail,
-    LeadFormValues,
-    LeadIntent,
-    LeadPatch,
-    LeadRow,
-    LeadSource,
-    LeadStatus,
-} from '../types/leads';
 import {
+    type AgentOption,
+    type CsvLeadRow,
     LEAD_INTENT_LABEL,
     LEAD_SOURCE_LABEL,
     LEAD_STATUS_LABEL,
     LEAD_STATUS_TONE,
+    type LeadDetail,
+    type LeadFormValues,
+    type LeadIntent,
+    type LeadPatch,
+    type LeadRow,
+    type LeadSource,
+    type LeadStatus,
     STATUS_ORDER,
 } from '../types/leads';
 import {
@@ -74,7 +72,7 @@ export function useLeads(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, any> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean> = { deleted_at: 'is.null' };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.intent) apiFilters.intent = `eq.${filters.intent}`;
@@ -308,18 +306,18 @@ export const LEAD_EXPORT_COLUMNS: ExportColumn<LeadRow>[] = [
     { key: 'name', label: 'Nombre' },
     { key: 'last_name', label: 'Apellido' },
     { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Teléfono', format: (v) => v ?? '—' },
-    { key: 'city', label: 'Ciudad', format: (v) => v ?? '—' },
+    { key: 'phone', label: 'Teléfono', format: (v) => String(v ?? '—') },
+    { key: 'city', label: 'Ciudad', format: (v) => String(v ?? '—') },
     { key: 'intent', label: 'Intención', format: (v) => LEAD_INTENT_LABEL[v as LeadIntent] ?? v },
     { key: 'source', label: 'Origen', format: (v) => LEAD_SOURCE_LABEL[v as LeadSource] ?? v },
     { key: 'status', label: 'Estado', format: (v) => LEAD_STATUS_LABEL[v as LeadStatus] ?? v },
-    { key: 'score', label: 'Score', format: (v) => v ?? 0 },
+    { key: 'score', label: 'Score', format: (v) => String(v ?? 0) },
     { key: 'tags', label: 'Tags', format: (v) => (v as string[])?.join('; ') ?? '' },
-    { key: 'agent', label: 'Asignado', format: (v) => v ?? '—' },
+    { key: 'agent', label: 'Asignado', format: (v) => String(v ?? '—') },
     {
         key: 'created_at',
         label: 'Recibido',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
 ];
 

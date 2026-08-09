@@ -9,8 +9,13 @@ import {
     useMutation,
     useUpdate,
 } from './api';
-import type { NewsletterSource, NewsletterStatus, NewsletterSubscriber } from '../types/newsletter';
-import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL } from '../types/newsletter';
+import {
+    NEWSLETTER_SOURCE_LABEL,
+    NEWSLETTER_STATUS_LABEL,
+    type NewsletterSource,
+    type NewsletterStatus,
+    type NewsletterSubscriber,
+} from '../types/newsletter';
 import {
     bulkCreateSubscribers,
     bulkDeleteSubscribers,
@@ -41,7 +46,7 @@ export function useSubscribers(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, unknown> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.source) apiFilters.source = `eq.${filters.source}`;
@@ -224,7 +229,7 @@ export const SUBSCRIBER_EXPORT_COLUMNS: ExportColumn<NewsletterSubscriber>[] = [
     {
         key: 'created_at',
         label: 'Creado',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
 ];
 

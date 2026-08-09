@@ -23,6 +23,7 @@ import {
     type RecurrenceRule,
     updateVisit,
     VISIT_STATUS_LABEL,
+    type VisitFormValues,
     type VisitRow,
     type VisitStatus,
 } from '../lib/visits';
@@ -862,7 +863,7 @@ function VisitFormModal({
     leads: { id: string; name: string; last_name: string; email: string }[];
     onClose: () => void;
     onOpenRecurring?: () => void;
-    onSubmit: (values: any) => Promise<void>;
+    onSubmit: (values: VisitFormValues) => Promise<void>;
 }) {
     const [values, setValues] = useState({
         lead_id: visit?.lead_id ?? '',

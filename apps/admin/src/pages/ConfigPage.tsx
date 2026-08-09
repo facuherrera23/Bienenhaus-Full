@@ -14,6 +14,7 @@ import {
 import { fetchMlSettings, setMlAppId, setMlDefaults } from '../lib/ml';
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { pushToast } from '../store/app';
 
 function formatDate(iso: string | null): string {
@@ -73,6 +74,7 @@ export function ConfigPage() {
         condition: 'used',
     });
     const [savingMl, setSavingMl] = useState(false);
+    const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
     useEffect(() => {
         document.title = 'Configuración · BIENENHAUS';
@@ -324,15 +326,7 @@ export function ConfigPage() {
                                                     className="icon-btn icon-btn--danger"
                                                     title="Eliminar usuario"
                                                     disabled={u.id === myId}
-                                                    onClick={() => {
-                                                        if (
-                                                            window.confirm(
-                                                                `¿Eliminar el acceso de ${u.email}?`,
-                                                            )
-                                                        ) {
-                                                            removeMutation.mutate(u.email);
-                                                        }
-                                                    }}
+                                                    onClick={() => setRemoveTarget(u.email)}
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -536,6 +530,19 @@ export function ConfigPage() {
                     </div>
                 </Modal>
             )}
+
+            <ConfirmDialog
+                open={removeTarget !== null}
+                title="Eliminar acceso"
+                message={removeTarget ? `¿Eliminar el acceso de ${removeTarget}?` : ''}
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (removeTarget) removeMutation.mutate(removeTarget);
+                    setRemoveTarget(null);
+                }}
+                onCancel={() => setRemoveTarget(null)}
+            />
         </div>
     );
 }

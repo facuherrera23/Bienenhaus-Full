@@ -10,10 +10,16 @@ import {
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { CommunicationTimeline } from '@components/owners';
-import { type CommunicationFormValues, communicationSchema } from '@lib/owners/schemas';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import {
+    type CommunicationFormValues,
+    type CommunicationRow,
+    communicationSchema,
+    type CommunicationStatus,
+    type CommunicationType,
+} from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CommunicationRow, CommunicationStatus, CommunicationType } from '@lib/owners/schemas';
 
 export function CommunicationsPage() {
     const [activeTab, setActiveTab] = useState<'all' | 'drafts' | 'sent'>('all');
@@ -23,6 +29,7 @@ export function CommunicationsPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [showNewComm, setShowNewComm] = useState(false);
     const [editingComm, setEditingComm] = useState<CommunicationRow | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; subject: string } | null>(null);
     const queryClient = useQueryClient();
 
     const { data, isLoading } = useCommunications({
@@ -141,8 +148,7 @@ export function CommunicationsPage() {
         }
     };
 
-    const handleDelete = async (commId: string, subject: string) => {
-        if (!window.confirm(`¿Eliminar "${subject}"?`)) return;
+    const handleDelete = async (commId: string, _subject: string) => {
         try {
             await deleteCommunication.mutateAsync(commId);
             pushToast({ type: 'success', title: 'Eliminado' });
@@ -164,7 +170,7 @@ export function CommunicationsPage() {
         setShowNewComm(true);
     };
 
-    const tabs = [
+    const tabs: { id: 'all' | 'drafts' | 'sent'; label: string; count: number }[] = [
         { id: 'all', label: 'Todas', count: allCommunications.length },
         {
             id: 'drafts',
@@ -211,7 +217,7 @@ export function CommunicationsPage() {
                         role="tab"
                         aria-selected={activeTab === tab.id}
                         className={`tab${activeTab === tab.id ? ' active' : ''}`}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id)}
                     >
                         {tab.label} <span className="tab-count">{tab.count}</span>
                     </button>
@@ -355,7 +361,8 @@ export function CommunicationsPage() {
                                 value={typeFilter}
                                 onChange={(e) =>
                                     setTypeFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | CommunicationType,
                                     )
                                 }
                             >
@@ -375,7 +382,8 @@ export function CommunicationsPage() {
                                 value={statusFilter}
                                 onChange={(e) =>
                                     setStatusFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as any,
+                                        (e.currentTarget as HTMLSelectElement)
+                                            .value as 'todos' | CommunicationStatus,
                                     )
                                 }
                             >
@@ -418,7 +426,11 @@ export function CommunicationsPage() {
                     onEdit={handleEdit}
                     onDelete={(commId) => {
                         const comm = filtered.find((c) => c.id === commId);
-                        if (comm) handleDelete(commId, comm.subject || 'Sin asunto');
+                        if (comm)
+                            setDeleteTarget({
+                                id: commId,
+                                subject: comm.subject || 'Sin asunto',
+                            });
                     }}
                     onResend={(commId) => {
                         const comm = filtered.find((c) => c.id === commId);
@@ -426,6 +438,19 @@ export function CommunicationsPage() {
                     }}
                 />
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                title="Eliminar comunicación"
+                message={deleteTarget ? `¿Eliminar "${deleteTarget.subject}"?` : ''}
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (deleteTarget) void handleDelete(deleteTarget.id, deleteTarget.subject);
+                    setDeleteTarget(null);
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

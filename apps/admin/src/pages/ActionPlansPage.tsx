@@ -8,11 +8,13 @@ import { ActionPlanCard } from '@components/owners';
 import { type ActionPlanFormValues, actionPlanSchema } from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ActionPlanCategory, ActionPlanPriority, ActionPlanStatus } from '@/types/owners';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,
     ACTION_PLAN_STATUS_LABEL,
+    type ActionPlanCategory,
+    type ActionPlanPriority,
+    type ActionPlanStatus,
 } from '@/types/owners';
 
 export function ActionPlansPage() {
@@ -219,7 +221,10 @@ export function ActionPlansPage() {
                         className="select"
                         value={statusFilter}
                         onChange={(e) =>
-                            setStatusFilter((e.currentTarget as HTMLSelectElement).value as any)
+                            setStatusFilter(
+                                (e.currentTarget as HTMLSelectElement)
+                                    .value as 'todos' | ActionPlanStatus,
+                            )
                         }
                     >
                         <option value="todos">Todos los estados</option>
@@ -232,7 +237,10 @@ export function ActionPlansPage() {
                         className="select"
                         value={categoryFilter}
                         onChange={(e) =>
-                            setCategoryFilter((e.currentTarget as HTMLSelectElement).value as any)
+                            setCategoryFilter(
+                                (e.currentTarget as HTMLSelectElement)
+                                    .value as 'todos' | ActionPlanCategory,
+                            )
                         }
                     >
                         <option value="todos">Todas las categorías</option>
@@ -246,7 +254,10 @@ export function ActionPlansPage() {
                         className="select"
                         value={priorityFilter}
                         onChange={(e) =>
-                            setPriorityFilter((e.currentTarget as HTMLSelectElement).value as any)
+                            setPriorityFilter(
+                                (e.currentTarget as HTMLSelectElement)
+                                    .value as 'todos' | ActionPlanPriority,
+                            )
                         }
                     >
                         <option value="todos">Todas las prioridades</option>

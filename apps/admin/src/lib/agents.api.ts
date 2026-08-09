@@ -12,15 +12,13 @@ import {
 } from './api';
 import { supabase } from '../lib/supabase';
 import { useEffect, useState } from 'preact/hooks';
-import type {
-    AgentAvailability,
-    AgentCommission,
-    AgentFormValues,
-    AgentPermissions,
-    AgentRow,
-    AgentSchedule,
-} from '../types/agents';
 import {
+    type AgentAvailability,
+    type AgentCommission,
+    type AgentFormValues,
+    type AgentPermissions,
+    type AgentRow,
+    type AgentSchedule,
     DAY_LABELS,
     DEFAULT_COMMISSION,
     DEFAULT_PERMISSIONS,
@@ -58,7 +56,7 @@ export function useAgents(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, any> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean> = { deleted_at: 'is.null' };
 
     if (filters?.is_active !== undefined) apiFilters.is_active = `eq.${filters.is_active}`;
 
@@ -303,16 +301,16 @@ export function usePermanentDeleteAgent() {
 export const AGENT_EXPORT_COLUMNS: ExportColumn<AgentRow>[] = [
     { key: 'name', label: 'Nombre' },
     { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Teléfono', format: (v) => v ?? '—' },
-    { key: 'matricula', label: 'Matrícula', format: (v) => v ?? '—' },
-    { key: 'role', label: 'Rol', format: (v) => v ?? '—' },
+    { key: 'phone', label: 'Teléfono', format: (v) => String(v ?? '—') },
+    { key: 'matricula', label: 'Matrícula', format: (v) => String(v ?? '—') },
+    { key: 'role', label: 'Rol', format: (v) => String(v ?? '—') },
     { key: 'is_active', label: 'Activo', format: (v) => (v ? 'Sí' : 'No') },
     { key: 'lead_count', label: 'Leads asignados' },
     { key: 'sort_order', label: 'Orden' },
     {
         key: 'created_at',
         label: 'Creado',
-        format: (v) => (v ? new Date(v).toLocaleDateString('es-AR') : '—'),
+        format: (v) => (v ? new Date(v as string).toLocaleDateString('es-AR') : '—'),
     },
 ];
 

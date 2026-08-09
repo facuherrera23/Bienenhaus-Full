@@ -15,6 +15,7 @@ import {
     updatePropertyOwnerLink,
 } from '../../lib/owners/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface PropertyOwnerManagerProps {
     propertyId: string;
@@ -25,6 +26,10 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
     const [search, setSearch] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedOwnerId, setSelectedOwnerId] = useState<string | null>(null);
+    const [unlinkTarget, setUnlinkTarget] = useState<{
+        ownerId: string;
+        ownerName: string | null;
+    } | null>(null);
     const queryClient = useQueryClient();
 
     const { data: linkedOwners, isLoading: loadingLinked } = useQuery({
@@ -207,17 +212,12 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                                         <button
                                             type="button"
                                             className="icon-btn icon-btn--danger"
-                                            onClick={() => {
-                                                if (
-                                                    window.confirm(
-                                                        `¿Desvincular a ${owner.owner_name}?`,
-                                                    )
-                                                ) {
-                                                    unlinkMutation.mutate({
-                                                        ownerId: owner.owner_id,
-                                                    });
-                                                }
-                                            }}
+                                            onClick={() =>
+                                                setUnlinkTarget({
+                                                    ownerId: owner.owner_id,
+                                                    ownerName: owner.owner_name,
+                                                })
+                                            }
                                             disabled={unlinkMutation.isPending}
                                             title="Desvincular"
                                         >
@@ -372,6 +372,19 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={unlinkTarget !== null}
+                title="Desvincular propietario"
+                message={unlinkTarget ? `¿Desvincular a ${unlinkTarget.ownerName}?` : ''}
+                confirmLabel="Desvincular"
+                danger
+                onConfirm={() => {
+                    if (unlinkTarget) unlinkMutation.mutate({ ownerId: unlinkTarget.ownerId });
+                    setUnlinkTarget(null);
+                }}
+                onCancel={() => setUnlinkTarget(null)}
+            />
         </div>
     );
 }

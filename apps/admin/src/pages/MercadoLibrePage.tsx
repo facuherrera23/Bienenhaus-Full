@@ -36,6 +36,7 @@ import {
     ML_REDIRECT_URI,
     ML_SYNC_STATUS_LABEL,
     ML_SYNC_STATUS_TONE,
+    type MlAutoReplyTemplate,
     type MlCategory,
     type MlListingType,
     type MlQuestion,
@@ -49,6 +50,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const LISTING_TYPE_DESCRIPTIONS: Record<string, string> = {
     free: 'Gratuita: sin costo, menor visibilidad, ideal para probar',
@@ -118,9 +120,8 @@ export function MercadoLibrePage() {
     type TemplateTrigger =
         'new_question' | 'new_order' | 'order_paid' | 'order_shipped' | 'order_delivered';
     const [showAutoReplyModal, setShowAutoReplyModal] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState<
-        import('../lib/ml').MlAutoReplyTemplate | null
-    >(null);
+    const [editingTemplate, setEditingTemplate] = useState<MlAutoReplyTemplate | null>(null);
+    const [deleteTemplateId, setDeleteTemplateId] = useState<number | null>(null);
     const [savingTemplate, setSavingTemplate] = useState(false);
     const [templateForm, setTemplateForm] = useState<{
         name: string;
@@ -614,16 +615,7 @@ export function MercadoLibrePage() {
                                             <button
                                                 className="btn btn--ghost btn--sm"
                                                 style={{ color: 'var(--bh-danger)' }}
-                                                onClick={() => {
-                                                    if (confirm('Eliminar plantilla?')) {
-                                                        void deleteMlAutoReplyTemplate(t.id).then(
-                                                            () =>
-                                                                queryClient.invalidateQueries({
-                                                                    queryKey: ['ml-auto-reply'],
-                                                                }),
-                                                        );
-                                                    }
-                                                }}
+                                                onClick={() => setDeleteTemplateId(t.id)}
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -1356,6 +1348,23 @@ export function MercadoLibrePage() {
 
             {replyModal}
             {templateModal}
+
+            <ConfirmDialog
+                open={deleteTemplateId !== null}
+                title="Eliminar plantilla"
+                message="¿Eliminar plantilla?"
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    if (deleteTemplateId) {
+                        void deleteMlAutoReplyTemplate(deleteTemplateId).then(() =>
+                            queryClient.invalidateQueries({ queryKey: ['ml-auto-reply'] }),
+                        );
+                    }
+                    setDeleteTemplateId(null);
+                }}
+                onCancel={() => setDeleteTemplateId(null)}
+            />
         </div>
     );
 }

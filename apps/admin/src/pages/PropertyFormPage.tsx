@@ -14,6 +14,12 @@ import {
     X,
 } from 'lucide-preact';
 import { Link, useLocation, useRoute } from 'wouter-preact';
+import type {
+    LatLng as LeafletLatLng,
+    Map as LeafletMap,
+    Marker as LeafletMarker,
+    LeafletMouseEvent,
+} from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
     type ListingType,
@@ -31,6 +37,7 @@ import {
     useUpdateProperty,
 } from '../lib/properties.api';
 import { PropertyOwnerManager } from '../components/owners';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
@@ -118,6 +125,7 @@ export function PropertyFormPage() {
     const [loaded, setLoaded] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [saving, setSaving] = useState(false);
+const [confirmDelete, setConfirmDelete] = useState(false);
     const [autosaveTimer, setAutosaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
     const [showMLPreview, setShowMLPreview] = useState(false);
     const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -126,7 +134,7 @@ export function PropertyFormPage() {
         'basic' | 'location' | 'details' | 'publish' | 'owners'
     >('basic');
     const mapRef = useRef<HTMLDivElement>(null);
-    const leafletMapRef = useRef<any>(null);
+    const leafletMapRef = useRef<LeafletMap | null>(null);
 
     useEffect(() => {
         return () => {
@@ -221,8 +229,8 @@ export function PropertyFormPage() {
 
                 leafletMapRef.current = map;
 
-                let marker: any = null;
-                const updateMarker = (latlng: any) => {
+                let marker: LeafletMarker | null = null;
+                const updateMarker = (latlng: LeafletLatLng) => {
                     if (marker) marker.remove();
                     marker = L.marker(latlng).addTo(map);
                     setMapCoords({ lat: latlng.lat, lng: latlng.lng });
@@ -232,7 +240,7 @@ export function PropertyFormPage() {
                     updateMarker(L.latLng(mapCoords.lat, mapCoords.lng));
                 }
 
-                map.on('click', (e: any) => updateMarker(e.latlng));
+                map.on('click', (e: LeafletMouseEvent) => updateMarker(e.latlng));
             });
         }
     };
@@ -311,7 +319,6 @@ export function PropertyFormPage() {
 
     const handleDelete = async () => {
         if (!editId) return;
-        if (!window.confirm(`¿Mover "${values.title}" a la papelera?`)) return;
         try {
             await softDeleteProperty.mutateAsync(editId);
             pushToast({ type: 'success', title: 'Propiedad movida a papelera' });
@@ -980,7 +987,7 @@ export function PropertyFormPage() {
                             <button
                                 type="button"
                                 className="btn btn--danger"
-                                onClick={handleDelete}
+                                onClick={() => setConfirmDelete(true)}
                                 disabled={saving}
                             >
                                 <Trash2 size={16} /> Mover a papelera
@@ -1124,6 +1131,19 @@ export function PropertyFormPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmDelete}
+                title="Mover a papelera"
+                message={`¿Mover "${values.title}" a la papelera?`}
+                confirmLabel="Mover a papelera"
+                danger
+                onConfirm={() => {
+                    setConfirmDelete(false);
+                    void handleDelete();
+                }}
+                onCancel={() => setConfirmDelete(false)}
+            />
         </div>
     );
 }

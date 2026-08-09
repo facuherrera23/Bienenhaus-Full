@@ -10,6 +10,7 @@ import {
     useUpdatePriceAnalysis,
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ComparablePropertyInput, PriceAnalysisGauge } from '@components/owners';
 import { priceAnalysisSchema } from '@lib/owners/schemas';
 import type { PriceAnalysisFormValues } from '../types/owners';
@@ -29,6 +30,7 @@ export function PriceAnalysisPage() {
     const propertyId = params?.id;
 
     const [editing, setEditing] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const queryClient = useQueryClient();
 
     usePropertyOwners(propertyId!);
@@ -99,7 +101,6 @@ export function PriceAnalysisPage() {
 
     const handleDelete = async () => {
         if (!priceAnalysis) return;
-        if (!window.confirm('¿Eliminar este análisis de precio?')) return;
         try {
             await deletePriceAnalysis.mutateAsync(priceAnalysis.id);
             pushToast({ type: 'success', title: 'Análisis eliminado' });
@@ -354,7 +355,7 @@ export function PriceAnalysisPage() {
                                 <button
                                     type="button"
                                     className="btn btn--danger"
-                                    onClick={handleDelete}
+                                    onClick={() => setConfirmDelete(true)}
                                 >
                                     <Trash2 size={14} /> Eliminar
                                 </button>
@@ -419,16 +420,13 @@ export function PriceAnalysisPage() {
                                         <dd>
                                             <span className="trend-badge">
                                                 {(() => {
-                                                    const Icon = MARKET_TREND_ICON[
-                                                        priceAnalysis.market_trend
-                                                    ] as any;
+                                                    const trend = priceAnalysis.market_trend;
+                                                    const Icon = trend ? MARKET_TREND_ICON[trend] : TrendingUp;
                                                     return (
                                                         <>
                                                             <Icon size={14} />{' '}
                                                             {
-                                                                MARKET_TREND_LABEL[
-                                                                    priceAnalysis.market_trend
-                                                                ]
+                                                                trend ? MARKET_TREND_LABEL[trend] : ''
                                                             }
                                                         </>
                                                     );
@@ -567,6 +565,19 @@ export function PriceAnalysisPage() {
                     </button>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmDelete}
+                title="Eliminar análisis"
+                message="¿Eliminar este análisis de precio?"
+                confirmLabel="Eliminar"
+                danger
+                onConfirm={() => {
+                    setConfirmDelete(false);
+                    void handleDelete();
+                }}
+                onCancel={() => setConfirmDelete(false)}
+            />
         </div>
     );
 }

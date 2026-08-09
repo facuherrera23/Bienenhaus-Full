@@ -542,6 +542,14 @@
     display: block;
 }
 
+.formError {
+    display: block;
+    font-size: var(--bh-text-xs);
+    color: var(--bh-danger);
+    margin-top: var(--bh-space-1);
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
+}
+
 .formGroup .inputWrapper .successCheck {
     position: absolute;
     right: 16px;
