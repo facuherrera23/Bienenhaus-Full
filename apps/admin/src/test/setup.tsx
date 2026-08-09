@@ -250,6 +250,8 @@ vi.mock('lucide-preact', () => {
         'Monitor',
         'CheckCheck',
         'Calculator',
+        // owners: MARKET_TREND_ICON (owners.ts)
+        'Minus',
     ];
     const mockIcons: Record<string, unknown> = {};
     icons.forEach((name) => {
