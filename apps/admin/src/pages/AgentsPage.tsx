@@ -4,6 +4,8 @@ import { Link } from 'wouter-preact';
 import { type AgentRow, useAgents, useToggleAgentActive } from '../lib/agents.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
+import styles from './AgentsPage.module.css';
+
 
 function getListData<T>(data: unknown): T[] {
     if (!data) return [];
@@ -65,25 +67,25 @@ export function AgentsPage() {
             )}
 
             {!isPending && !isError && (
-                <div className="agent-grid">
+                <div className={styles['agent-grid']}>
                     {agents.map((a) => (
                         <article
                             key={a.id}
-                            className={`agent-card${a.is_active ? '' : ' is-inactive'}`}
+                            className={`${styles['agent-card']}${a.is_active ? '' : ' is-inactive'}`}
                         >
-                            <div className="agent-card-head">
-                                <span className="agent-photo" aria-hidden="true">
+                            <div className={styles['agent-card-head']}>
+                                <span className={styles['agent-photo']} aria-hidden="true">
                                     {a.photo_url ? (
                                         <img src={a.photo_url} alt="" />
                                     ) : (
                                         (a.name[0] ?? '').toUpperCase()
                                     )}
                                 </span>
-                                <div className="agent-card-title">
+                                <div className={styles['agent-card-title']}>
                                     <h3>{a.name}</h3>
                                     <p>{a.role ?? 'Asesor'}</p>
                                     {a.matricula && (
-                                        <span className="agent-matricula">Mat. {a.matricula}</span>
+                                        <span className={styles['agent-matricula']}>Mat. {a.matricula}</span>
                                     )}
                                 </div>
                                 <span
@@ -93,7 +95,7 @@ export function AgentsPage() {
                                 </span>
                             </div>
 
-                            <div className="agent-card-contact">
+                            <div className={styles['agent-card-contact']}>
                                 <span>
                                     <Mail size={14} /> {a.email}
                                 </span>
@@ -103,21 +105,21 @@ export function AgentsPage() {
                             </div>
 
                             {a.specialties.length > 0 && (
-                                <div className="agent-specs">
+                                <div className={styles['agent-specs']}>
                                     {a.specialties.map((s) => (
-                                        <span key={s} className="chip">
+                                        <span key={s} className={styles['chip']}>
                                             {s}
                                         </span>
                                     ))}
                                 </div>
                             )}
 
-                            <div className="agent-card-foot">
+                            <div className={styles['agent-card-foot']}>
                                 <span className="muted">
                                     {a.lead_count} lead{a.lead_count === 1 ? '' : 's'} asignado
                                     {a.lead_count === 1 ? '' : 's'}
                                 </span>
-                                <div className="agent-card-actions">
+                                <div className={styles['agent-card-actions']}>
                                     <button
                                         className="btn btn--ghost"
                                         onClick={() => handleToggleActive(a)}

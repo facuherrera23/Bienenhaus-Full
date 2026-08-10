@@ -10,6 +10,8 @@ import {
     useUpdateProperty,
 } from '../lib/properties.api';
 import { pushToast } from '../store/app';
+import styles from './QuickPropertyActions.module.css';
+
 
 const STATUSES = Object.keys(STATUS_LABEL) as PropertyStatus[];
 
@@ -56,27 +58,27 @@ export function QuickPropertyActions({ properties }: QuickPropertyActionsProps) 
             )}
 
             {recent.length > 0 && (
-                <ul className="quick-list">
+                <ul className={styles['quick-list']}>
                     {recent.map((p) => (
-                        <li className="quick-item" key={p.id}>
+                        <li className={styles['quick-item']} key={p.id}>
                             {p.cover_url ? (
                                 <img
-                                    className="quick-thumb"
+                                    className={styles['quick-thumb']}
                                     src={p.cover_url}
                                     alt=""
                                     loading="lazy"
                                 />
                             ) : (
                                 <span
-                                    className="quick-thumb quick-thumb--placeholder"
+                                    className={`${styles['quick-thumb']} ${styles['quick-thumb--placeholder']}`}
                                     aria-hidden="true"
                                 >
                                     <Building2 size={16} />
                                 </span>
                             )}
-                            <div className="quick-body">
-                                <p className="quick-title">{p.title}</p>
-                                <p className="quick-meta">
+                            <div className={styles['quick-body']}>
+                                <p className={styles['quick-title']}>{p.title}</p>
+                                <p className={styles['quick-meta']}>
                                     {p.location} · {p.code}
                                 </p>
                             </div>

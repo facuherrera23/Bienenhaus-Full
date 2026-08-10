@@ -16,6 +16,8 @@ import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { pushToast } from '../store/app';
+import styles from './ConfigPage.module.css';
+
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—';
@@ -508,7 +510,7 @@ export function ConfigPage() {
                     <p className="muted">
                         Enviá este enlace al usuario. Lo abre para definir su contraseña.
                     </p>
-                    <div className="link-box">
+                    <div className={styles['link-box']}>
                         <code>{linkModal.link}</code>
                         <button
                             type="button"

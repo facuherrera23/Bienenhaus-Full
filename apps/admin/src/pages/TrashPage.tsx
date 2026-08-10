@@ -43,6 +43,8 @@ import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import styles from './TrashPage.module.css';
+
 
 type TabType = 'properties' | 'leads' | 'agents' | 'newsletter' | 'owners' | 'action_plans';
 
@@ -363,13 +365,13 @@ const [deleteTarget, setDeleteTarget] = useState<{
                 )}
             </div>
 
-            <div className="trash-tabs" role="tablist">
+            <div className={styles['trash-tabs']} role="tablist">
                 {tabsWithCounts.map((tab) => (
                     <button
                         key={tab.id}
                         role="tab"
                         aria-selected={activeTab === tab.id}
-                        className={`trash-tab${activeTab === tab.id ? ' active' : ''}`}
+                        className={`${styles['trash-tab']}${activeTab === tab.id ? ' active' : ''}`}
                         onClick={() => setActiveTab(tab.id)}
                         disabled={pending}
                     >

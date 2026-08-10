@@ -18,6 +18,8 @@ import {
 } from '../lib/activity';
 import type { PropertyStatus } from '../types/properties';
 import { useQuery } from '../lib/query/hooks';
+import styles from './RecentActivity.module.css';
+
 
 const ICON_BY_ACTION: Record<ActivityAction, typeof Plus> = {
     create: Plus,
@@ -122,29 +124,29 @@ export function RecentActivity() {
             {isError && <div className="placeholder-card">No se pudo cargar la actividad.</div>}
 
             {!isPending && !isError && (data?.length ?? 0) === 0 && (
-                <div className="activity-empty">
+                <div className={styles['activity-empty']}>
                     <Activity size={28} strokeWidth={1.6} aria-hidden="true" />
-                    <p className="activity-empty-title">Sin actividad aún</p>
-                    <p className="activity-empty-hint">Las acciones del panel aparecerán aquí.</p>
+                    <p className={styles['activity-empty-title']}>Sin actividad aún</p>
+                    <p className={styles['activity-empty-hint']}>Las acciones del panel aparecerán aquí.</p>
                 </div>
             )}
 
             {!isPending && !isError && (data?.length ?? 0) > 0 && (
-                <ul className="activity-list">
+                <ul className={styles['activity-list']}>
                     {data!.map((row) => {
                         const { title, detail } = describe(row);
                         const Icon = ICON_BY_ACTION[row.action] ?? Plus;
                         return (
-                            <li className="activity-item" key={row.id}>
+                            <li className={styles['activity-item']} key={row.id}>
                                 <span
-                                    className={`activity-icon is-${row.action}`}
+                                    className={`${styles['activity-icon']} is-${row.action}`}
                                     aria-hidden="true"
                                 >
                                     <Icon size={15} strokeWidth={1.9} />
                                 </span>
-                                <div className="activity-body">
-                                    <p className="activity-title">{title}</p>
-                                    <p className="activity-meta">
+                                <div className={styles['activity-body']}>
+                                    <p className={styles['activity-title']}>{title}</p>
+                                    <p className={styles['activity-meta']}>
                                         {detail && <span>{detail} · </span>}
                                         {row.actor_name ?? row.actor_email ?? 'Sistema'} ·{' '}
                                         {timeAgo(row.created_at)}

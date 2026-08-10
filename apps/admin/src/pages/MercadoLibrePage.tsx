@@ -51,6 +51,8 @@ import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import styles from './MercadoLibrePage.module.css';
+
 
 const LISTING_TYPE_DESCRIPTIONS: Record<string, string> = {
     free: 'Gratuita: sin costo, menor visibilidad, ideal para probar',
@@ -74,7 +76,7 @@ function formatDate(iso: string | null): string {
 
 function StatCard({ label, value }: { label: string; value: number }) {
     return (
-        <div className="stat-card">
+        <div className={styles['stat-card']}>
             <strong>{value}</strong>
             <span>{label}</span>
         </div>
@@ -323,7 +325,7 @@ export function MercadoLibrePage() {
                 )}
                 {metricsQ.data && !metricsQ.isPending && !metricsQ.isError && (
                     <>
-                        <div className="ml-stats" style={{ marginBottom: '24px' }}>
+                        <div className={styles['ml-stats']} style={{ marginBottom: '24px' }}>
                             <StatCard label="Visitas totales" value={metricsQ.data.total_visits} />
                             <StatCard label="Preguntas" value={metricsQ.data.total_questions} />
                             <StatCard
@@ -851,7 +853,7 @@ export function MercadoLibrePage() {
                     {questionsSection}
                     {autoReplySection}
 
-                    <div className="ml-grid">
+                    <div className={styles['ml-grid']}>
                         <section className="card">
                             <div className="site-section-head">
                                 <div>
@@ -881,9 +883,9 @@ export function MercadoLibrePage() {
                             </div>
 
                             {connection ? (
-                                <div className="ml-connection">
-                                    <div className="ml-connection-identity">
-                                        <span className="cell-thumb ml-avatar" aria-hidden="true">
+                                <div className={styles['ml-connection']}>
+                                    <div className={styles['ml-connection-identity']}>
+                                        <span className={`cell-thumb ${styles['ml-avatar']}`} aria-hidden="true">
                                             {connection.nickname?.slice(0, 2).toUpperCase() ?? 'ML'}
                                         </span>
                                         <div>
@@ -895,7 +897,7 @@ export function MercadoLibrePage() {
                                             </span>
                                         </div>
                                     </div>
-                                    <dl className="ml-details">
+                                    <dl className={styles['ml-details']}>
                                         <div>
                                             <dt>Site</dt>
                                             <dd>{connection.site_id}</dd>
@@ -914,18 +916,18 @@ export function MercadoLibrePage() {
                                         </div>
                                     </dl>
 
-                                    <div className="ml-defaults">
+                                    <div className={styles['ml-defaults']}>
                                         <h4>Configuracion de publicaciones</h4>
-                                        <div className="defaults-grid">
+                                        <div className={styles['defaults-grid']}>
                                             <label className="field">
                                                 <span>Categoria (category_id)</span>
                                                 <div
-                                                    className="typeahead"
+                                                    className={styles['typeahead']}
                                                     onMouseLeave={() =>
                                                         setShowCategoryDropdown(false)
                                                     }
                                                 >
-                                                    <Search size={16} className="typeahead-icon" />
+                                                    <Search size={16} className={styles['typeahead-icon']} />
                                                     <input
                                                         type="text"
                                                         placeholder="Buscar categoria... (ej: MLA1459)"
@@ -958,7 +960,7 @@ export function MercadoLibrePage() {
                                                     {showCategoryDropdown &&
                                                         categorySearch &&
                                                         categoriesQ.data && (
-                                                            <ul className="typeahead-dropdown">
+                                                            <ul className={styles['typeahead-dropdown']}>
                                                                 {categoriesQ.data
                                                                     .filter(
                                                                         (c: MlCategory) =>
@@ -1018,7 +1020,7 @@ export function MercadoLibrePage() {
                                                         defaultsDraft.category_id && (
                                                             <button
                                                                 type="button"
-                                                                className="typeahead-clear"
+                                                                className={styles['typeahead-clear']}
                                                                 onClick={() => {
                                                                     setDefaultsDraft({
                                                                         ...defaultsDraft,
@@ -1035,7 +1037,7 @@ export function MercadoLibrePage() {
                                             </label>
                                             <label className="field">
                                                 <span>Tipo de publicacion (listing_type_id)</span>
-                                                <div className="select-with-desc">
+                                                <div className={styles['select-with-desc']}>
                                                     <select
                                                         className="select"
                                                         value={defaultsDraft.listing_type_id}
@@ -1073,7 +1075,7 @@ export function MercadoLibrePage() {
                                                             ),
                                                         )}
                                                     </select>
-                                                    <p className="select-desc">
+                                                    <p className={styles['select-desc']}>
                                                         {
                                                             LISTING_TYPE_DESCRIPTIONS[
                                                                 defaultsDraft.listing_type_id
@@ -1101,7 +1103,7 @@ export function MercadoLibrePage() {
                                                 </select>
                                             </label>
                                         </div>
-                                        <div className="ml-connection-actions">
+                                        <div className={styles['ml-connection-actions']}>
                                             {JSON.stringify(defaultsDraft) !==
                                                 JSON.stringify(settingsQ.data?.defaults ?? {}) && (
                                                 <button
@@ -1120,7 +1122,7 @@ export function MercadoLibrePage() {
                                         </div>
                                     </div>
 
-                                    <div className="ml-connection-actions">
+                                    <div className={styles['ml-connection-actions']}>
                                         <button
                                             className="btn btn--danger btn--sm"
                                             onClick={() => disconnectMutation.mutate()}
@@ -1131,7 +1133,7 @@ export function MercadoLibrePage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="ml-connect">
+                                <div className={styles['ml-connect']}>
                                     <p>
                                         {mlEnabled
                                             ? 'No hay ninguna cuenta conectada. Conectala para empezar a publicar.'
@@ -1155,7 +1157,7 @@ export function MercadoLibrePage() {
                                         </div>
                                     </label>
 
-                                    <div className="ml-redirect">
+                                    <div className={styles['ml-redirect']}>
                                         <span className="muted">Redirect URI configurada:</span>
                                         <code>{ML_REDIRECT_URI}</code>
                                         <button
@@ -1174,7 +1176,7 @@ export function MercadoLibrePage() {
                                         </button>
                                     </div>
 
-                                    <div className="ml-connection-actions">
+                                    <div className={styles['ml-connection-actions']}>
                                         {appIdDraft.trim() !== (settingsQ.data?.app_id ?? '') && (
                                             <button
                                                 className="btn btn--secondary btn--sm"
@@ -1204,14 +1206,14 @@ export function MercadoLibrePage() {
                                     <p>Estado de la cola y publicaciones activas.</p>
                                 </div>
                             </div>
-                            <div className="ml-stats">
+                            <div className={styles['ml-stats']}>
                                 <StatCard label="Pendientes" value={stats.pending} />
                                 <StatCard label="Procesando" value={stats.processing} />
                                 <StatCard label="Exitosos" value={stats.success} />
                                 <StatCard label="Fallidos" value={stats.failed} />
                                 <StatCard label="En Mercado Libre" value={stats.onMl} />
                             </div>
-                            <p className="muted ml-note">
+                            <p className={`muted ${styles['ml-note']}`}>
                                 La sincronizacion corre en segundo plano automaticamente cada pocos
                                 minutos.
                             </p>
@@ -1261,7 +1263,7 @@ export function MercadoLibrePage() {
                                         <td className="num">{q.ml_item_id ?? '-'}</td>
                                         <td className="muted">{formatDate(q.created_at)}</td>
                                         <td
-                                            className="muted cell-error"
+                                            className={`muted ${styles['cell-error']}`}
                                             title={q.last_error ?? undefined}
                                         >
                                             {q.last_error ?? '-'}

@@ -64,6 +64,8 @@ import {
     ValuacionConValidacionesSchema,
     VigilanciaEnum,
 } from '../schemas/valuationSchemas';
+import styles from './TasarPage.module.css';
+
 
 // ============================================================
 // Paso 6 — Pasada 2: WIZARD COMPLETO con campos reales
@@ -461,8 +463,8 @@ function ComparablesEditor({
     }
 
     return (
-        <div className="comparable-section field--wide">
-            <div className="comparable-section-head">
+        <div className={`${styles['comparable-section']} field--wide`}>
+            <div className={styles['comparable-section-head']}>
                 <span>Comparables</span>
                 <button type="button" className="btn btn--sm btn--secondary" onClick={addComparable} disabled={disabled}>
                     <Plus size={14} /> Agregar comparable
@@ -470,14 +472,14 @@ function ComparablesEditor({
             </div>
 
             {comparables.length === 0 ? (
-                <p className="comparable-empty">
+                <p className={styles['comparable-empty']}>
                     Sin comparables cargados. Agregá al menos uno para el análisis comparativo.
                 </p>
             ) : (
                 comparables.map((c, i) => (
-                    <div className="comparable-card" key={i}>
-                        <div className="comparable-card-head">
-                            <span className="comparable-card-title">Comparable #{c.orden}</span>
+                    <div className={styles['comparable-card']} key={i}>
+                        <div className={styles['comparable-card-head']}>
+                            <span className={styles['comparable-card-title']}>Comparable #{c.orden}</span>
                             <button
                                 type="button"
                                 className="btn btn--sm btn--danger"
@@ -561,7 +563,7 @@ function ComparablesEditor({
                                 onChange={(v) => updateComparable(i, { urlOrigen: v })}
                             />
                         </div>
-                        <div className="comparable-chars">
+                        <div className={styles['comparable-chars']}>
                             {c.chars.map((char, ci) => (
                                 <SelectInput
                                     key={ci}
@@ -574,7 +576,7 @@ function ComparablesEditor({
                                 />
                             ))}
                         </div>
-                        <label className="checkbox comparable-included">
+                        <label className={`checkbox ${styles['comparable-included']}`}>
                             <input
                                 type="checkbox"
                                 checked={c.included}
@@ -1128,7 +1130,7 @@ export function TasarPage() {
                                 onChange={(v) => setField(id, v)}
                             />
                         ))}
-                        <div className="ambient-total">
+                        <div className={styles['ambient-total']}>
                             <span>Total de ambientes</span>
                             <strong>{ambientTotal}</strong>
                         </div>
@@ -1447,9 +1449,9 @@ export function TasarPage() {
             {/* Header */}
             <div className="page-head">
                 <div>
-                    <div className="breadcrumbs">
+                    <div className={styles['breadcrumbs']}>
                         <Link href="/tasar">Tasar</Link>
-                        <span className="breadcrumb-sep">/</span>
+                        <span className={styles['breadcrumb-sep']}>/</span>
                         <span>{editId ? 'Editar tasación' : 'Nueva tasación'}</span>
                     </div>
                     <h1 className="page-title">{editId ? 'Editar tasación' : 'Nueva tasación'}</h1>
@@ -1460,7 +1462,7 @@ export function TasarPage() {
                     </p>
                 </div>
 
-                <div className="page-actions">
+                <div className={styles['page-actions']}>
                     <button className="btn btn--ghost" onClick={handleNewValuation}>
                         <FileCheck2 size={16} /> Nueva
                     </button>
@@ -1485,7 +1487,7 @@ export function TasarPage() {
 
             {/* Banner de estado (locked / autosave) */}
             {isLocked && (
-                <div className="valuation-banner valuation-banner--locked">
+                <div className={`${styles['valuation-banner']} ${styles['valuation-banner--locked']}`}>
                     <Lock size={16} />
                     <span>
                         Esta tasación está finalizada. Para modificarla, usá «Habilitar edición».
@@ -1493,13 +1495,13 @@ export function TasarPage() {
                 </div>
             )}
             {!isLocked && (
-                <div className="valuation-banner">
+                <div className={styles['valuation-banner']}>
                     {saving ? (
                         <Loader2 className="spin" size={14} />
                     ) : dirty ? (
-                        <span className="valuation-status-dot valuation-status-dot--dirty" />
+                        <span className={`${styles['valuation-status-dot']} ${styles['valuation-status-dot--dirty']}`} />
                     ) : (
-                        <span className="valuation-status-dot valuation-status-dot--saved" />
+                        <span className={`${styles['valuation-status-dot']} ${styles['valuation-status-dot--saved']}`} />
                     )}
                     <span>
                         {saving
@@ -1514,11 +1516,11 @@ export function TasarPage() {
             )}
 
             {loadError && (
-                <div className="valuation-banner valuation-banner--error">{loadError}</div>
+                <div className={`${styles['valuation-banner']} ${styles['valuation-banner--error']}`}>{loadError}</div>
             )}
 
             {/* Stepper */}
-            <nav className="wizard-stepper" aria-label="Pasos de la tasación">
+            <nav className={styles['wizard-stepper']} aria-label="Pasos de la tasación">
                 {STEPS.map((s, i) => {
                     const Icon = s.icon;
                     const isActive = i === stepIndex;
@@ -1526,40 +1528,40 @@ export function TasarPage() {
                     return (
                         <button
                             key={s.id}
-                            className={`wizard-step${isActive ? ' wizard-step--active' : ''}${
-                                isDone ? ' wizard-step--done' : ''
+                            className={`${styles['wizard-step']}${isActive ? ` ${styles['wizard-step--active']}` : ''}${
+                                isDone ? ` ${styles['wizard-step--done']}` : ''
                             }`}
                             onClick={() => goToStep(i)}
                             aria-current={isActive ? 'step' : undefined}
                         >
-                            <span className="wizard-step-icon">
+                            <span className={styles['wizard-step-icon']}>
                                 {isDone ? <FileCheck2 size={15} /> : <Icon size={15} />}
                             </span>
-                            <span className="wizard-step-label">{s.label}</span>
-                            <span className="wizard-step-num">{i + 1}</span>
+                            <span className={styles['wizard-step-label']}>{s.label}</span>
+                            <span className={styles['wizard-step-num']}>{i + 1}</span>
                         </button>
                     );
                 })}
             </nav>
 
             {/* Contenido del paso */}
-            <section className="card valuation-step-card">
-                <div className="valuation-step-head">
+            <section className={`card ${styles['valuation-step-card']}`}>
+                <div className={styles['valuation-step-head']}>
                     <div>
-                        <h2 className="valuation-step-title">
+                        <h2 className={styles['valuation-step-title']}>
                             {stepIndex + 1}. {step.label}
                         </h2>
-                        <p className="valuation-step-desc">{step.description}</p>
+                        <p className={styles['valuation-step-desc']}>{step.description}</p>
                     </div>
-                    <span className="valuation-step-count">
+                    <span className={styles['valuation-step-count']}>
                         Paso {stepIndex + 1} de {STEPS.length}
                     </span>
                 </div>
 
-                <div className="valuation-step-body">{renderStepContent()}</div>
+                <div className={styles['valuation-step-body']}>{renderStepContent()}</div>
 
                 {/* Navegación */}
-                <div className="valuation-nav">
+                <div className={styles['valuation-nav']}>
                     <button
                         className="btn btn--ghost"
                         onClick={() => goToStep(stepIndex - 1)}

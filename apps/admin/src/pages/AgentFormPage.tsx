@@ -18,6 +18,8 @@ import {
 } from '../lib/agents';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
+import styles from './AgentFormPage.module.css';
+
 
 const EMPTY: AgentFormValues = {
     name: '',
@@ -231,15 +233,15 @@ export function AgentFormPage() {
                                 inicial del nombre.
                             </p>
                         </div>
-                        <div className="photo-picker">
-                            <span className="photo-picker-preview" aria-hidden="true">
+                        <div className={styles['photo-picker']}>
+                            <span className={styles['photo-picker-preview']} aria-hidden="true">
                                 {photoPreview ? (
                                     <img src={photoPreview} alt="Vista previa" />
                                 ) : (
                                     (values.name[0] ?? '').toUpperCase()
                                 )}
                             </span>
-                            <div className="photo-picker-actions">
+                            <div className={styles['photo-picker-actions']}>
                                 <label className="btn btn--secondary">
                                     {photoPreview ? 'Cambiar foto' : 'Subir foto'}
                                     <input
@@ -254,7 +256,7 @@ export function AgentFormPage() {
                                         Quitar foto
                                     </button>
                                 )}
-                                <span className="muted photo-picker-note">
+                                <span className={`muted ${styles['photo-picker-note']}`}>
                                     {photoFile
                                         ? `${photoFile.name} (listo para subir)`
                                         : 'Sin archivo seleccionado'}

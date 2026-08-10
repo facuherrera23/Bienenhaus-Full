@@ -1,0 +1,338 @@
+/**
+ * pages/TasarPage.module.css — migrado a CSS Modules (Fase 3).
+ * Clases: ambient-total, breadcrumb-sep, breadcrumbs, comparable-card, comparable-card-head, comparable-card-title, comparable-chars, comparable-empty, comparable-included, comparable-section, comparable-section-head, page-actions, valuation-banner, valuation-banner--error, valuation-banner--locked, valuation-nav, valuation-status-dot, valuation-status-dot--dirty, valuation-status-dot--saved, valuation-step-body, valuation-step-card, valuation-step-count, valuation-step-desc, valuation-step-head, valuation-step-title, wizard-step, wizard-step--active, wizard-step--done, wizard-step-icon, wizard-step-label, wizard-step-num, wizard-stepper
+ */
+
+/* ========================================================================== M�dulo Tasar � Wizard de tasaci�n (pasada 1: esqueleto) ========================================================================== */ .breadcrumbs {
+
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--bh-text-tertiary);
+      margin-bottom: 6px;
+
+}
+
+.breadcrumbs a {
+
+      color: var(--bh-accent);
+      text-decoration: none;
+
+}
+
+.breadcrumbs a:hover {
+
+      text-decoration: underline;
+
+}
+
+.breadcrumb-sep {
+
+      color: var(--bh-text-disabled);
+
+}
+
+.page-actions {
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+
+}
+
+/* --- Banner de estado (locked / autosave / error) --- */ .valuation-banner {
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-sm);
+      background: var(--bh-bg-card);
+      color: var(--bh-text-secondary);
+      font-size: 13px;
+
+}
+
+.valuation-banner--locked {
+
+      border-color: rgba(250, 204, 21, 0.35);
+      background: rgba(250, 204, 21, 0.08);
+      color: var(--bh-warning);
+
+}
+
+.valuation-banner--error {
+
+      border-color: rgba(248, 113, 113, 0.35);
+      background: var(--bh-danger-soft);
+      color: var(--bh-danger);
+
+}
+
+.valuation-status-dot {
+
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+
+}
+
+.valuation-status-dot--dirty {
+
+      background: var(--bh-warning);
+
+}
+
+.valuation-status-dot--saved {
+
+      background: var(--bh-success);
+
+}
+
+/* --- Stepper --- */ .wizard-stepper {
+
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      flex-wrap: wrap;
+
+}
+
+.wizard-step {
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-md);
+      background: var(--bh-bg-card);
+      color: var(--bh-text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color var(--bh-dur-fast) var(--bh-ease), background var(--bh-dur-fast) var(--bh-ease);
+
+}
+
+.wizard-step:hover {
+
+      border-color: var(--bh-border-strong);
+
+}
+
+.wizard-step--active {
+
+      border-color: var(--bh-accent);
+      background: var(--bh-accent-soft);
+      color: var(--bh-text-primary);
+
+}
+
+.wizard-step--done {
+
+      color: var(--bh-text-tertiary);
+
+}
+
+.wizard-step--done .wizard-step-icon {
+
+      color: var(--bh-success);
+
+}
+
+.wizard-step-icon {
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bh-text-tertiary);
+
+}
+
+.wizard-step-label {
+
+      line-height: 1.2;
+
+}
+
+.wizard-step-num {
+
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--bh-text-disabled);
+      background: var(--bh-bg-input);
+      border-radius: 999px;
+      padding: 1px 7px;
+
+}
+
+/* --- Contenido del paso --- */ .valuation-step-card {
+
+      padding: 22px 24px;
+
+}
+
+.valuation-step-head {
+
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+
+}
+
+.valuation-step-title {
+
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--bh-text-primary);
+      margin: 0 0 4px;
+
+}
+
+.valuation-step-desc {
+
+      margin: 0;
+      color: var(--bh-text-tertiary);
+      font-size: 13px;
+
+}
+
+.valuation-step-count {
+
+      font-size: 12px;
+      color: var(--bh-text-disabled);
+      white-space: nowrap;
+      background: var(--bh-bg-input);
+      padding: 4px 10px;
+      border-radius: 999px;
+
+}
+
+/* --- Cuerpo del paso --- */ .valuation-step-body {
+  
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+
+}
+
+/* --- Editor de comparables --- */ .comparable-section {
+  
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+}
+
+.comparable-section-head {
+  
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--bh-text-primary);
+
+}
+
+.comparable-empty {
+  
+      margin: 0;
+      padding: 14px 16px;
+      border: 1px dashed var(--bh-border-strong);
+      border-radius: var(--bh-radius-md);
+      background: var(--bh-bg-input);
+      color: var(--bh-text-tertiary);
+      font-size: 13px;
+
+}
+
+.comparable-card {
+  
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-md);
+      background: var(--bh-bg-card);
+
+}
+
+.comparable-card-head {
+  
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--bh-border);
+
+}
+
+.comparable-card-title {
+  
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--bh-text-primary);
+
+}
+
+.comparable-chars {
+  
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--bh-border);
+
+}
+
+.comparable-included {
+  
+      align-self: flex-start;
+
+}
+
+/* --- Total de ambientes --- */ .ambient-total {
+  
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 14px;
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-sm);
+      background: var(--bh-bg-input);
+      font-size: 13px;
+      color: var(--bh-text-secondary);
+
+}
+
+.ambient-total strong {
+  
+      font-size: 15px;
+      color: var(--bh-text-primary);
+
+}
+
+/* --- Navegaci�n --- */ .valuation-nav {
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--bh-border);
+
+}

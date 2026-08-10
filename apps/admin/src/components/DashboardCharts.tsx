@@ -16,6 +16,8 @@ import {
     YAxis,
 } from 'recharts';
 import { Building2, DollarSign, TrendingUp, Users } from 'lucide-preact';
+import styles from './DashboardCharts.module.css';
+
 
 const STATUS_COLORS = {
     // Property status
@@ -145,9 +147,9 @@ export function DashboardCharts() {
 
     if (leadsPending || propsPending) {
         return (
-            <div className="charts-grid">
+            <div className={styles['charts-grid']}>
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="chart-card placeholder-card">
+                    <div key={i} className={`${styles['chart-card']} placeholder-card`}>
                         Cargando gráficos…
                     </div>
                 ))}
@@ -157,8 +159,8 @@ export function DashboardCharts() {
 
     if ((leads?.length ?? 0) === 0 && (properties?.length ?? 0) === 0) {
         return (
-            <div className="charts-grid">
-                <div className="chart-card placeholder-card">
+            <div className={styles['charts-grid']}>
+                <div className={`${styles['chart-card']} placeholder-card`}>
                     <p>Sin datos disponibles</p>
                     <p className="muted">Agrega propiedades y leads para ver los gráficos.</p>
                 </div>
@@ -184,7 +186,7 @@ export function DashboardCharts() {
 
     return (
         <div className="charts-section">
-            <div className="kpi-grid charts-kpi">
+            <div className={`kpi-grid ${styles['charts-kpi']}`}>
                 <div className="kpi-card" role="region" aria-label="KPI: Total Leads">
                     <span className="kpi-icon" aria-hidden="true">
                         <Users size={20} strokeWidth={1.8} />
@@ -245,13 +247,13 @@ export function DashboardCharts() {
                 </div>
             </div>
 
-            <div className="charts-grid">
-                <div className="chart-card">
-                    <div className="chart-header">
+            <div className={styles['charts-grid']}>
+                <div className={styles['chart-card']}>
+                    <div className={styles['chart-header']}>
                         <h3>Leads por Estado</h3>
-                        <p className="chart-subtitle">Distribución actual del pipeline</p>
+                        <p className={styles['chart-subtitle']}>Distribución actual del pipeline</p>
                     </div>
-                    <div className="chart-wrapper">
+                    <div className={styles['chart-wrapper']}>
                         <ResponsiveContainer width="100%" height={280}>
                             <BarChart
                                 data={Object.entries(leadsByStatus).map(([status, count]) => ({
@@ -282,12 +284,12 @@ export function DashboardCharts() {
                     </div>
                 </div>
 
-                <div className="chart-card">
-                    <div className="chart-header">
+                <div className={styles['chart-card']}>
+                    <div className={styles['chart-header']}>
                         <h3>Propiedades por Estado</h3>
-                        <p className="chart-subtitle">Estado del catálogo</p>
+                        <p className={styles['chart-subtitle']}>Estado del catálogo</p>
                     </div>
-                    <div className="chart-wrapper">
+                    <div className={styles['chart-wrapper']}>
                         <ResponsiveContainer width="100%" height={280}>
                             <PieChart>
                                 <Pie
@@ -324,12 +326,12 @@ export function DashboardCharts() {
                     </div>
                 </div>
 
-                <div className="chart-card">
-                    <div className="chart-header">
+                <div className={styles['chart-card']}>
+                    <div className={styles['chart-header']}>
                         <h3>Leads por Origen</h3>
-                        <p className="chart-subtitle">De dónde vienen los contactos</p>
+                        <p className={styles['chart-subtitle']}>De dónde vienen los contactos</p>
                     </div>
-                    <div className="chart-wrapper">
+                    <div className={styles['chart-wrapper']}>
                         <ResponsiveContainer width="100%" height={280}>
                             <BarChart
                                 data={Object.entries(leadsBySource).map(([source, count]) => ({
@@ -365,12 +367,12 @@ export function DashboardCharts() {
                     </div>
                 </div>
 
-                <div className="chart-card">
-                    <div className="chart-header">
+                <div className={styles['chart-card']}>
+                    <div className={styles['chart-header']}>
                         <h3>Leads por Mes</h3>
-                        <p className="chart-subtitle">Evolución temporal (últimos 6 meses)</p>
+                        <p className={styles['chart-subtitle']}>Evolución temporal (últimos 6 meses)</p>
                     </div>
-                    <div className="chart-wrapper">
+                    <div className={styles['chart-wrapper']}>
                         <ResponsiveContainer width="100%" height={280}>
                             <AreaChart data={leadsByMonthSorted}>
                                 <defs>

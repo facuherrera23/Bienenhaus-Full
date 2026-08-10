@@ -17,6 +17,8 @@ import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
 import { useActionPlans } from '../lib/owners/api';
 import { useOwners } from '../lib/owners/api';
+import styles from './Dashboard.module.css';
+
 
 export function Dashboard() {
     const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
@@ -125,7 +127,7 @@ export function Dashboard() {
     ];
 
     return (
-        <div className="page dashboard-page">
+        <div className={`page ${styles['dashboard-page']}`}>
             <div className="page-head">
                 <div>
                     <h2 className="page-title">Dashboard</h2>
@@ -138,10 +140,10 @@ export function Dashboard() {
                 </Link>
             </div>
 
-            {loading && <div className="dashboard-loading">Cargando métricas…</div>}
+            {loading && <div className={styles['dashboard-loading']}>Cargando métricas…</div>}
 
-            <section className="dashboard-section" aria-labelledby="kpi-title">
-                <h3 id="kpi-title" className="section-title">
+            <section className={styles['dashboard-section']} aria-labelledby="kpi-title">
+                <h3 id="kpi-title" className={styles['section-title']}>
                     Indicadores Clave
                 </h3>
                 <div className="kpi-grid">
@@ -155,47 +157,47 @@ export function Dashboard() {
                             <span className="kpi-icon" aria-hidden="true">
                                 <kpi.icon size={20} strokeWidth={1.8} />
                             </span>
-                            <div className="kpi-content">
+                            <div className={styles['kpi-content']}>
                                 <p className="kpi-label">{kpi.label}</p>
                                 <p className="kpi-value">{loading ? '—' : kpi.value}</p>
                                 <p className="kpi-delta">{kpi.delta}</p>
                             </div>
-                            <span className="kpi-accent" aria-hidden="true"></span>
+                            <span className={styles['kpi-accent']} aria-hidden="true"></span>
                         </article>
                     ))}
                 </div>
             </section>
 
-            <section className="dashboard-section charts-section" aria-labelledby="charts-title">
+            <section className={`${styles['dashboard-section']} charts-section`} aria-labelledby="charts-title">
                 <div className="section-header">
-                    <h3 id="charts-title" className="section-title">
+                    <h3 id="charts-title" className={styles['section-title']}>
                         Análisis y Tendencias
                     </h3>
-                    <Link href="/leads" className="section-link">
+                    <Link href="/leads" className={styles['section-link']}>
                         Ver leads <Users size={14} />
                     </Link>
                 </div>
                 <DashboardCharts />
             </section>
 
-            <section className="dashboard-section" aria-labelledby="quick-title">
+            <section className={styles['dashboard-section']} aria-labelledby="quick-title">
                 <div className="section-header">
-                    <h3 id="quick-title" className="section-title">
+                    <h3 id="quick-title" className={styles['section-title']}>
                         Acciones Rápidas
                     </h3>
-                    <Link href="/propiedades" className="section-link">
+                    <Link href="/propiedades" className={styles['section-link']}>
                         Ver todas <Home size={14} />
                     </Link>
                 </div>
                 <QuickPropertyActions properties={properties} />
             </section>
 
-            <section className="dashboard-section" aria-labelledby="activity-title">
+            <section className={styles['dashboard-section']} aria-labelledby="activity-title">
                 <div className="section-header">
-                    <h3 id="activity-title" className="section-title">
+                    <h3 id="activity-title" className={styles['section-title']}>
                         Actividad Reciente
                     </h3>
-                    <Link href="/leads" className="section-link">
+                    <Link href="/leads" className={styles['section-link']}>
                         Ver todos <Activity size={14} />
                     </Link>
                 </div>

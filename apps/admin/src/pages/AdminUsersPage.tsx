@@ -16,6 +16,8 @@ import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { authUserRole, pushToast } from '../store/app';
+import styles from './AdminUsersPage.module.css';
+
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—';
@@ -275,7 +277,7 @@ export function AdminUsersPage() {
                     aria-labelledby="invite-title"
                 >
                     <div
-                        className="modal-container modal--small"
+                        className={`modal-container ${styles['modal--small']}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button

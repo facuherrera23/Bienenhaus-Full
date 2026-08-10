@@ -1,6 +1,8 @@
 import { Download, FileText, Mail, MessageSquare, X } from 'lucide-preact';
 import type { ReportRow } from '../../types/owners';
 import { REPORT_TYPE_LABEL } from '../../types/owners';
+import styles from './OwnerReportPreview.module.css';
+
 
 interface OwnerReportPreviewProps {
     report: ReportRow;
@@ -246,7 +248,7 @@ export function OwnerReportPreview({
                     </div>
                 </div>
 
-                <div className="modal-footer">
+                <div className={styles['modal-footer']}>
                     <div className="footer-left">
                         {onRegenerate && (
                             <button type="button" className="btn btn--ghost" onClick={onRegenerate}>

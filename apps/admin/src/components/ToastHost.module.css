@@ -1,0 +1,130 @@
+/**
+ * components/ToastHost.module.css — migrado a CSS Modules (Fase 3).
+ * Clases: toast, toast-body, toast-host, toast-icon
+ */
+
+/* -------------------------------------------------------------------------- Toasts -------------------------------------------------------------------------- */ .toast-host {
+
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: var(--bh-z-toast);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      width: 320px;
+
+}
+
+.toast {
+
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      background: var(--bh-bg-card);
+      border: 1px solid var(--bh-border);
+      border-left-width: 3px;
+      border-radius: var(--bh-radius-sm);
+      box-shadow: var(--bh-shadow-md);
+
+}
+
+.toast-icon {
+
+      flex: none;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+
+}
+
+.toast-body {
+
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      color: var(--bh-text-primary);
+
+}
+
+.toast-body span {
+
+      color: var(--bh-text-tertiary);
+      font-size: 12.5px;
+
+}
+
+:global(.toast--success) .toast-icon {
+
+      background: var(--bh-success);
+
+}
+
+:global(.toast--error) .toast-icon {
+
+      background: var(--bh-danger);
+
+}
+
+:global(.toast--info) .toast-icon {
+
+      background: var(--bh-info);
+
+}
+
+:global(.toast--warning) .toast-icon {
+
+      background: var(--bh-warning);
+
+}
+
+/* Toast improvements */ .toast {
+
+      animation: toastIn var(--bh-dur-med) var(--bh-ease-out);
+
+}
+
+/* Toast icon improvements */ .toast-icon {
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: var(--bh-radius-full);
+      font-size: 11px;
+      font-weight: var(--bh-weight-bold);
+      color: #fff;
+
+}
+
+:global(.toast--success) .toast-icon {
+
+      background: var(--bh-success);
+
+}
+
+:global(.toast--error) .toast-icon {
+
+      background: var(--bh-danger);
+
+}
+
+:global(.toast--info) .toast-icon {
+
+      background: var(--bh-info);
+
+}
+
+:global(.toast--warning) .toast-icon {
+
+      background: var(--bh-warning);
+
+}

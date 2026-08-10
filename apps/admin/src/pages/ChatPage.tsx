@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+﻿import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
     Check,
     CheckCheck,
@@ -44,6 +44,7 @@ import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ImageLightbox } from '../components/ImageLightbox';
+import styles from './ChatPage.module.css';
 
 export function ChatPage() {
     const currentUserId = useAuthUserId();
@@ -59,6 +60,7 @@ export function ChatPage() {
     const [selectedLeadId, setSelectedLeadId] = useState<string>('');
     const [groupName, setGroupName] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messageInputRef = useRef<HTMLInputElement>(null);
     const [sending, setSending] = useState(false);
 
     const scrollToBottom = () => {
@@ -178,8 +180,7 @@ export function ChatPage() {
         setReplyingToId(msg.id);
         setMessageText(`> ${msg.sender_name}: ${msg.content}\n\n`);
         setTimeout(() => {
-            const input = document.querySelector('.message-input') as HTMLInputElement;
-            input?.focus();
+            messageInputRef.current?.focus();
         }, 0);
     };
 
@@ -308,13 +309,15 @@ export function ChatPage() {
     const isOwnMessage = (msg: ChatMessage) => msg.sender_id === currentUserId;
 
     return (
-        <div className="page chat-page">
-            <div className="chat-layout">
+        <div className={`page ${styles['chat-page']}`}>
+            <div className={styles['chat-layout']}>
                 {/* Sidebar - Channel List */}
-                <aside className={`chat-sidebar${showChannelList ? ' open' : ''}`}>
-                    <div className="chat-sidebar-header">
+                <aside
+                    className={`${styles['chat-sidebar']}${showChannelList ? ` ${styles.open}` : ''}`}
+                >
+                    <div className={styles['chat-sidebar-header']}>
                         <h2>Mensajes</h2>
-                        <div className="sidebar-actions">
+                        <div className={styles['sidebar-actions']}>
                             <button
                                 className="icon-btn"
                                 onClick={() => {
@@ -335,15 +338,15 @@ export function ChatPage() {
                         </div>
                     </div>
 
-                    <div className="chat-search">
+                    <div className={styles['chat-search']}>
                         <Search size={16} />
                         <input type="text" placeholder="Buscar conversaciones..." />
                     </div>
 
-                    {channelsPending && <div className="chat-loading">Cargando…</div>}
+                    {channelsPending && <div className={styles['chat-loading']}>Cargando…</div>}
 
                     {!channelsPending && channels && channels.length === 0 && (
-                        <div className="chat-empty">
+                        <div className={styles['chat-empty']}>
                             <MessageSquare size={48} />
                             <h3>Sin conversaciones</h3>
                             <p>Creá tu primer chat</p>
@@ -351,14 +354,14 @@ export function ChatPage() {
                     )}
 
                     {!channelsPending && channels && channels.length > 0 && (
-                        <ul className="chat-channel-list">
+                        <ul className={styles['chat-channel-list']}>
                             {channels.map((channel) => (
                                 <li
                                     key={channel.id}
-                                    className={`chat-channel-item${selectedChannelId === channel.id ? ' active' : ''}`}
+                                    className={`${styles['chat-channel-item']}${selectedChannelId === channel.id ? ` ${styles.active}` : ''}`}
                                     onClick={() => handleChannelClick(channel)}
                                 >
-                                    <div className="channel-avatar">
+                                    <div className={styles['channel-avatar']}>
                                         {channel.type === 'direct' &&
                                         channel.participants.length === 1 ? (
                                             channel.participants[0].agent_photo_url ? (
@@ -379,9 +382,9 @@ export function ChatPage() {
                                             <UserPlus size={20} />
                                         )}
                                     </div>
-                                    <div className="channel-info">
-                                        <div className="channel-header">
-                                            <span className="channel-name">
+                                    <div className={styles['channel-info']}>
+                                        <div className={styles['channel-header']}>
+                                            <span className={styles['channel-name']}>
                                                 {channel.type === 'direct' &&
                                                 channel.participants.length === 1
                                                     ? channel.participants[0].agent_name
@@ -391,12 +394,12 @@ export function ChatPage() {
                                                           : CHANNEL_TYPE_LABEL[channel.type]))}
                                             </span>
                                             {channel.last_message && (
-                                                <span className="channel-time">
+                                                <span className={styles['channel-time']}>
                                                     {formatTime(channel.last_message.created_at)}
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="channel-preview">
+                                        <div className={styles['channel-preview']}>
                                             {channel.last_message && (
                                                 <>
                                                     {channel.last_message.sender_id ===
@@ -405,7 +408,7 @@ export function ChatPage() {
                                                         : ''}
                                                     {channel.last_message.message_type !==
                                                         'text' && (
-                                                        <span className="msg-type-badge">
+                                                        <span className={styles['msg-type-badge']}>
                                                             [
                                                             {
                                                                 MESSAGE_TYPE_LABEL[
@@ -421,7 +424,7 @@ export function ChatPage() {
                                             )}
                                         </div>
                                         {channel.unread_count > 0 && (
-                                            <span className="unread-badge">
+                                            <span className={styles['unread-badge']}>
                                                 {channel.unread_count > 9
                                                     ? '9+'
                                                     : channel.unread_count}
@@ -435,11 +438,11 @@ export function ChatPage() {
                 </aside>
 
                 {/* Main Chat Area */}
-                <main className="chat-main">
+                <main className={styles['chat-main']}>
                     {selectedChannelId ? (
                         <>
-                            <header className="chat-header">
-                                <div className="header-left">
+                            <header className={styles['chat-header']}>
+                                <div className={styles['header-left']}>
                                     {window.innerWidth < 768 && (
                                         <button
                                             className="icon-btn"
@@ -448,7 +451,7 @@ export function ChatPage() {
                                             <ChevronLeft size={20} />
                                         </button>
                                     )}
-                                    <div className="header-avatar">
+                                    <div className={styles['header-avatar']}>
                                         {activeChannel?.type === 'direct' &&
                                         activeChannel.participants.length === 1 ? (
                                             activeChannel.participants[0].agent_photo_url ? (
@@ -472,7 +475,7 @@ export function ChatPage() {
                                             <UserPlus size={24} />
                                         )}
                                     </div>
-                                    <div className="header-info">
+                                    <div className={styles['header-info']}>
                                         <h3>
                                             {activeChannel?.type === 'direct' &&
                                             activeChannel.participants.length === 1
@@ -484,26 +487,26 @@ export function ChatPage() {
                                                             activeChannel?.type ?? 'direct'
                                                         ]))}
                                         </h3>
-                                        <span className="header-subtitle">
+                                        <span className={styles['header-subtitle']}>
                                             {activeChannel?.participants.length} participante
                                             {activeChannel?.participants.length !== 1 ? 's' : ''}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="header-actions">
+                                <div className={styles['header-actions']}>
                                     <button className="icon-btn" title="Información del canal">
                                         <MoreHorizontal size={18} />
                                     </button>
                                 </div>
                             </header>
 
-                            <div className="chat-messages" role="log" aria-live="polite">
+                            <div className={styles['chat-messages']} role="log" aria-live="polite">
                                 {messagesPending ? (
-                                    <div className="messages-loading">
+                                    <div className={styles['messages-loading']}>
                                         <Loader2 size={24} className="spin" />
                                     </div>
                                 ) : messages && messages.length === 0 ? (
-                                    <div className="messages-empty">
+                                    <div className={styles['messages-empty']}>
                                         <MessageSquare size={48} />
                                         <h3>No hay mensajes aún</h3>
                                         <p>Enviá el primer mensaje</p>
@@ -511,7 +514,7 @@ export function ChatPage() {
                                 ) : (
                                     <>
                                         {hasMoreMessages && (
-                                            <div className="load-more-container">
+                                            <div className={styles['load-more-container']}>
                                                 <button
                                                     className="btn btn--ghost btn--sm"
                                                     onClick={loadMoreMessages}
@@ -535,17 +538,17 @@ export function ChatPage() {
                                             const isEditing = editingMessageId === msg.id;
                                             const showActions = isOwn && !isEditing;
                                             return (
-                                                <div key={msg.id} className="message-group">
+                                                <div key={msg.id} className={styles['message-group']}>
                                                     {showDate && (
-                                                        <div className="message-date-divider">
+                                                        <div className={styles['message-date-divider']}>
                                                             {formatDate(msg.created_at)}
                                                         </div>
                                                     )}
                                                     <div
-                                                        className={`message${isOwn ? ' own' : ''}`}
+                                                        className={`${styles.message}${isOwn ? ` ${styles.own}` : ''}`}
                                                     >
                                                         {!isOwn && (
-                                                            <div className="message-avatar">
+                                                            <div className={styles['message-avatar']}>
                                                                 {msg.sender_photo_url ? (
                                                                     <img
                                                                         src={msg.sender_photo_url}
@@ -558,20 +561,20 @@ export function ChatPage() {
                                                                 )}
                                                             </div>
                                                         )}
-                                                        <div className="message-content">
-                                                            <div className="message-header">
+                                                        <div className={styles['message-content']}>
+                                                            <div className={styles['message-header']}>
                                                                 {!isOwn && (
-                                                                    <span className="message-sender">
+                                                                    <span className={styles['message-sender']}>
                                                                         {msg.sender_name}
                                                                     </span>
                                                                 )}
-                                                                <span className="message-time">
+                                                                <span className={styles['message-time']}>
                                                                     {formatTime(msg.created_at)}
                                                                 </span>
                                                                 {showActions && (
-                                                                    <div className="message-actions">
+                                                                    <div className={styles['message-actions']}>
                                                                         <button
-                                                                            className="icon-btn-sm"
+                                                                            className={styles['icon-btn-sm']}
                                                                             title="Responder"
                                                                             onClick={() =>
                                                                                 startReply(msg)
@@ -580,7 +583,7 @@ export function ChatPage() {
                                                                             <Reply size={14} />
                                                                         </button>
                                                                         <button
-                                                                            className="icon-btn-sm"
+                                                                            className={styles['icon-btn-sm']}
                                                                             title="Editar"
                                                                             onClick={() =>
                                                                                 startEdit(msg)
@@ -591,14 +594,14 @@ export function ChatPage() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <div className="message-bubble">
+                                                            <div className={styles['message-bubble']}>
                                                                 {msg.message_type === 'image' &&
                                                                     msg.file_url && (
                                                                         <a
                                                                             href={msg.file_url}
                                                                             target="_blank"
                                                                             rel="noopener"
-                                                                            className="message-image"
+                                                                            className={styles['message-image']}
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
                                                                                 openImageLightbox(
@@ -624,7 +627,7 @@ export function ChatPage() {
                                                                             href={msg.file_url}
                                                                             target="_blank"
                                                                             rel="noopener"
-                                                                            className="message-file"
+                                                                            className={styles['message-file']}
                                                                         >
                                                                             <Paperclip size={18} />{' '}
                                                                             {msg.file_name}
@@ -647,24 +650,24 @@ export function ChatPage() {
                                                                                 cancelEdit();
                                                                         }}
                                                                         autoFocus
-                                                                        className="edit-input"
+                                                                        className={styles['edit-input']}
                                                                     />
                                                                 ) : (
                                                                     <>
                                                                         {msg.content && (
-                                                                            <div className="message-text">
+                                                                            <div className={styles['message-text']}>
                                                                                 {msg.content}
                                                                             </div>
                                                                         )}
                                                                         {msg.reply_to && (
-                                                                            <div className="message-reply">
-                                                                                <span className="reply-sender">
+                                                                            <div className={styles['message-reply']}>
+                                                                                <span className={styles['reply-sender']}>
                                                                                     {
                                                                                         msg.reply_to
                                                                                             .sender_name
                                                                                     }
                                                                                 </span>
-                                                                                <span className="reply-text">
+                                                                                <span className={styles['reply-text']}>
                                                                                     {
                                                                                         msg.reply_to
                                                                                             .content
@@ -675,7 +678,7 @@ export function ChatPage() {
                                                                     </>
                                                                 )}
                                                             </div>
-                                                            <div className="message-status">
+                                                            <div className={styles['message-status']}>
                                                                 {isOwn && (
                                                                     <>
                                                                         <Check
@@ -684,8 +687,8 @@ export function ChatPage() {
                                                                                 msg.read_by &&
                                                                                 msg.read_by.length >
                                                                                     0
-                                                                                    ? 'read'
-                                                                                    : 'sent'
+                                                                                    ? styles.read
+                                                                                    : styles.sent
                                                                             }
                                                                             title={
                                                                                 msg.read_by &&
@@ -700,7 +703,7 @@ export function ChatPage() {
                                                                                 0 && (
                                                                                 <CheckCheck
                                                                                     size={14}
-                                                                                    className="read"
+                                                                                    className={styles.read}
                                                                                     title="Leído"
                                                                                 />
                                                                             )}
@@ -709,7 +712,7 @@ export function ChatPage() {
                                                                 {!isOwn &&
                                                                     replyingToId === msg.id && (
                                                                         <button
-                                                                            className="icon-btn-sm"
+                                                                            className={styles['icon-btn-sm']}
                                                                             onClick={cancelReply}
                                                                             title="Cancelar respuesta"
                                                                         >
@@ -727,24 +730,28 @@ export function ChatPage() {
                                 )}
                             </div>
 
-                            <footer className="chat-footer">
-                                <form onSubmit={handleSend} className="message-form">
-                                    <div className="message-input-wrapper">
+                            <footer className={styles['chat-footer']}>
+                                <form onSubmit={handleSend} className={styles['message-form']}>
+                                    <div className={styles['message-input-wrapper']}>
                                         <button
                                             type="button"
-                                            className="attach-btn"
+                                            className={styles['attach-btn']}
                                             title="Adjuntar archivo"
                                         >
                                             <Paperclip size={20} />
                                         </button>
                                         <button
                                             type="button"
-                                            className="attach-btn"
+                                            className={styles['attach-btn']}
                                             title="Adjuntar imagen"
                                         >
                                             <Image size={20} />
                                         </button>
-                                        <button type="button" className="attach-btn" title="Emoji">
+                                        <button
+                                            type="button"
+                                            className={styles['attach-btn']}
+                                            title="Emoji"
+                                        >
                                             <Smile size={20} />
                                         </button>
                                         <input
@@ -752,7 +759,8 @@ export function ChatPage() {
                                             value={messageText}
                                             onChange={(e) => setMessageText(e.currentTarget.value)}
                                             placeholder="Escribí un mensaje..."
-                                            className="message-input"
+                                            ref={messageInputRef}
+                                            className={styles['message-input']}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && !e.shiftKey) {
                                                     e.preventDefault();
@@ -762,7 +770,7 @@ export function ChatPage() {
                                         />
                                         <button
                                             type="submit"
-                                            className="send-btn"
+                                            className={styles['send-btn']}
                                             disabled={!messageText.trim() || sending}
                                         >
                                             {sending ? (
@@ -776,7 +784,7 @@ export function ChatPage() {
                             </footer>
                         </>
                     ) : (
-                        <div className="chat-welcome">
+                        <div className={styles['chat-welcome']}>
                             <MessageSquare size={64} />
                             <h2>Bienvenido al Chat</h2>
                             <p>Seleccioná una conversación o creá una nueva para empezar.</p>
@@ -814,11 +822,11 @@ export function ChatPage() {
                         </button>
                         <div className="modal-content">
                             <h2>Nueva conversación</h2>
-                            <div className="create-mode-tabs">
+                            <div className={styles['create-mode-tabs']}>
                                 {(['direct', 'group', 'property', 'lead'] as const).map((mode) => (
                                     <button
                                         key={mode}
-                                        className={`mode-tab${createMode === mode ? ' active' : ''}`}
+                                        className={`${styles['mode-tab']}${createMode === mode ? ` ${styles.active}` : ''}`}
                                         onClick={() => {
                                             setCreateMode(mode);
                                             setSelectedAgentIds([]);
@@ -834,15 +842,15 @@ export function ChatPage() {
                             </div>
 
                             {createMode === 'direct' && (
-                                <div className="agent-selector">
+                                <div className={styles['agent-selector']}>
                                     <label>Seleccioná un agente</label>
-                                    <div className="agent-list">
+                                    <div className={styles['agent-list']}>
                                         {(agents ?? [])
                                             .filter((a) => a.id !== currentUserId)
                                             .map((agent) => (
                                                 <label
                                                     key={agent.id}
-                                                    className={`agent-option${selectedAgentIds.includes(agent.id) ? ' selected' : ''}`}
+                                                    className={`${styles['agent-option']}${selectedAgentIds.includes(agent.id) ? ` ${styles.selected}` : ''}`}
                                                 >
                                                     <input
                                                         type="radio"
@@ -854,7 +862,7 @@ export function ChatPage() {
                                                             setSelectedAgentIds([agent.id])
                                                         }
                                                     />
-                                                    <span className="agent-avatar-small">
+                                                    <span className={styles['agent-avatar-small']}>
                                                         {agent.photo_url ? (
                                                             <img src={agent.photo_url} alt="" />
                                                         ) : (
@@ -882,13 +890,13 @@ export function ChatPage() {
                                     </label>
                                     <label className="field field--wide">
                                         <span>Participantes *</span>
-                                        <div className="agent-multi-select">
+                                        <div className={styles['agent-multi-select']}>
                                             {(agents ?? [])
                                                 .filter((a) => a.id !== currentUserId)
                                                 .map((agent) => (
                                                     <label
                                                         key={agent.id}
-                                                        className={`agent-option${selectedAgentIds.includes(agent.id) ? ' selected' : ''}`}
+                                                        className={`${styles['agent-option']}${selectedAgentIds.includes(agent.id) ? ` ${styles.selected}` : ''}`}
                                                     >
                                                         <input
                                                             type="checkbox"
@@ -897,7 +905,7 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className="agent-avatar-small">
+                                                        <span className={styles['agent-avatar-small']}>
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (
@@ -933,13 +941,13 @@ export function ChatPage() {
                                     </label>
                                     <label className="field field--wide">
                                         <span>Agentes a invitar</span>
-                                        <div className="agent-multi-select">
+                                        <div className={styles['agent-multi-select']}>
                                             {(agents ?? [])
                                                 .filter((a) => a.id !== currentUserId)
                                                 .map((agent) => (
                                                     <label
                                                         key={agent.id}
-                                                        className={`agent-option${selectedAgentIds.includes(agent.id) ? ' selected' : ''}`}
+                                                        className={`${styles['agent-option']}${selectedAgentIds.includes(agent.id) ? ` ${styles.selected}` : ''}`}
                                                     >
                                                         <input
                                                             type="checkbox"
@@ -948,7 +956,7 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className="agent-avatar-small">
+                                                        <span className={styles['agent-avatar-small']}>
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (
@@ -984,13 +992,13 @@ export function ChatPage() {
                                     </label>
                                     <label className="field field--wide">
                                         <span>Agentes a invitar</span>
-                                        <div className="agent-multi-select">
+                                        <div className={styles['agent-multi-select']}>
                                             {(agents ?? [])
                                                 .filter((a) => a.id !== currentUserId)
                                                 .map((agent) => (
                                                     <label
                                                         key={agent.id}
-                                                        className={`agent-option${selectedAgentIds.includes(agent.id) ? ' selected' : ''}`}
+                                                        className={`${styles['agent-option']}${selectedAgentIds.includes(agent.id) ? ` ${styles.selected}` : ''}`}
                                                     >
                                                         <input
                                                             type="checkbox"
@@ -999,7 +1007,7 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className="agent-avatar-small">
+                                                        <span className={styles['agent-avatar-small']}>
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (

@@ -9,6 +9,8 @@ import {
     uploadPropertyImages,
 } from '../lib/properties';
 import { pushToast } from '../store/app';
+import styles from './PropertyImageGallery.module.css';
+
 
 interface ImageGalleryProps {
     propertyId: string | null;
@@ -206,7 +208,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
 
             <div
                 ref={galleryRef}
-                className={`image-gallery-dropzone${dragOver ? ' drag-over' : ''}`}
+                className={`${styles['image-gallery-dropzone']}${dragOver ? ` ${styles['drag-over']}` : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -222,7 +224,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                 />
 
                 {loading ? (
-                    <div className="image-gallery-grid" aria-busy="true" aria-live="polite">
+                    <div className={styles['image-gallery-grid']} aria-busy="true" aria-live="polite">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div className="image-gallery-skeleton" key={i}>
                                 <div className="image-gallery-skeleton-thumb" />
@@ -232,7 +234,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         ))}
                     </div>
                 ) : images.length === 0 ? (
-                    <div className="gallery-empty" onClick={() => fileInputRef.current?.click()}>
+                    <div className={styles['gallery-empty']} onClick={() => fileInputRef.current?.click()}>
                         <div className="gallery-empty-icon">
                             <Upload size={48} strokeWidth={1.5} />
                         </div>
@@ -245,18 +247,18 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         </button>
                     </div>
                 ) : (
-                    <div className="image-gallery-grid">
+                    <div className={styles['image-gallery-grid']}>
                         {images.map((img, index) => (
                             <div
                                 key={img.id}
-                                className={`image-gallery-item${img.is_cover ? ' is-cover' : ''}${draggedId === img.id ? ' dragging' : ''}`}
+                                className={`${styles['image-gallery-item']}${img.is_cover ? ' is-cover' : ''}${draggedId === img.id ? ` ${styles['dragging']}` : ''}`}
                                 draggable={true}
                                 onDragStart={(e) => handleDragStart(e, img.id)}
                                 onDragOver={handleDragOverItem}
                                 onDrop={(e) => handleDropItem(e, img.id)}
                                 onDragEnd={handleDragEnd}
                             >
-                                <div className="image-thumb">
+                                <div className={styles['image-thumb']}>
                                     <img
                                         src={img.url}
                                         alt={img.alt ?? `Imagen ${index + 1}`}
@@ -264,10 +266,10 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                     />
                                     {uploading && <Loader2 size={20} className="spin" />}
                                 </div>
-                                <div className="image-actions">
+                                <div className={styles['image-actions']}>
                                     <button
                                         type="button"
-                                        className={`image-action-btn${img.is_cover ? ' active' : ''}`}
+                                        className={`${styles['image-action-btn']}${img.is_cover ? ' active' : ''}`}
                                         onClick={() => handleSetCover(img.id)}
                                         title={
                                             img.is_cover
@@ -283,7 +285,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                     </button>
                                     <button
                                         type="button"
-                                        className="image-action-btn danger"
+                                        className={`${styles['image-action-btn']} danger`}
                                         onClick={() => handleDelete(img.id)}
                                         title="Eliminar"
                                         disabled={uploading}
@@ -298,17 +300,17 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                 >
                                     <Move size={14} />
                                 </div>
-                                <div className="image-position">
+                                <div className={styles['image-position']}>
                                     <span>{index + 1}</span>
                                 </div>
-                                {img.is_cover && <span className="cover-badge">PORTADA</span>}
+                                {img.is_cover && <span className={styles['cover-badge']}>PORTADA</span>}
                             </div>
                         ))}
                     </div>
                 )}
 
                 {images.length > 0 && !loading && (
-                    <div className="gallery-footer">
+                    <div className={styles['gallery-footer']}>
                         <label
                             htmlFor="property-images-input"
                             className="btn btn--secondary btn--sm"

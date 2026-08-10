@@ -41,6 +41,8 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
+import styles from './PropertyFormPage.module.css';
+
 
 const STORAGE_KEY = 'property-form-draft';
 const AUTOSAVE_DELAY = 2000;
@@ -357,7 +359,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                     {!isNew && (
                         <button
                             type="button"
-                            className={`btn btn--secondary btn--ml-toggle${showMLPreview ? ' active' : ''}`}
+                            className={`btn btn--secondary ${styles['btn--ml-toggle']}${showMLPreview ? ' active' : ''}`}
                             onClick={() => setShowMLPreview(!showMLPreview)}
                             disabled={saving}
                             aria-pressed={showMLPreview}
@@ -396,7 +398,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
 
             {!loadError && loaded && !isNew && (
                 <div
-                    className="form-tabs"
+                    className={styles['form-tabs']}
                     role="tablist"
                     data-active-index={[
                         'basic',
@@ -410,7 +412,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                         role="tab"
                         aria-selected={activeTab === 'basic'}
                         data-tab="basic"
-                        className={`form-tab${activeTab === 'basic' ? ' active' : ''}`}
+                        className={`${styles['form-tab']}${activeTab === 'basic' ? ' active' : ''}`}
                         onClick={() => setActiveTab('basic')}
                     >
                         <Home size={16} /> Datos básicos
@@ -419,7 +421,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                         role="tab"
                         aria-selected={activeTab === 'location'}
                         data-tab="location"
-                        className={`form-tab${activeTab === 'location' ? ' active' : ''}`}
+                        className={`${styles['form-tab']}${activeTab === 'location' ? ' active' : ''}`}
                         onClick={() => setActiveTab('location')}
                     >
                         <MapPin size={16} /> Ubicación
@@ -428,7 +430,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                         role="tab"
                         aria-selected={activeTab === 'details'}
                         data-tab="details"
-                        className={`form-tab${activeTab === 'details' ? ' active' : ''}`}
+                        className={`${styles['form-tab']}${activeTab === 'details' ? ' active' : ''}`}
                         onClick={() => setActiveTab('details')}
                     >
                         <List size={16} /> Detalles
@@ -437,7 +439,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                         role="tab"
                         aria-selected={activeTab === 'publish'}
                         data-tab="publish"
-                        className={`form-tab${activeTab === 'publish' ? ' active' : ''}`}
+                        className={`${styles['form-tab']}${activeTab === 'publish' ? ' active' : ''}`}
                         onClick={() => setActiveTab('publish')}
                     >
                         <Building2 size={16} /> Publicación
@@ -446,7 +448,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                         role="tab"
                         aria-selected={activeTab === 'owners'}
                         data-tab="owners"
-                        className={`form-tab${activeTab === 'owners' ? ' active' : ''}`}
+                        className={`${styles['form-tab']}${activeTab === 'owners' ? ' active' : ''}`}
                         onClick={() => setActiveTab('owners')}
                     >
                         <Users size={16} /> Propietarios
@@ -577,7 +579,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                                                 )
                                             }
                                         />
-                                        <small className="field-hint">
+                                        <small className={styles['field-hint']}>
                                             Opcional. Link de YouTube para mostrar en el detalle.
                                         </small>
                                     </label>
@@ -831,7 +833,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                                                     )
                                                 }
                                             />
-                                            <small className="field-hint">
+                                            <small className={styles['field-hint']}>
                                                 Opcional. Link de YouTube para mostrar en el
                                                 detalle.
                                             </small>
@@ -1011,10 +1013,10 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                             </button>
                         </div>
                         <div className="modal-body">
-                            <div className="ml-preview">
-                                <div className="ml-preview-header">
+                            <div className={styles['ml-preview']}>
+                                <div className={styles['ml-preview-header']}>
                                     <h4>{values.title}</h4>
-                                    <div className="ml-preview-badges">
+                                    <div className={styles['ml-preview-badges']}>
                                         <span className="badge badge--info">
                                             {getListingTypeLabel(values.listing_type)}
                                         </span>
@@ -1028,10 +1030,10 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                                         </span>
                                     </div>
                                 </div>
-                                <div className="ml-preview-body">
+                                <div className={styles['ml-preview-body']}>
                                     <h5>Descripción</h5>
                                     <p>{values.description || 'Sin descripción'}</p>
-                                    <div className="ml-preview-attrs">
+                                    <div className={styles['ml-preview-attrs']}>
                                         {values.area_total && (
                                             <span>
                                                 <strong>Sup. total:</strong> {values.area_total} m²
@@ -1066,7 +1068,7 @@ const [confirmDelete, setConfirmDelete] = useState(false);
                                     </div>
                                 </div>
                             </div>
-                            <div className="ml-preview-note">
+                            <div className={styles['ml-preview-note']}>
                                 <strong>Nota:</strong> Esta es una vista previa aproximada. La
                                 publicación final en Mercado Libre puede variar según la
                                 configuración de la cuenta y las políticas de la plataforma.

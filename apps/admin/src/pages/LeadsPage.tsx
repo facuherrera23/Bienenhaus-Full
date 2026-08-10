@@ -38,6 +38,8 @@ import {
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
+import styles from './LeadsPage.module.css';
+
 
 export function LeadsPage() {
     const [, setLocation] = useLocation();
@@ -331,7 +333,7 @@ export function LeadsPage() {
                             )}
                         </div>
                         {bulkOp && (
-                            <div className="bulk-confirm">
+                            <div className={styles['bulk-confirm']}>
                                 <span>
                                     {bulkOp === 'assign'
                                         ? 'Auto-asignar'
@@ -523,7 +525,7 @@ export function LeadsPage() {
                                             {(l.tags ?? []).slice(0, 3).map((t: string) => (
                                                 <span
                                                     key={t}
-                                                    className="tag badge badge--neutral"
+                                                    className={`${styles['tag']} badge badge--neutral`}
                                                     style={{ marginRight: '4px', fontSize: '11px' }}
                                                 >
                                                     {t}
@@ -558,11 +560,11 @@ export function LeadsPage() {
             )}
 
             {!isPending && !isError && view === 'kanban' && (
-                <div className="kanban-board">
+                <div className={styles['kanban-board']}>
                     {getKanbanColumns().map((col: { status: LeadStatus; leads: LeadRow[] }) => (
-                        <div key={col.status} className="kanban-column">
+                        <div key={col.status} className={styles['kanban-column']}>
                             <div
-                                className={`kanban-column-header badge badge--${LEAD_STATUS_TONE[col.status]}`}
+                                className={`${styles['kanban-column-header']} badge badge--${LEAD_STATUS_TONE[col.status]}`}
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -574,7 +576,7 @@ export function LeadsPage() {
                             >
                                 <span>{LEAD_STATUS_LABEL[col.status]}</span>
                                 <span
-                                    className="kanban-count"
+                                    className={styles['kanban-count']}
                                     style={{
                                         background: 'rgba(0,0,0,0.1)',
                                         padding: '2px 8px',
@@ -586,7 +588,7 @@ export function LeadsPage() {
                                 </span>
                             </div>
                             <div
-                                className="kanban-column-body"
+                                className={styles['kanban-column-body']}
                                 style={{
                                     minHeight: '400px',
                                     minWidth: '280px',
@@ -597,7 +599,7 @@ export function LeadsPage() {
                             >
                                 {col.leads.length === 0 && (
                                     <div
-                                        className="kanban-empty"
+                                        className={styles['kanban-empty']}
                                         style={{
                                             textAlign: 'center',
                                             color: 'var(--bh-text-tertiary)',
@@ -610,7 +612,7 @@ export function LeadsPage() {
                                 {col.leads.map((l: LeadRow) => (
                                     <div
                                         key={l.id}
-                                        className="kanban-card"
+                                        className={styles['kanban-card']}
                                         style={{
                                             background: 'var(--bh-bg-card)',
                                             border: '1px solid var(--bh-border)',
@@ -687,7 +689,7 @@ export function LeadsPage() {
                                                 {l.tags.map((t: string) => (
                                                     <span
                                                         key={t}
-                                                        className="tag badge badge--neutral"
+                                                        className={`${styles['tag']} badge badge--neutral`}
                                                         style={{
                                                             fontSize: '10px',
                                                             cursor: 'pointer',
@@ -777,7 +779,7 @@ export function LeadsPage() {
                             {importPreview ? (
                                 <>
                                     <div
-                                        className="import-summary"
+                                        className={styles['import-summary']}
                                         style={{
                                             display: 'flex',
                                             gap: '16px',
@@ -946,7 +948,7 @@ export function LeadsPage() {
 
             {showTagInput && (
                 <div
-                    className="tag-popover"
+                    className={styles['tag-popover']}
                     style={{
                         position: 'fixed',
                         zIndex: 1000,

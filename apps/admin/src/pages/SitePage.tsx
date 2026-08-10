@@ -24,6 +24,8 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import styles from './SitePage.module.css';
+
 
 interface DraftEntry {
     id: string | null;
@@ -122,9 +124,9 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
     };
 
     return (
-        <div className="site-image-field">
+        <div className={styles['site-image-field']}>
             {url ? (
-                <div className="site-image-preview">
+                <div className={styles['site-image-preview']}>
                     <img src={url} alt="Vista previa" />
                     <button
                         type="button"
@@ -213,15 +215,15 @@ function ListEditor({
     };
 
     return (
-        <div className="site-list">
-            {list.length === 0 && <p className="site-list-empty">No hay items todavía.</p>}
+        <div className={styles['site-list']}>
+            {list.length === 0 && <p className={styles['site-list-empty']}>No hay items todavía.</p>}
             {list.map((item, i) => (
-                <div className="site-list-item" key={i}>
-                    <div className="site-list-item-head">
+                <div className={styles['site-list-item']} key={i}>
+                    <div className={styles['site-list-item-head']}>
                         <span>
                             {meta.itemLabel} {i + 1}
                         </span>
-                        <div className="site-list-item-actions">
+                        <div className={styles['site-list-item-actions']}>
                             <button
                                 type="button"
                                 className="icon-btn"
@@ -324,10 +326,10 @@ function ContentRowEditor({
     onToggleActive: (v: boolean) => void;
 }) {
     return (
-        <div className={`site-row${isActive ? '' : ' is-inactive'}`}>
-            <div className="site-row-head">
+        <div className={`${styles['site-row']}${isActive ? '' : ' is-inactive'}`}>
+            <div className={styles['site-row-head']}>
                 <h4>{heading}</h4>
-                <div className="site-row-active">
+                <div className={styles['site-row-active']}>
                     <ActiveToggle checked={isActive} onChange={onToggleActive} />
                     <span>{isActive ? 'Activado' : 'Desactivado'}</span>
                 </div>
@@ -545,7 +547,7 @@ export function SitePage() {
         const rows = SECTION_KEYS[section] ?? [];
         const dirtyCount = sectionDirtyCount(section);
         return (
-            <section key={section} className="card site-section">
+            <section key={section} className={`card ${styles['site-section']}`}>
                 <div className="site-section-head">
                     <div>
                         <h3>{SECTION_LABELS[section]}</h3>
@@ -574,7 +576,7 @@ export function SitePage() {
                         {savingGroup === `c-${section}` ? 'Guardando…' : 'Guardar'}
                     </button>
                 </div>
-                <div className="site-section-body">
+                <div className={styles['site-section-body']}>
                     {rows.map((key) => {
                         const dk = `${locale}|${section}|${key}`;
                         const entry = drafts[dk] ?? { id: null, value: {}, isActive: true };
@@ -583,12 +585,12 @@ export function SitePage() {
                             const meta = listMetaFor(section, key)!;
                             return (
                                 <div
-                                    className={`site-row${entry.isActive ? '' : ' is-inactive'}`}
+                                    className={`${styles['site-row']}${entry.isActive ? '' : ' is-inactive'}`}
                                     key={key}
                                 >
-                                    <div className="site-row-head">
+                                    <div className={styles['site-row-head']}>
                                         <h4>{heading}</h4>
-                                        <div className="site-row-active">
+                                        <div className={styles['site-row-active']}>
                                             <ActiveToggle
                                                 checked={entry.isActive}
                                                 onChange={(v) => setEntry(dk, { isActive: v })}
@@ -697,7 +699,7 @@ export function SitePage() {
         const dirtyCount = settingsDirty.length;
 
         return (
-            <section className="card site-section settings-section">
+            <section className={`card ${styles['site-section']} settings-section`}>
                 <div className="site-section-head">
                     <div>
                         <h3>⚙️ Configuración del Sitio</h3>
@@ -726,7 +728,7 @@ export function SitePage() {
                         {savingGroup === 'settings' ? 'Guardando…' : 'Guardar todos los ajustes'}
                     </button>
                 </div>
-                <div className="site-section-body settings-body">
+                <div className={`${styles['site-section-body']} settings-body`}>
                     {SETTINGS_GROUPS.map((group) => {
                         const groupKeys = group.keys.filter((k) => settingsMap.has(k));
                         if (groupKeys.length === 0) return null;
@@ -770,7 +772,7 @@ export function SitePage() {
                                         const isImage = s.key in IMAGE_SETTINGS;
 
                                         return (
-                                            <div key={s.id} className="site-row">
+                                            <div key={s.id} className={styles['site-row']}>
                                                 <div className="site-row-label">
                                                     <h4>{s.description ?? s.key}</h4>
                                                 </div>

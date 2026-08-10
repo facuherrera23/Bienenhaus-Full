@@ -33,6 +33,8 @@ import { fetchLeads } from '../lib/leads';
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import styles from './VisitsPage.module.css';
+
 
 const VIEW_MODES = ['month', 'week', 'day'] as const;
 type ViewMode = (typeof VIEW_MODES)[number];
@@ -261,7 +263,7 @@ export function VisitsPage() {
     }, [viewMode, currentDate]);
 
     return (
-        <div className="page visits-page">
+        <div className={`page ${styles['visits-page']}`}>
             <div className="page-head">
                 <div>
                     <h2 className="page-title">Agenda de Visitas</h2>
@@ -272,8 +274,8 @@ export function VisitsPage() {
                 </button>
             </div>
 
-            <div className="visits-toolbar">
-                <div className="toolbar-view">
+            <div className={styles['visits-toolbar']}>
+                <div className={styles['toolbar-view']}>
                     {VIEW_MODES.map((mode) => (
                         <button
                             key={mode}
@@ -288,11 +290,11 @@ export function VisitsPage() {
                     ))}
                 </div>
 
-                <div className="toolbar-nav">
+                <div className={styles['toolbar-nav']}>
                     <button className="btn btn--ghost" onClick={() => navigate('prev')}>
                         <ChevronLeft size={16} />
                     </button>
-                    <span className="current-period">
+                    <span className={styles['current-period']}>
                         {viewMode === 'month' &&
                             currentDate.toLocaleDateString('es-AR', {
                                 month: 'long',
@@ -362,17 +364,17 @@ export function VisitsPage() {
             {!visitsPending && !rangePending && (
                 <>
                     {viewMode === 'month' && (
-                        <div className="calendar-month">
-                            <div className="calendar-header-row">
+                        <div className={styles['calendar-month']}>
+                            <div className={styles['calendar-header-row']}>
                                 {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((d) => (
-                                    <div key={d} className="calendar-day-header">
+                                    <div key={d} className={styles['calendar-day-header']}>
                                         {d}
                                     </div>
                                 ))}
                             </div>
-                            <div className="calendar-grid">
+                            <div className={styles['calendar-grid']}>
                                 {monthWeeks.map((week, wIdx) => (
-                                    <div key={wIdx} className="calendar-week">
+                                    <div key={wIdx} className={styles['calendar-week']}>
                                         {week.map((day, dIdx) => {
                                             const dayVisits = filteredVisits.filter((v) =>
                                                 isSameDay(new Date(v.starts_at), day),
@@ -383,16 +385,16 @@ export function VisitsPage() {
                                             return (
                                                 <div
                                                     key={dIdx}
-                                                    className={`calendar-day${!isCurrentMonth ? ' other-month' : ''}${isToday ? ' today' : ''}`}
+                                                    className={`${styles['calendar-day']}${!isCurrentMonth ? ` ${styles['other-month']}` : ''}${isToday ? ` ${styles['today']}` : ''}`}
                                                 >
-                                                    <span className="day-number">
+                                                    <span className={styles['day-number']}>
                                                         {day.getDate()}
                                                     </span>
-                                                    <div className="day-visits">
+                                                    <div className={styles['day-visits']}>
                                                         {dayVisits.slice(0, 3).map((v) => (
                                                             <div
                                                                 key={v.id}
-                                                                className={`day-visit-chip visit-status-${v.status}`}
+                                                                className={`${styles['day-visit-chip']} visit-status-${v.status}`}
                                                                 onClick={() => openEdit(v)}
                                                             >
                                                                 <span className="day-visit-main">
@@ -427,7 +429,7 @@ export function VisitsPage() {
                                                         ))}
                                                         {dayVisits.length > 3 && (
                                                             <div
-                                                                className="day-more"
+                                                                className={styles['day-more']}
                                                                 onClick={() => {
                                                                     setViewMode('day');
                                                                     setCurrentDate(day);
@@ -447,21 +449,21 @@ export function VisitsPage() {
                     )}
 
                     {(viewMode === 'week' || viewMode === 'day') && (
-                        <div className="calendar-week-view">
-                            <div className="week-header">
+                        <div className={styles['calendar-week-view']}>
+                            <div className={styles['week-header']}>
                                 {weekDays.map((day, i) => (
                                     <div
                                         key={i}
-                                        className={`week-day-header${isSameDay(day, today) ? ' today' : ''}`}
+                                        className={`${styles['week-day-header']}${isSameDay(day, today) ? ` ${styles['today']}` : ''}`}
                                     >
-                                        <span className="week-day-name">
+                                        <span className={styles['week-day-name']}>
                                             {day.toLocaleDateString('es-AR', { weekday: 'short' })}
                                         </span>
-                                        <span className="week-day-number">{day.getDate()}</span>
+                                        <span className={styles['week-day-number']}>{day.getDate()}</span>
                                     </div>
                                 ))}
                             </div>
-                            <div className="week-grid">
+                            <div className={styles['week-grid']}>
                                 {weekDays.map((day, dIdx) => {
                                     const dayVisits = filteredVisits.filter((v) =>
                                         isSameDay(new Date(v.starts_at), day),
@@ -469,12 +471,12 @@ export function VisitsPage() {
                                     return (
                                         <div
                                             key={dIdx}
-                                            className={`week-day-column${isSameDay(day, today) ? ' today' : ''}`}
+                                            className={`${styles['week-day-column']}${isSameDay(day, today) ? ` ${styles['today']}` : ''}`}
                                         >
                                             {dayVisits.map((v) => (
                                                 <div
                                                     key={v.id}
-                                                    className={`week-visit visit-status-${v.status}`}
+                                                    className={`${styles['week-visit']} visit-status-${v.status}`}
                                                     onClick={() => openEdit(v)}
                                                 >
                                                     <div className="week-visit-head">
@@ -499,21 +501,21 @@ export function VisitsPage() {
                                                             <QrCode size={12} />
                                                         </button>
                                                     </div>
-                                                    <span className="visit-title">{v.title}</span>
+                                                    <span className={styles['visit-title']}>{v.title}</span>
                                                     {v.location && (
-                                                        <span className="visit-location">
+                                                        <span className={styles['visit-location']}>
                                                             <MapPin size={12} /> {v.location}
                                                         </span>
                                                     )}
                                                     {v.meeting_type && (
-                                                        <span className="visit-type">
+                                                        <span className={styles['visit-type']}>
                                                             {MEETING_TYPE_LABEL[v.meeting_type]}
                                                         </span>
                                                     )}
                                                 </div>
                                             ))}
                                             {dayVisits.length === 0 && (
-                                                <div className="week-empty">Sin visitas</div>
+                                                <div className={styles['week-empty']}>Sin visitas</div>
                                             )}
                                         </div>
                                     );

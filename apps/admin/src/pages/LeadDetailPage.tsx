@@ -16,6 +16,8 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import styles from './LeadDetailPage.module.css';
+
 
 export function LeadDetailPage() {
     const [, params] = useRoute('/leads/:id');
@@ -143,12 +145,12 @@ export function LeadDetailPage() {
             {!loadError && !lead && <div className="card placeholder-card">Cargando…</div>}
 
             {!loadError && lead && (
-                <div className="lead-detail">
-                    <div className="lead-hero">
-                        <span className="lead-avatar" aria-hidden="true">
+                <div className={styles['lead-detail']}>
+                    <div className={styles['lead-hero']}>
+                        <span className={styles['lead-avatar']} aria-hidden="true">
                             {(lead.name[0] ?? '').toUpperCase()}
                         </span>
-                        <div className="lead-hero-info">
+                        <div className={styles['lead-hero-info']}>
                             <h3>
                                 {lead.name} {lead.last_name}
                             </h3>
@@ -162,7 +164,7 @@ export function LeadDetailPage() {
                         </span>
                     </div>
 
-                    <div className="lead-grid">
+                    <div className={styles['lead-grid']}>
                         <section className="form-section">
                             <div className="form-section-head">
                                 <h3>Contacto</h3>
