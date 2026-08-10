@@ -55,3 +55,10 @@ tsc-current.txt
 build_output.txt
 src.zip
 *.src.zip
+
+# Dev server diagnostic logs
+.admin-diag-*.err
+.admin-diag-*.log
+.landing-dev.log
+.landing-dev.log.err
+
