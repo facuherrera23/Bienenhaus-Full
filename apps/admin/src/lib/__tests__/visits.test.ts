@@ -1,5 +1,4 @@
-import type { Mock } from 'vitest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { supabaseUrl } from '../supabase';
 import { from } from '../../test/setup';
 import {
@@ -39,6 +38,13 @@ import {
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
     VISITS_SELECT,
+    type AgentAvailability,
+    type QrCheckin,
+    type RecurrenceRule,
+    type RecurringVisit,
+    type ReminderConfig,
+    type VisitApiRow,
+    type VisitRow,
 } from '../visits';
 import type {
     AgentAvailability,
@@ -492,13 +498,13 @@ describe('createVisit', () => {
     });
 
     it('lanza error si el insert falla', async () => {
-        const chain = mockFrom({ single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert err' } }) });
+        mockFrom({ single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert err' } }) });
         await expect(
             createVisit({
-                lead_id: 'l1',
-                property_id: 'p1',
-                agent_id: 'a1',
-                title: 'T',
+                lead_id: '11111111-1111-1111-1111-111111111111',
+                property_id: '22222222-2222-2222-2222-222222222222',
+                agent_id: '33333333-3333-3333-3333-333333333333',
+                title: 'Test Visit',
                 description: '',
                 starts_at: '2026-01-10T15:00:00.000Z',
                 ends_at: '2026-01-10T16:00:00.000Z',
@@ -521,8 +527,8 @@ describe('updateVisit', () => {
     });
 
     it('lanza error si falla', async () => {
-        const chain = mockFrom({ eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'upd err' } }) });
-        await expect(updateVisit('v1', { title: 'X' })).rejects.toThrow('upd err');
+        mockFrom({ eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'upd err' } }) });
+        await expect(updateVisit('v1', { title: 'Valid Title' })).rejects.toThrow('upd err');
     });
 });
 
@@ -600,8 +606,7 @@ describe('restoreVisit / permanentDeleteVisit', () => {
 
 describe('fetchAgentAvailability', () => {
     it('devuelve la disponibilidad activa del agente', async () => {
-        let chain: Record<string, unknown>;
-        chain = mockFrom({
+        const chain = mockFrom({
             order: vi
                 .fn()
                 .mockImplementationOnce(() => chain)
@@ -616,8 +621,7 @@ describe('fetchAgentAvailability', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        let chain: Record<string, unknown>;
-        chain = mockFrom({
+        const chain = mockFrom({
             order: vi
                 .fn()
                 .mockImplementationOnce(() => chain)
@@ -809,7 +813,7 @@ describe('createReminders', () => {
     });
 
     it('lanza error si falla', async () => {
-        const chain = mockFrom({ select: vi.fn().mockResolvedValue({ data: null, error: { message: 'rem err' } }) });
+        mockFrom({ select: vi.fn().mockResolvedValue({ data: null, error: { message: 'rem err' } }) });
         await expect(createReminders('v1')).rejects.toThrow('rem err');
     });
 });
@@ -916,8 +920,7 @@ describe('checkInWithQr', () => {
     });
 
     it('devuelve error si falla la actualización', async () => {
-        let chain: Record<string, unknown>;
-        chain = mockFrom({
+        const chain = mockFrom({
             single: vi.fn().mockResolvedValue({
                 data: { ...makeQr(), visit: { agent_id: 'a1' } },
                 error: null,

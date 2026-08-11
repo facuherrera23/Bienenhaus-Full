@@ -58,7 +58,7 @@ export const PropertyImageSchema = z.object({
     { message: 'Máximo 10 MB', path: ['file'] }
 ).refine(
     (data) => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(data.file.type),
-    { message: 'Solo JPG, PNG, WebP, GIF', path: ['file'] }
+    { message: 'no es una imagen', path: ['file'] }
 );
 
 export const PropertyLocationSchema = z.object({

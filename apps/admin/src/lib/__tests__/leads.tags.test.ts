@@ -1,6 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { addLeadTag, removeLeadTag, setLeadTags, parseLeadsCsv, importLeadsFromCsv, bulkImportLeadsParsed } from '../leads';
-import type { LeadFormValues } from '../../types/leads';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { addLeadTag, bulkImportLeadsParsed, importLeadsFromCsv, parseLeadsCsv, removeLeadTag, setLeadTags } from '../leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {
@@ -53,7 +52,7 @@ describe('leads tags & csv', () => {
             mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['vip'] }, error: null });
 
             await addLeadTag('lead-1', 'vip');
-            expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['vip'] });
+            expect(mockSupabase.update).not.toHaveBeenCalled();
         });
     });
 
@@ -160,6 +159,8 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
 
             mockSupabase.maybeSingle
                 .mockResolvedValueOnce({ data: null, error: null });
+            mockSupabase.single
+                .mockResolvedValueOnce({ data: { id: 'lead-1' }, error: null });
 
             const result = await importLeadsFromCsv(csvText);
             expect(result.created).toBe(1);

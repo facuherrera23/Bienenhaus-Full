@@ -14,15 +14,16 @@ import { validateSetting } from '../site-validation';
 
 describe('ml.schemas Zod validation', () => {
     describe('MlTokenResponseSchema', () => {
+        const validToken = {
+            access_token: 'APP_USR-12345',
+            token_type: 'bearer',
+            expires_in: 21600,
+            scope: 'read write',
+            user_id: 123456789,
+            refresh_token: 'TG-12345',
+        };
+
         it('validates correct token response', () => {
-            const validToken = {
-                access_token: 'APP_USR-12345',
-                token_type: 'bearer',
-                expires_in: 21600,
-                scope: 'read write',
-                user_id: 123456789,
-                refresh_token: 'TG-12345',
-            };
             const result = MlTokenResponseSchema.safeParse(validToken);
             expect(result.success).toBe(true);
         });
@@ -51,7 +52,7 @@ describe('ml.schemas Zod validation', () => {
             sold_quantity: 0,
             available_quantity: 1,
             currency_id: 'ARS',
-            pictures: [{ id: '1', url: 'https://img.com/1.jpg', secure_url: 'https://img.com/1.jpg', size: '500x500', max_size: '1000x1000', quality: 90 }],
+            pictures: [{ id: '1', url: 'https://img.com/1.jpg', secure_url: 'https://img.com/1.jpg', size: '500x500', max_size: 1000000, quality: 90 }],
             attributes: [{ id: 'ROOMS', value_name: '3' }],
         };
 
@@ -209,12 +210,12 @@ describe('ml.schemas Zod validation', () => {
 
     describe('validateSetting', () => {
         it('validates string type', () => {
-            const result = validateSetting('test_key', 'value', 'string');
+            const result = validateSetting('value', 'string');
             expect(result.valid).toBe(true);
         });
 
         it('validates number type', () => {
-            const result = validateSetting('test_key', 42, 'number');
+            const result = validateSetting(42, 'number');
             expect(result.valid).toBe(true);
         });
 
@@ -225,32 +226,32 @@ describe('ml.schemas Zod validation', () => {
         });
 
         it('validates boolean type', () => {
-            const result = validateSetting('test_key', true, 'boolean');
+            const result = validateSetting(true, 'boolean');
             expect(result.valid).toBe(true);
         });
 
         it('validates url type', () => {
-            const result = validateSetting('test_key', 'https://example.com', 'url');
+            const result = validateSetting('https://example.com', 'url');
             expect(result.valid).toBe(true);
         });
 
         it('rejects invalid url', () => {
-            const result = validateSetting('test_key', 'not-a-url', 'url');
+            const result = validateSetting('not-a-url', 'url');
             expect(result.valid).toBe(false);
         });
 
         it('validates email type', () => {
-            const result = validateSetting('test_key', 'test@example.com', 'email');
+            const result = validateSetting('test@example.com', 'email');
             expect(result.valid).toBe(true);
         });
 
         it('rejects invalid email', () => {
-            const result = validateSetting('test_key', 'invalid-email', 'email');
+            const result = validateSetting('invalid-email', 'email');
             expect(result.valid).toBe(false);
         });
 
         it('validates color hex', () => {
-            const result = validateSetting('test_key', '#1FC8C3', 'color');
+            const result = validateSetting('#1FC8C3', 'color');
             expect(result.valid).toBe(true);
         });
 
@@ -260,9 +261,9 @@ describe('ml.schemas Zod validation', () => {
         });
 
         it('rejects unknown value_type', () => {
-            const result = validateSetting('test_key', 'value', 'unknown_type');
+            const result = validateSetting('value', 'unknown_type');
             expect(result.valid).toBe(false);
-            expect(result.error).toContain('Unknown value_type');
+            expect(result.error).toContain('Tipo de valor desconocido');
         });
     });
 });

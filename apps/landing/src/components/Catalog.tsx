@@ -1,7 +1,7 @@
 // apps/landing/src/components/Catalog.tsx
-import { useState, useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { useScrollAnimation, useTilt, useRipple } from '@/lib/motion';
+import { useRipple, useScrollAnimation, useTilt } from '@/lib/motion';
 import styles from '../styles/modules/Catalog.module.css';
 
 // Placeholder inline (data URI, no depende de ningún archivo) para cuando
@@ -19,10 +19,6 @@ const PLACEHOLDER_IMAGE =
   );
 
 // Datos de ejemplo (reemplazar con datos reales de Supabase)
-// NOTA: las imágenes de estos 2 registros mock (penthouse.jpg, casa.jpg)
-// nunca existieron en public/assets/images/properties/ — de ahí los 404.
-// No se subieron fotos placeholder a propósito: el PropertyCard ya
-// resuelve el fallback visualmente (ver PLACEHOLDER_IMAGE arriba).
 const propertiesData = [
   {
     id: 1,
@@ -36,7 +32,7 @@ const propertiesData = [
     area: 280,
     garage: 2,
     description: 'Penthouse exclusivo con terraza privada y vistas panorámicas.',
-    image: '/assets/images/properties/penthouse.jpg',
+    image: PLACEHOLDER_IMAGE,
     featured: true,
   },
   {
@@ -51,7 +47,7 @@ const propertiesData = [
     area: 350,
     garage: 3,
     description: 'Amplia casa con jardín y pileta en exclusivo barrio privado.',
-    image: '/assets/images/properties/casa.jpg',
+    image: PLACEHOLDER_IMAGE,
     featured: false,
   },
   // ... más propiedades
@@ -59,6 +55,22 @@ const propertiesData = [
 
 const operationTypes = ['Todos', 'Venta', 'Alquiler'];
 const propertyTypes = ['Todos', 'Casa', 'Penthouse', 'Departamento', 'PH'];
+
+interface Property {
+  id: number;
+  title: string;
+  price: string;
+  location: string;
+  operation: string;
+  type: string;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  garage: number;
+  description: string;
+  image: string;
+  featured: boolean;
+}
 
 export function Catalog() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -284,7 +296,7 @@ export function Catalog() {
 }
 
 // Componente de Property Card con Tilt 3D
-function PropertyCard({ property, index }: { property: any; index: number }) {
+function PropertyCard({ property, index }: { property: Property; index: number }) {
   const [isLiked, setIsLiked] = useState(false);
   const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 8,

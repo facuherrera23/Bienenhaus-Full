@@ -117,7 +117,9 @@
     --bh-space-4: 16px; /* 1rem    — Standard padding, input height */
     --bh-space-5: 20px; /* 1.25rem — Comfortable section spacing */
     --bh-space-6: 24px; /* 1.5rem  — Generous card padding */
+    --bh-space-7: 28px; /* 1.75rem — Hero stats panel padding */
     --bh-space-8: 32px; /* 2rem    — Separated groups, grid gaps */
+    --bh-space-9: 36px; /* 2.25rem — Hero actions gap */
     --bh-space-10: 40px; /* 2.5rem  — Section inner, container pad (tablet) */
     --bh-space-12: 48px; /* 3rem    — Major section breaks */
     --bh-space-16: 64px; /* 4rem    — Page vertical rhythm */

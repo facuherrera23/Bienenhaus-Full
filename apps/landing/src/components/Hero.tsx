@@ -1,9 +1,9 @@
 // apps/landing/src/components/Hero.tsx
 import { 
-  useMouseGlow, 
-  useCountUp, 
-  useScrollAnimation,
-  useRipple 
+  useCountUp,
+  useMouseGlow,
+  useRipple,
+  useScrollAnimation
 } from '@/lib/motion';
 import styles from '../styles/modules/Hero.module.css';
 

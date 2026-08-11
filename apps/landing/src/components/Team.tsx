@@ -1,5 +1,7 @@
 // apps/landing/src/components/Team.tsx
 import { useScrollAnimation, useTilt } from '@/lib/motion';
+import { images } from '@/lib/images';
+import type { JSX } from 'preact';
 import styles from '../styles/modules/Team.module.css';
 
 interface TeamMember {
@@ -25,7 +27,7 @@ const teamData: TeamMember[] = [
     experience: '10+ años',
     bio: 'Apasionado por el mercado inmobiliario con más de una década de experiencia.',
     specialties: ['Propiedades Premium', 'Inversiones', 'Tasaciones'],
-    photo: '/assets/images/team/facundo.jpg',
+    photo: images.team.maria, // Usando imagen de Unsplash como placeholder
     social: {
       linkedin: 'https://linkedin.com/in/facundo-herrera',
       instagram: 'https://instagram.com/facundo.herrera',
@@ -39,7 +41,7 @@ const teamData: TeamMember[] = [
     experience: '8+ años',
     bio: 'Especialista en estrategias de marketing y ventas de propiedades exclusivas.',
     specialties: ['Marketing', 'Ventas', 'Negociación'],
-    photo: '/assets/images/team/maria.jpg',
+    photo: images.team.maria,
     social: {
       linkedin: 'https://linkedin.com/in/maria-gonzalez',
       instagram: 'https://instagram.com/maria.gonzalez',
@@ -53,7 +55,7 @@ const teamData: TeamMember[] = [
     experience: '15+ años',
     bio: 'Amplia trayectoria en el sector inmobiliario con foco en propiedades de alta gama.',
     specialties: ['Propiedades de Lujo', 'Inversiones', 'Asesoramiento'],
-    photo: '/assets/images/team/carlos.jpg',
+    photo: images.team.juan, // Usando imagen de Unsplash como placeholder
     social: {
       linkedin: 'https://linkedin.com/in/carlos-rodriguez',
       instagram: 'https://instagram.com/carlos.rodriguez',
@@ -67,7 +69,7 @@ const teamData: TeamMember[] = [
     experience: '6+ años',
     bio: 'Experta en valuaciones profesionales y análisis comparativo de mercado.',
     specialties: ['Tasaciones', 'Análisis de Mercado', 'Valuaciones'],
-    photo: '/assets/images/team/laura.jpg',
+    photo: images.team.maria, // Usando imagen de Unsplash como placeholder
     social: {
       linkedin: 'https://linkedin.com/in/laura-fernandez',
       instagram: 'https://instagram.com/laura.fernandez',
@@ -141,6 +143,23 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
     glowIntensity: 0.3,
   });
 
+  // Placeholder SVG inline para fallback de imágenes
+  const PLACEHOLDER_IMAGE =
+    'data:image/svg+xml;charset=UTF-8,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500">' +
+        '<rect width="400" height="500" fill="#1a1e23"/>' +
+        '<text x="200" y="250" font-family="sans-serif" font-size="24" fill="#8a949c" text-anchor="middle" dominant-baseline="middle">BIENENHAUS</text>' +
+      '</svg>',
+    );
+
+  const handleImageError = (e: JSX.TargetedEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.src !== PLACEHOLDER_IMAGE) {
+      img.src = PLACEHOLDER_IMAGE;
+    }
+  };
+
   // Scroll reveal individual con delay
   const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
@@ -167,6 +186,7 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
             alt={member.name} 
             loading="lazy"
             className={styles.teamImage}
+            onError={handleImageError}
           />
           <div className={styles.teamImageOverlay} aria-hidden="true" />
         </div>

@@ -1,6 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createLead, updateLead, updateLeadStatus, softDeleteLead, restoreLead, permanentDeleteLead, fetchLead, fetchLeads, calculateLeadScore, recalculateLeadScore, bulkRecalculateScores } from '../leads';
-import type { LeadFormValues, LeadDetail } from '../../types/leads';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { bulkRecalculateScores, calculateLeadScore, createLead, fetchLead, fetchLeads, permanentDeleteLead, recalculateLeadScore, restoreLead, softDeleteLead, updateLead, updateLeadStatus } from '../leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {

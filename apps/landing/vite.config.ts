@@ -24,8 +24,18 @@ export default defineConfig({
         // and inline it in <head> so First Paint is not blocked by the full 230KB stylesheet.
         // The full CSS loads asynchronously via media="print" onload swap pattern.
         criticalCss({
-            modulePrefixes: ['hero', 'navbar'],
-            keyframes: ['fadeUp', 'fadeIn', 'slideIn', 'bob'],
+            // Include ALL class prefixes from Hero.module.css + Navbar.module.css
+            // CSS Modules hashes each class separately: _hero_<hash>, _heroContent_<hash>, _eyebrow_<hash>, etc.
+            modulePrefixes: [
+                'hero', 'heroBg', 'heroContent', 'heroLeft', 'heroDeco', 'eyebrow',
+                'heroTitle', 'heroDesc', 'heroDivider', 'heroActions', 'btnPrimary', 'btnVideo',
+                'playCircle', 'heroRight', 'statsPanel', 'statRow', 'statIcon', 'statNumber',
+                'statLabel', 'statDesc', 'trustTitle', 'trustDesc', 'scrollIndicator',
+                'featureBar', 'featureItem', 'featureIcon', 'featureTitle', 'featureDesc',
+                'navbar', 'logo', 'navMenu', 'navActions', 'btnPublish', 'iconBtn',
+                'hamburgerLines', 'mobileMenu', 'skipLink', 'skipLinkFocus'
+            ],
+            keyframes: ['fadeUp', 'fadeIn', 'slideIn', 'bob', 'kenBurns', 'floatParticle', 'pulseDot', 'typewriter', 'blinkCursor', 'ringPulse', 'borderGlow', 'pulseBounce', 'navbarGlow', 'mobileLinkIn'],
         }),
         // Inyecta el meta CSP en el HTML del build (GitHub Pages no permite headers).
         csp(),

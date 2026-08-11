@@ -1,6 +1,9 @@
 import { vi } from 'vitest';
 import { cleanup } from '@testing-library/preact';
 
+vi.stubEnv('VITE_SUPABASE_URL', 'dummy');
+vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'dummy');
+
 // Do NOT mock preact — mocking useState/useEffect/useMemo neutralizes all hooks,
 // breaking component tests that rely on state/effects. testing-library/preact
 // works with real preact. Only mock wouter (router) and lucide-preact (icons).
