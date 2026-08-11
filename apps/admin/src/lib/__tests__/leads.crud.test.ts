@@ -11,6 +11,7 @@ const { mockSupabase } = vi.hoisted(() => {
         not: vi.fn(() => mockSupabase),
         order: vi.fn(() => mockSupabase),
         limit: vi.fn(() => mockSupabase),
+        range: vi.fn(() => mockSupabase),
         maybeSingle: vi.fn(() => mockSupabase),
         single: vi.fn(() => mockSupabase),
         insert: vi.fn(() => mockSupabase),
@@ -91,7 +92,8 @@ describe('leads CRUD', () => {
                 data: { id: 'existing-lead', message: 'Old message', status: 'nuevo' },
                 error: null,
             });
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
 
             const result = await createLead(validFormValues);
             expect(result).toBe('existing-lead');
@@ -112,46 +114,51 @@ describe('leads CRUD', () => {
         });
 
         it('updates lead successfully', async () => {
-            mockSupabase.update.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const eqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: eqMock });
             await updateLead('lead-1', { status: 'contactado' });
             expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'contactado' });
-            expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lead-1');
+            expect(eqMock).toHaveBeenCalledWith('id', 'lead-1');
         });
     });
 
     describe('updateLeadStatus', () => {
         it('updates status', async () => {
-            mockSupabase.update.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const eqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: eqMock });
             await updateLeadStatus('lead-1', 'calificado');
             expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'calificado' });
-            expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lead-1');
+            expect(eqMock).toHaveBeenCalledWith('id', 'lead-1');
         });
     });
 
     describe('softDeleteLead', () => {
         it('sets deleted_at', async () => {
-            mockSupabase.update.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const eqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: eqMock });
             await softDeleteLead('lead-1');
             expect(mockSupabase.update).toHaveBeenCalledWith({ deleted_at: expect.any(String) });
-            expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lead-1');
+            expect(eqMock).toHaveBeenCalledWith('id', 'lead-1');
         });
     });
 
     describe('restoreLead', () => {
         it('clears deleted_at', async () => {
-            mockSupabase.update.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const eqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: eqMock });
             await restoreLead('lead-1');
             expect(mockSupabase.update).toHaveBeenCalledWith({ deleted_at: null });
-            expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lead-1');
+            expect(eqMock).toHaveBeenCalledWith('id', 'lead-1');
         });
     });
 
     describe('permanentDeleteLead', () => {
         it('deletes lead', async () => {
-            mockSupabase.delete.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const eqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.delete.mockReturnValue({ eq: eqMock });
             await permanentDeleteLead('lead-1');
             expect(mockSupabase.delete).toHaveBeenCalled();
-            expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lead-1');
+            expect(eqMock).toHaveBeenCalledWith('id', 'lead-1');
         });
     });
 
@@ -190,13 +197,18 @@ describe('leads CRUD', () => {
             deleted_at: null,
         }];
 
+        mockSupabase.range.mockReturnValue(mockSupabase);
         mockSupabase.returns.mockResolvedValueOnce({ data: [mockRows[0]], error: null });
 
         const leads = await fetchLeads();
-        expect(leads).toHaveLength(1);
-        expect(leads[0].name).toBe('Juan');
-        expect(leads[0].score).toBe(75);
+        expect(leads.data).toHaveLength(1);
+        expect(leads.data[0].name).toBe('Juan');
+        expect(leads.data[0].score).toBe(75);
+        expect(leads.page).toBe(1);
+        expect(leads.pageSize).toBe(20);
+        expect(leads.hasMore).toBe(false);
         expect(mockSupabase.range).toHaveBeenCalledWith(0, 19);
+        expect(mockSupabase.returns).toHaveBeenCalled();
     });
     });
 });
@@ -263,11 +275,12 @@ describe('recalculateLeadScore', () => {
             },
             error: null,
         });
-        mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
 
-        const score = await recalculateLeadScore('lead-1');
-        expect(score).toBeGreaterThan(0);
-        expect(mockSupabase.update).toHaveBeenCalledWith({ score: expect.any(Number) });
+            const score = await recalculateLeadScore('lead-1');
+            expect(score).toBeGreaterThan(0);
+            expect(mockSupabase.update).toHaveBeenCalledWith({ score: expect.any(Number) });
     });
 
     it('returns 0 for non-existent lead', async () => {
@@ -305,7 +318,8 @@ describe('recalculateLeadScore', () => {
                 .mockResolvedValueOnce({ data: null, error: null }); // returns null -> score 0
             
             // Mock the update chain that recalculateLeadScore uses to persist the score
-            mockSupabase.update.mockReturnValue({ eq: vi.fn().mockResolvedValueOnce({ error: null }) });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
 
             const updated = await bulkRecalculateScores(['lead-1', 'lead-2', 'lead-3']);
             expect(updated).toBe(2); // lead-1 and lead-2 should be updated (score > 0), lead-3 should not (score = 0)

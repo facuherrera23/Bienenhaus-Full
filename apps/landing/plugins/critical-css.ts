@@ -5,8 +5,13 @@
  * + design tokens) and inlines them directly in <head> as a <style> tag, so First
  * Paint is not blocked by the full 230KB stylesheet.
  *
- * The full CSS is loaded asynchronously via the media="print" onload swap pattern,
- * with a <noscript> fallback for users without JavaScript.
+ * The full CSS is loaded asynchronously via the preload + media="print" swap
+ * pattern. The media swap runs from an external script (load-deferred-styles.js,
+ * emitted by this same plugin) instead of an inline onload="..." attribute —
+ * the landing app's CSP (script-src 'self', no 'unsafe-inline') would silently
+ * block an inline event handler, which used to leave the full stylesheet
+ * (and the fonts declared in it) never applied. A <noscript> fallback covers
+ * users without JavaScript.
  *
  * Extraction strategy:
  *   1. All :root blocks (design tokens, legacy aliases, responsive overrides, reduced-motion)
@@ -21,7 +26,7 @@
  *   - generateBundle: extracts critical CSS from the bundled CSS asset (available here)
  *   - transformIndexHtml: injects the critical CSS into the HTML (runs after generateBundle)
  */
-import type { Plugin } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite';
 
 // Use structural types for the bundle assets to avoid importing rollup types
 // (which may not be a direct dependency).
@@ -338,10 +343,16 @@ export function criticalCss(options: CriticalCssOptions = {}): Plugin {
     // Shared state between hooks: extracted in generateBundle, consumed in transformIndexHtml
     let extractedCriticalCss = '';
     let cssAssetName = '';
+    let loaderFileName = '';
+    let base = '/';
 
     return {
         name: 'bienenhaus-critical-css',
         apply: 'build',
+
+        configResolved(resolvedConfig: ResolvedConfig) {
+            base = resolvedConfig.base;
+        },
 
         generateBundle(_rollupOptions, bundle: BundleLike) {
             let cssAsset: BundleAsset | undefined;
@@ -379,6 +390,30 @@ export function criticalCss(options: CriticalCssOptions = {}): Plugin {
             this.info(
                 `Critical CSS extracted: ${criticalSize} bytes (${reduction}% reduction from ${fullSize} bytes)`,
             );
+
+            // Loader externo para el swap media="print" -> media="all". Va como
+            // <script src> en vez de onload="..." inline porque nuestra CSP
+            // (script-src 'self') no tiene 'unsafe-inline' ni hash/nonce para
+            // atributos de evento — un onload inline quedaría bloqueado
+            // silenciosamente y el CSS completo nunca se aplicaría.
+            const loaderSrc = [
+                '(function () {',
+                '  var links = document.querySelectorAll("link[data-deferred-style]");',
+                '  for (var i = 0; i < links.length; i++) {',
+                '    links[i].media = "all";',
+                '  }',
+                '})();',
+            ].join('\n');
+
+            const loaderReferenceId = this.emitFile({
+                type: 'asset',
+                name: 'load-deferred-styles.js',
+                source: loaderSrc,
+            });
+            // getFileName solo existe en el PluginContext completo (disponible acá,
+            // en generateBundle) — NO en el contexto que Vite pasa a
+            // transformIndexHtml, por eso se resuelve a string ya en este hook.
+            loaderFileName = this.getFileName(loaderReferenceId);
         },
 
         transformIndexHtml(html) {
@@ -401,13 +436,20 @@ export function criticalCss(options: CriticalCssOptions = {}): Plugin {
             if (cssLinkMatch) {
                 const fullLinkTag = cssLinkMatch[0];
                 const cssHref = cssLinkMatch[1];
-                const asyncLink = `<link rel="stylesheet" href="${cssHref}" media="print" onload="this.media='all'">`;
+                // Sin onload inline: el swap de media lo hace el script externo
+                // emitido en generateBundle (compatible con script-src 'self').
+                const asyncLink = `<link rel="preload" as="style" href="${cssHref}">\n    <link rel="stylesheet" href="${cssHref}" media="print" data-deferred-style>`;
                 const noscriptFallback = `<noscript><link rel="stylesheet" href="${cssHref}"></noscript>`;
                 result = result.replace(fullLinkTag, `${asyncLink}\n    ${noscriptFallback}`);
             } else {
                 this.warn(
                     'Critical CSS plugin: could not find CSS <link> tag in HTML to convert to async.',
                 );
+            }
+
+            if (loaderFileName) {
+                const loaderTag = `<script src="${base}${loaderFileName}" defer></script>`;
+                result = result.replace(/<\/body>/i, `    ${loaderTag}\n</body>`);
             }
 
             return result;

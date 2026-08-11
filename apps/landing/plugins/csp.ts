@@ -24,15 +24,21 @@
  *   - worker-src 'self'          → service worker (sw.js)
  *
  * NOTA sobre "Executing inline event handler" bloqueado en consola:
- *   Ese warning NO viene de nuestro código — lo inyecta Cloudflare junto con
- *   el beacon.min.js (auto-injection de Web Analytics a nivel de proxy/edge,
- *   fuera de nuestro control y del build). El contenido de ese handler es
- *   dinámico, así que no se le puede dar una excepción por hash ni nonce
- *   desde acá. Si se quiere eliminar el warning del todo, hay que desactivar
- *   la auto-inyección del script en el dashboard de Cloudflare (Speed >
- *   Optimization > Web Analytics, o Zaraz si está activo) y, si se lo quiere
- *   seguir usando, cargarlo manualmente vía el snippet oficial sin atributos
- *   de evento inline.
+ *   Tenía DOS orígenes posibles, no uno solo:
+ *   1) Cloudflare inyecta su propio beacon.min.js a nivel de proxy/edge junto
+ *      con Web Analytics (fuera de nuestro control y del build); si ese script
+ *      usa un handler inline, no se le puede dar excepción por hash/nonce
+ *      desde acá porque su contenido es dinámico. Si se quiere eliminar del
+ *      todo, hay que desactivar la auto-inyección en el dashboard de
+ *      Cloudflare (Speed > Optimization > Web Analytics, o Zaraz si está
+ *      activo) y, si se lo sigue queriendo usar, cargarlo manualmente vía el
+ *      snippet oficial sin atributos de evento inline.
+ *   2) plugins/critical-css.ts generaba un `onload="this.media='all'"` propio
+ *      para el swap async del CSS completo — ESE SÍ era nuestro, y quedaba
+ *      bloqueado por esta misma política (script-src sin 'unsafe-inline').
+ *      Ya se corrigió: ahora usa un <script src> externo (load-deferred-
+ *      styles.js) en vez de un atributo de evento inline, así que no
+ *      necesita ninguna excepción en el CSP.
  */
 import type { Plugin } from 'vite';
 

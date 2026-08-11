@@ -11,6 +11,7 @@ const { mockSupabase } = vi.hoisted(() => {
         not: vi.fn(() => mockSupabase),
         order: vi.fn(() => mockSupabase),
         limit: vi.fn(() => mockSupabase),
+        range: vi.fn(() => mockSupabase),
         maybeSingle: vi.fn(() => mockSupabase),
         single: vi.fn(() => mockSupabase),
         insert: vi.fn(() => mockSupabase),
@@ -38,16 +39,18 @@ describe('leads tags & csv', () => {
 
     describe('addLeadTag', () => {
         it('adds new tag', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { tags: ['vip'] }, error: null });
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+            mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['vip'] }, error: null });
 
             await addLeadTag('lead-1', 'nuevo');
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['vip', 'nuevo'] });
         });
 
         it('does not duplicate tags', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { tags: ['vip'] }, error: null });
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+            mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['vip'] }, error: null });
 
             await addLeadTag('lead-1', 'vip');
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['vip'] });
@@ -56,16 +59,18 @@ describe('leads tags & csv', () => {
 
     describe('removeLeadTag', () => {
         it('removes existing tag', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { tags: ['vip', 'nuevo'] }, error: null });
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+            mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['vip', 'nuevo'] }, error: null });
 
             await removeLeadTag('lead-1', 'vip');
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['nuevo'] });
         });
 
         it('handles tag not present', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { tags: ['nuevo'] }, error: null });
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+            mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['nuevo'] }, error: null });
 
             await removeLeadTag('lead-1', 'vip');
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['nuevo'] });
@@ -74,7 +79,8 @@ describe('leads tags & csv', () => {
 
     describe('setLeadTags', () => {
         it('replaces all tags', async () => {
-            mockSupabase.update.mockResolvedValueOnce({ error: null });
+            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
 
             await setLeadTags('lead-1', ['vip', 'urgente']);
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['vip', 'urgente'] });
@@ -111,7 +117,7 @@ Juan,PÃ©rez,juan@test.com,invalid_intent,landing_form,nuevo,Test`;
 
             const result = await parseLeadsCsv(csvText);
             expect(result.valid).toHaveLength(0);
-            expect(result.errors[0].message).toContain('Intent invÃ¡lido');
+            expect(result.errors[0].message).toContain('Intent inválido');
         });
 
         it('rejects invalid source', async () => {
@@ -120,7 +126,7 @@ Juan,PÃ©rez,juan@test.com,comprar,invalid_source,nuevo,Test`;
 
             const result = await parseLeadsCsv(csvText);
             expect(result.valid).toHaveLength(0);
-            expect(result.errors[0].message).toContain('Source invÃ¡lido');
+            expect(result.errors[0].message).toContain('Source inválido');
         });
 
         it('handles missing optional fields', async () => {
@@ -142,7 +148,7 @@ Carlos,Lopez,carlos@test.com,alquilar,whatsapp,nuevo,Busco depto`;
             const result = await parseLeadsCsv(csvText);
             expect(result.valid).toHaveLength(2);
             expect(result.errors).toHaveLength(1);
-            expect(result.errors[0].message).toContain('Intent invÃ¡lido');
+            expect(result.errors[0].message).toContain('Intent inválido');
         });
     });
 
@@ -152,8 +158,8 @@ Carlos,Lopez,carlos@test.com,alquilar,whatsapp,nuevo,Busco depto`;
 Juan,PÃ©rez,juan@test.com,comprar,landing_form,nuevo,Quiero comprar
 Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
 
-            mockSupabase.single
-                .mockResolvedValueOnce({ data: { id: 'lead-1' }, error: null });
+            mockSupabase.maybeSingle
+                .mockResolvedValueOnce({ data: null, error: null });
 
             const result = await importLeadsFromCsv(csvText);
             expect(result.created).toBe(1);
@@ -168,6 +174,9 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
                 { name: 'Maria', last_name: 'Gomez', email: 'maria@test.com', intent: 'vender', source: 'whatsapp', status: 'nuevo', message: 'Test 2' },
             ];
 
+            mockSupabase.maybeSingle
+                .mockResolvedValueOnce({ data: null, error: null })
+                .mockResolvedValueOnce({ data: null, error: null });
             mockSupabase.single
                 .mockResolvedValueOnce({ data: { id: 'lead-1' }, error: null })
                 .mockResolvedValueOnce({ data: { id: 'lead-2' }, error: null });

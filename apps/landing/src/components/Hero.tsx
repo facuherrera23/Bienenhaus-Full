@@ -52,13 +52,26 @@ export function Hero({ onVideoOpen }: HeroProps) {
     <section className={styles.hero} ref={glowRef}>
       {/* Ken Burns Background */}
       <div className={styles.heroBg}>
-        <img
-          src="/assets/images/hero-bg.jpg"
-          className={styles.heroBgImg}
-          alt="BIENENHAUS PROPIEDADES - Propiedades exclusivas"
-          loading="eager"
-          fetchpriority="high"
-        />
+        <picture>
+          {/* Orden importa: el navegador usa el primer <source> que matchee media + soporte de formato */}
+          <source media="(min-width: 1440px)" type="image/avif" srcSet="/assets/images/hero/hero-baner-xl.avif" />
+          <source media="(min-width: 1440px)" type="image/webp" srcSet="/assets/images/hero/hero-baner-xl.webp" />
+          <source media="(min-width: 1024px)" type="image/avif" srcSet="/assets/images/hero/hero-baner-lg.avif" />
+          <source media="(min-width: 1024px)" type="image/webp" srcSet="/assets/images/hero/hero-baner-lg.webp" />
+          <source media="(min-width: 768px)" type="image/avif" srcSet="/assets/images/hero/hero-baner-md.avif" />
+          <source media="(min-width: 768px)" type="image/webp" srcSet="/assets/images/hero/hero-baner-md.webp" />
+          <source media="(min-width: 480px)" type="image/avif" srcSet="/assets/images/hero/hero-baner-sm.avif" />
+          <source media="(min-width: 480px)" type="image/webp" srcSet="/assets/images/hero/hero-baner-sm.webp" />
+          <source type="image/avif" srcSet="/assets/images/hero/hero-baner-xs.avif" />
+          <source type="image/webp" srcSet="/assets/images/hero/hero-baner-xs.webp" />
+          <img
+            src="/assets/images/hero/hero-baner.png"
+            className={styles.heroBgImg}
+            alt="BIENENHAUS PROPIEDADES - Propiedades exclusivas"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </picture>
       </div>
 
       {/* Overlays existentes */}

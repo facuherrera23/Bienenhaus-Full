@@ -4,7 +4,25 @@ import type { JSX } from 'preact';
 import { useScrollAnimation, useTilt, useRipple } from '@/lib/motion';
 import styles from '../styles/modules/Catalog.module.css';
 
+// Placeholder inline (data URI, no depende de ningún archivo) para cuando
+// property.image no carga — evita el ícono de imagen rota del navegador.
+// TODO: esto es un parche defensivo. El fix real es reemplazar
+// `propertiesData` por datos de Supabase (tabla `properties` + `property_images`,
+// ya tipados en types/properties.ts como PropertyDetail.images[]).
+const PLACEHOLDER_IMAGE =
+  'data:image/svg+xml;charset=UTF-8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">' +
+      '<rect width="800" height="600" fill="#e5e0d8"/>' +
+      '<text x="400" y="300" font-family="sans-serif" font-size="28" fill="#a89f8f" text-anchor="middle" dominant-baseline="middle">BIENENHAUS</text>' +
+      '</svg>',
+  );
+
 // Datos de ejemplo (reemplazar con datos reales de Supabase)
+// NOTA: las imágenes de estos 2 registros mock (penthouse.jpg, casa.jpg)
+// nunca existieron en public/assets/images/properties/ — de ahí los 404.
+// No se subieron fotos placeholder a propósito: el PropertyCard ya
+// resuelve el fallback visualmente (ver PLACEHOLDER_IMAGE arriba).
 const propertiesData = [
   {
     id: 1,
@@ -287,6 +305,16 @@ function PropertyCard({ property, index }: { property: any; index: number }) {
     // Aquí iría la lógica de favoritos
   };
 
+  // Si la imagen de la propiedad no carga (404, url vieja, etc.), cae a un
+  // placeholder inline en vez de mostrar el ícono de imagen rota. El guard
+  // de `src` evita loop infinito si el placeholder mismo llegara a fallar.
+  const handleImageError = (e: JSX.TargetedEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.src !== PLACEHOLDER_IMAGE) {
+      img.src = PLACEHOLDER_IMAGE;
+    }
+  };
+
   return (
     <article 
       className={`${styles.propertyCard} ${cardVisible ? styles.visible : ''}`}
@@ -305,6 +333,7 @@ function PropertyCard({ property, index }: { property: any; index: number }) {
             src={property.image} 
             alt={property.title}
             loading="lazy"
+            onError={handleImageError}
           />
           <div className={styles.cardOverlay} aria-hidden="true" />
 

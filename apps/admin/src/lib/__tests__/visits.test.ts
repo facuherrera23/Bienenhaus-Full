@@ -492,7 +492,7 @@ describe('createVisit', () => {
     });
 
     it('lanza error si el insert falla', async () => {
-        mockFrom({ single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert err' } }) });
+        const chain = mockFrom({ single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert err' } }) });
         await expect(
             createVisit({
                 lead_id: 'l1',
@@ -521,7 +521,7 @@ describe('updateVisit', () => {
     });
 
     it('lanza error si falla', async () => {
-        mockFrom({ eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'upd err' } }) });
+        const chain = mockFrom({ eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'upd err' } }) });
         await expect(updateVisit('v1', { title: 'X' })).rejects.toThrow('upd err');
     });
 });
@@ -795,8 +795,7 @@ describe('generateOccurrences', () => {
 
 describe('createReminders', () => {
     it('crea los recordatorios por defecto para la visita', async () => {
-        const chain = mockFrom({});
-chain.select = vi.fn().mockResolvedValue({ data: [reminderConfig], error: null });
+        const chain = mockFrom({ select: vi.fn().mockResolvedValue({ data: [reminderConfig], error: null }) });
         const result = await createReminders('v1');
         expect(result).toEqual([reminderConfig]);
         expect(chain.insert).toHaveBeenCalledWith(DEFAULT_REMINDERS.map((r) => ({ ...r, visit_id: 'v1' })));
@@ -810,7 +809,7 @@ chain.select = vi.fn().mockResolvedValue({ data: [reminderConfig], error: null }
     });
 
     it('lanza error si falla', async () => {
-        mockFrom({ returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'rem err' } }) });
+        const chain = mockFrom({ select: vi.fn().mockResolvedValue({ data: null, error: { message: 'rem err' } }) });
         await expect(createReminders('v1')).rejects.toThrow('rem err');
     });
 });
