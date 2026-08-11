@@ -465,9 +465,9 @@ describe('createVisit', () => {
     it('crea una visita con los valores provistos', async () => {
         const chain = mockFrom({ single: vi.fn().mockResolvedValue({ data: makeVisitRow(), error: null }) });
         const result = await createVisit({
-            lead_id: 'l1',
-            property_id: 'p1',
-            agent_id: 'a1',
+            lead_id: '11111111-1111-1111-1111-111111111111',
+            property_id: '22222222-2222-2222-2222-222222222222',
+            agent_id: '33333333-3333-3333-3333-333333333333',
             title: 'Reunión',
             description: '',
             starts_at: '2026-01-10T15:00:00.000Z',
@@ -475,7 +475,7 @@ describe('createVisit', () => {
             status: 'programada',
             location: '',
             meeting_type: 'presencial',
-            meeting_link: '',
+            meeting_link: null,
             notes: '',
         });
         expect(result.id).toBe('v1');
