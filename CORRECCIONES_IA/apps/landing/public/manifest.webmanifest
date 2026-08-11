@@ -1,0 +1,17 @@
+{
+    "name": "BIENENHAUS PROPIEDADES",
+    "short_name": "BIENENHAUS",
+    "description": "Selección premium de propiedades exclusivas en las mejores zonas. Asesoramiento personalizado en cada paso.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#050607",
+    "theme_color": "#050607",
+    "icons": [
+        {
+            "src": "/pwa-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

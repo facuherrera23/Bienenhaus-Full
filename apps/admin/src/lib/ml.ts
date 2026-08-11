@@ -213,7 +213,7 @@ export async function fetchMlSettings(): Promise<MlSettings> {
     const { data, error } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['ml_app_id', 'ml_defaults']);
+        .in('key', ['ml_app_id', 'ml_defaults', 'ml_client_secret']);
 
     if (error) throw new Error(error.message);
 
@@ -234,6 +234,9 @@ export async function fetchMlSettings(): Promise<MlSettings> {
                 ),
                 condition: String((s.value as { condition?: unknown }).condition ?? 'used'),
             };
+        }
+        if (s.key === 'ml_client_secret') {
+            settings.client_secret = String((s.value as { value?: unknown }).value ?? '');
         }
     }
 
@@ -663,4 +666,26 @@ export async function retryDeadLetter(id: number): Promise<void> {
 export async function deleteDeadLetter(id: number): Promise<void> {
     const { error } = await supabase.from('ml_sync_dead_letter').delete().eq('id', id);
     if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// API Functions - Client Secret (for edge functions)
+// ============================================================
+
+/**
+ * Obtiene el client_secret de Mercado Libre desde site_settings.
+ * Usado por edge functions para intercambiar tokens OAuth.
+ * El valor se guarda encriptado en la BD, esta función lo devuelve en texto plano
+ * (la edge function tiene la clave de encriptación en Deno.env).
+ */
+export async function fetchMlClientSecret(): Promise<string | null> {
+    const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'ml_client_secret')
+        .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data?.value) return null;
+    return String((data.value as { value?: unknown }).value ?? '');
 }

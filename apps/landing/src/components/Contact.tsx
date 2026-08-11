@@ -1,6 +1,6 @@
 // apps/landing/src/components/Contact.tsx
 import { useState } from 'preact/hooks';
-import { useScrollAnimation, useRipple } from '@/lib/motion';
+import { useRipple, useScrollAnimation } from '@/lib/motion';
 import styles from '../styles/modules/Contact.module.css';
 
 interface FormData {
@@ -52,8 +52,10 @@ export function Contact() {
 
   const { RippleEffect } = useRipple();
 
-  const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: Event) => {
+    const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    const { name, value, type } = target;
+    const checked = target instanceof HTMLInputElement && type === 'checkbox' ? target.checked : undefined;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,

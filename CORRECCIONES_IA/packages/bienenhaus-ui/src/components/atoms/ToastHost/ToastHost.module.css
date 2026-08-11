@@ -1,0 +1,137 @@
+/**
+ * ToastHost Component Styles
+ * Fixed-position toast notification stack. Uses ONLY --bh-* design tokens.
+ *
+ * Variants: success | error | info | warning
+ * Layout:  fixed bottom-right, 320px width, accent-left-border per type,
+ *          icon circle with semantic background.
+ *
+ * NOTE: This atom follows the Button pattern — the component uses plain
+ * string class names (e.g. "toast-host", "toast--success") and does NOT
+ * import this module. Consumers import the CSS where needed, or the
+ * classes are loaded globally via the design system entry.
+ */
+
+/* ============================================================
+   HOST — fixed container, bottom-right stack
+   ============================================================ */
+.toast-host {
+  position: fixed;
+  right: var(--bh-space-5);
+  bottom: var(--bh-space-5);
+  z-index: var(--bh-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bh-space-2);
+  width: 320px;
+  font-family: var(--bh-font-sans);
+  pointer-events: none;
+}
+
+/* ============================================================
+   TOAST — individual notification card
+   ============================================================ */
+.toast {
+  display: flex;
+  gap: var(--bh-space-3);
+  align-items: flex-start;
+  padding: var(--bh-space-3) var(--bh-space-4);
+  background: var(--bh-bg-card);
+  border: 1px solid var(--bh-border);
+  border-left-width: 3px;
+  border-radius: var(--bh-radius-sm);
+  box-shadow: var(--bh-shadow-md);
+  pointer-events: auto;
+  cursor: default;
+  transition:
+    transform var(--bh-dur-med) var(--bh-ease-premium),
+    opacity var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+/* ============================================================
+   ICON — semantic circle, 20×20 inline SVG inside
+   ============================================================ */
+.toast-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--bh-radius-full);
+  color: var(--bh-bg-primary);
+}
+
+.toast-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================================
+   BODY — title + optional description
+   ============================================================ */
+.toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bh-space-1);
+  font-size: var(--bh-text-sm);
+  color: var(--bh-text-primary);
+  line-height: var(--bh-leading-snug);
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: var(--bh-weight-semibold);
+  font-size: var(--bh-text-sm);
+  color: var(--bh-text-primary);
+}
+
+.toast-desc {
+  color: var(--bh-text-tertiary);
+  font-size: var(--bh-text-xs);
+  line-height: var(--bh-leading-normal);
+}
+
+/* ============================================================
+   VARIANTS — accent left border + icon background per type
+   ============================================================ */
+.toast--success {
+  border-left-color: var(--bh-success);
+}
+
+.toast--success .toast-icon {
+  background: var(--bh-success);
+}
+
+.toast--error {
+  border-left-color: var(--bh-danger);
+}
+
+.toast--error .toast-icon {
+  background: var(--bh-danger);
+}
+
+.toast--info {
+  border-left-color: var(--bh-info);
+}
+
+.toast--info .toast-icon {
+  background: var(--bh-info);
+}
+
+.toast--warning {
+  border-left-color: var(--bh-warning);
+}
+
+.toast--warning .toast-icon {
+  background: var(--bh-warning);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
+  }
+}

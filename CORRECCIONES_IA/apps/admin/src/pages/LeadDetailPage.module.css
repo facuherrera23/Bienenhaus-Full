@@ -1,0 +1,81 @@
+/**
+ * pages/LeadDetailPage.module.css — migrado a CSS Modules (Fase 3).
+ * Clases: lead-avatar, lead-detail, lead-grid, lead-hero, lead-hero-info
+ */
+
+/* -------------------------------------------------------------------------- Detalle de lead -------------------------------------------------------------------------- */ .lead-detail {
+
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 900px;
+
+}
+
+.lead-hero {
+
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bh-bg-card);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-lg);
+      padding: 18px 22px;
+
+}
+
+.lead-avatar {
+
+      width: 46px;
+      height: 46px;
+      flex: none;
+      border-radius: 50%;
+      background: var(--bh-accent-soft);
+      color: var(--bh-accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 17px;
+
+}
+
+.lead-hero-info {
+
+      flex: 1;
+      min-width: 0;
+
+}
+
+.lead-hero-info h3 {
+
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--bh-text-primary);
+
+}
+
+.lead-hero-info p {
+
+      margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--bh-text-tertiary);
+
+}
+
+.lead-grid {
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+
+}
+
+@media (max-width: 860px) {
+  .lead-grid {
+
+            grid-template-columns: 1fr;
+        
+  }
+}

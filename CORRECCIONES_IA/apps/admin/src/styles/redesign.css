@@ -1,0 +1,57 @@
+/**
+ * Admin Redesign Overrides — Linear-style SaaS
+ *
+ * Admin-scoped layer: overrides ONLY @bienenhaus/ui tokens for this app.
+ * Loaded LAST in main.tsx (after shell/sidebar/topbar) so these win the
+ * cascade. The landing never imports this file, so shared tokens remain
+ * untouched there.
+ *
+ * Scope: layout dims + radii (pill+card hybrid) + soft elevation shadows.
+ * COLORS are intentionally untouched (brand keep).
+ */
+
+:root {
+    /* ============================================================
+       LAYOUT — slimmer, Linear-style shell
+       ============================================================ */
+    --bh-sidebar-w: 240px; /* was 280px */
+    --bh-sidebar-w-collapsed: 68px; /* was 88px */
+    --bh-topbar-h: 60px; /* was 72px */
+    --bh-breadcrumb-h: 48px; /* was 56px */
+    --bh-sidebar-logo-h: 60px; /* was 64px */
+    --bh-main-pad: 28px; /* was 32px */
+    --bh-main-gap: 24px; /* was 32px */
+
+    /* ============================================================
+       RADII — hybrid pill + card
+       Buttons/badges/toggles use --bh-radius-full (pill);
+       cards/panels/inputs use the 10–16px medium scale.
+       ============================================================ */
+    --bh-radius-xs: 6px;
+    --bh-radius-sm: 10px; /* badges, chips, dropdown items */
+    --bh-radius-md: 12px; /* inputs, selects, buttons (non-pill) */
+    --bh-radius-lg: 16px; /* cards, panels */
+    --bh-radius-xl: 20px; /* modals, large cards */
+    --bh-radius-2xl: 24px; /* large panels */
+    --bh-radius-3xl: 28px; /* featured panels */
+    --bh-radius-4xl: 30px; /* stat cards */
+    --bh-radius-full: 999px; /* pills, avatars, icon buttons */
+
+    /* ============================================================
+       SHADOWS — Linear-style soft layered elevation
+       Layered: tight contact shadow + broad ambient blur.
+       Accent glows preserved (brand signature).
+       ============================================================ */
+    --bh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+    --bh-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.28);
+    --bh-shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.22), 0 12px 32px rgba(0, 0, 0, 0.32);
+    --bh-shadow-xl: 0 4px 12px rgba(0, 0, 0, 0.24), 0 24px 60px rgba(0, 0, 0, 0.36);
+    --bh-shadow-glow: 0 0 24px var(--bh-accent-glow-soft);
+    --bh-shadow-glow-lg: 0 0 40px var(--bh-accent-glow-soft), 0 20px 60px rgba(0, 0, 0, 0.3);
+
+    /* ============================================================
+       FOCUS RINGS — shared accent ring used by keyboard focus,
+       active sidebar items and selection highlights.
+       ============================================================ */
+    --bh-ring-focus: 0 0 0 3px var(--bh-accent-soft);
+}

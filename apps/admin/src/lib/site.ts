@@ -266,6 +266,7 @@ const SETTINGS_FIELD_META: Record<string, FieldMeta[]> = {
         { key: 'anios', label: 'Años de trayectoria', type: 'number' },
     ],
     ml_enabled: [{ key: 'value', label: 'Sincronización con Mercado Libre' }],
+    ml_client_secret: [{ key: 'value', label: 'Client Secret de Mercado Libre', type: 'text' }],
     hero_video_url: [{ key: 'value', label: 'URL del video (YouTube/Vimeo)', type: 'text' }],
     hero_video_title: [{ key: 'value', label: 'Título del video', type: 'text' }],
     hero_video_autoplay: [{ key: 'value', label: 'Autoplay', type: 'boolean' }],

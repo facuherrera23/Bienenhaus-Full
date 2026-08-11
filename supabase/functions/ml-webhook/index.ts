@@ -36,9 +36,13 @@ interface LogEntry {
     topic?: string;
     resource?: string;
     user_id?: number;
-    status?: 'received' | 'processed' | 'failed' | 'deduplicated';
+    status?: 'received' | 'processed' | 'failed' | 'deduplicated' | 'auto_reply_sent' | 'unhandled' | number;
     duration_ms?: number;
     error?: string;
+    question_id?: string;
+    order_id?: string;
+    trigger?: string;
+    attempts?: number;
 }
 
 function log(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
@@ -63,7 +67,8 @@ async function logWebhookEvent(
     status: 'received' | 'processed' | 'failed' | 'deduplicated',
     error?: string,
 ): Promise<void> {
-    await supabase.from('ml_webhook_events').insert({
+    const { data: existing } = await supabase.from('ml_webhook_events').select('id').eq('user_id', payload.user_id).eq('resource', payload.resource).eq('topic', payload.topic).eq('sent_at', payload.sent).maybeSingle();
+    const row = {
         user_id: payload.user_id,
         resource: payload.resource,
         topic: payload.topic,
@@ -74,7 +79,38 @@ async function logWebhookEvent(
         status,
         error: error ?? null,
         payload: JSON.stringify(payload),
-    });
+    };
+    if (existing?.id) {
+        await supabase.from('ml_webhook_events').update({ status, error: error ?? null, payload: JSON.stringify(payload), attempts: payload.attempts }).eq('id', existing.id);
+    } else {
+        await supabase.from('ml_webhook_events').insert(row);
+    }
+}
+
+async function getMlClientId(): Promise<string | null> {
+    const { data: settings } = await supabase
+        .from('site_settings')
+        .select('key, value')
+        .in('key', ['ml_app_id']);
+
+    const clientId = settings?.find(s => s.key === 'ml_app_id')?.value?.value as string ?? '';
+    if (clientId) return clientId;
+
+    // Fallback a env vars (legacy)
+    return Deno.env.get('ML_CLIENT_ID') ?? null;
+}
+
+async function validateNotificationBinding(payload: MlWebhookPayload): Promise<boolean> {
+    const clientId = await getMlClientId();
+    if (clientId && String(payload.application_id) !== clientId) return false;
+    const { data: connection } = await supabase
+        .from('ml_connection')
+        .select('user_id')
+        .eq('provider', 'mercadolibre')
+        .eq('is_active', true)
+        .eq('user_id', payload.user_id)
+        .maybeSingle();
+    return !!connection;
 }
 
 async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
@@ -148,7 +184,7 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
     const { data: item } = await supabase
         .from('property_ml_meta')
         .select('property_id, ml_item_id')
-        .eq('ml_item_id', questionId)
+        .eq('ml_item_id', Number(questionId))
         .maybeSingle();
 
     if (item) {
@@ -343,13 +379,17 @@ Deno.serve(async (req) => {
 
     const start = Date.now();
 
+    if (!(await validateNotificationBinding(payload))) {
+        return respond(401, { error: 'Notificación no perteneciente a la aplicación/cuenta conectada' });
+    }
+
     // Deduplication check
     const { data: existingEvent } = await supabase
         .from('ml_webhook_events')
         .select('status')
         .eq('resource', payload.resource)
-        .eq('attempts', payload.attempts)
         .eq('topic', payload.topic)
+        .eq('sent_at', payload.sent)
         .maybeSingle();
 
     if (existingEvent && existingEvent.status === 'processed') {
@@ -365,6 +405,7 @@ Deno.serve(async (req) => {
                 await handleQuestions(payload);
                 break;
             case 'orders':
+            case 'orders_v2':
                 await handleOrders(payload);
                 break;
             case 'items':

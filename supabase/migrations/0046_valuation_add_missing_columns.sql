@@ -10,8 +10,8 @@
 -- ============================================================================
 
 alter table public.property_valuations
-  add column ac_dispersion numeric default 10
+  add column if not exists ac_dispersion numeric default 10
     check (ac_dispersion >= 0 and ac_dispersion <= 100);
 
 alter table public.property_valuations
-  add column observaciones text;
+  add column if not exists observaciones text;

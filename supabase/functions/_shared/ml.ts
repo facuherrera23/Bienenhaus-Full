@@ -1,5 +1,6 @@
 /**
  * Helpers de la API de Mercado Libre (OAuth + items).
+ * Credenciales de la app (client_id/client_secret) se leen de BD encriptadas.
  */
 
 import { decrypt, encrypt } from './crypto.ts';
@@ -36,17 +37,61 @@ export interface MlTokenResponse {
     refresh_token: string;
 }
 
-function credentials(): { clientId: string; clientSecret: string } {
+/**
+ * Obtiene client_id y client_secret desencriptados desde la BD.
+ * Requiere que el caller sea staff (validado en RPC get_ml_credentials).
+ */
+export async function getMlAppCredentials(
+    supabase: SupabaseClient,
+): Promise<{ clientId: string; clientSecret: string } | null> {
+    const { data, error } = await supabase.rpc('get_ml_credentials');
+    if (error || !data) {
+        return null;
+    }
+
+    const { client_id_encrypted, client_id_iv, client_secret_encrypted, client_secret_iv } = data;
+
+    if (!data.client_id_encrypted || !data.client_secret_encrypted) {
+        return null;
+    }
+
+    const clientId = await decrypt(client_id_encrypted, client_id_iv);
+    const clientSecret = await decrypt(client_secret_encrypted, client_secret_iv);
+
+    return { clientId, clientSecret };
+}
+
+/**
+ * Obtiene credenciales de la app ML. Primero intenta BD, fallback a env vars (legacy).
+ * @deprecated Usar getMlAppCredentials(supabase) en nuevo código.
+ */
+export async function getMlAppCredentialsLegacy(
+    supabase: SupabaseClient,
+): Promise<{ clientId: string; clientSecret: string }> {
+    // Primero intenta BD
+    const fromDb = await getMlAppCredentials(supabase);
+    if (fromDb) return fromDb;
+
+    // Fallback a env vars (legacy)
     const clientId = Deno.env.get('ML_CLIENT_ID') ?? '';
     const clientSecret = Deno.env.get('ML_CLIENT_SECRET') ?? '';
     if (!clientId || !clientSecret) {
-        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados');
+        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados (ni en BD ni en env)');
     }
     return { clientId, clientSecret };
 }
 
-export async function exchangeCode(code: string, redirectUri: string): Promise<MlTokenResponse> {
-    const { clientId, clientSecret } = credentials();
+export async function exchangeCode(
+    code: string,
+    redirectUri: string,
+    codeVerifier?: string,
+    clientId?: string,
+    clientSecret?: string,
+): Promise<MlTokenResponse> {
+    if (!clientId || !clientSecret) {
+        throw new Error('clientId y clientSecret son requeridos');
+    }
+
     const res = await fetchWithTimeout(ML_TOKEN_URL, {
         method: 'POST',
         headers: {
@@ -59,6 +104,7 @@ export async function exchangeCode(code: string, redirectUri: string): Promise<M
             client_secret: clientSecret,
             code,
             redirect_uri: redirectUri,
+            ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
         }),
     });
     const text = await res.text();
@@ -68,8 +114,11 @@ export async function exchangeCode(code: string, redirectUri: string): Promise<M
     return JSON.parse(text) as MlTokenResponse;
 }
 
-export async function refreshToken(refresh: string): Promise<MlTokenResponse> {
-    const { clientId, clientSecret } = credentials();
+export async function refreshToken(
+    refresh: string,
+    clientId: string,
+    clientSecret: string,
+): Promise<MlTokenResponse> {
     const res = await fetchWithTimeout(ML_TOKEN_URL, {
         method: 'POST',
         headers: {
@@ -113,7 +162,11 @@ export async function getAccessToken(
     }
 
     const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
-    const tokens = await refreshToken(refresh);
+    
+    // Obtener credenciales de la app (BD o env vars)
+    const { clientId, clientSecret } = await getMlAppCredentialsLegacy(supabase);
+    
+    const tokens = await refreshToken(refresh, clientId, clientSecret);
     const access = await encrypt(tokens.access_token);
     const refreshEnc = await encrypt(tokens.refresh_token);
 
@@ -152,10 +205,12 @@ export interface MlItemPayload {
     price: number;
     currency_id: string;
     available_quantity: number;
-    buying_mode: 'buy_it_now';
+    buying_mode: 'classified';
     listing_type_id?: string;
-    condition: 'new' | 'used';
+    condition: 'new' | 'used' | 'not_specified';
     pictures?: { source: string }[];
+    channels?: ('marketplace')[];
+    location?: { address_line?: string };
     description?: { plain_text: string };
     [key: string]: unknown;
 }
@@ -180,8 +235,10 @@ async function api(
         authorization: `Bearer ${accessToken}`,
         'content-type': 'application/json',
         accept: 'application/json',
-        ...(init?.headers ?? {}),
     };
+    if (init?.headers) {
+        new Headers(init.headers).forEach((value, key) => { headers[key] = value; });
+    }
     if (idempotencyKey) {
         headers['x-idempotency-key'] = idempotencyKey;
     }
@@ -466,7 +523,7 @@ export async function runMlApiCallWithRetry<T>(
 ): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
     const result = await runMlApiCall(accessToken, fn, operationName);
 
-    if (!result.ok && result.retryAfter) {
+    if ('retryAfter' in result && result.retryAfter !== undefined) {
         console.log(
             `[ml-api] Rate limited on ${operationName}, waiting ${result.retryAfter}s before retry...`,
         );

@@ -1,0 +1,63 @@
+/**
+ * pages/TrashPage.module.css — migrado a CSS Modules (Fase 3).
+ * Clases: trash-tab, trash-tabs
+ */
+
+/* -------------------------------------------------------------------------- Trash Page (Papelera) -------------------------------------------------------------------------- */ .trash-tabs {
+
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 4px;
+      background: var(--bh-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-sm);
+      overflow-x: auto;
+
+}
+
+.trash-tab {
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: var(--bh-radius-sm);
+      color: var(--bh-text-tertiary);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--dur-fast) var(--ease-premium);
+
+}
+
+.trash-tab:hover {
+
+      background: var(--bh-bg-hover);
+      color: var(--bh-text-secondary);
+
+}
+
+.trash-tab:global(.active) {
+
+      background: var(--bh-accent);
+      color: var(--bh-bg);
+
+}
+
+.trash-tab:disabled {
+
+      opacity: 0.6;
+      cursor: not-allowed;
+
+}
+
+.trash-tab:global(.active) :global(.tab-count) {
+
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--bh-bg);
+
+}

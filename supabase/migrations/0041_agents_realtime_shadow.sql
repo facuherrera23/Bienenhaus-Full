@@ -6,7 +6,7 @@
 -- ============================================================================
 
 -- 1) Tabla shadow con solo columnas de display
-create table public.agents_realtime (
+create table if not exists public.agents_realtime (
   id uuid primary key,
   name text not null,
   matricula text,
@@ -20,14 +20,16 @@ create table public.agents_realtime (
 );
 
 -- Índice para ordenamiento
-create index agents_realtime_sort_idx on public.agents_realtime (sort_order asc, name);
+create index if not exists agents_realtime_sort_idx on public.agents_realtime (sort_order asc, name);
 
 -- 2) RLS: lectura pública solo activos
 alter table public.agents_realtime enable row level security;
 
+drop policy if exists agents_realtime_public_select on public.agents_realtime;
 create policy agents_realtime_public_select on public.agents_realtime
   for select using (is_active = true);
 
+drop policy if exists agents_realtime_staff_all on public.agents_realtime;
 create policy agents_realtime_staff_all on public.agents_realtime
   for all using (public.is_staff()) with check (public.is_staff());
 
@@ -63,6 +65,7 @@ begin
 end;
 $$;
 
+drop trigger if exists sync_agents_realtime on public.agents;
 create trigger sync_agents_realtime
 after insert or update or delete on public.agents
 for each row execute function public.sync_agents_realtime();

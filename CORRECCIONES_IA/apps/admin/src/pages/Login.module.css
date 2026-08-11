@@ -1,0 +1,175 @@
+/**
+ * Login — shared styles for Login.tsx / ChangePassword.tsx.
+ *
+ * Migrated verbatim from styles.css into CSS Modules (scoped to the login
+ * pages). No design changes: values, colors, media queries and keyframes are
+ * copied as-is, referencing --bh-* tokens.
+ *
+ * The `field`, `btn`, `btn--primary` and `btn--block` classes used by these
+ * pages belong to the global design system (styles.css) and are NOT migrated.
+ */
+
+.login-brand .sidebar-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-deep));
+    color: var(--bh-white);
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(1000px 600px at 20% -10%, var(--bh-accent-soft), transparent),
+        var(--bh-bg-app);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 36px 32px;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-xl);
+    box-shadow: var(--bh-shadow-md);
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.login-brand div {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.login-brand strong {
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    color: var(--bh-text-primary);
+}
+
+.login-brand span {
+    font-size: 12px;
+    color: var(--bh-text-tertiary);
+}
+
+.login-card h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--bh-text-primary);
+}
+
+.login-hint {
+    margin: -6px 0 2px;
+    font-size: 13px;
+    color: var(--bh-text-tertiary);
+}
+
+.login-error {
+    margin: 0;
+    padding: 9px 12px;
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-danger-soft);
+    color: var(--bh-danger);
+    font-size: 12.5px;
+}
+
+.login-success {
+    margin: 0;
+    padding: 9px 12px;
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-success-soft);
+    color: var(--bh-success);
+    font-size: 12.5px;
+}
+
+.login-legal {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--bh-text-tertiary);
+}
+
+/* Lockout state */
+.login-lockout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-4);
+    background: var(--bh-warning-soft);
+    border: 1px solid var(--bh-warning);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-warning);
+}
+
+.login-lockout__icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.login-lockout__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.login-lockout__title {
+    display: block;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-warning);
+    margin-bottom: var(--bh-space-1);
+}
+
+.login-lockout__text {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-secondary);
+    line-height: 1.5;
+}
+
+.login-lockout__timer {
+    font-family: var(--bh-font-mono);
+    font-size: var(--bh-text-lg);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-warning);
+    background: rgba(250, 204, 21, 0.15);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+    display: inline-block;
+    min-width: 5ch;
+    text-align: center;
+}
+
+/* Login card entrance animation */
+@media (prefers-reduced-motion: no-preference) {
+    .login-card {
+        animation: loginCardIn var(--bh-dur-slow) var(--bh-ease-premium);
+    }
+
+    @keyframes loginCardIn {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}

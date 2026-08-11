@@ -1,0 +1,379 @@
+/**
+ * pages/VisitsPage.module.css — migrado a CSS Modules (Fase 3).
+ * Clases: calendar-day, calendar-day-header, calendar-grid, calendar-header-row, calendar-month, calendar-week, calendar-week-view, current-period, day-more, day-number, day-visit-chip, day-visits, other-month, today, toolbar-nav, toolbar-view, visit-location, visit-title, visit-type, visits-page, visits-toolbar, week-day-column, week-day-header, week-day-name, week-day-number, week-empty, week-grid, week-header, week-visit
+ */
+
+/* -------------------------------------------------------------------------- Visits / Agenda -------------------------------------------------------------------------- */ .visits-page {
+
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+}
+
+.visits-toolbar {
+
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--bh-card-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-md);
+
+}
+
+.toolbar-view {
+
+      display: flex;
+      gap: 8px;
+
+}
+
+.toolbar-nav {
+
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+}
+
+.current-period {
+
+      font-weight: 600;
+      color: var(--bh-text-primary);
+      min-width: 280px;
+      text-align: center;
+
+}
+
+/* Calendar Month View */ .calendar-month {
+
+      background: var(--bh-card-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-md);
+      overflow: hidden;
+
+}
+
+.calendar-header-row {
+
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--bh-bg);
+      border-bottom: 1px solid var(--bh-border);
+
+}
+
+.calendar-day-header {
+
+      padding: 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--bh-text-tertiary);
+      text-transform: uppercase;
+
+}
+
+.calendar-grid {
+
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+
+}
+
+.calendar-week {
+
+      display: contents;
+
+}
+
+.calendar-day {
+
+      min-height: 120px;
+      border-right: 1px solid var(--bh-border);
+      border-bottom: 1px solid var(--bh-border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bh-card-bg);
+      transition: background var(--dur-fast);
+
+}
+
+.calendar-day:hover {
+
+      background: var(--bh-bg-hover);
+
+}
+
+.calendar-day.other-month {
+
+      background: var(--bh-bg);
+      opacity: 0.5;
+
+}
+
+.calendar-day.today {
+
+      background: rgba(31, 200, 195, 0.08);
+
+}
+
+.calendar-day.today .day-number {
+
+      background: var(--bh-accent);
+      color: var(--bh-bg);
+
+}
+
+.day-number {
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--bh-text-primary);
+      margin-bottom: 6px;
+
+}
+
+.day-visits {
+
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow: hidden;
+
+}
+
+.day-visit-chip {
+
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--bh-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-xs);
+      font-size: 11.5px;
+      color: var(--bh-text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all var(--dur-fast);
+
+}
+
+.day-visit-chip:hover {
+
+      border-color: var(--bh-accent);
+      color: var(--bh-accent);
+
+}
+
+.day-visit-chip time {
+
+      font-size: 10.5px;
+      color: var(--bh-text-tertiary);
+      font-weight: 500;
+
+}
+
+.day-more {
+
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--bh-accent);
+      cursor: pointer;
+      text-align: center;
+
+}
+
+.day-more:hover {
+
+      background: rgba(31, 200, 195, 0.1);
+      border-radius: var(--bh-radius-xs);
+
+}
+
+/* Week / Day View */ .calendar-week-view {
+
+      background: var(--bh-card-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-md);
+      overflow: hidden;
+
+}
+
+.week-header {
+
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--bh-bg);
+      border-bottom: 1px solid var(--bh-border);
+
+}
+
+.week-day-header {
+
+      padding: 16px 8px;
+      text-align: center;
+      border-right: 1px solid var(--bh-border);
+
+}
+
+.week-day-header:last-child {
+
+      border-right: none;
+
+}
+
+.week-day-header.today {
+
+      background: rgba(31, 200, 195, 0.08);
+
+}
+
+.week-day-name {
+
+      display: block;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--bh-text-tertiary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+
+}
+
+.week-day-number {
+
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--bh-text-primary);
+
+}
+
+.week-day-header.today .week-day-number {
+
+      color: var(--bh-accent);
+
+}
+
+.week-grid {
+
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+
+}
+
+.week-day-column {
+
+      min-height: 500px;
+      border-right: 1px solid var(--bh-border);
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+
+}
+
+.week-day-column:last-child {
+
+      border-right: none;
+
+}
+
+.week-day-column.today {
+
+      background: rgba(31, 200, 195, 0.04);
+
+}
+
+.week-day-column.today .week-day-header {
+
+      background: rgba(31, 200, 195, 0.08);
+
+}
+
+.week-visit {
+
+      padding: 10px 12px;
+      background: var(--bh-bg);
+      border: 1px solid var(--bh-border);
+      border-radius: var(--bh-radius-sm);
+      cursor: pointer;
+      transition: all var(--dur-fast);
+
+}
+
+.week-visit:hover {
+
+      border-color: var(--bh-accent);
+      transform: translateY(-1px);
+      box-shadow: var(--bh-shadow-md);
+
+}
+
+.visit-title {
+
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--bh-text-primary);
+      margin-bottom: 4px;
+
+}
+
+.week-visit time {
+
+      display: block;
+      font-size: 11.5px;
+      color: var(--bh-text-tertiary);
+      font-weight: 500;
+      margin-bottom: 6px;
+
+}
+
+.visit-location {
+
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--bh-text-tertiary);
+      margin-bottom: 4px;
+
+}
+
+.visit-type {
+
+      display: inline-block;
+      padding: 2px 6px;
+      background: rgba(31, 200, 195, 0.15);
+      color: var(--bh-accent);
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: var(--bh-radius-xs);
+      text-transform: uppercase;
+
+}
+
+.week-empty {
+
+      padding: 24px;
+      text-align: center;
+      color: var(--bh-text-tertiary);
+      font-size: 12px;
+
+}

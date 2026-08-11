@@ -129,18 +129,22 @@ values (
 on conflict (id) do nothing;
 
 -- Lectura pública
+drop policy if exists property_images_public_read on storage.objects;
 create policy property_images_public_read on storage.objects
   for select using (bucket_id = 'property-images');
 
 -- Escritura/borrado solo para staff
+drop policy if exists property_images_staff_insert on storage.objects;
 create policy property_images_staff_insert on storage.objects
   for insert to authenticated
   with check (bucket_id = 'property-images' and public.is_staff());
 
+drop policy if exists property_images_staff_update on storage.objects;
 create policy property_images_staff_update on storage.objects
   for update to authenticated
   using (bucket_id = 'property-images' and public.is_staff());
 
+drop policy if exists property_images_staff_delete on storage.objects;
 create policy property_images_staff_delete on storage.objects
   for delete to authenticated
   using (bucket_id = 'property-images' and public.is_staff());
@@ -159,18 +163,22 @@ values (
 on conflict (id) do nothing;
 
 -- Acceso exclusivo staff (select para lectura futura vía signed URLs)
+drop policy if exists chat_files_staff_select on storage.objects;
 create policy chat_files_staff_select on storage.objects
   for select to authenticated
   using (bucket_id = 'chat-files' and public.is_staff());
 
+drop policy if exists chat_files_staff_insert on storage.objects;
 create policy chat_files_staff_insert on storage.objects
   for insert to authenticated
   with check (bucket_id = 'chat-files' and public.is_staff());
 
+drop policy if exists chat_files_staff_update on storage.objects;
 create policy chat_files_staff_update on storage.objects
   for update to authenticated
   using (bucket_id = 'chat-files' and public.is_staff());
 
+drop policy if exists chat_files_staff_delete on storage.objects;
 create policy chat_files_staff_delete on storage.objects
   for delete to authenticated
   using (bucket_id = 'chat-files' and public.is_staff());

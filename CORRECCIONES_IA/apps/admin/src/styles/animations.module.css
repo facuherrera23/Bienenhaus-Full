@@ -1,0 +1,368 @@
+/* apps/admin/src/styles/animations.module.css */
+
+/* ============================================================
+   ANIMACIONES GLOBALES — Keyframes + Clases de utilidad
+   ============================================================ */
+
+/* ============================================================
+   KEYFRAMES — Definiciones de animación
+   ============================================================ */
+
+/* Ripple para botones */
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Fade Up — Aparece desde abajo */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In — Aparece sin movimiento */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scale In — Aparece con escala */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Slide Up — Para modales y tarjetas */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Slide In Left — Para elementos que entran desde la izquierda */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide In Right — Para elementos que entran desde la derecha */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse Glow — Para badges y elementos destacados */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.15));
+  }
+  50% {
+    box-shadow: 0 0 30px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.25)), 0 0 60px rgba(31, 200, 195, 0.05);
+  }
+}
+
+/* Border Glow — Para bordes animados */
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Float — Para elementos flotantes (partículas) */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-25px) translateX(5px);
+  }
+}
+
+/* Shimmer — Para skeletons y carga */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Spin — Para loaders */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Count Up — Para números que aumentan (opcional, se usa con JS) */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast In — Para notificaciones */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%) translateY(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(-50%);
+  }
+}
+
+/* Particle Float — Para partículas del login */
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-60px) scale(1.2);
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.8);
+  }
+}
+
+/* Shine — Efecto de brillo en botones */
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Pulsing Dot — Para indicadores de estado */
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+/* ============================================================
+   CLASES DE UTILIDAD — Para usar con useScrollAnimation
+   ============================================================ */
+
+/* Animación por defecto (fadeUp) */
+.animate-fade-up {
+  animation: fadeUp 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-slide-right {
+  animation: slideInRight 0.6s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+/* ============================================================
+   CLASES CON DELAY
+   ============================================================ */
+
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+.animate-delay-600 {
+  animation-delay: 600ms;
+}
+.animate-delay-700 {
+  animation-delay: 700ms;
+}
+.animate-delay-800 {
+  animation-delay: 800ms;
+}
+.animate-delay-900 {
+  animation-delay: 900ms;
+}
+.animate-delay-1000 {
+  animation-delay: 1000ms;
+}
+
+/* ============================================================
+   CLASES CON DURACIÓN PERSONALIZADA
+   ============================================================ */
+
+.animate-duration-fast {
+  animation-duration: 0.3s;
+}
+.animate-duration-normal {
+  animation-duration: 0.6s;
+}
+.animate-duration-slow {
+  animation-duration: 0.9s;
+}
+.animate-duration-slower {
+  animation-duration: 1.2s;
+}
+
+/* ============================================================
+   CLASES DE UTILIDAD — Variantes
+   ============================================================ */
+
+/* Para elementos que deben aparecer pero quedarse visibles */
+.animate-once {
+  animation-fill-mode: forwards;
+}
+
+/* Para elementos que se repiten (ej. loaders) */
+.animate-infinite {
+  animation-iteration-count: infinite;
+}
+
+/* Para elementos que necesitan easing personalizado */
+.animate-ease-premium {
+  animation-timing-function: var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+/* ============================================================
+   SHIMMER — Para skeletons
+   ============================================================ */
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bh-bg-secondary, #0a0d10) 25%,
+    var(--bh-bg-card, #1a1e23) 50%,
+    var(--bh-bg-secondary, #0a0d10) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   SPIN — Para loaders
+   ============================================================ */
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ============================================================
+   PULSE DOT — Para indicadores
+   ============================================================ */
+
+.pulse-dot {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   REDUCED MOTION — Respetar preferencias del usuario
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-up,
+  .animate-slide-left,
+  .animate-slide-right,
+  .shimmer,
+  .spin,
+  .pulse-dot {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* También desactivamos animaciones decorativas */
+  [class*="animate-"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -156,6 +156,7 @@ $function$;
 --    (SECURITY DEFINER) y service_role (bypassrls) no necesitan policy.
 -- ----------------------------------------------------------------------------
 drop policy if exists "Service role can insert audit logs" on public.audit_logs;
+drop policy if exists audit_logs_staff_insert on public.audit_logs;
 create policy audit_logs_staff_insert on public.audit_logs
   for insert with check (public.is_staff());
 

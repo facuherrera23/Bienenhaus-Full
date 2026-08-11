@@ -9,6 +9,7 @@ import {
     ChevronUp,
     Copy,
     Eye,
+    EyeOff,
     Globe,
     History,
     KeyRound,
@@ -1204,12 +1205,15 @@ function MLTab() {
         listing_type_id: 'gold_pro',
         condition: 'used',
     });
+    const [clientSecretDraft, setClientSecretDraft] = useState('');
+    const [showClientSecret, setShowClientSecret] = useState(false);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!settingsQ.data) return;
         setAppIdDraft(settingsQ.data.app_id);
         setDefaultsDraft(settingsQ.data.defaults);
+        setClientSecretDraft(settingsQ.data.client_secret ?? '');
     }, [settingsQ.data]);
 
     const invalidateMlSettings = () => {
@@ -1222,6 +1226,13 @@ function MLTab() {
         try {
             await setMlAppId(appIdDraft.trim());
             await setMlDefaults(defaultsDraft);
+            if (clientSecretDraft.trim()) {
+                await upsertSiteSettingWithVersion('ml_client_secret', { value: clientSecretDraft.trim() }, {
+                    value_type: 'json',
+                    is_public: false,
+                    locale: 'es-AR',
+                });
+            }
             pushToast({ type: 'success', title: 'Configuración de ML guardada' });
             invalidateMlSettings();
         } catch {
@@ -1236,6 +1247,7 @@ function MLTab() {
         defaultsDraft.category_id !== settingsQ.data?.defaults.category_id ||
         defaultsDraft.listing_type_id !== settingsQ.data?.defaults.listing_type_id ||
         defaultsDraft.condition !== settingsQ.data?.defaults.condition;
+    const dirtyClientSecret = clientSecretDraft.trim() !== (settingsQ.data?.client_secret ?? '');
 
     return (
         <section className="card">
@@ -1251,7 +1263,7 @@ function MLTab() {
                     type="button"
                     className="btn btn--primary"
                     onClick={() => void save()}
-                    disabled={saving || (!dirtyAppId && !dirtyDefaults)}
+                    disabled={saving || (!dirtyAppId && !dirtyDefaults && !dirtyClientSecret)}
                 >
                     {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
                     Guardar
@@ -1267,6 +1279,29 @@ function MLTab() {
                         value={appIdDraft}
                         onInput={(e) => setAppIdDraft((e.currentTarget as HTMLInputElement).value)}
                     />
+                </label>
+                <label className="field">
+                    <span>Client Secret</span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                            type={showClientSecret ? 'text' : 'password'}
+                            placeholder="Ingresá el client_secret"
+                            value={clientSecretDraft}
+                            onInput={(e) => setClientSecretDraft((e.currentTarget as HTMLInputElement).value)}
+                            style={{ flex: 1 }}
+                        />
+                        <button
+                            type="button"
+                            className="icon-btn"
+                            onClick={() => setShowClientSecret(!showClientSecret)}
+                            aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                        >
+                            {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                        Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
+                    </p>
                 </label>
                 <label className="field">
                     <span>Category ID (opcional)</span>

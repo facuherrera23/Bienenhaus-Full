@@ -1,0 +1,1036 @@
+/* apps/landing/src/styles/modules/Contact.module.css */
+
+/* ============================================================
+   CONTACT — Sección de contacto
+   ============================================================ */
+
+.contact {
+    padding: var(--bh-space-35) 0 var(--bh-space-40);
+    background: var(--bh-bg-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.contact::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 70% 20%, rgba(31, 200, 195, 0.015) 0%, transparent 50%),
+        radial-gradient(circle at 30% 80%, rgba(31, 200, 195, 0.01) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.contact .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================
+   HEADER — Con scroll reveal
+   ============================================================ */
+
+.contactHeader {
+    max-width: 780px;
+    margin-bottom: var(--bh-space-15);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--bh-ease-premium);
+}
+
+.contactHeader.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.contactLabel {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--bh-accent);
+    display: inline-block;
+    margin-bottom: var(--bh-space-4);
+    position: relative;
+}
+
+.contactLabel::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--bh-accent);
+    transition: width 0.6s ease 0.4s;
+}
+
+.contactHeader.visible .contactLabel::after {
+    width: 40px;
+}
+
+.contactTitle {
+    font-family: var(--bh-font-display);
+    font-size: var(--bh-text-7xl);
+    font-weight: var(--bh-weight-bold);
+    line-height: 1.05;
+    color: var(--bh-text-primary);
+    margin-bottom: var(--bh-space-5);
+}
+
+.contactTitle .highlight {
+    color: var(--bh-accent);
+    font-style: italic;
+}
+
+.contactDesc {
+    font-size: var(--bh-text-lg);
+    line-height: 1.7;
+    color: var(--bh-text-secondary);
+    max-width: 560px;
+    font-weight: var(--bh-weight-normal);
+    margin-bottom: var(--bh-space-6);
+}
+
+.btnContactSecondary {
+    background: transparent;
+    border: 1.5px solid var(--bh-accent);
+    color: var(--bh-text-primary);
+    padding: 14px 32px;
+    border-radius: var(--bh-radius-md);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    cursor: pointer;
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    font-family: var(--bh-font-sans);
+    position: relative;
+    overflow: hidden;
+}
+
+.btnContactSecondary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btnContactSecondary:hover::after {
+    transform: translateX(100%);
+}
+
+.btnContactSecondary svg {
+    transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.btnContactSecondary:hover {
+    background: var(--bh-accent);
+    color: var(--bh-bg-primary);
+    box-shadow: 0 0 40px var(--bh-accent-glow-soft);
+    transform: scale(1.03);
+}
+
+.btnContactSecondary:hover svg {
+    transform: translateX(4px);
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+.contactLayout {
+    display: grid;
+    grid-template-columns: 35% 65%;
+    gap: var(--bh-space-12);
+    align-items: start;
+}
+
+/* ============================================================
+   CONTACT INFO — Con scroll reveal
+   ============================================================ */
+
+.contactInfo {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-3xl);
+    padding: var(--bh-space-10) var(--bh-space-8);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
+}
+
+.contactInfo.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.contactInfoTitle {
+    font-family: var(--bh-font-display);
+    font-size: var(--bh-text-xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+    margin-bottom: var(--bh-space-6);
+}
+
+.contactInfoItem {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-4);
+    padding: var(--bh-space-3) 0;
+    border-bottom: 1px solid var(--bh-border);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    cursor: default;
+}
+
+.contactInfoItem:last-child {
+    border-bottom: none;
+}
+
+.contactInfoItem:hover {
+    color: var(--bh-accent);
+    padding-left: var(--bh-space-1);
+}
+
+.contactInfoItem .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bh-accent);
+    font-size: var(--bh-text-lg);
+    flex-shrink: 0;
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.contactInfoItem:hover .icon {
+    border-color: var(--bh-accent);
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+.contactInfoItem .content {
+    display: flex;
+    flex-direction: column;
+}
+
+.contactInfoItem .label {
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bh-text-tertiary);
+}
+
+.contactInfoItem .value {
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-secondary);
+    font-weight: var(--bh-weight-normal);
+}
+
+/* ============================================================
+   RESPONSE / HORARIOS
+   ============================================================ */
+
+.contactResponse {
+    margin-top: var(--bh-space-6);
+    padding: var(--bh-space-5) var(--bh-space-6);
+    background: rgba(31, 200, 195, 0.04);
+    border-radius: var(--bh-radius-xl);
+    border: 1px solid rgba(31, 200, 195, 0.08);
+}
+
+.contactResponse .responseLabel {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+}
+
+.contactResponse .responseLabel svg {
+    color: var(--bh-accent);
+}
+
+.contactResponse .responseHours {
+    display: flex;
+    gap: var(--bh-space-6);
+    margin-top: var(--bh-space-3);
+    flex-wrap: wrap;
+}
+
+.contactResponse .responseHours .hourBlock {
+    display: flex;
+    flex-direction: column;
+}
+
+.contactResponse .responseHours .hourBlock .day {
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.contactResponse .responseHours .hourBlock .time {
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-secondary);
+}
+
+/* ============================================================
+   SOCIAL ICONS
+   ============================================================ */
+
+.contactSocial {
+    display: flex;
+    gap: var(--bh-space-3);
+    margin-top: var(--bh-space-6);
+    flex-wrap: wrap;
+}
+
+.contactSocial .socialCircle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--bh-border);
+    color: var(--bh-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--bh-text-xl);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.contactSocial .socialCircle:hover {
+    border-color: var(--bh-accent);
+    color: var(--bh-accent);
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+    transform: scale(1.1) rotate(-4deg);
+}
+
+/* ============================================================
+   MAPA MINI
+   ============================================================ */
+
+.contactMap {
+    margin-top: var(--bh-space-6);
+    border-radius: var(--bh-radius-2xl);
+    overflow: hidden;
+    height: 160px;
+    background: var(--bh-bg-secondary);
+    border: 1px solid var(--bh-border);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contactMap .mapPlaceholder {
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bh-space-2);
+}
+
+.contactMap .mapPlaceholder svg {
+    color: var(--bh-accent);
+}
+
+.mapPin {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--bh-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 30px var(--bh-accent-glow-soft);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pinBounce 2s ease-in-out infinite;
+}
+
+.mapPin::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 12px solid var(--bh-accent);
+}
+
+@keyframes pinBounce {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -70%) scale(1.1);
+    }
+}
+
+/* ============================================================
+   CONTACT FORM — Con floating labels
+   ============================================================ */
+
+.contactFormWrapper {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-3xl);
+    padding: var(--bh-space-12);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
+}
+
+.contactFormWrapper.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================================
+   FORM INDICATORS
+   ============================================================ */
+
+.formIndicators {
+    display: flex;
+    gap: var(--bh-space-5);
+    margin-bottom: var(--bh-space-8);
+    flex-wrap: wrap;
+}
+
+.formIndicator {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--bh-radius-full);
+    border: 1px solid var(--bh-border);
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-secondary);
+}
+
+.formIndicator svg {
+    color: var(--bh-accent);
+    font-size: var(--bh-text-md);
+}
+
+.formIndicator .highlight {
+    color: var(--bh-text-primary);
+    font-weight: var(--bh-weight-medium);
+}
+
+/* ============================================================
+   INTENT PILLS
+   ============================================================ */
+
+.formStepLabel {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bh-text-tertiary);
+    margin-bottom: var(--bh-space-4);
+    display: block;
+}
+
+.formPills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bh-space-2);
+    margin-bottom: var(--bh-space-8);
+}
+
+.formPill {
+    padding: 10px 22px;
+    border-radius: var(--bh-radius-full);
+    border: 1px solid var(--bh-border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-normal);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    cursor: pointer;
+    font-family: var(--bh-font-sans);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+}
+
+.formPill:hover {
+    border-color: var(--bh-accent);
+    color: var(--bh-text-primary);
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+    transform: scale(1.02);
+}
+
+.formPill.active {
+    background: var(--bh-accent);
+    border-color: var(--bh-accent);
+    color: var(--bh-bg-primary);
+    font-weight: var(--bh-weight-medium);
+    box-shadow: 0 0 30px var(--bh-accent-glow-soft);
+}
+
+/* ============================================================
+   FORM ROW
+   ============================================================ */
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--bh-space-4);
+}
+
+/* ============================================================
+   FORM GROUP — Con floating labels
+   ============================================================ */
+
+.formGroup {
+    margin-bottom: var(--bh-space-5);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp var(--bh-dur-med) var(--bh-ease-premium) forwards;
+}
+
+.formGroup:nth-child(1) { animation-delay: 0.1s; }
+.formGroup:nth-child(2) { animation-delay: 0.15s; }
+.formGroup:nth-child(3) { animation-delay: 0.2s; }
+.formGroup:nth-child(4) { animation-delay: 0.25s; }
+.formGroup:nth-child(5) { animation-delay: 0.3s; }
+.formGroup:nth-child(6) { animation-delay: 0.35s; }
+.formGroup:nth-child(7) { animation-delay: 0.4s; }
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.formGroup .inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Floating label */
+.formGroup .inputWrapper label {
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-tertiary);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    font-weight: var(--bh-weight-normal);
+}
+
+/* Para textarea, la label flota diferente */
+.formGroup .inputWrapper textarea ~ label {
+    top: 16px;
+    transform: none;
+}
+
+/* Estado flotante */
+.formGroup .inputWrapper input:focus ~ label,
+.formGroup .inputWrapper input:not(:placeholder-shown) ~ label,
+.formGroup .inputWrapper textarea:focus ~ label,
+.formGroup .inputWrapper textarea:not(:placeholder-shown) ~ label {
+    top: 6px;
+    font-size: 10px;
+    color: var(--bh-accent);
+    transform: translateY(0);
+}
+
+.formGroup .inputWrapper textarea:focus ~ label,
+.formGroup .inputWrapper textarea:not(:placeholder-shown) ~ label {
+    top: 8px;
+}
+
+.formGroup .inputWrapper input,
+.formGroup .inputWrapper select,
+.formGroup .inputWrapper textarea {
+    width: 100%;
+    padding: 16px 16px 16px 44px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-xl);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-md);
+    font-family: var(--bh-font-sans);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    outline: none;
+}
+
+.formGroup .inputWrapper input::placeholder,
+.formGroup .inputWrapper textarea::placeholder {
+    color: transparent;
+}
+
+.formGroup .inputWrapper input:hover,
+.formGroup .inputWrapper select:hover,
+.formGroup .inputWrapper textarea:hover {
+    border-color: var(--bh-accent);
+}
+
+.formGroup .inputWrapper input:focus,
+.formGroup .inputWrapper select:focus,
+.formGroup .inputWrapper textarea:focus {
+    border-color: var(--bh-accent);
+    box-shadow: 
+        0 0 30px var(--bh-accent-glow-soft),
+        inset 0 0 30px rgba(32, 184, 171, 0.02);
+}
+
+.formGroup .inputWrapper textarea {
+    padding: 16px 16px 16px 44px;
+    min-height: 120px;
+    resize: vertical;
+    font-family: var(--bh-font-sans);
+    line-height: 1.5;
+}
+
+.formGroup .inputWrapper .inputIcon {
+    position: absolute;
+    left: 16px;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-md);
+    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+    pointer-events: none;
+}
+
+.formGroup .inputWrapper input:focus + .inputIcon + label,
+.formGroup .inputWrapper input:focus ~ .inputIcon,
+.formGroup .inputWrapper textarea:focus + .inputIcon + label,
+.formGroup .inputWrapper textarea:focus ~ .inputIcon {
+    color: var(--bh-accent);
+}
+
+/* Success check */
+.formGroup .inputWrapper .successCheck {
+    position: absolute;
+    right: 16px;
+    color: var(--bh-accent);
+    font-size: var(--bh-text-lg);
+    opacity: 0;
+    transition: opacity var(--bh-dur-fast) var(--bh-ease-premium);
+    pointer-events: none;
+}
+
+.formGroup.success .inputWrapper .successCheck {
+    opacity: 1;
+}
+
+.formGroup.success .inputWrapper input,
+.formGroup.success .inputWrapper select,
+.formGroup.success .inputWrapper textarea {
+    border-color: var(--bh-accent);
+}
+
+/* Error state */
+.formGroup.error .inputWrapper input,
+.formGroup.error .inputWrapper select,
+.formGroup.error .inputWrapper textarea {
+    border-color: var(--bh-danger);
+    box-shadow: 0 0 20px var(--bh-danger-soft);
+}
+
+.formGroup .errorMessage {
+    font-size: var(--bh-text-xs);
+    color: var(--bh-danger);
+    margin-top: var(--bh-space-1);
+    display: none;
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
+}
+
+.formGroup.error .errorMessage {
+    display: block;
+}
+
+/* ============================================================
+   CHECKBOX GROUP
+   ============================================================ */
+
+.formGroup.checkboxGroup {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bh-space-3);
+    margin-top: var(--bh-space-2);
+}
+
+.formGroup.checkboxGroup input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    margin-top: 2px;
+    accent-color: var(--bh-accent);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-sm);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    padding: 0;
+}
+
+.formGroup.checkboxGroup input[type='checkbox']:checked {
+    background: var(--bh-accent);
+    border-color: var(--bh-accent);
+    position: relative;
+}
+
+.formGroup.checkboxGroup input[type='checkbox']:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bh-bg-primary);
+    font-size: 14px;
+    font-weight: var(--bh-weight-bold);
+}
+
+.formGroup.checkboxGroup label {
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-secondary);
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.formGroup.checkboxGroup label a {
+    color: var(--bh-accent);
+    text-decoration: underline;
+    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.formGroup.checkboxGroup label a:hover {
+    color: var(--bh-accent-hover);
+}
+
+.formGroup.checkboxGroup .required {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   SUBMIT BUTTON — Con ripple
+   ============================================================ */
+
+.btnSubmit {
+    width: 100%;
+    height: 64px;
+    background: var(--bh-accent);
+    border: none;
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-bg-primary);
+    font-size: var(--bh-text-lg);
+    font-weight: var(--bh-weight-semibold);
+    font-family: var(--bh-font-sans);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bh-space-3);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-top: var(--bh-space-2);
+}
+
+.btnSubmit svg {
+    transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+    font-size: var(--bh-text-lg);
+}
+
+.btnSubmit:hover {
+    transform: scale(1.02);
+    box-shadow: 
+        0 0 40px var(--bh-accent-glow-soft),
+        0 0 80px rgba(32, 184, 171, 0.05);
+}
+
+.btnSubmit:hover svg {
+    transform: translateX(4px);
+}
+
+.btnSubmit .spinner {
+    display: none;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--bh-bg-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.btnSubmit.loading .spinner {
+    display: block;
+}
+
+.btnSubmit.loading .btnText,
+.btnSubmit.loading svg {
+    display: none;
+}
+
+.btnSubmit[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================
+   SUCCESS STATE
+   ============================================================ */
+
+.submitSuccess {
+    display: none;
+    text-align: center;
+    padding: var(--bh-space-10) var(--bh-space-5);
+}
+
+.submitSuccess.show {
+    display: block;
+    animation: fadeUp var(--bh-dur-slow) var(--bh-ease-premium) forwards;
+}
+
+.submitSuccess .successIcon {
+    font-size: 64px;
+    color: var(--bh-accent);
+    margin-bottom: var(--bh-space-4);
+}
+
+.submitSuccess .successIcon svg {
+    animation: scaleIn 0.6s var(--bh-ease-premium) forwards;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.submitSuccess .successTitle {
+    font-family: var(--bh-font-display);
+    font-size: var(--bh-text-2xl);
+    color: var(--bh-text-primary);
+    margin-bottom: var(--bh-space-2);
+}
+
+.submitSuccess .successText {
+    font-size: var(--bh-text-lg);
+    color: var(--bh-text-secondary);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1280px) {
+    .contactTitle {
+        font-size: var(--bh-text-5xl);
+    }
+    .contactLayout {
+        gap: var(--bh-space-9);
+    }
+    .contactFormWrapper {
+        padding: var(--bh-space-9);
+    }
+}
+
+@media (max-width: 1024px) {
+    .contact {
+        padding: var(--bh-space-25) 0 var(--bh-space-30);
+    }
+    .contactTitle {
+        font-size: var(--bh-text-4xl);
+    }
+    .contactLayout {
+        grid-template-columns: 1fr;
+        gap: var(--bh-space-10);
+    }
+    .contactInfo {
+        padding: var(--bh-space-8) var(--bh-space-7);
+    }
+    .contactFormWrapper {
+        padding: var(--bh-space-8) var(--bh-space-7);
+    }
+    .formPills {
+        gap: var(--bh-space-2);
+    }
+    .formPill {
+        padding: 8px 16px;
+        font-size: var(--bh-text-sm);
+    }
+    .formIndicators {
+        gap: var(--bh-space-3);
+    }
+    .formIndicator {
+        padding: 6px 14px;
+        font-size: var(--bh-text-xs);
+    }
+}
+
+@media (max-width: 768px) {
+    .contact {
+        padding: var(--bh-space-20) 0 var(--bh-space-25);
+    }
+    .contactTitle {
+        font-size: var(--bh-text-3xl);
+    }
+    .contactDesc {
+        font-size: var(--bh-text-md);
+        max-width: 100%;
+    }
+    .contactLabel {
+        font-size: var(--bh-text-sm);
+    }
+    .btnContactSecondary {
+        width: 100%;
+        justify-content: center;
+    }
+    .contactLayout {
+        gap: var(--bh-space-8);
+    }
+    .contactInfo {
+        padding: var(--bh-space-7) var(--bh-space-5);
+        border-radius: var(--bh-radius-2xl);
+    }
+    .contactFormWrapper {
+        padding: var(--bh-space-6) var(--bh-space-4);
+        border-radius: var(--bh-radius-2xl);
+    }
+    .contactInfoTitle {
+        font-size: var(--bh-text-lg);
+    }
+    .contactInfoItem {
+        padding: var(--bh-space-2) 0;
+    }
+    .contactInfoItem .icon {
+        width: 36px;
+        height: 36px;
+        font-size: var(--bh-text-md);
+    }
+    .contactResponse {
+        padding: var(--bh-space-4) var(--bh-space-4);
+    }
+    .contactResponse .responseHours {
+        gap: var(--bh-space-4);
+    }
+    .contactSocial .socialCircle {
+        width: 42px;
+        height: 42px;
+        font-size: var(--bh-text-lg);
+    }
+    .contactMap {
+        height: 120px;
+    }
+    .formIndicators {
+        gap: var(--bh-space-2);
+    }
+    .formIndicator {
+        padding: 4px 12px;
+        font-size: var(--bh-text-xs);
+    }
+    .formPills {
+        gap: var(--bh-space-1);
+    }
+    .formPill {
+        padding: 6px 14px;
+        font-size: var(--bh-text-sm);
+    }
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .formGroup .inputWrapper input,
+    .formGroup .inputWrapper select,
+    .formGroup .inputWrapper textarea {
+        padding: 14px 14px 14px 38px;
+        font-size: var(--bh-text-md);
+        border-radius: var(--bh-radius-lg);
+    }
+    .formGroup .inputWrapper label {
+        left: 38px;
+    }
+    .formGroup .inputWrapper textarea {
+        min-height: 100px;
+        padding: 14px 14px 14px 38px;
+    }
+    .btnSubmit {
+        height: 56px;
+        font-size: var(--bh-text-md);
+        border-radius: var(--bh-radius-lg);
+    }
+    .submitSuccess .successIcon {
+        font-size: 48px;
+    }
+    .submitSuccess .successTitle {
+        font-size: var(--bh-text-xl);
+    }
+}
+
+@media (max-width: 390px) {
+    .contactTitle {
+        font-size: var(--bh-text-2xl);
+    }
+    .contactInfo {
+        padding: var(--bh-space-5) var(--bh-space-4);
+    }
+    .contactFormWrapper {
+        padding: var(--bh-space-4) var(--bh-space-3);
+    }
+    .formGroup .inputWrapper input,
+    .formGroup .inputWrapper select,
+    .formGroup .inputWrapper textarea {
+        padding: 12px 12px 12px 34px;
+        font-size: var(--bh-text-sm);
+    }
+    .formGroup .inputWrapper label {
+        left: 34px;
+        font-size: var(--bh-text-sm);
+    }
+    .formPill {
+        padding: 4px 12px;
+        font-size: var(--bh-text-xs);
+    }
+    .btnSubmit {
+        height: 48px;
+        font-size: var(--bh-text-sm);
+    }
+}

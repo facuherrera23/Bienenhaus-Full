@@ -1,0 +1,135 @@
+/**
+ * Avatar Component Styles
+ * User identity atom. Uses ONLY --bh-* design tokens.
+ *
+ * Sizes:  xs 24px | sm 32px | md 40px | lg 48px | xl 64px
+ * Shape:  circle | square
+ * Status: online | offline | busy | away (bottom-right dot)
+ */
+
+.avatar {
+  /* Diameter — overridden per size via --avatar-size */
+  --avatar-size: var(--bh-space-10); /* 40px default (md) */
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  overflow: hidden;
+  flex-shrink: 0;
+  vertical-align: middle;
+  background-color: var(--bh-accent-soft);
+  color: var(--bh-accent);
+  font-family: var(--bh-font-sans);
+  font-weight: var(--bh-weight-semibold);
+  line-height: 1;
+  user-select: none;
+  transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+/* ============================================================
+   SIZES — diameter + matching font-size
+   ============================================================ */
+.xs {
+  --avatar-size: 24px;
+  font-size: var(--bh-text-xs);
+}
+
+.sm {
+  --avatar-size: 32px;
+  font-size: var(--bh-text-sm);
+}
+
+.md {
+  --avatar-size: var(--bh-space-10); /* 40px */
+  font-size: var(--bh-text-md);
+}
+
+.lg {
+  --avatar-size: var(--bh-space-12); /* 48px */
+  font-size: var(--bh-text-lg);
+}
+
+.xl {
+  --avatar-size: var(--bh-space-16); /* 64px */
+  font-size: var(--bh-text-xl);
+}
+
+/* ============================================================
+   SHAPE
+   ============================================================ */
+.circle {
+  border-radius: var(--bh-radius-full);
+}
+
+.square {
+  border-radius: var(--bh-radius-lg);
+}
+
+/* ============================================================
+   IMAGE — fills the avatar box, cover-fit
+   ============================================================ */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================================
+   FALLBACK — centered initials/text when no image
+   ============================================================ */
+.fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-transform: uppercase;
+  letter-spacing: var(--bh-tracking-wide);
+  pointer-events: none;
+}
+
+/* ============================================================
+   STATUS INDICATOR — bottom-right presence dot
+   ============================================================
+   `.withStatus` is applied to the host so the dot can be toggled
+   purely via the prop; the dot element itself is always styled.
+   ============================================================ */
+.status {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--bh-radius-full);
+  border: 2px solid var(--bh-bg-primary);
+  box-shadow: var(--bh-shadow-sm);
+}
+
+.statusOnline {
+  background-color: var(--bh-success);
+}
+
+.statusOffline {
+  background-color: var(--bh-text-tertiary);
+}
+
+.statusBusy {
+  background-color: var(--bh-danger);
+}
+
+.statusAway {
+  background-color: var(--bh-warning);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .avatar {
+    transition: none;
+  }
+}

@@ -1,0 +1,691 @@
+/* apps/admin/src/styles/tables.module.css */
+
+/* ============================================================
+   TABLAS PREMIUM — Con hover glow, selección animada y badges
+   ============================================================ */
+
+/* ============================================================
+   CONTENEDOR DE TABLA
+   ============================================================ */
+
+.tableContainer {
+  overflow: hidden;
+  border-radius: var(--bh-radius-lg);
+  border: 1px solid var(--bh-border);
+  background: var(--bh-bg-card);
+  box-shadow: var(--bh-shadow-sm);
+  transition: border-color var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.tableContainer:hover {
+  border-color: var(--bh-border-strong);
+}
+
+/* ============================================================
+   TABLA BASE
+   ============================================================ */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--bh-text-sm);
+}
+
+/* ============================================================
+   HEADER — Sticky con fondo
+   ============================================================ */
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--bh-space-3) var(--bh-space-4);
+  text-align: left;
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bh-text-tertiary);
+  border-bottom: 1px solid var(--bh-border);
+  background: var(--bh-bg-input);
+  white-space: nowrap;
+  box-shadow: var(--bh-shadow-sm);
+}
+
+/* ============================================================
+   CELDAS
+   ============================================================ */
+
+.table td {
+  padding: var(--bh-space-3) var(--bh-space-4);
+  border-bottom: 1px solid var(--bh-border);
+  vertical-align: middle;
+  color: var(--bh-text-secondary);
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================
+   FILAS — Hover con glow
+   ============================================================ */
+
+.table tbody tr {
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+  position: relative;
+}
+
+/* Hover con glow lateral */
+.table tbody tr:hover {
+  background: var(--bh-bg-hover);
+}
+
+.table tbody tr:hover td {
+  color: var(--bh-text-primary);
+}
+
+/* Glow lateral al hover */
+.table tbody tr::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--bh-accent);
+  opacity: 0;
+  transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 15px var(--bh-accent-glow-soft);
+}
+
+.table tbody tr:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================
+   FILA SELECCIONADA
+   ============================================================ */
+
+.table tbody tr.selected {
+  background: rgba(31, 200, 195, 0.04);
+}
+
+.table tbody tr.selected::before {
+  opacity: 1;
+  background: var(--bh-accent);
+  box-shadow: 0 0 30px var(--bh-accent-glow-soft);
+}
+
+.table tbody tr.selected:hover {
+  background: rgba(31, 200, 195, 0.08);
+}
+
+/* ============================================================
+   FILAS CLICKEABLES
+   ============================================================ */
+
+.rowClick {
+  cursor: pointer;
+}
+
+.rowClick td {
+  transition: background var(--bh-dur-fast) var(--bh-ease);
+}
+
+/* ============================================================
+   CHECKBOX ANIMADO
+   ============================================================ */
+
+.tableCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--bh-accent);
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid var(--bh-border-input);
+  border-radius: var(--bh-radius-sm);
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tableCheckbox:checked {
+  background: var(--bh-accent);
+  border-color: var(--bh-accent);
+}
+
+.tableCheckbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--bh-bg-primary);
+  font-size: 12px;
+  font-weight: var(--bh-weight-bold);
+}
+
+.tableCheckbox:hover {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 15px var(--bh-accent-glow-soft);
+}
+
+.tableCheckbox:focus-visible {
+  outline: 2px solid var(--bh-accent);
+  outline-offset: 2px;
+}
+
+/* Checkbox de seleccionar todos en el header */
+.tableCheckboxAll {
+  composes: tableCheckbox;
+}
+
+/* ============================================================
+   BADGES — Con pulse glow
+   ============================================================ */
+
+.badge {
+  display: inline-block;
+  padding: var(--bh-space-1) var(--bh-space-2);
+  border-radius: var(--bh-radius-full);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-bold);
+  white-space: nowrap;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.badge--success {
+  background: var(--bh-success-soft);
+  color: var(--bh-success);
+}
+
+.badge--success.badge--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.badge--warning {
+  background: var(--bh-warning-soft);
+  color: var(--bh-warning);
+}
+
+.badge--warning.badge--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.badge--danger {
+  background: var(--bh-danger-soft);
+  color: var(--bh-danger);
+}
+
+.badge--danger.badge--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.badge--info {
+  background: var(--bh-info-soft);
+  color: var(--bh-info);
+}
+
+.badge--info.badge--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.badge--neutral {
+  background: var(--bh-bg-hover);
+  color: var(--bh-text-tertiary);
+  border: 1px solid var(--bh-border);
+}
+
+/* Badge en estado de carga */
+.badge--loading {
+  opacity: 0.6;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   BADGE SELECT — Dropdown con estilo badge
+   ============================================================ */
+
+.badgeSelect {
+  padding: var(--bh-space-1) var(--bh-space-3);
+  border-radius: var(--bh-radius-full);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-bold);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--bh-text-secondary);
+  cursor: pointer;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: var(--bh-space-5);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A949C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.badgeSelect:hover {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 15px var(--bh-accent-glow-soft);
+}
+
+.badgeSelect:focus-visible {
+  outline: 2px solid var(--bh-accent);
+  outline-offset: 2px;
+}
+
+.badgeSelect option {
+  background: var(--bh-bg-card);
+  color: var(--bh-text-primary);
+  padding: var(--bh-space-2);
+}
+
+/* ============================================================
+   CELDA DE PROPIEDAD — Con imagen y texto
+   ============================================================ */
+
+.cellProperty {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-3);
+  min-width: 200px;
+}
+
+.cellProperty img {
+  width: 46px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: var(--bh-radius-sm);
+  flex: none;
+  border: 1px solid var(--bh-border);
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.cellProperty:hover img {
+  transform: scale(1.05);
+}
+
+.cellThumb {
+  width: 46px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--bh-radius-sm);
+  background: var(--bh-bg-hover);
+  border: 1px dashed var(--bh-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bh-text-tertiary);
+  font-size: var(--bh-text-xs);
+}
+
+.cellAvatar {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--bh-accent-soft);
+  color: var(--bh-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-extrabold);
+  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.cellProperty:hover .cellAvatar {
+  transform: scale(1.05);
+}
+
+.cellProperty > div:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.cellProperty strong {
+  color: var(--bh-text-primary);
+  font-weight: var(--bh-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cellProperty .muted {
+  color: var(--bh-text-tertiary);
+  font-size: var(--bh-text-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   FILA VACÍA
+   ============================================================ */
+
+.emptyCell {
+  text-align: center;
+  color: var(--bh-text-tertiary);
+  padding: var(--bh-space-10) var(--bh-space-4) !important;
+}
+
+.emptyCell svg {
+  opacity: 0.5;
+  margin-bottom: var(--bh-space-3);
+}
+
+.emptyCell h4 {
+  color: var(--bh-text-secondary);
+  font-weight: var(--bh-weight-semibold);
+  margin: 0 0 var(--bh-space-1);
+}
+
+.emptyCell p {
+  margin: 0;
+  font-size: var(--bh-text-sm);
+}
+
+/* ============================================================
+   FILTROS ANIMADOS
+   ============================================================ */
+
+.filtersPanel {
+  padding: var(--bh-space-4);
+  background: var(--bh-bg-card);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-md);
+  margin-bottom: var(--bh-space-4);
+  animation: slideUp var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bh-space-4);
+  align-items: end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bh-space-1);
+  flex: 1;
+  min-width: 150px;
+}
+
+.filterGroup label {
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bh-text-tertiary);
+}
+
+.filterGroup select,
+.filterGroup input {
+  padding: var(--bh-space-2) var(--bh-space-3);
+  border: 1px solid var(--bh-border-input);
+  border-radius: var(--bh-radius-md);
+  background: var(--bh-bg-input);
+  color: var(--bh-text-primary);
+  font-size: var(--bh-text-sm);
+  font-family: var(--bh-font-sans);
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  outline: none;
+}
+
+.filterGroup select:hover,
+.filterGroup input:hover {
+  border-color: var(--bh-accent);
+}
+
+.filterGroup select:focus,
+.filterGroup input:focus {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+.filterGroup select option {
+  background: var(--bh-bg-card);
+  color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   TOOLBAR — Barra de acciones
+   ============================================================ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-3);
+  flex-wrap: wrap;
+  padding: var(--bh-space-3) var(--bh-space-4);
+  background: var(--bh-bg-card);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-md);
+  box-shadow: var(--bh-shadow-sm);
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.toolbar:focus-within {
+  border-color: var(--bh-border-focus);
+  box-shadow: var(--bh-ring-focus), 0 0 16px var(--bh-accent-glow-soft);
+}
+
+.toolbarSearch {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  padding: var(--bh-space-2) var(--bh-space-3);
+  border: 1px solid var(--bh-border-input);
+  border-radius: var(--bh-radius-md);
+  background: var(--bh-bg-input);
+  color: var(--bh-text-tertiary);
+  flex: 1;
+  min-width: 200px;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.toolbarSearch:focus-within {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+.toolbarSearch input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--bh-text-primary);
+  width: 100%;
+  font-size: var(--bh-text-sm);
+  font-family: var(--bh-font-sans);
+}
+
+.toolbarSearch input::placeholder {
+  color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   PAGINACIÓN
+   ============================================================ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bh-space-4);
+  padding: var(--bh-space-4) var(--bh-space-3);
+  border-top: 1px solid var(--bh-border);
+  flex-wrap: wrap;
+}
+
+.paginationInfo {
+  font-size: var(--bh-text-sm);
+  color: var(--bh-text-tertiary);
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+}
+
+.paginationBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-sm);
+  background: transparent;
+  color: var(--bh-text-secondary);
+  cursor: pointer;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.paginationBtn:hover:not(:disabled) {
+  border-color: var(--bh-accent);
+  color: var(--bh-accent);
+  box-shadow: 0 0 15px var(--bh-accent-glow-soft);
+  transform: scale(1.05);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paginationBtn.active {
+  background: var(--bh-accent);
+  border-color: var(--bh-accent);
+  color: var(--bh-bg-primary);
+}
+
+/* ============================================================
+   BULK ACTIONS — Barra de acciones masivas
+   ============================================================ */
+
+.bulkBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bh-space-4);
+  padding: var(--bh-space-3) var(--bh-space-4);
+  background: var(--bh-accent-soft);
+  border: 1px solid rgba(31, 200, 195, 0.2);
+  border-radius: var(--bh-radius-md);
+  margin-bottom: var(--bh-space-4);
+  animation: slideUp var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.bulkInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-3);
+  font-size: var(--bh-text-sm);
+  font-weight: var(--bh-weight-medium);
+  color: var(--bh-text-primary);
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .table thead th {
+    padding: var(--bh-space-2) var(--bh-space-3);
+    font-size: 10px;
+  }
+  .table td {
+    padding: var(--bh-space-2) var(--bh-space-3);
+    font-size: var(--bh-text-xs);
+  }
+  .cellProperty {
+    min-width: 140px;
+  }
+  .cellProperty img,
+  .cellThumb {
+    width: 36px;
+    height: 28px;
+  }
+  .cellAvatar {
+    width: 28px;
+    height: 28px;
+    font-size: var(--bh-text-xs);
+  }
+  .filterRow {
+    flex-direction: column;
+    gap: var(--bh-space-2);
+  }
+  .filterGroup {
+    min-width: 100%;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbarSearch {
+    min-width: 100%;
+  }
+  .bulkBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--bh-space-2);
+  }
+  .bulkActions {
+    flex-wrap: wrap;
+  }
+  .pagination {
+    flex-direction: column;
+    gap: var(--bh-space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .table {
+    font-size: var(--bh-text-xs);
+  }
+  .table thead th,
+  .table td {
+    padding: var(--bh-space-2);
+  }
+  .cellProperty {
+    min-width: 100px;
+  }
+  .cellProperty img,
+  .cellThumb {
+    width: 30px;
+    height: 22px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .table tbody tr::before {
+    transition: none;
+  }
+  .table tbody tr {
+    transition: none;
+  }
+  .filtersPanel {
+    animation: none;
+  }
+  .bulkBar {
+    animation: none;
+  }
+}

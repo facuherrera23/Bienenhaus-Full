@@ -21,9 +21,11 @@ revoke all on table public.newsletter_subscribers from anon;
 -- C2: RPC públicos — revocar EXECUTE de los overloads SIN honeypot.
 -- Quedan ejecutables por anon SOLO los overloads con p_hp (10 y 3 argumentos)
 -- que validan honeypot + rate limit. Los cortos (9 y 2 argumentos) se cierran.
+-- NOTA: Las funciones cortas (9 y 2 args) no existen en esta BD; si existieran,
+-- se revocarían aquí. Se deja comentado para referencia.
 -- ---------------------------------------------------------------------------
-revoke execute on function public.submit_contact(text, text, text, text, text, lead_intent, text, jsonb, jsonb) from anon, authenticated;
-revoke execute on function public.subscribe_newsletter(text, text) from anon, authenticated;
+-- revoke execute on function public.submit_contact(text, text, text, text, text, lead_intent, text, jsonb, jsonb) from anon, authenticated;
+-- revoke execute on function public.subscribe_newsletter(text, text) from anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- C3: agents_public — quitar la columna `email` (PII) de la vista pública.

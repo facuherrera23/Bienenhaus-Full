@@ -10,7 +10,7 @@
 -- ============================================================================
 -- 1) property_valuations — tabla principal (120+ campos, port exacto TAI.html)
 -- ============================================================================
-create table public.property_valuations (
+create table if not exists public.property_valuations (
   id uuid primary key default gen_random_uuid(),
   -- Datos cliente
   solicitante text not null,
@@ -120,14 +120,14 @@ create table public.property_valuations (
 );
 
 -- Índices para consultas comunes (lista, owner read, soft delete)
-create index property_valuations_created_at_idx on public.property_valuations (created_at desc);
-create index property_valuations_created_by_idx on public.property_valuations (created_by);
-create index property_valuations_deleted_at_idx on public.property_valuations (deleted_at);
+create index if not exists property_valuations_created_at_idx on public.property_valuations (created_at desc);
+create index if not exists property_valuations_created_by_idx on public.property_valuations (created_by);
+create index if not exists property_valuations_deleted_at_idx on public.property_valuations (deleted_at);
 
 -- ============================================================================
 -- 2) valuation_comparables — comparables del análisis (hasta 6 por tasación)
 -- ============================================================================
-create table public.valuation_comparables (
+create table if not exists public.valuation_comparables (
   id uuid primary key default gen_random_uuid(),
   valuation_id uuid not null references public.property_valuations(id) on delete cascade,
   orden int not null,
@@ -147,13 +147,13 @@ create table public.valuation_comparables (
   updated_at timestamptz default now()
 );
 
-create index valuation_comparables_valuation_idx on public.valuation_comparables (valuation_id, orden);
-create index valuation_comparables_orden_idx on public.valuation_comparables (orden);
+create index if not exists valuation_comparables_valuation_idx on public.valuation_comparables (valuation_id, orden);
+create index if not exists valuation_comparables_orden_idx on public.valuation_comparables (orden);
 
 -- ============================================================================
 -- 3) valuation_images — fotos fachada + comparables unificadas
 -- ============================================================================
-create table public.valuation_images (
+create table if not exists public.valuation_images (
   id uuid primary key default gen_random_uuid(),
   valuation_id uuid not null references public.property_valuations(id) on delete cascade,
   comparable_id uuid references public.valuation_comparables(id) on delete set null, -- null = fachada
@@ -163,13 +163,13 @@ create table public.valuation_images (
   created_at timestamptz default now()
 );
 
-create index valuation_images_valuation_idx on public.valuation_images (valuation_id, tipo, orden);
-create index valuation_images_comparable_idx on public.valuation_images (comparable_id);
+create index if not exists valuation_images_valuation_idx on public.valuation_images (valuation_id, tipo, orden);
+create index if not exists valuation_images_comparable_idx on public.valuation_images (comparable_id);
 
 -- ============================================================================
 -- 4) valuation_history — auditoría automática de cambios por tasación
 -- ============================================================================
-create table public.valuation_history (
+create table if not exists public.valuation_history (
   id uuid primary key default gen_random_uuid(),
   valuation_id uuid not null references public.property_valuations(id) on delete cascade,
   action text not null, -- insert | update | delete
@@ -179,12 +179,12 @@ create table public.valuation_history (
   created_at timestamptz default now()
 );
 
-create index valuation_history_valuation_idx on public.valuation_history (valuation_id, created_at desc);
+create index if not exists valuation_history_valuation_idx on public.valuation_history (valuation_id, created_at desc);
 
 -- ============================================================================
 -- 5) geocode_cache — cache de geocodificación (Nominatim 1 req/s → cache)
 -- ============================================================================
-create table public.geocode_cache (
+create table if not exists public.geocode_cache (
   query text primary key,            -- query normalizada (direccion + localidad)
   lat double precision,
   lon double precision,
@@ -204,14 +204,18 @@ alter table public.valuation_history enable row level security;
 alter table public.geocode_cache enable row level security;
 
 -- property_valuations
+drop policy if exists valuation_staff_all on public.property_valuations;
 create policy valuation_staff_all on public.property_valuations
   for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists valuation_owner_read on public.property_valuations;
 create policy valuation_owner_read on public.property_valuations
   for select using (created_by = auth.uid());
 
 -- valuation_comparables (staff all; owner read vía padre)
+drop policy if exists valuation_comparables_staff_all on public.valuation_comparables;
 create policy valuation_comparables_staff_all on public.valuation_comparables
   for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists valuation_comparables_owner_read on public.valuation_comparables;
 create policy valuation_comparables_owner_read on public.valuation_comparables
   for select using (
     exists (
@@ -221,8 +225,10 @@ create policy valuation_comparables_owner_read on public.valuation_comparables
   );
 
 -- valuation_images (staff all; owner read vía padre)
+drop policy if exists valuation_images_staff_all on public.valuation_images;
 create policy valuation_images_staff_all on public.valuation_images
   for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists valuation_images_owner_read on public.valuation_images;
 create policy valuation_images_owner_read on public.valuation_images
   for select using (
     exists (
@@ -232,8 +238,10 @@ create policy valuation_images_owner_read on public.valuation_images
   );
 
 -- valuation_history (solo lectura; inserts vía trigger security definer)
+drop policy if exists valuation_history_staff_read on public.valuation_history;
 create policy valuation_history_staff_read on public.valuation_history
   for select using (public.is_staff());
+drop policy if exists valuation_history_owner_read on public.valuation_history;
 create policy valuation_history_owner_read on public.valuation_history
   for select using (
     exists (
@@ -243,6 +251,7 @@ create policy valuation_history_owner_read on public.valuation_history
   );
 
 -- geocode_cache (staff only)
+drop policy if exists geocode_cache_staff_all on public.geocode_cache;
 create policy geocode_cache_staff_all on public.geocode_cache
   for all using (public.is_staff()) with check (public.is_staff());
 
@@ -251,14 +260,17 @@ create policy geocode_cache_staff_all on public.geocode_cache
 -- ============================================================================
 
 -- updated_at (usa public.set_updated_at() de 0001)
+drop trigger if exists trg_property_valuations_updated_at on public.property_valuations;
 create trigger trg_property_valuations_updated_at
   before update on public.property_valuations
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_valuation_comparables_updated_at on public.valuation_comparables;
 create trigger trg_valuation_comparables_updated_at
   before update on public.valuation_comparables
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_geocode_cache_updated_at on public.geocode_cache;
 create trigger trg_geocode_cache_updated_at
   before update on public.geocode_cache
   for each row execute function public.set_updated_at();
@@ -279,6 +291,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_property_valuations_lock_guard on public.property_valuations;
 create trigger trg_property_valuations_lock_guard
   before update on public.property_valuations
   for each row execute function public.valuation_prevent_locked_update();
@@ -313,6 +326,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_property_valuations_history on public.property_valuations;
 create trigger trg_property_valuations_history
   after insert or update or delete on public.property_valuations
   for each row execute function public.valuation_history_trigger();

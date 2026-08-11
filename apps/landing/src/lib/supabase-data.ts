@@ -120,7 +120,7 @@ function mapProperty(p: Property): PropertyCardData {
 function mapListingType(
     type: string,
 ): 'casa' | 'depto' | 'oficina' | 'local' | 'terreno' | 'country' {
-    const map: Record<string, any> = {
+    const map: Record<string, 'casa' | 'depto' | 'oficina' | 'local' | 'terreno' | 'country'> = {
         casa: 'casa',
         departamento: 'depto',
         depto: 'depto',
@@ -130,7 +130,7 @@ function mapListingType(
         country: 'country',
         ph: 'depto',
     };
-    return map[type?.toLowerCase()] || 'casa';
+    return (map[type?.toLowerCase()] as 'casa' | 'depto' | 'oficina' | 'local' | 'terreno' | 'country') || 'casa';
 }
 
 function mapAgent(a: Agent): AgentCardData {
@@ -179,7 +179,7 @@ export function useProperties() {
             const newLocationsMap = new Map(locRes.data?.map((l) => [l.id, l.name]) || []);
             locationsMapRef.current = newLocationsMap;
 
-            const mapped = (propsRes.data || []).map((p: any) => {
+            const mapped = (propsRes.data || []).map((p: Property) => {
                 const mappedProperty = mapProperty(p as Property);
                 if (p.location_id && newLocationsMap.has(p.location_id)) {
                     mappedProperty.location = newLocationsMap.get(p.location_id)!;
@@ -191,8 +191,8 @@ export function useProperties() {
                 setData(mapped);
                 setError(null);
             }
-        } catch (err: any) {
-            if (mounted.current) setError(err.message);
+        } catch (err) {
+            if (mounted.current) setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             if (mounted.current) setLoading(false);
         }
@@ -208,38 +208,36 @@ export function useProperties() {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'properties' },
-                (payload: any) => {
+                (payload: Record<string, unknown>) => {
                     if (!mounted.current) return;
 
                     setData((prev) => {
                         if (payload.eventType === 'INSERT') {
                             const newProp = mapProperty(payload.new as Property);
                             if (
-                                payload.new.location_id &&
-                                locationsMapRef.current.has(payload.new.location_id)
+                                (payload.new as Record<string, unknown>).location_id &&
+                                locationsMapRef.current.has((payload.new as Record<string, unknown>).location_id as string)
                             ) {
-                                newProp.location = locationsMapRef.current.get(payload.new.location_id)!;
+                                newProp.location = locationsMapRef.current.get((payload.new as Record<string, unknown>).location_id as string)!;
                             }
                             return [newProp, ...prev];
                         } else if (payload.eventType === 'UPDATE') {
                             return prev.map((p) =>
-                                p.id === payload.new.id
+                                p.id === (payload.new as Record<string, unknown>).id
                                     ? (() => {
                                           const updated = mapProperty(payload.new as Property);
                                           if (
-                                              payload.new.location_id &&
-                                              locationsMapRef.current.has(payload.new.location_id)
+                                              (payload.new as Record<string, unknown>).location_id &&
+                                              locationsMapRef.current.has((payload.new as Record<string, unknown>).location_id as string)
                                           ) {
-                                              updated.location = locationsMapRef.current.get(
-                                                  payload.new.location_id,
-                                              )!;
+                                              updated.location = locationsMapRef.current.get((payload.new as Record<string, unknown>).location_id as string)!;
                                           }
                                           return updated;
                                       })()
                                     : p,
                             );
                         } else if (payload.eventType === 'DELETE') {
-                            return prev.filter((p) => p.id !== payload.old.id);
+                            return prev.filter((p) => p.id !== (payload.old as Record<string, unknown>).id);
                         }
                         return prev;
                     });
@@ -248,10 +246,11 @@ export function useProperties() {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'property_images' },
-                (payload: any) => {
+                (payload: Record<string, unknown>) => {
                     if (!mounted.current) return;
                     // Update cover_url for affected property
-                    const propertyId = payload.new?.property_id ?? payload.old?.property_id;
+                    const propertyId = ((payload.new as Record<string, unknown>)?.property_id ??
+                        (payload.old as Record<string, unknown>)?.property_id) as string | undefined;
                     if (!propertyId) return;
 
                     setData((prev) =>
@@ -267,13 +266,13 @@ export function useProperties() {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'locations' },
-                (payload: any) => {
+                (payload: Record<string, unknown>) => {
                     if (!mounted.current) return;
                     // Update locations map incrementally
                     if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                        locationsMapRef.current.set(payload.new.id, payload.new.name);
+                        locationsMapRef.current.set((payload.new as Record<string, unknown>).id as string, (payload.new as Record<string, unknown>).name as string);
                     } else if (payload.eventType === 'DELETE') {
-                        locationsMapRef.current.delete(payload.old.id);
+                        locationsMapRef.current.delete((payload.old as Record<string, unknown>).id as string);
                     }
                     // Update location names in existing properties
                     setData((prev) =>
@@ -317,8 +316,8 @@ export function useAgents() {
                 setData((agents || []).map(mapAgent));
                 setError(null);
             }
-        } catch (err: any) {
-            if (mounted.current) setError(err.message);
+        } catch (err) {
+            if (mounted.current) setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             if (mounted.current) setLoading(false);
         }
@@ -363,8 +362,8 @@ export function useLocations() {
 
             if (error) throw error;
             if (mounted.current) setData(locations || []);
-        } catch (err: any) {
-            console.error('Locations fetch error:', err);
+        } catch (err) {
+            console.error('Locations fetch error:', err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             if (mounted.current) setLoading(false);
         }

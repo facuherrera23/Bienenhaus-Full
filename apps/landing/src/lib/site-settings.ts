@@ -42,40 +42,43 @@ const DEFAULT_SETTINGS: SiteSettings = {
     stats: { comercializadas: 0, clientes: 0, exito: 0, anios: 0 },
 };
 
-function mapSettings(rows: any[]): SiteSettings {
+function mapSettings(rows: Array<{ key: string; value: { value?: unknown } | unknown; value_type?: string }>): SiteSettings {
     const settings = { ...DEFAULT_SETTINGS };
 
     for (const row of rows) {
-        const v = row.value?.value ?? row.value;
+        const rowValue = row.value as { value?: unknown } | unknown;
+        const v = rowValue && typeof rowValue === 'object' && 'value' in rowValue
+            ? rowValue.value ?? rowValue
+            : rowValue;
         switch (row.key) {
             case 'social':
                 settings.social = v as SocialLinks;
                 break;
             case 'contact_email':
-                settings.contact.email = v?.value ?? v;
+                settings.contact.email = String(v);
                 break;
             case 'contact_whatsapp':
-                settings.contact.whatsapp = v?.value ?? v;
+                settings.contact.whatsapp = String(v);
                 break;
             case 'contact_whatsapp_alt':
-                settings.contact.whatsappAlt = v?.value ?? v;
+                settings.contact.whatsappAlt = String(v);
                 break;
             case 'contact_address':
-                settings.contact.address = v?.value ?? v;
+                settings.contact.address = String(v);
                 break;
             case 'contact_hours':
                 settings.contact.hours = v as ContactInfo['hours'];
                 break;
             case 'site_name':
             case 'empresa':
-                settings.company.name = v?.value ?? v;
+                settings.company.name = String(v);
                 break;
             case 'cri':
             case 'matricula':
-                settings.company.matricula = v?.value ?? v;
+                settings.company.matricula = String(v);
                 break;
             case 'ubicacion':
-                settings.company.ubicacion = v?.value ?? v;
+                settings.company.ubicacion = String(v);
                 break;
             case 'stats':
                 settings.stats = v as SiteSettings['stats'];
@@ -86,7 +89,7 @@ function mapSettings(rows: any[]): SiteSettings {
 }
 
 // --- Singleton realtime manager ---
-let realtimeChannel: any = null;
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 const realtimeSubscribers = new Set<() => void>();
 
 function ensureRealtimeChannel() {
@@ -160,8 +163,8 @@ export function useSiteSettings() {
                 setSettings(mapSettings(data || []));
                 setError(null);
             }
-        } catch (err: any) {
-            if (mounted.current) setError(err.message);
+        } catch (err) {
+            if (mounted.current) setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             if (mounted.current) setLoading(false);
         }

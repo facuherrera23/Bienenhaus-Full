@@ -1,0 +1,251 @@
+/* apps/landing/src/styles/animations.module.css */
+
+/* ============================================================
+   ANIMACIONES GLOBALES — Keyframes + Clases de utilidad
+   ============================================================ */
+
+/* ============================================================
+   KEYFRAMES — Definiciones de animación
+   ============================================================ */
+
+/* Ripple para botones */
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Fade Up — Aparece desde abajo */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In — Aparece sin movimiento */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scale In — Aparece con escala */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Slide Left — Aparece desde la izquierda */
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide Right — Aparece desde la derecha */
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse Glow — Para badges y elementos destacados */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.15));
+  }
+  50% {
+    box-shadow: 0 0 40px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.25)), 0 0 80px rgba(31, 200, 195, 0.05);
+  }
+}
+
+/* Border Glow — Para bordes animados */
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Float — Para elementos flotantes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Shimmer — Para skeletons y carga */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Pulse Dot — Para puntos decorativos */
+@keyframes pulseDot {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.15));
+  }
+  50% {
+    box-shadow: 0 0 30px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.25)), 0 0 60px rgba(31, 200, 195, 0.1);
+  }
+}
+
+/* Ring Pulse — Para anillos alrededor de elementos */
+@keyframes ringPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Pulse Bounce — Para scroll indicator */
+@keyframes pulseBounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    transform: translateX(-50%) translateY(8px);
+    border-color: var(--bh-accent);
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft, rgba(31, 200, 195, 0.15));
+  }
+}
+
+/* Ken Burns — Para imágenes con zoom lento */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translateX(0);
+  }
+  100% {
+    transform: scale(1.08) translateX(-2%);
+  }
+}
+
+/* Typewriter — Para textos que se escriben */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Blink Cursor — Para el cursor del typewriter */
+@keyframes blinkCursor {
+  0%, 100% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--bh-accent);
+  }
+}
+
+/* ============================================================
+   CLASES DE UTILIDAD — Para usar con useScrollAnimation
+   ============================================================ */
+
+/* Animación por defecto (fadeUp) */
+.animate-fade-up {
+  animation: fadeUp 0.8s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.8s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.8s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.8s var(--bh-ease-premium, cubic-bezier(0.22, 0.61, 0.36, 1)) forwards;
+}
+
+/* Clases con delay */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Clases con duración personalizada */
+.animate-duration-fast {
+  animation-duration: 0.4s;
+}
+.animate-duration-normal {
+  animation-duration: 0.8s;
+}
+.animate-duration-slow {
+  animation-duration: 1.2s;
+}
+
+/* ============================================================
+   REDUCED MOTION — Respetar preferencias del usuario
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-left,
+  .animate-slide-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

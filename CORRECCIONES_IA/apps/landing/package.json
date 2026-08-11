@@ -1,0 +1,25 @@
+{
+    "name": "@bienenhaus/landing",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc --noEmit && vite build",
+        "preview": "vite preview",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@bienenhaus/supabase": "workspace:*",
+        "@bienenhaus/ui": "workspace:*",
+        "@sentry/browser": "^10.69.0",
+        "@supabase/supabase-js": "^2.49.4",
+        "lucide-preact": "^1.28.0",
+        "preact": "^10.26.0"
+    },
+    "devDependencies": {
+        "@preact/preset-vite": "^2.10.1",
+        "typescript": "^5.8.3",
+        "vite": "^7.0.4"
+    }
+}

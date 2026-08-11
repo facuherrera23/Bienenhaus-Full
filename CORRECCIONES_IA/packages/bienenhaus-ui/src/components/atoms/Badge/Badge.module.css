@@ -1,0 +1,92 @@
+/**
+ * Badge Component Styles
+ * Inline status pill. Uses ONLY --bh-* design tokens.
+ *
+ * Sizes:    sm | md
+ * Variants: success | danger | warning | info | neutral | primary
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  border-radius: var(--bh-radius-full);
+  font-family: var(--bh-font-sans);
+  font-weight: var(--bh-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition:
+    background-color var(--bh-dur-fast) var(--bh-ease-premium),
+    color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+/* ============================================================
+   SIZES
+   ============================================================ */
+.sm {
+  padding: var(--bh-space-1) var(--bh-space-2);
+  font-size: var(--bh-text-xs);
+}
+
+.md {
+  padding: var(--bh-space-1) var(--bh-space-3);
+  font-size: var(--bh-text-sm);
+}
+
+/* ============================================================
+   VARIANTS
+   ============================================================ */
+.success {
+  background-color: var(--bh-success-soft);
+  color: var(--bh-success);
+}
+
+.danger {
+  background-color: var(--bh-danger-soft);
+  color: var(--bh-danger);
+}
+
+.warning {
+  background-color: var(--bh-warning-soft);
+  color: var(--bh-warning);
+}
+
+.info {
+  background-color: var(--bh-info-soft);
+  color: var(--bh-info);
+}
+
+.neutral {
+  background-color: var(--bh-bg-hover);
+  color: var(--bh-text-tertiary);
+}
+
+.primary {
+  background-color: var(--bh-accent-soft);
+  color: var(--bh-accent);
+}
+
+/* ============================================================
+   DOT — leading colored circle, inherits current text color
+   ============================================================
+   `.withDot` is applied to the host so the dot can be toggled
+   purely via the prop; the dot element itself is always styled.
+   ============================================================ */
+.dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--bh-radius-full);
+  background-color: currentColor;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .badge {
+    transition: none;
+  }
+}

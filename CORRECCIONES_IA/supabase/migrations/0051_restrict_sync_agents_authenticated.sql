@@ -1,0 +1,58 @@
+-- ============================================================================
+-- 0051_restrict_sync_agents_authenticated.sql
+-- BIENENHAUS - Restringir sync_agents_realtime SOLO a service_role
+-- ============================================================================
+-- Contexto:
+--   El linter de seguridad de Supabase (advisor 0028) sigue reportando que la
+--   función public.sync_agents_realtime() es ejecutable por `authenticated`
+--   como SECURITY DEFINER vía /rest/v1/rpc/sync_agents_realtime.
+--   (0050 ya revocó anon/public; esta migración cierra el rol authenticated.)
+--
+--   Análisis de riesgo:
+--   - sync_agents_realtime() es una trigger function (AFTER INSERT/UPDATE/
+--     DELETE ON agents, ver 0041) que mantiene la tabla shadow
+--     agents_realtime para Realtime de la landing.
+--   - Los triggers NO requieren EXECUTE para dispararse: el trigger de la
+--     tabla invoca la función automáticamente con los permisos de su OWNER
+--     (security definer). Revocar EXECUTE solo afecta la invocación DIRECTA
+--     del RPC por el rol.
+--   - Verificado: NO se referencia en ninguna RLS policy ni en ninguna edge
+--     function. El único uso es el trigger (DML sobre agents) + service_role.
+--   - authenticated (staff) hace DML sobre agents vía RLS policies, lo que
+--     dispara el trigger sin necesidad de EXECUTE directo.
+--
+-- Decisión:
+--   Revocar EXECUTE de authenticated y mantenerlo únicamente para
+--   service_role (edge functions, futuras operaciones de mantenimiento).
+-- ============================================================================
+
+revoke execute on function public.sync_agents_realtime() from authenticated;
+grant execute on function public.sync_agents_realtime() to service_role;
+
+-- ============================================================================
+-- Excepciones aceptadas del advisor de seguridad (documentadas, NO corregir):
+--
+-- 1) public.agents_public (lint 0010 security_definer_view, ERROR)
+--    Vista con security_invoker = false POR DISEÑO (ver 0031): anon no tiene
+--    grants sobre `agents` y la vista es la única puerta pública, filtrando
+--    columnas (excluye email/phone/social/permissions/commission/schedule) y
+--    filas (is_active AND deleted_at IS NULL). Convertirla a security_invoker
+--    obligaría a otorgar SELECT de anon sobre `agents` completa, EXPONIENDO
+--    datos sensibles por PostgREST directo. El WHERE explícito es la garantía.
+--
+-- 2) is_admin() / is_staff() / is_super_admin() / has_role()
+--    (lint 0028 anon_security_definer_function_executable, WARN)
+--    Ejecutables por anon porque ~40 tablas tienen policies con roles
+--    {public} (incluye anon) que evalúan estos helpers en cada consulta;
+--    revocar EXECUTE rompería el acceso público (ERROR en vez de 0 filas).
+--    Son benignos: para anon (auth.uid() = NULL) siempre devuelven false.
+--
+-- 3) submit_contact() / subscribe_newsletter() (lint 0028, WARN)
+--    Funciones públicas de la landing por diseño (formularios con honeypot
+--    + rate limit).
+--
+-- 4) ml_enqueue() / ml_get_connection() / complete_password_change()
+--    (lint 0028 authenticated_security_definer_function_executable, WARN)
+--    Solo ejecutables por authenticated, y validadas por rol dentro del body
+--    (is_admin/is_staff, ver 0042/0043). No exponen datos a anon.
+-- ============================================================================

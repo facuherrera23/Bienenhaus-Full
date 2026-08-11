@@ -1,0 +1,167 @@
+/**
+ * Textarea Component Styles
+ * Multi-line text input molecule. Uses ONLY --bh-* design tokens.
+ *
+ * Sibling of the Input/SearchInput molecules: same transparent bg
+ * (--bh-bg-input), border token, radius-md, focus ring accent, padding scale.
+ *
+ * Sizes: sm | md | lg (default md)
+ * Resize: none | vertical | both (default vertical)
+ * Counter: {value.length}/{maxLength} bottom-right, danger at limit.
+ */
+
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--bh-border-input);
+  border-radius: var(--bh-radius-md);
+  background-color: var(--bh-bg-input);
+  color: var(--bh-text-primary);
+  font-family: var(--bh-font-sans);
+  font-size: var(--bh-text-md);
+  line-height: var(--bh-leading-normal);
+  transition:
+    border-color var(--bh-dur-fast) var(--bh-ease-premium),
+    background-color var(--bh-dur-fast) var(--bh-ease-premium),
+    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+/* ============================================================
+   FOCUS — 2px accent ring with offset (on the textarea focus)
+   ============================================================ */
+.wrapper:focus-within {
+  border-color: var(--bh-border-focus);
+  box-shadow: 0 0 0 2px var(--bh-accent-soft);
+}
+
+/* ============================================================
+   SIZES — padding + font-size scale
+   ============================================================ */
+.sm {
+  padding: var(--bh-space-2) var(--bh-space-2);
+  font-size: var(--bh-text-sm);
+}
+
+.md {
+  padding: var(--bh-space-3) var(--bh-space-3);
+  font-size: var(--bh-text-md);
+}
+
+.lg {
+  padding: var(--bh-space-4) var(--bh-space-4);
+  font-size: var(--bh-text-lg);
+}
+
+/* ============================================================
+   RESIZE — controls the native CSS resize handle
+   ============================================================ */
+.resizeNone .textarea {
+  resize: none;
+}
+
+.resizeVertical .textarea {
+  resize: vertical;
+}
+
+.resizeBoth .textarea {
+  resize: both;
+}
+
+/* ============================================================
+   ERROR — danger border + danger focus ring
+   ============================================================ */
+.wrapper.error {
+  border-color: var(--bh-danger);
+}
+
+.wrapper.error:focus-within {
+  border-color: var(--bh-danger);
+  box-shadow: 0 0 0 2px var(--bh-danger-soft);
+}
+
+/* ============================================================
+   DISABLED
+   ============================================================ */
+.wrapper.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================================
+   READ-ONLY
+   ============================================================ */
+.wrapper.readonly {
+  background-color: var(--bh-bg-hover);
+}
+
+/* ============================================================
+   TEXTAREA — fills the wrapper, transparent bg, comfortable leading
+   ============================================================ */
+.textarea {
+  width: 100%;
+  min-height: 96px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--bh-text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: var(--bh-leading-normal);
+  padding: 0;
+  cursor: text;
+  resize: inherit;
+}
+
+.textarea::placeholder {
+  color: var(--bh-text-tertiary);
+}
+
+.textarea:disabled {
+  cursor: not-allowed;
+}
+
+.textarea:focus {
+  outline: none;
+}
+
+/* ============================================================
+   COUNTER — bottom-right, muted; danger at limit
+   ============================================================ */
+.wrapper.withCounter {
+  padding-bottom: var(--bh-space-1);
+}
+
+.counter {
+  align-self: flex-end;
+  padding: var(--bh-space-1) var(--bh-space-2);
+  color: var(--bh-text-tertiary);
+  font-family: var(--bh-font-mono);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-medium);
+  line-height: 1;
+  letter-spacing: var(--bh-tracking-wide);
+  user-select: none;
+  pointer-events: none;
+  transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.counterDanger {
+  color: var(--bh-danger);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .wrapper {
+    transition: none;
+  }
+
+  .counter {
+    transition: none;
+  }
+}

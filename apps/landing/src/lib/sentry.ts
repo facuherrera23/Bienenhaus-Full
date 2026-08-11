@@ -22,8 +22,8 @@ const IGNORED_ERRORS = [
 ];
 
 type SentryModule = typeof import('@sentry/browser');
-
 let sentry: SentryModule | null = null;
+
 let isInitialized = false;
 
 /**

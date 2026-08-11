@@ -24,6 +24,7 @@ export interface MlOverview {
 export interface MlSettings {
     app_id: string;
     defaults: { category_id: string; listing_type_id: string; condition: string };
+    client_secret?: string;
 }
 
 export interface MlQueueRow {

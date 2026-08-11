@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+out/
+*.local
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.smtp
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage/
+.playwright/
+test-results/
+playwright-report/
+
+# Supabase CLI temp
+supabase/.temp/
+
+# Scratch / backups
+Fix/
+ADMIN_*.md
+
+# OpenCode session artifacts
+.omo/
+
+# Tool outputs
+tsc_output.txt
+tsc-current.txt
+build_output.txt
+src.zip
+*.src.zip
+
+# Dev server diagnostic logs
+.admin-diag-*.err
+.admin-diag-*.log
+.landing-dev.log
+.landing-dev.log.err
+

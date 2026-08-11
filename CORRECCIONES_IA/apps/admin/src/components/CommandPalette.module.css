@@ -1,0 +1,181 @@
+/* ============================================================
+   Command Palette (Cmd+K)
+   ------------------------------------------------------------
+   Migrated verbatim from styles.css into CSS Modules (scoped to
+   CommandPalette.tsx). No design changes: values, colors, media
+   queries, hover/focus states and animations are copied as-is.
+   Every measurement references a --bh-* token.
+   ============================================================ */
+
+.command-palette-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--bh-z-toast);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.command-palette {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 24px;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    box-shadow: var(--bh-shadow-xl);
+    overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.command-palette-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--bh-border);
+    background: var(--bh-bg-input);
+}
+
+.command-palette-search-icon {
+    color: var(--bh-text-tertiary);
+    flex-shrink: 0;
+}
+
+.command-palette-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--bh-text-primary);
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.command-palette-input::placeholder {
+    color: var(--bh-text-tertiary);
+}
+
+.command-palette-shortcut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-tertiary);
+    font-size: 11px;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+.command-palette-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.command-palette-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background var(--bh-dur-fast) var(--bh-ease);
+}
+
+.command-palette-item:hover,
+.command-palette-item.selected {
+    background: var(--bh-bg-hover);
+}
+
+.command-palette-item-icon {
+    color: var(--bh-accent);
+    flex-shrink: 0;
+}
+
+.command-palette-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.command-palette-item-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--bh-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.command-palette-item-description {
+    font-size: 11.5px;
+    color: var(--bh-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.command-palette-item-section {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--bh-text-tertiary);
+    padding: 2px 8px;
+      background: var(--bh-bg-hover);
+      border-radius: var(--bh-radius-full);
+      flex-shrink: 0;
+}
+
+.command-palette-selected-indicator {
+    color: var(--bh-accent);
+    flex-shrink: 0;
+}
+
+.command-palette-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 32px 16px;
+    color: var(--bh-text-tertiary);
+    font-size: 13px;
+}
+
+.command-palette-empty svg {
+    opacity: 0.5;
+}
