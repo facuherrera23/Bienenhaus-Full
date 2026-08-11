@@ -1,6 +1,6 @@
 // apps/landing/src/components/Team.tsx
 import { useScrollAnimation, useTilt } from '@/lib/motion';
-import styles from './Team.module.css';
+import styles from '../styles/modules/Team.module.css';
 
 interface TeamMember {
   id: number;
@@ -134,7 +134,7 @@ export function Team() {
 
 // Componente individual de Team Card con Tilt
 function TeamCard({ member, index }: { member: TeamMember; index: number }) {
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 10,
     transitionSpeed: 300,
     glow: true,
@@ -142,7 +142,7 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
   });
 
   // Scroll reveal individual con delay
-  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
     once: true,
     delay: index * 100,

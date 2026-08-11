@@ -1,11 +1,10 @@
 // apps/landing/src/components/Process.tsx
-import { useRef, useEffect } from 'preact/hooks';
 import { 
   useScrollAnimation, 
   useTilt,
   useParallax 
 } from '@/lib/motion';
-import styles from './Process.module.css';
+import styles from '../styles/modules/Process.module.css';
 
 interface Step {
   id: number;
@@ -150,7 +149,7 @@ export function Process() {
 
 // Componente individual de Step Card con Tilt
 function StepCard({ step, index }: { step: Step; index: number }) {
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 10,
     transitionSpeed: 300,
     glow: true,
@@ -158,7 +157,7 @@ function StepCard({ step, index }: { step: Step; index: number }) {
   });
 
   // Scroll reveal individual con delay
-  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
     once: true,
     delay: index * 150,

@@ -1,5 +1,6 @@
 // apps/landing/src/lib/motion/useTilt.ts
 import { useRef, useEffect, useState } from 'preact/hooks';
+import type { JSX } from 'preact';
 
 export interface TiltOptions {
   /** Ángulo máximo de rotación en grados */
@@ -12,13 +13,13 @@ export interface TiltOptions {
   glowIntensity?: number;
 }
 
-export function useTilt({
+export function useTilt<T extends HTMLElement = HTMLDivElement>({
   maxAngle = 15,
   transitionSpeed = 300,
   glow = true,
   glowIntensity = 0.3,
 }: TiltOptions = {}) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<T>(null);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50 });
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export function useTilt({
       '--mouse-y': `${tilt.glowY}%`,
       '--glow-intensity': glowIntensity,
     }),
-  } as React.CSSProperties;
+  } as JSX.CSSProperties;
 
   return { ref, style, tilt };
 }

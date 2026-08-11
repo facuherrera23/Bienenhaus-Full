@@ -18,9 +18,6 @@ import {
     LEAD_STATUS_LABEL,
     LEAD_STATUS_ORDER,
     LEAD_STATUS_TONE,
-    LeadIntent,
-    LeadSource,
-    LeadStatus,
     parseLeadsCsv,
     permanentDeleteLead,
     recalculateLeadScore,
@@ -34,6 +31,7 @@ import {
     updateLeadStatus,
 } from '../leads';
 import type { LeadApiRow } from '../leads';
+import { LeadIntentSchema, LeadSourceSchema, LeadStatusSchema } from '../_shared/leads-validation';
 
 // ============================================================================
 // Helpers
@@ -50,6 +48,7 @@ function buildChain(overrides: Record<string, unknown> = {}): Record<string, unk
         not: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
         ilike: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         range: vi.fn().mockReturnThis(),
@@ -101,7 +100,7 @@ beforeEach(() => {
 
 describe('LeadStatus / LeadIntent / LeadSource arrays', () => {
     it('define the canonical domain values', () => {
-        expect(LeadStatus).toEqual([
+        expect(LeadStatusSchema.options).toEqual([
             'nuevo',
             'contactado',
             'calificado',
@@ -109,10 +108,10 @@ describe('LeadStatus / LeadIntent / LeadSource arrays', () => {
             'cerrado_ganado',
             'cerrado_perdido',
         ]);
-        expect(LeadIntent).toContain('comprar');
-        expect(LeadIntent).toContain('tasar');
-        expect(LeadSource).toContain('landing_form');
-        expect(LeadSource).toContain('ml_contacto');
+        expect(LeadIntentSchema.options).toContain('comprar');
+        expect(LeadIntentSchema.options).toContain('tasar');
+        expect(LeadSourceSchema.options).toContain('landing_form');
+        expect(LeadSourceSchema.options).toContain('ml_contacto');
     });
 });
 
@@ -121,7 +120,7 @@ describe('LEAD_STATUS_LABEL', () => {
         expect(LEAD_STATUS_LABEL.nuevo).toBe('Nuevo');
         expect(LEAD_STATUS_LABEL.cerrado_ganado).toBe('Ganado');
         expect(LEAD_STATUS_LABEL.cerrado_perdido).toBe('Perdido');
-        expect(Object.keys(LEAD_STATUS_LABEL).length).toBe(LeadStatus.length);
+        expect(Object.keys(LEAD_STATUS_LABEL).length).toBe(LeadStatusSchema.options.length);
     });
 });
 
@@ -129,7 +128,7 @@ describe('LEAD_STATUS_TONE', () => {
     it('assigns tones to all statuses', () => {
         expect(LEAD_STATUS_TONE.cerrado_ganado).toBe('success');
         expect(LEAD_STATUS_TONE.cerrado_perdido).toBe('danger');
-        expect(Object.keys(LEAD_STATUS_TONE).length).toBe(LeadStatus.length);
+        expect(Object.keys(LEAD_STATUS_TONE).length).toBe(LeadStatusSchema.options.length);
     });
 });
 
@@ -145,7 +144,7 @@ describe('LEAD_INTENT_LABEL', () => {
     it('maps every intent to a label', () => {
         expect(LEAD_INTENT_LABEL.comprar).toBe('Comprar');
         expect(LEAD_INTENT_LABEL.tasar).toBe('Tasar');
-        expect(Object.keys(LEAD_INTENT_LABEL).length).toBe(LeadIntent.length);
+        expect(Object.keys(LEAD_INTENT_LABEL).length).toBe(LeadIntentSchema.options.length);
     });
 });
 
@@ -153,7 +152,7 @@ describe('LEAD_SOURCE_LABEL', () => {
     it('maps every source to a label', () => {
         expect(LEAD_SOURCE_LABEL.whatsapp).toBe('WhatsApp');
         expect(LEAD_SOURCE_LABEL.ml_contacto).toBe('Mercado Libre');
-        expect(Object.keys(LEAD_SOURCE_LABEL).length).toBe(LeadSource.length);
+        expect(Object.keys(LEAD_SOURCE_LABEL).length).toBe(LeadSourceSchema.options.length);
     });
 });
 
@@ -377,17 +376,22 @@ describe('fetchLeads', () => {
         mockFrom({
             returns: vi.fn().mockResolvedValue({ data: [leadApiRow], error: null }),
         });
-        const rows = await fetchLeads();
-        expect(rows).toHaveLength(1);
-        expect(rows[0].agent).toBe('Juan');
-        expect(rows[0].tags).toEqual(['urgente']);
+        const result = await fetchLeads();
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].agent).toBe('Juan');
+        expect(result.data[0].tags).toEqual(['urgente']);
     });
 
     it('returns empty array when no data', async () => {
         mockFrom({
             returns: vi.fn().mockResolvedValue({ data: null, error: null }),
         });
-        await expect(fetchLeads()).resolves.toEqual([]);
+        await expect(fetchLeads()).resolves.toEqual({
+            data: [],
+            page: 1,
+            pageSize: 20,
+            hasMore: false,
+        });
     });
 
     it('throws on error', async () => {
@@ -539,13 +543,13 @@ describe('autoAssignLead', () => {
     it('assigns the lead to the next agent', async () => {
         mockFrom({
             limit: vi.fn().mockResolvedValue({
-                data: [{ id: 'a1', name: 'Juan' }],
+                data: [{ id: '11111111-1111-1111-1111-111111111111', name: 'Juan' }],
                 error: null,
             }),
             update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
         });
         await expect(autoAssignLead('lead-1')).resolves.toEqual({
-            agentId: 'a1',
+            agentId: '11111111-1111-1111-1111-111111111111',
             agentName: 'Juan',
         });
     });
@@ -562,7 +566,7 @@ describe('bulkAutoAssignLeads', () => {
     it('counts assigned and skipped leads', async () => {
         mockFrom({
             limit: vi.fn().mockResolvedValue({
-                data: [{ id: 'a1', name: 'Juan' }],
+                data: [{ id: '11111111-1111-1111-1111-111111111111', name: 'Juan' }],
                 error: null,
             }),
             update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),

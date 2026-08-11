@@ -1,7 +1,8 @@
 // apps/landing/src/components/Catalog.tsx
 import { useState, useMemo } from 'preact/hooks';
+import type { JSX } from 'preact';
 import { useScrollAnimation, useTilt, useRipple } from '@/lib/motion';
-import styles from './Catalog.module.css';
+import styles from '../styles/modules/Catalog.module.css';
 
 // Datos de ejemplo (reemplazar con datos reales de Supabase)
 const propertiesData = [
@@ -45,7 +46,6 @@ export function Catalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOperation, setSelectedOperation] = useState('Todos');
   const [selectedType, setSelectedType] = useState('Todos');
-  const [selectedLocation, setSelectedLocation] = useState('Todos');
   const [priceRange, setPriceRange] = useState('Todos');
   const [selectedBedrooms, setSelectedBedrooms] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
@@ -268,20 +268,20 @@ export function Catalog() {
 // Componente de Property Card con Tilt 3D
 function PropertyCard({ property, index }: { property: any; index: number }) {
   const [isLiked, setIsLiked] = useState(false);
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 8,
     transitionSpeed: 300,
     glow: true,
     glowIntensity: 0.3,
   });
 
-  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
     once: true,
     delay: index * 100,
   });
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = (e: JSX.TargetedMouseEvent<HTMLElement>) => {
     e.stopPropagation();
     setIsLiked(!isLiked);
     // Aquí iría la lógica de favoritos

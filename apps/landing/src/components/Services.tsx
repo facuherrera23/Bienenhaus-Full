@@ -1,11 +1,10 @@
 // apps/landing/src/components/Services.tsx
-import { useRef, useEffect } from 'preact/hooks';
 import { 
   useScrollAnimation, 
   useTilt,
   useParallax 
 } from '@/lib/motion';
-import styles from './Services.module.css';
+import styles from '../styles/modules/Services.module.css';
 
 interface Service {
   id: number;
@@ -114,7 +113,7 @@ export function Services() {
 
 // Componente individual de Service Card con Tilt
 function ServiceCard({ service, index }: { service: Service; index: number }) {
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 12,
     transitionSpeed: 300,
     glow: true,
@@ -122,7 +121,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
   });
 
   // Scroll reveal individual con delay
-  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
     once: true,
     delay: index * 100,

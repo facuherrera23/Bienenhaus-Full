@@ -1,12 +1,11 @@
 // apps/landing/src/components/Stats.tsx
-import { useRef, useEffect } from 'preact/hooks';
 import { 
   useScrollAnimation, 
   useCountUp, 
   useParallax,
   useTilt 
 } from '@/lib/motion';
-import styles from './Stats.module.css';
+import styles from '../styles/modules/Stats.module.css';
 
 interface StatItem {
   id: number;
@@ -140,7 +139,7 @@ function StatCard({
   isGridVisible: boolean;
 }) {
   // Tilt 3D para la card
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 8,
     transitionSpeed: 300,
     glow: true,
@@ -148,7 +147,7 @@ function StatCard({
   });
 
   // Scroll reveal individual
-  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.15,
     once: true,
     delay: index * 150,

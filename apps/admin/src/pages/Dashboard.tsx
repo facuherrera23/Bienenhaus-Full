@@ -69,8 +69,8 @@ function useCountUp(target: number, duration: number = 1500, start: boolean = tr
 // ============================================================
 // HOOK: Scroll reveal (IntersectionObserver)
 // ============================================================
-function useScrollReveal(threshold: number = 0.1) {
-    const ref = useRef<HTMLElement>(null);
+function useScrollReveal<T extends HTMLElement = HTMLDivElement>(threshold: number = 0.1) {
+    const ref = useRef<T>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -120,7 +120,6 @@ export function Dashboard() {
     const publishedProps = properties?.filter((p) => p.status === 'publicada').length ?? 0;
     const featuredProps = properties?.filter((p) => p.featured).length ?? 0;
     const pipelineValue = properties?.filter((p) => p.listing_type === 'venta' && p.currency === 'USD')?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
-    const pipelineValueARS = properties?.filter((p) => p.listing_type === 'venta' && p.currency === 'ARS')?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
 
     const totalOwners = owners?.length ?? 0;
     const ownersWithProps = owners?.filter((o) => o.property_count > 0).length ?? 0;

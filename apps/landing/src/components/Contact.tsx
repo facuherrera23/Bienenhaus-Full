@@ -1,7 +1,7 @@
 // apps/landing/src/components/Contact.tsx
 import { useState } from 'preact/hooks';
 import { useScrollAnimation, useRipple } from '@/lib/motion';
-import styles from './Contact.module.css';
+import styles from '../styles/modules/Contact.module.css';
 
 interface FormData {
   name: string;

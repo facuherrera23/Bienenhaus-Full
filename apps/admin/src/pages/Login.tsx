@@ -1,7 +1,7 @@
 // apps/admin/src/pages/Login.tsx
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { AlertTriangle, Lock, Mail, User } from 'lucide-preact';
+import { AlertTriangle, Lock, Mail } from 'lucide-preact';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword, authSession } from '../store/app';
 import styles from '../styles/Login.module.css';
@@ -58,7 +58,6 @@ export function Login() {
     const [lockout, setLockout] = useState(false);
     const [lockoutRemaining, setLockoutRemaining] = useState(0);
     const [lockoutProgress, setLockoutProgress] = useState(100);
-    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (authSession.value) {
@@ -207,7 +206,7 @@ export function Login() {
                     <span>Contraseña</span>
                     <div className={styles.inputWrapper}>
                         <input
-                            type={showPassword ? 'text' : 'password'}
+                            type="password"
                             value={password}
                             placeholder=" "
                             required

@@ -1,5 +1,6 @@
-// apps/landing/src/lib/motion/useRipple.ts
+// apps/landing/src/lib/motion/useRipple.tsx
 import { useRef, useState } from 'preact/hooks';
+import type { ComponentChildren, JSX } from 'preact';
 
 interface Ripple {
   id: number;
@@ -12,7 +13,7 @@ export function useRipple() {
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const counterRef = useRef(0);
 
-  const createRipple = (e: React.MouseEvent<HTMLElement>) => {
+  const createRipple = (e: JSX.TargetedMouseEvent<HTMLElement>) => {
     const element = e.currentTarget;
     const rect = element.getBoundingClientRect();
     const size = Math.max(rect.width, rect.height);
@@ -28,8 +29,8 @@ export function useRipple() {
     }, 600);
   };
 
-  const RippleEffect = ({ children }: { children: React.ReactNode }) => {
-    const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+  const RippleEffect = ({ children }: { children: ComponentChildren }) => {
+    const handleClick = (e: JSX.TargetedMouseEvent<HTMLElement>) => {
       createRipple(e);
     };
 

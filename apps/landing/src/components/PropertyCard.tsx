@@ -1,7 +1,8 @@
 // apps/landing/src/components/PropertyCard.tsx
 import { useState } from 'preact/hooks';
+import type { JSX } from 'preact';
 import { useTilt } from '@/lib/motion';
-import styles from './PropertyCard.module.css';
+import styles from '../styles/modules/PropertyCard.module.css';
 
 interface PropertyCardProps {
   property: {
@@ -22,16 +23,16 @@ interface PropertyCardProps {
   onClick?: () => void;
 }
 
-export function PropertyCard({ property, index = 0, onClick }: PropertyCardProps) {
+export function PropertyCard({ property, index: _index = 0, onClick }: PropertyCardProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const { ref, style: tiltStyle } = useTilt({
+  const { ref, style: tiltStyle } = useTilt<HTMLElement>({
     maxAngle: 8,
     transitionSpeed: 300,
     glow: true,
     glowIntensity: 0.3,
   });
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = (e: JSX.TargetedMouseEvent<HTMLElement>) => {
     e.stopPropagation();
     setIsLiked(!isLiked);
   };

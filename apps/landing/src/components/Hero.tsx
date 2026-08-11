@@ -1,12 +1,11 @@
 // apps/landing/src/components/Hero.tsx
-import { useRef, useEffect, useState } from 'preact/hooks';
 import { 
   useMouseGlow, 
   useCountUp, 
   useScrollAnimation,
   useRipple 
 } from '@/lib/motion';
-import styles from './Hero.module.css';
+import styles from '../styles/modules/Hero.module.css';
 
 interface HeroProps {
   onVideoOpen?: () => void;

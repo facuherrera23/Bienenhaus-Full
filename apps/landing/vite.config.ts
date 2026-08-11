@@ -1,3 +1,4 @@
+import path from 'path';
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { criticalCss } from './plugins/critical-css';
@@ -12,6 +13,11 @@ const DEV_HEADERS = {
 };
 
 export default defineConfig({
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'src'),
+        },
+    },
     plugins: [
         preact(),
         // Extract critical CSS for above-the-fold content (Hero + Navbar + design tokens)

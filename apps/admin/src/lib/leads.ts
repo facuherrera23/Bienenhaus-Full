@@ -224,7 +224,7 @@ export function toLeadRow(l: any): any {
     };
 }
 
-function toLeadDetail(l: any): any {
+export function toLeadDetail(l: any): any {
     return {
         id: l.id,
         name: l.name,

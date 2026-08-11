@@ -1,5 +1,6 @@
 // apps/landing/src/lib/motion/useParallax.ts
 import { useRef, useEffect, useState } from 'preact/hooks';
+import type { JSX } from 'preact';
 
 export interface ParallaxOptions {
   /** Velocidad del parallax (0-1) */
@@ -12,13 +13,13 @@ export interface ParallaxOptions {
   relativeToViewport?: boolean;
 }
 
-export function useParallax({
+export function useParallax<T extends HTMLElement = HTMLDivElement>({
   speed = 0.3,
   direction = 'vertical',
   initialOffset = 0,
   relativeToViewport = true,
 }: ParallaxOptions = {}) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<T>(null);
   const [offset, setOffset] = useState(initialOffset);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -71,7 +72,7 @@ export function useParallax({
       ? `translateY(${offset}px)` 
       : `translateX(${offset}px)`,
     willChange: 'transform',
-  } as React.CSSProperties;
+  } as JSX.CSSProperties;
 
   return { ref, style, offset, isVisible };
 }

@@ -1,6 +1,6 @@
 // apps/landing/src/components/Navbar.tsx
 import { useState, useEffect } from 'preact/hooks';
-import styles from './Navbar.module.css';
+import styles from '../styles/modules/Navbar.module.css';
 
 interface NavLink {
   label: string;

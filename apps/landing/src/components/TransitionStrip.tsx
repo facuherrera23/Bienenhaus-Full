@@ -1,6 +1,6 @@
 // apps/landing/src/components/TransitionStrip.tsx
 import { useScrollAnimation } from '@/lib/motion';
-import styles from './TransitionStrip.module.css';
+import styles from '../styles/modules/TransitionStrip.module.css';
 
 export function TransitionStrip() {
   const { ref, isVisible } = useScrollAnimation({

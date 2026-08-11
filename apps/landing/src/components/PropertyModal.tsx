@@ -1,6 +1,6 @@
 // apps/landing/src/components/PropertyModal.tsx
 import { useState, useEffect } from 'preact/hooks';
-import styles from './PropertyModal.module.css';
+import styles from '../styles/modules/PropertyModal.module.css';
 
 interface PropertyModalProps {
   isOpen: boolean;

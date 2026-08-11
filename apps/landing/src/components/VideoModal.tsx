@@ -1,6 +1,6 @@
 // apps/landing/src/components/VideoModal.tsx
 import { useEffect, useState } from 'preact/hooks';
-import styles from './VideoModal.module.css';
+import styles from '../styles/modules/VideoModal.module.css';
 
 interface VideoModalProps {
   isOpen: boolean;

@@ -795,7 +795,8 @@ describe('generateOccurrences', () => {
 
 describe('createReminders', () => {
     it('crea los recordatorios por defecto para la visita', async () => {
-        const chain = mockFrom({ returns: vi.fn().mockResolvedValue({ data: [reminderConfig], error: null }) });
+        const chain = mockFrom({});
+chain.select = vi.fn().mockResolvedValue({ data: [reminderConfig], error: null });
         const result = await createReminders('v1');
         expect(result).toEqual([reminderConfig]);
         expect(chain.insert).toHaveBeenCalledWith(DEFAULT_REMINDERS.map((r) => ({ ...r, visit_id: 'v1' })));

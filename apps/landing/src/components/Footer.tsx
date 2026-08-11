@@ -1,7 +1,7 @@
 // apps/landing/src/components/Footer.tsx
 import { useState } from 'preact/hooks';
-import { useScrollAnimation, useRipple } from '@/lib/motion';
-import styles from './Footer.module.css';
+import { useScrollAnimation } from '@/lib/motion';
+import styles from '../styles/modules/Footer.module.css';
 
 interface FooterLink {
   label: string;

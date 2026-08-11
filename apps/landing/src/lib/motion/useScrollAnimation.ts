@@ -16,15 +16,14 @@ export interface ScrollAnimationOptions {
   root?: Element | null;
 }
 
-export function useScrollAnimation({
+export function useScrollAnimation<T extends HTMLElement = HTMLDivElement>({
   threshold = 0.15,
   rootMargin = '0px 0px -50px 0px',
   once = true,
-  animation = 'fadeUp',
   delay = 0,
   root = null,
 }: ScrollAnimationOptions = {}) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<T>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const timeoutRef = useRef<number | null>(null);
