@@ -68,7 +68,7 @@
     margin-left: var(--bh-sidebar-w);
     transition: margin-left var(--bh-dur-sidebar) var(--bh-ease-premium);
 }
-:global(.sidebar.is-collapsed) ~ .shell-main {
+.shell-main.is-collapsed {
     margin-left: var(--bh-sidebar-w-collapsed);
 }
 
@@ -102,10 +102,8 @@
    Mobile (≤768px): sidebar becomes drawer, shell-main full width.
    ============================================================ */
 @media (max-width: 768px) {
-    .shell-main {
-        margin-left: 0;
-    }
-    :global(.sidebar.is-collapsed) ~ .shell-main {
+    .shell-main,
+    .shell-main.is-collapsed {
         margin-left: 0;
     }
     .breadcrumb-row {
@@ -114,5 +112,15 @@
     .shell-content {
         padding: var(--bh-space-4);
         gap: var(--bh-space-4);
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION — spec §57: disable layout animations
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-scrim,
+    .shell-main {
+        transition: none;
     }
 }

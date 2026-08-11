@@ -10,7 +10,6 @@ import {
     type MessageType,
 } from '../types/chat';
 import {
-    addParticipant,
     createDirectChannel,
     createGroupChannel,
     createLeadChannel,
@@ -18,10 +17,8 @@ import {
     editMessage,
     markAsRead,
     markChannelAsRead,
-    removeParticipant,
     sendMessage,
     softDeleteMessage,
-    updateLastRead,
 } from './chat';
 
 const CHANNELS_PATH = 'chat_channels';
@@ -175,26 +172,6 @@ export function useCreateLeadChannel() {
 }
 
 // ============================================================
-// Mutation Hooks - Participants
-// ============================================================
-
-export function useAddParticipant() {
-    return useMutation({
-        mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-            return addParticipant(channelId, agentId);
-        },
-    });
-}
-
-export function useRemoveParticipant() {
-    return useMutation({
-        mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-            return removeParticipant(channelId, agentId);
-        },
-    });
-}
-
-// ============================================================
 // Mutation Hooks - Messages
 // ============================================================
 
@@ -254,14 +231,6 @@ export function useMarkChannelAsRead() {
     return useMutation({
         mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
             return markChannelAsRead(channelId, agentId);
-        },
-    });
-}
-
-export function useUpdateLastRead() {
-    return useMutation({
-        mutationFn: async ({ channelId, agentId }: { channelId: string; agentId: string }) => {
-            return updateLastRead(channelId, agentId);
         },
     });
 }

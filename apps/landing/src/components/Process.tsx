@@ -1,148 +1,196 @@
-import { useEffect, useRef } from 'preact/hooks';
-import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
-import { ArrowRight, Award, BarChart2, Handshake, Key, Megaphone, Users } from 'lucide-preact';
-import styles from '../styles/modules/Process.module.css';
+// apps/landing/src/components/Process.tsx
+import { useRef, useEffect } from 'preact/hooks';
+import { 
+  useScrollAnimation, 
+  useTilt,
+  useParallax 
+} from '@/lib/motion';
+import styles from './Process.module.css';
 
 interface Step {
-    icon: string;
-    title: string;
-    desc: string;
+  id: number;
+  icon: string;
+  title: string;
+  description: string;
 }
 
-function getLucideIcon(name: string) {
-    const iconMap: Record<string, any> = {
-        'fa-users': Users,
-        'fa-chart-bar': BarChart2,
-        'fa-bullhorn': Megaphone,
-        'fa-handshake': Handshake,
-        'fa-key': Key,
-    };
-    return iconMap[name] || Users;
-}
+const stepsData: Step[] = [
+  {
+    id: 1,
+    icon: '🔍',
+    title: 'Descubrimiento',
+    description: 'Analizamos tus necesidades y objetivos para encontrar la propiedad ideal.',
+  },
+  {
+    id: 2,
+    icon: '📋',
+    title: 'Evaluación',
+    description: 'Realizamos un análisis detallado y tasación profesional de tu propiedad.',
+  },
+  {
+    id: 3,
+    icon: '📸',
+    title: 'Presentación',
+    description: 'Creamos una estrategia de marketing personalizada con fotos y videos.',
+  },
+  {
+    id: 4,
+    icon: '🤝',
+    title: 'Negociación',
+    description: 'Gestionamos ofertas y negociamos las mejores condiciones para ti.',
+  },
+  {
+    id: 5,
+    icon: '🏠',
+    title: 'Cierre',
+    description: 'Acompañamos todo el proceso hasta la firma y entrega de llaves.',
+  },
+];
 
 export function Process() {
-    const rootRef = useRef<HTMLElement>(null);
-    const { content } = useSiteContent();
+  // Scroll reveal para el header
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
+    threshold: 0.2,
+    once: true,
+  });
 
-    const section = content.proceso ?? {};
-    const label = textOf(section.label, 'text', 'Como trabajamos');
-    const title = textOf(section.title, 'text', 'Un proceso simple. Resultados extraordinarios.');
-    const description = textOf(
-        section.description,
-        'text',
-        'Acompanamos cada operacion con un metodo claro y personalizado para que vender, comprar o invertir sea una experiencia segura, transparente y eficiente.',
-    );
+  // Scroll reveal para el timeline
+  const { ref: timelineRef, isVisible: timelineVisible } = useScrollAnimation({
+    threshold: 0.15,
+    once: true,
+  });
 
-    const steps: Step[] = listOf(section.steps).map((s) => ({
-        icon: faIcon(textOf(s, 'icon')),
-        title: textOf(s, 'title'),
-        desc: textOf(s, 'description'),
-    }));
+  // Parallax para el fondo
+  const { ref: parallaxRef, style: parallaxStyle } = useParallax({
+    speed: 0.1,
+    direction: 'vertical',
+    relativeToViewport: true,
+  });
 
-    useEffect(() => {
-        const root = rootRef.current;
-        if (!root) return;
-        const first = root.querySelector('.step-card');
-        if (!first) return;
+  return (
+    <section className={styles.process} ref={parallaxRef}>
+      {/* Fondo decorativo con parallax */}
+      <div className={styles.processBg} style={parallaxStyle} aria-hidden="true" />
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setTimeout(
-                            () =>
-                                root
-                                    .querySelector('.timeline-line-progress')
-                                    ?.classList.add('animated'),
-                            300,
-                        );
+      <div className="container">
+        {/* Header */}
+        <div 
+          className={`${styles.processHeader} ${headerVisible ? styles.visible : ''}`}
+          ref={headerRef}
+        >
+          <div className={styles.processHeaderLeft}>
+            <span className={styles.processLabel}>Proceso</span>
+            <h2 className={styles.processTitle}>
+              <span className={styles.highlight}>Cómo</span> trabajamos
+            </h2>
+            <p className={styles.processDesc}>
+              Un proceso estructurado y transparente para garantizar
+              los mejores resultados en cada paso.
+            </p>
+          </div>
+          <div className={styles.processHeaderRight}>
+            <button className={styles.btnProcess}>
+              Más información
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-                        root.querySelectorAll('.timeline-dot').forEach((dot, index) => {
-                            setTimeout(
-                                () => {
-                                    dot.classList.add('visible');
-                                    setTimeout(() => dot.classList.add('active'), 400);
-                                },
-                                400 + index * 150,
-                            );
-                        });
+        {/* Timeline y Steps */}
+        <div 
+          className={`${styles.timeline} ${timelineVisible ? styles.visible : ''}`}
+          ref={timelineRef}
+        >
+          {/* Línea de progreso */}
+          <div className={styles.timelineLine} aria-hidden="true">
+            <div className={`${styles.timelineLineProgress} ${timelineVisible ? styles.animated : ''}`} />
+          </div>
 
-                        root.querySelectorAll('.step-card').forEach((card, index) => {
-                            const delay =
-                                parseInt(card.getAttribute('data-delay') ?? '0', 10) || index * 120;
-                            setTimeout(() => card.classList.add('visible'), 500 + delay);
-                        });
+          {/* Dots de la timeline */}
+          <div className={styles.timelineDots} aria-hidden="true">
+            {stepsData.map((step, index) => (
+              <div 
+                key={step.id}
+                className={`${styles.timelineDot} ${timelineVisible ? styles.visible : ''} ${index === 0 ? styles.active : ''}`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              />
+            ))}
+          </div>
 
-                        setTimeout(
-                            () => root.querySelector('.commitment-bar')?.classList.add('visible'),
-                            800,
-                        );
-                        observer.disconnect();
-                    }
-                });
-            },
-            { threshold: 0.15, rootMargin: '0px 0px -80px 0px' },
-        );
-        observer.observe(first);
-        return () => observer.disconnect();
-    }, []);
+          {/* Grid de pasos */}
+          <div className={styles.stepsGrid}>
+            {stepsData.map((step, index) => (
+              <StepCard key={step.id} step={step} index={index} />
+            ))}
+          </div>
+        </div>
 
-    return (
-        <section className={styles.process} id="proceso" aria-label="Como trabajamos" ref={rootRef}>
-            <div className="container">
-                <header className={styles.processHeader}>
-                    <div className={styles.processHeaderLeft}>
-                        <span className={styles.processLabel}>{label}</span>
-                        <h2 className={styles.processTitle}>{title}</h2>
-                        <p className={styles.processDesc}>{description}</p>
-                        <a href="#contacto" className={styles.btnProcess}>
-                            HABLAR CON UN ASESOR{' '}
-                            <ArrowRight className={styles.icon} aria-hidden="true" />
-                        </a>
-                    </div>
-                    <div className={styles.processHeaderRight}></div>
-                </header>
-                <div className={styles.timeline}>
-                    <div className={styles.timelineLine}>
-                        <div className={styles.timelineLineProgress} id="timelineProgress"></div>
-                    </div>
-                    <div className={styles.timelineDots} id="timelineDots">
-                        {steps.map((_, i) => (
-                            <span className={styles.timelineDot} data-index={i} key={i}></span>
-                        ))}
-                    </div>
-                    <div className={styles.stepsGrid} id="stepsGrid">
-                        {steps.map((step, i) => {
-                            const StepIcon = getLucideIcon(step.icon);
-                            return (
-                                <article
-                                    className={`${styles.stepCard} ${styles.visible}`}
-                                    data-delay={i * 120}
-                                    key={step.title}
-                                >
-                                    <div className={styles.stepNumber}>{`0${i + 1}`}</div>
-                                    <div className={styles.stepIcon} aria-hidden="true">
-                                        <StepIcon className={styles.icon} aria-hidden="true" />
-                                    </div>
-                                    <h3 className={styles.stepTitle}>{step.title}</h3>
-                                    <p className={styles.stepDesc}>{step.desc}</p>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </div>
-                <div className={styles.commitmentBar} id="commitmentBar">
-                    <div className={styles.commitmentIcon}>
-                        <Award className={styles.icon} aria-hidden="true" />
-                        <span>Nuestro compromiso</span>
-                    </div>
-                    <div className={styles.commitmentText}>
-                        Transparencia, dedicacion y excelencia en cada etapa del proceso. Tu
-                        tranquilidad es nuestra prioridad, tu exito nuestro compromiso.
-                    </div>
-                    <div className={styles.commitmentSignature}>Bienenhaus</div>
-                </div>
-            </div>
-        </section>
-    );
+        {/* Commitment Bar */}
+        <div 
+          className={`${styles.commitmentBar} ${timelineVisible ? styles.visible : ''}`}
+        >
+          <div className={styles.commitmentIcon}>
+            <span>🤝</span>
+            <span>Compromiso</span>
+          </div>
+          <p className={styles.commitmentText}>
+            Acompañamos cada paso con honestidad, transparencia y dedicación.
+          </p>
+          <div className={styles.commitmentSignature}>
+            Bienenhaus
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Componente individual de Step Card con Tilt
+function StepCard({ step, index }: { step: Step; index: number }) {
+  const { ref, style: tiltStyle } = useTilt({
+    maxAngle: 10,
+    transitionSpeed: 300,
+    glow: true,
+    glowIntensity: 0.3,
+  });
+
+  // Scroll reveal individual con delay
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+    threshold: 0.15,
+    once: true,
+    delay: index * 150,
+  });
+
+  return (
+    <article 
+      className={`${styles.stepCard} ${cardVisible ? styles.visible : ''}`}
+      ref={(el) => {
+        if (el) {
+          ref.current = el;
+          cardRef.current = el;
+        }
+      }}
+      style={tiltStyle}
+    >
+      <div className={styles.stepNumber}>
+        {String(step.id).padStart(2, '0')}
+      </div>
+      <div className={styles.stepIcon}>{step.icon}</div>
+      <h3 className={styles.stepTitle}>{step.title}</h3>
+      <p className={styles.stepDesc}>{step.description}</p>
+
+      {/* Efecto de glow que sigue al mouse */}
+      <div 
+        className={styles.cardGlow}
+        style={{
+          '--mouse-x': '50%',
+          '--mouse-y': '50%',
+        }}
+        aria-hidden="true"
+      />
+    </article>
+  );
 }

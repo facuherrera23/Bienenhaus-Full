@@ -1,0 +1,550 @@
+/* apps/admin/src/styles/ui-kit.module.css */
+
+/* ============================================================
+   UI KIT PREMIUM — Avatar, Badge, Dropdown, Tooltip, etc.
+   ============================================================ */
+
+/* ============================================================
+   AVATAR — Con estados y glow
+   ============================================================ */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: var(--bh-weight-bold);
+  background: var(--bh-accent-soft);
+  color: var(--bh-accent);
+  position: relative;
+  flex-shrink: 0;
+  user-select: none;
+  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar--xs {
+  width: 24px;
+  height: 24px;
+  font-size: var(--bh-text-xs);
+}
+
+.avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--bh-text-sm);
+}
+
+.avatar--md {
+  width: 40px;
+  height: 40px;
+  font-size: var(--bh-text-md);
+}
+
+.avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: var(--bh-text-lg);
+}
+
+.avatar--xl {
+  width: 64px;
+  height: 64px;
+  font-size: var(--bh-text-xl);
+}
+
+/* Estados de presencia */
+.avatar .status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bh-bg-card);
+  background: var(--bh-text-tertiary);
+}
+
+.avatar .status--online {
+  background: var(--bh-success);
+}
+
+.avatar .status--offline {
+  background: var(--bh-text-tertiary);
+}
+
+.avatar .status--away {
+  background: var(--bh-warning);
+}
+
+.avatar .status--busy {
+  background: var(--bh-danger);
+}
+
+.avatar .status--pulse {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+/* Hover glow */
+.avatar--glow:hover {
+  box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+/* ============================================================
+   BADGE — Con variantes y pulse glow
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-1);
+  padding: var(--bh-space-1) var(--bh-space-2);
+  border-radius: var(--bh-radius-full);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-semibold);
+  white-space: nowrap;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.badge--default {
+  background: var(--bh-bg-hover);
+  color: var(--bh-text-secondary);
+  border: 1px solid var(--bh-border);
+}
+
+.badge--primary {
+  background: var(--bh-accent-soft);
+  color: var(--bh-accent);
+}
+
+.badge--success {
+  background: var(--bh-success-soft);
+  color: var(--bh-success);
+}
+
+.badge--warning {
+  background: var(--bh-warning-soft);
+  color: var(--bh-warning);
+}
+
+.badge--danger {
+  background: var(--bh-danger-soft);
+  color: var(--bh-danger);
+}
+
+.badge--info {
+  background: var(--bh-info-soft);
+  color: var(--bh-info);
+}
+
+.badge--purple {
+  background: var(--bh-purple-soft);
+  color: var(--bh-purple);
+}
+
+/* Badge con pulse glow */
+.badge--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Badge con dot */
+.badge--dot {
+  padding-left: var(--bh-space-1);
+}
+
+.badge--dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: var(--bh-space-1);
+}
+
+.badge--dot.badge--pulse::before {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+/* Badge sizes */
+.badge--sm {
+  font-size: 10px;
+  padding: 2px 8px;
+}
+
+.badge--lg {
+  font-size: var(--bh-text-sm);
+  padding: var(--bh-space-2) var(--bh-space-3);
+}
+
+/* Badge removable */
+.badge--removable {
+  padding-right: var(--bh-space-1);
+}
+
+.badge--removable .badge-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  opacity: 0.6;
+  padding: 0;
+  border: none;
+}
+
+.badge--removable .badge-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   DROPDOWN — Con animación de entrada
+   ============================================================ */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  cursor: pointer;
+}
+
+.dropdownTrigger .chevron {
+  transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.dropdownTrigger[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + var(--bh-space-2));
+  right: 0;
+  min-width: 200px;
+  background: var(--bh-bg-raised);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-md);
+  box-shadow: var(--bh-shadow-lg);
+  padding: var(--bh-space-1);
+  z-index: var(--bh-z-dropdown);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transition: all var(--bh-dur-dropdown) var(--bh-ease-premium);
+  transform-origin: top right;
+}
+
+.dropdownMenu--open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.dropdownMenu--left {
+  right: auto;
+  left: 0;
+  transform-origin: top left;
+}
+
+.dropdownMenu--left.dropdownMenu--open {
+  transform-origin: top left;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--bh-space-2);
+  padding: var(--bh-space-2) var(--bh-space-3);
+  border-radius: var(--bh-radius-sm);
+  color: var(--bh-text-secondary);
+  font-size: var(--bh-text-sm);
+  cursor: pointer;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: var(--bh-bg-hover);
+  color: var(--bh-text-primary);
+}
+
+.dropdownItem--active {
+  background: var(--bh-accent-soft);
+  color: var(--bh-accent);
+}
+
+.dropdownItem--danger {
+  color: var(--bh-danger);
+}
+
+.dropdownItem--danger:hover {
+  background: var(--bh-danger-soft);
+  color: var(--bh-danger);
+}
+
+.dropdownItem .icon {
+  color: var(--bh-text-tertiary);
+  flex-shrink: 0;
+}
+
+.dropdownItem--danger .icon {
+  color: var(--bh-danger);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--bh-border);
+  margin: var(--bh-space-1) var(--bh-space-2);
+}
+
+.dropdownHeader {
+  padding: var(--bh-space-2) var(--bh-space-3);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-semibold);
+  color: var(--bh-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   TOOLTIP — Con efecto de fade
+   ============================================================ */
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltipContent {
+  position: absolute;
+  bottom: calc(100% + var(--bh-space-2));
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  padding: var(--bh-space-1) var(--bh-space-2);
+  background: var(--bh-bg-raised);
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-sm);
+  color: var(--bh-text-secondary);
+  font-size: var(--bh-text-xs);
+  font-weight: var(--bh-weight-medium);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+  z-index: var(--bh-z-tooltip);
+  pointer-events: none;
+}
+
+.tooltip:hover .tooltipContent {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+.tooltipContent--right {
+  left: calc(100% + var(--bh-space-2));
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+}
+
+.tooltip:hover .tooltipContent--right {
+  transform: translateY(-50%) scale(1);
+}
+
+.tooltipContent--left {
+  right: calc(100% + var(--bh-space-2));
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+}
+
+.tooltip:hover .tooltipContent--left {
+  transform: translateY(-50%) scale(1);
+}
+
+/* ============================================================
+   SPINNER — Loader animado
+   ============================================================ */
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--bh-border);
+  border-top-color: var(--bh-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.spinner--lg {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+.spinner--xl {
+  width: 56px;
+  height: 56px;
+  border-width: 4px;
+}
+
+/* ============================================================
+   SKELETON — Placeholder de carga
+   ============================================================ */
+
+.skeleton {
+  background: var(--bh-bg-secondary);
+  border-radius: var(--bh-radius-sm);
+  animation: shimmer 1.5s infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    var(--bh-bg-secondary) 25%,
+    var(--bh-bg-card) 50%,
+    var(--bh-bg-secondary) 75%
+  );
+}
+
+.skeleton--text {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton--text-sm {
+  height: 10px;
+  width: 80%;
+}
+
+.skeleton--text-lg {
+  height: 20px;
+  width: 100%;
+}
+
+.skeleton--circle {
+  border-radius: 50%;
+}
+
+.skeleton--rect {
+  border-radius: var(--bh-radius-sm);
+}
+
+.skeleton--avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton--card {
+  height: 120px;
+  border-radius: var(--bh-radius-md);
+}
+
+/* ============================================================
+   PROGRESS BAR — Barra de progreso animada
+   ============================================================ */
+
+.progress {
+  width: 100%;
+  height: 6px;
+  background: var(--bh-bg-input);
+  border-radius: var(--bh-radius-full);
+  overflow: hidden;
+}
+
+.progress--sm {
+  height: 4px;
+}
+
+.progress--lg {
+  height: 10px;
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: var(--bh-radius-full);
+  background: linear-gradient(90deg, var(--bh-accent), var(--bh-accent-hover));
+  transition: width var(--bh-dur-slow) var(--bh-ease-premium);
+}
+
+.progressBar--success {
+  background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft));
+}
+
+.progressBar--warning {
+  background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft));
+}
+
+.progressBar--danger {
+  background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft));
+}
+
+.progressBar--pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .dropdownMenu {
+    min-width: 180px;
+  }
+  .tooltipContent {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .badge--pulse {
+    animation: none;
+  }
+  .badge--dot.badge--pulse::before {
+    animation: none;
+  }
+  .dropdownMenu {
+    transition: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+  .spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+  .progressBar {
+    transition: none;
+  }
+  .progressBar--pulse {
+    animation: none;
+  }
+}

@@ -1,8 +1,4 @@
-/**
- * TransitionStrip Module Styles
- * Extracted from landing.css lines 3491-3552
- * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
- */
+/* apps/landing/src/styles/modules/TransitionStrip.module.css */
 
 .transitionStrip {
     position: relative;
@@ -51,7 +47,14 @@
     padding: 0 var(--bh-space-8);
     background: var(--bh-bg-primary);
     text-align: center;
-    opacity: 0.7;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.8s var(--bh-ease-premium);
+}
+
+.stripText.visible {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .stripText .highlight {
@@ -70,40 +73,26 @@
     border-radius: 50%;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .transitionStrip .stripText {
-        font-size: 18px;
-    }
-    .transitionStrip {
-        height: 110px;
-    }
-}
-
 @media (max-width: 768px) {
     .transitionStrip {
         height: 90px;
     }
-    .transitionStrip .stripText {
+    .stripText {
         font-size: 15px;
         padding: 0 var(--bh-space-5);
     }
-    .transitionStrip .stripGlow {
+    .stripGlow {
         width: 120px;
         height: 120px;
     }
 }
 
 @media (max-width: 390px) {
-    .transitionStrip .stripText {
+    .stripText {
         font-size: 13px;
         padding: 0 var(--bh-space-3);
     }
     .transitionStrip {
         height: 70px;
-    }
-    .transitionStrip .stripGlow {
-        width: 120px;
-        height: 120px;
     }
 }

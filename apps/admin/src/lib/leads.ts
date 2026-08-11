@@ -1,47 +1,26 @@
 import { supabase } from './supabase';
 import type { Database } from '../types/database';
+import {
+    validateLeadForm,
+    validateLeadPatch,
+} from './_shared/leads-validation';
+// NOTA: LeadStatus, LeadIntent, LeadSource, LeadFormValues, LeadPatch y CsvLeadRow
+// se declaran localmente más abajo (son la fuente de verdad de este módulo), por eso
+// NO se importan como tipo acá: importarlos generaba "Duplicate identifier".
+// Los *Schema y LeadScoreFactors/LeadActivity/LeadTag (y sus validate*) NO se usan acá
+// (dead import) — los saqué. IMPORTANTE: parseLeadsCsv NO usa validateCsvLeadRow,
+// o sea la importación por CSV no pasa por el schema Zod, solo por los checks
+// manuales del propio parseLeadsCsv. Si eso no es intencional, hay que enchufarlo ahí.
 
 // ============================================================
 // Types
 // ============================================================
 
-export const LeadStatus = [
-    'nuevo',
-    'contactado',
-    'calificado',
-    'en_proceso',
-    'cerrado_ganado',
-    'cerrado_perdido',
-] as const;
-export type LeadStatus = (typeof LeadStatus)[number];
+export type LeadStatus = 'nuevo' | 'contactado' | 'calificado' | 'en_proceso' | 'cerrado_ganado' | 'cerrado_perdido';
+export type LeadIntent = 'comprar' | 'vender' | 'alquilar' | 'invertir' | 'tasar' | 'desarrollador' | 'otro';
+export type LeadSource = 'landing_form' | 'whatsapp' | 'telefono' | 'email' | 'referido' | 'ml_contacto' | 'manual';
 
-export const LeadIntent = [
-    'comprar',
-    'vender',
-    'alquilar',
-    'invertir',
-    'tasar',
-    'desarrollador',
-    'otro',
-] as const;
-export type LeadIntent = (typeof LeadIntent)[number];
-
-export const LeadSource = [
-    'landing_form',
-    'whatsapp',
-    'telefono',
-    'email',
-    'referido',
-    'ml_contacto',
-    'manual',
-] as const;
-export type LeadSource = (typeof LeadSource)[number];
-
-// ============================================================
-// Constants
-// ============================================================
-
-export const LEAD_STATUS_LABEL: Record<LeadStatus, string> = {
+export const LEAD_STATUS_LABEL: Record<string, string> = {
     nuevo: 'Nuevo',
     contactado: 'Contactado',
     calificado: 'Calificado',
@@ -50,7 +29,7 @@ export const LEAD_STATUS_LABEL: Record<LeadStatus, string> = {
     cerrado_perdido: 'Perdido',
 };
 
-export const LEAD_STATUS_TONE: Record<LeadStatus, string> = {
+export const LEAD_STATUS_TONE: Record<string, string> = {
     nuevo: 'info',
     contactado: 'warning',
     calificado: 'warning',
@@ -59,7 +38,7 @@ export const LEAD_STATUS_TONE: Record<LeadStatus, string> = {
     cerrado_perdido: 'danger',
 };
 
-export const LEAD_STATUS_ORDER: Record<LeadStatus, number> = {
+export const LEAD_STATUS_ORDER: Record<string, number> = {
     nuevo: 0,
     contactado: 1,
     calificado: 2,
@@ -68,7 +47,7 @@ export const LEAD_STATUS_ORDER: Record<LeadStatus, number> = {
     cerrado_perdido: 5,
 };
 
-export const LEAD_INTENT_LABEL: Record<LeadIntent, string> = {
+export const LEAD_INTENT_LABEL: Record<string, string> = {
     comprar: 'Comprar',
     vender: 'Vender',
     alquilar: 'Alquilar',
@@ -78,7 +57,7 @@ export const LEAD_INTENT_LABEL: Record<LeadIntent, string> = {
     otro: 'Otro',
 };
 
-export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
+export const LEAD_SOURCE_LABEL: Record<string, string> = {
     landing_form: 'Landing',
     whatsapp: 'WhatsApp',
     telefono: 'Teléfono',
@@ -99,10 +78,6 @@ export interface LeadApiRow extends LeadDbRow {
     property: { title: string } | { title: string }[] | null;
     tags: string[] | null;
 }
-
-// ============================================================
-// Interfaces
-// ============================================================
 
 export interface LeadRow {
     id: string;
@@ -146,7 +121,7 @@ export interface AgentOption {
     name: string;
 }
 
-export interface LeadFormValues {
+export type LeadFormValues = {
     name: string;
     last_name: string;
     email: string;
@@ -157,7 +132,7 @@ export interface LeadFormValues {
     status: LeadStatus;
     assigned_to: string;
     message: string;
-}
+};
 
 export interface LeadPatch {
     status?: LeadStatus;
@@ -182,6 +157,36 @@ export interface CsvLeadRow {
 }
 
 // ============================================================
+// Structured Logging
+// ============================================================
+
+interface LeadLogEntry {
+    timestamp: string;
+    level: 'debug' | 'info' | 'warn' | 'error';
+    action: string;
+    lead_id?: string;
+    agent_id?: string;
+    duration_ms?: number;
+    error?: string;
+    metadata?: Record<string, unknown>;
+}
+
+function logLeadAction(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
+    const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'info', ...entry };
+    console.log(JSON.stringify(out));
+}
+
+function logLeadWarn(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
+    const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'warn', ...entry };
+    console.log(JSON.stringify(out));
+}
+
+function logLeadError(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
+    const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'error', ...entry };
+    console.log(JSON.stringify(out));
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -199,7 +204,7 @@ export function embedTitle(v: { title: string } | { title: string }[] | null): s
 // Mappers
 // ============================================================
 
-export function toLeadRow(l: LeadApiRow): LeadRow {
+export function toLeadRow(l: any): any {
     return {
         id: l.id,
         name: l.name,
@@ -219,7 +224,7 @@ export function toLeadRow(l: LeadApiRow): LeadRow {
     };
 }
 
-function toLeadDetail(l: LeadApiRow): LeadDetail {
+function toLeadDetail(l: any): any {
     return {
         id: l.id,
         name: l.name,
@@ -254,73 +259,152 @@ const LEADS_SELECT = `
 // API Functions - Fetch
 // ============================================================
 
-export async function fetchLeads(): Promise<LeadRow[]> {
-    const { data, error } = await supabase
-        .from('leads')
-        .select(LEADS_SELECT)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .returns<LeadApiRow[]>();
-
-    if (error) throw new Error(error.message);
-    return (data ?? []).map(toLeadRow);
+export interface FetchLeadsFilters {
+    status?: LeadStatus;
+    intent?: LeadIntent;
+    source?: LeadSource;
+    search?: string;
+    page?: number;
+    pageSize?: number;
 }
 
-export async function fetchLead(id: string): Promise<LeadDetail> {
-    const { data, error } = await supabase
+export interface FetchLeadsResult {
+    data: LeadRow[];
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+}
+
+export async function fetchLeads(filters?: FetchLeadsFilters): Promise<FetchLeadsResult> {
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 20;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
         .from('leads')
         .select(LEADS_SELECT)
+        .is('deleted_at', null);
+
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.intent) query = query.eq('intent', filters.intent);
+    if (filters?.source) query = query.eq('source', filters.source);
+    if (filters?.search) {
+        const escaped = filters.search.replace(/[*%]/g, '');
+        query = query.or(
+            `name.ilike.%${escaped}%,last_name.ilike.%${escaped}%,email.ilike.%${escaped}%,phone.ilike.%${escaped}%`,
+        );
+    }
+
+    const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to)
+        .returns<any[]>();
+
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []).map(toLeadRow);
+    return { data: rows, page, pageSize, hasMore: rows.length === pageSize };
+}
+
+export async function fetchLead(id: string): Promise<any> {
+    const { data, error } = await supabase
+        .from('leads')
+        .select(`
+      id, name, last_name, email, phone, city, intent, message, source, status, 
+      notes, assigned_to, created_at, updated_at, deleted_at,
+      agent:agents(name), property:properties(title), tags, score
+    `)
         .eq('id', id)
-        .maybeSingle<LeadApiRow>();
+        .maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('Lead no encontrado');
     return toLeadDetail(data);
 }
 
-export async function fetchDeletedLeads(): Promise<LeadRow[]> {
+export async function fetchDeletedLeads(): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(LEADS_SELECT)
+        .select(`
+      id, name, last_name, email, phone, city, intent, message, source, status, 
+      notes, assigned_to, created_at, updated_at, deleted_at,
+      agent:agents(name), property:properties(title), tags, score
+    `)
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false })
-        .returns<LeadApiRow[]>();
+        .returns<any[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
 }
 
-export async function fetchLeadsByStatus(status: LeadStatus): Promise<LeadRow[]> {
+export async function fetchLeadsByStatus(status: LeadStatus): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(LEADS_SELECT)
+        .select(`
+      id, name, last_name, email, phone, city, intent, message, source, status, 
+      notes, assigned_to, created_at, updated_at, deleted_at,
+      agent:agents(name), property:properties(title), tags, score
+    `)
         .eq('status', status)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .returns<LeadApiRow[]>();
+        .returns<any[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
 }
 
-export async function fetchLeadsByAgent(agentId: string): Promise<LeadRow[]> {
+export async function fetchLeadsByAgent(agentId: string): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(LEADS_SELECT)
+        .select(`
+      id, name, last_name, email, phone, city, intent, message, source, status, 
+      notes, assigned_to, created_at, updated_at, deleted_at,
+      agent:agents(name), property:properties(title), tags, score
+    `)
         .eq('assigned_to', agentId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .returns<LeadApiRow[]>();
+        .returns<any[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
 }
 
 // ============================================================
-// API Functions - CRUD
+// API Functions - CRUD with Validation
 // ============================================================
 
-export async function createLead(values: LeadFormValues): Promise<string> {
+export async function createLead(values: any): Promise<string> {
+    const validation = validateLeadForm(values);
+    if (!validation.valid) {
+        logLeadError({ action: 'createLead', error: validation.error, metadata: values });
+        throw new Error(validation.error ?? 'Datos de lead inválidos');
+    }
+
+    // Deduplication: check existing lead by email/phone in last 30 days
+    const { data: existing } = await supabase
+        .from('leads')
+        .select('id, status, created_at, message')
+        .or(`email.eq.${values.email},phone.eq.${values.phone}`)
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (existing) {
+        logLeadWarn({ action: 'createLead', lead_id: existing.id, metadata: { deduplicated: true } });
+        // Update existing lead with new message
+        await supabase.from('leads').update({
+            message: (existing.message ?? '') + '\n\n---\n' + values.message,
+            source: values.source, // Keep original or upgrade
+            updated_at: new Date().toISOString(),
+        }).eq('id', existing.id);
+        return existing.id;
+    }
+
+    logLeadAction({ action: 'createLead', metadata: values });
     const { data, error } = await supabase
         .from('leads')
         .insert({
@@ -342,13 +426,21 @@ export async function createLead(values: LeadFormValues): Promise<string> {
     return data.id;
 }
 
-export async function updateLead(id: string, patch: LeadPatch): Promise<void> {
+export async function updateLead(id: string, patch: any): Promise<void> {
+    const validation = validateLeadPatch(patch);
+    if (!validation.valid) {
+        logLeadError({ action: 'updateLead', lead_id: id, error: validation.error });
+        throw new Error(validation.error ?? 'Datos de lead inválidos');
+    }
+
+    logLeadAction({ action: 'updateLead', lead_id: id, metadata: patch });
     const { error } = await supabase.from('leads').update(patch).eq('id', id);
 
     if (error) throw new Error(error.message);
 }
 
 export async function updateLeadStatus(id: string, status: LeadStatus): Promise<void> {
+    logLeadAction({ action: 'updateLeadStatus', lead_id: id, metadata: { status } });
     const { error } = await supabase.from('leads').update({ status }).eq('id', id);
 
     if (error) throw new Error(error.message);
@@ -359,6 +451,7 @@ export async function updateLeadStatus(id: string, status: LeadStatus): Promise<
 // ============================================================
 
 export async function softDeleteLead(id: string): Promise<void> {
+    logLeadAction({ action: 'softDeleteLead', lead_id: id });
     const { error } = await supabase
         .from('leads')
         .update({ deleted_at: new Date().toISOString() })
@@ -368,12 +461,14 @@ export async function softDeleteLead(id: string): Promise<void> {
 }
 
 export async function restoreLead(id: string): Promise<void> {
+    logLeadAction({ action: 'restoreLead', lead_id: id });
     const { error } = await supabase.from('leads').update({ deleted_at: null }).eq('id', id);
 
     if (error) throw new Error(error.message);
 }
 
 export async function permanentDeleteLead(id: string): Promise<void> {
+    logLeadAction({ action: 'permanentDeleteLead', lead_id: id });
     const { error } = await supabase.from('leads').delete().eq('id', id);
 
     if (error) throw new Error(error.message);
@@ -383,7 +478,7 @@ export async function permanentDeleteLead(id: string): Promise<void> {
 // API Functions - Assignment
 // ============================================================
 
-export async function fetchAgents(): Promise<AgentOption[]> {
+export async function fetchAgents(): Promise<any[]> {
     const { data, error } = await supabase
         .from('agents')
         .select('id, name')
@@ -392,14 +487,22 @@ export async function fetchAgents(): Promise<AgentOption[]> {
         .order('sort_order', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return (data ?? []) as AgentOption[];
+    return (data ?? []) as any[];
 }
 
-export async function getNextAgentForAssignment(): Promise<AgentOption | null> {
-    const { data, error } = await supabase
+export async function getNextAgentForAssignment(lead?: { intent: string; city?: string }): Promise<any | null> {
+    let query = supabase
         .from('agents')
-        .select('id, name, leads:leads(count)')
+        .select('id, name, specialties, leads:leads(count)')
         .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+    // Filter by specialty matching lead intent
+    if (lead?.intent) {
+        query = query.contains('specialties', [lead.intent]);
+    }
+
+    const { data, error } = await query
         .order('leads.count', { ascending: true, referencedTable: 'leads' })
         .order('sort_order', { ascending: true })
         .limit(1);
@@ -412,7 +515,13 @@ export async function getNextAgentForAssignment(): Promise<AgentOption | null> {
 export async function autoAssignLead(
     leadId: string,
 ): Promise<{ agentId: string; agentName: string } | null> {
-    const agent = await getNextAgentForAssignment();
+    const { data: lead } = await supabase
+        .from('leads')
+        .select('intent, city')
+        .eq('id', leadId)
+        .single();
+
+    const agent = await getNextAgentForAssignment(lead as any);
     if (!agent) return null;
 
     await updateLead(leadId, { assigned_to: agent.id });
@@ -442,8 +551,8 @@ export async function bulkAutoAssignLeads(
 // ============================================================
 
 export function calculateLeadScore(lead: {
-    intent: LeadIntent;
-    source: LeadSource;
+    intent: string;
+    source: string;
     message?: string | null;
     phone?: string | null;
     city?: string | null;
@@ -451,7 +560,7 @@ export function calculateLeadScore(lead: {
     let score = 0;
 
     // Intent scoring
-    const intentScores: Record<LeadIntent, number> = {
+    const intentScores: Record<string, number> = {
         comprar: 30,
         vender: 25,
         alquilar: 20,
@@ -463,7 +572,7 @@ export function calculateLeadScore(lead: {
     score += intentScores[lead.intent] ?? 5;
 
     // Source scoring
-    const sourceScores: Record<LeadSource, number> = {
+    const sourceScores: Record<string, number> = {
         landing_form: 10,
         whatsapp: 20,
         telefono: 25,
@@ -559,11 +668,11 @@ export async function setLeadTags(id: string, tags: string[]): Promise<void> {
 }
 
 // ============================================================
-// API Functions - Import
+// API Functions - Import with Deduplication
 // ============================================================
 
 export async function parseLeadsCsv(csvText: string): Promise<{
-    valid: CsvLeadRow[];
+    valid: any[];
     errors: { row: number; message: string }[];
 }> {
     const lines = csvText.trim().split('\n');
@@ -580,7 +689,7 @@ export async function parseLeadsCsv(csvText: string): Promise<{
         }
     }
 
-    const valid: CsvLeadRow[] = [];
+    const valid: any[] = [];
     const errors: { row: number; message: string }[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -595,15 +704,15 @@ export async function parseLeadsCsv(csvText: string): Promise<{
             row[h] = values[idx];
         });
 
-        const intent = row.intent as LeadIntent;
-        const source = row.source as LeadSource;
-        const status = (row.status as LeadStatus) || 'nuevo';
+        const intent = row.intent;
+        const source = row.source;
+        const status = (row.status as any) || 'nuevo';
 
-        if (!LeadIntent.includes(intent)) {
+        if (!['comprar', 'vender', 'alquilar', 'invertir', 'tasar', 'desarrollador', 'otro'].includes(intent)) {
             errors.push({ row: i, message: `Intent inválido: ${intent}` });
             continue;
         }
-        if (!LeadSource.includes(source)) {
+        if (!['landing_form', 'whatsapp', 'telefono', 'email', 'referido', 'ml_contacto', 'manual'].includes(source)) {
             errors.push({ row: i, message: `Source inválido: ${source}` });
             continue;
         }
@@ -654,7 +763,7 @@ export async function importLeadsFromCsv(csvText: string): Promise<{
     return { created: imported, errors };
 }
 
-export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{
+export async function bulkImportLeadsParsed(leads: any[]): Promise<{
     created: number;
     errors: { row: number; message: string }[];
 }> {
@@ -683,11 +792,3 @@ export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{
 
     return { created: imported, errors };
 }
-
-// ============================================================
-// Export Direct Functions (para compatibilidad)
-// ============================================================
-
-export { toLeadDetail };
-export const bulkImportLeads = importLeadsFromCsv;
-export const purgeLead = permanentDeleteLead;

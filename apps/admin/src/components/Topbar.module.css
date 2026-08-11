@@ -15,7 +15,7 @@
     gap: var(--bh-space-4);
     height: var(--bh-topbar-h);
     padding: 0 var(--bh-space-6);
-    background: rgba(8, 9, 11, 0.86);
+    background: var(--bh-bg-topbar);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--bh-border);
 }
@@ -58,6 +58,11 @@
     width: 100%;
     max-width: 480px;
     cursor: pointer;
+}
+
+/* SearchInput kit wrapper — pill radius (redesign) */
+.topbar-search-input > div {
+    border-radius: var(--bh-radius-full);
 }
 
 .topbar-search-input input {

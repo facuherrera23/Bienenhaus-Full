@@ -87,7 +87,7 @@ insert into public.site_settings (key, value, value_type, is_public, description
   ('hero_video_autoplay', '{"value": true}', 'json', true, 'Autoplay del video del Hero'),
   ('hero_video_muted', '{"value": true}', 'json', true, 'Silenciado (muted) del video del Hero'),
   ('hero_video_poster', '{"value": ""}', 'json', true, 'Poster/Imagen de portada del video del Hero')
-on conflict (key) do update set value = excluded.value, updated_at = now();
+on conflict (key, locale) do update set value = excluded.value, updated_at = now();
 
 -- ============================================================================
 -- SITE CONTENT (editable content for landing CMS)

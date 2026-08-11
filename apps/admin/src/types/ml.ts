@@ -147,3 +147,24 @@ export const ML_SYNC_STATUS_TONE: Record<MlSyncStatus, string> = {
     failed: 'danger',
     cancelled: 'neutral',
 };
+export type MlDeadLetterStatus = 'pending' | 'resolved' | 'ignored';
+
+// Fila de la cola de fallos definitivos de sync con ML.
+// Mismo shape que ml_sync_queue (de donde "caen" los items tras agotar max_attempts),
+// más los campos propios de resolución manual.
+export interface MlDeadLetterRow {
+    id: number;
+    property_id: string;
+    operation: MlOperation;
+    payload: Record<string, unknown>;
+    attempts: number;
+    max_attempts: number;
+    ml_item_id: number | null;
+    last_error: string | null;
+    status: MlDeadLetterStatus;
+    resolved_at: string | null;
+    resolved_by: string | null;
+    created_at: string;
+    property_title: string | null;
+    property_code: number | null;
+}

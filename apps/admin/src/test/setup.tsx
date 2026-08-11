@@ -1,272 +1,84 @@
-import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import React from 'preact/compat';
+import { cleanup } from '@testing-library/preact';
 
-// Create mock functions that can be controlled by tests
-export const signInWithPassword = vi
-    .fn()
-    .mockResolvedValue({ data: { user: null, session: null }, error: null });
-export const getSession = vi.fn().mockResolvedValue({ data: { session: null }, error: null });
-export const getUser = vi.fn().mockResolvedValue({ data: { user: null }, error: null });
-export const signOut = vi.fn().mockResolvedValue({ error: null });
-export const onAuthStateChange = vi.fn(() => ({
-    data: { subscription: { unsubscribe: vi.fn() } },
+// Do NOT mock preact — mocking useState/useEffect/useMemo neutralizes all hooks,
+// breaking component tests that rely on state/effects. testing-library/preact
+// works with real preact. Only mock wouter (router) and lucide-preact (icons).
+
+vi.mock('wouter', () => ({
+    useLocation: () => ['/', vi.fn()],
+    useRoute: () => [null, {}],
+    Link: ({ children, href }: { children: any; href: string }) => <a href={href}>{children}</a>,
+    Switch: ({ children }: { children: any }) => children,
+    Route: ({ component }: { component: any }) => component({}),
 }));
+
+vi.mock('lucide-preact', () => ({
+    // Export all lucide icons as simple components
+    ...Object.fromEntries([
+        'Search', 'Plus', 'X', 'Trash2', 'Edit', 'Eye', 'Download', 'Upload',
+        'ChevronLeft', 'ChevronRight', 'ChevronDown', 'Calendar', 'Users',
+        'MessageSquare', 'Building2', 'LayoutDashboard', 'Mail', 'ShoppingBag',
+        'Globe', 'Settings', 'Shield', 'UserRound', 'UserCheck', 'ClipboardList',
+        'FileText', 'Calculator', 'Home', 'MapPin', 'Star', 'Loader2', 'CheckCircle',
+        'Clock', 'DollarSign', 'File', 'FileText', 'Image', 'Key', 'TrendingUp',
+        'Minus', 'TrendingDown',
+        'MoreHorizontal', 'ArrowRight', 'Filter', 'Download', 'Kanban', 'List',
+        'AlertTriangle', 'UserPlus', 'Copy', 'Move', 'QrCode', 'WhatsAppIcon',
+        'FacebookIcon', 'InstagramIcon', 'LinkedinIcon',
+    ].map(name => [name, ({ children, ...props }: any) => <svg {...props} data-testid={name.toLowerCase()}>{children}</svg>])),
+}));
+
+// Re-exported so tests can do `(from as Mock).mockReturnValue(chain)` to
+// control what supabase.from('table') returns. The createClient mock below
+// references THIS from, keeping both in sync.
 export const from = vi.fn(() => ({
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnThis(),
-    gt: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    lt: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    like: vi.fn().mockReturnThis(),
-    ilike: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     range: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: null, error: null }),
     maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    returns: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
     upsert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    returns: vi.fn().mockResolvedValue({ data: null, error: null }),
 }));
 
-// Mock Supabase client
 vi.mock('@supabase/supabase-js', () => ({
     createClient: vi.fn(() => ({
         from,
+        rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
         auth: {
-            getUser,
-            getSession,
-            onAuthStateChange,
-            signInWithPassword,
-            signOut,
+            getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+            getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+            admin: {
+                generateLink: vi.fn().mockResolvedValue({ data: { properties: { action_link: 'https://test.com' } }, error: null }),
+            },
         },
         storage: {
             from: vi.fn(() => ({
                 upload: vi.fn().mockResolvedValue({ data: { path: 'test' }, error: null }),
+                download: vi.fn().mockResolvedValue({ data: new Blob(), error: null }),
                 remove: vi.fn().mockResolvedValue({ error: null }),
-                getPublicUrl: vi.fn(() => ({
-                    data: { publicUrl: 'https://example.com/test.jpg' },
-                })),
-                list: vi.fn().mockResolvedValue({ data: [], error: null }),
+                getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://test.com/img.jpg' } })),
+                createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'https://test.com/signed' } }),
             })),
         },
-        channel: vi.fn(() => ({
-            on: vi.fn().mockReturnThis(),
-            subscribe: vi.fn(),
-            unsubscribe: vi.fn(),
-        })),
-        removeChannel: vi.fn(),
     })),
 }));
 
-vi.mock('wouter-preact', () => ({
-    useLocation: () => ['/', vi.fn()],
-    useRoute: () => [null, {}],
-    Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
-        <a href={href}>{children}</a>
-    ),
-    Switch: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    Route: ({
-        component: Component,
-        ...props
-    }: {
-        component: React.ComponentType<any>;
-        [key: string]: any;
-    }) => <Component {...props} />,
-}));
-
-vi.mock('@tanstack/react-query', async () => {
-    const actual = await vi.importActual('@tanstack/react-query');
-    return {
-        ...actual,
-        useQuery: vi.fn(() => ({
-            data: undefined,
-            isLoading: false,
-            isError: false,
-            isSuccess: false,
-            error: null,
-            refetch: vi.fn(),
-        })),
-        useMutation: vi.fn(() => ({
-            mutate: vi.fn(),
-            mutateAsync: vi.fn(),
-            isLoading: false,
-            isError: false,
-            isSuccess: false,
-            error: null,
-        })),
-        useQueryClient: vi.fn(() => ({
-            invalidateQueries: vi.fn(),
-            setQueryData: vi.fn(),
-            getQueryData: vi.fn(),
-        })),
-    };
+afterEach(() => {
+    cleanup();
 });
-
-vi.mock('@preact/signals', () => {
-    const makeSignal = (initial: unknown) => {
-        let value = initial;
-        return {
-            get value() {
-                return value;
-            },
-            set value(v: unknown) {
-                value = v;
-            },
-        };
-    };
-    return {
-        signal: makeSignal,
-        computed: (fn: () => unknown) => makeSignal(fn()),
-        effect: vi.fn(),
-    };
-});
-
-vi.mock('lucide-preact', () => {
-    const icons = [
-        'Activity',
-        'AlertCircle',
-        'ArrowLeft',
-        'ArrowUpRight',
-        'BarChart2',
-        'Building2',
-        'Calendar',
-        'Check',
-        'CheckCircle',
-        'ChevronDown',
-        'Clock',
-        'DollarSign',
-        'Download',
-        'Edit',
-        'FileText',
-        'Filter',
-        'Globe',
-        'Home',
-        'LayoutDashboard',
-        'Loader2',
-        'Mail',
-        'MapPin',
-        'MessageSquare',
-        'MoreVertical',
-        'Phone',
-        'Plus',
-        'RotateCcw',
-        'Save',
-        'Search',
-        'Send',
-        'Settings',
-        'Shield',
-        'ShoppingBag',
-        'Target',
-        'TrendingDown',
-        'TrendingUp',
-        'Trash2',
-        'User',
-        'UserCheck',
-        'UserPlus',
-        'UserRound',
-        'Users',
-        'X',
-        'XCircle',
-        // FASE 3 (Shell/Sidebar/Topbar)
-        'Menu',
-        'LogOut',
-        'Bell',
-        'BellRing',
-        'ChevronRight',
-        'ChevronUp',
-        'ChevronLeft',
-        'ClipboardList',
-        'HelpCircle',
-        'Bookmark',
-        'KeyRound',
-        'UserCog',
-        'Command',
-        'Sparkles',
-        'Wrench',
-        'AlertTriangle',
-        'CheckCircle2',
-        'Info',
-        'ExternalLink',
-        'RefreshCw',
-        'Inbox',
-        'Archive',
-        'Clock',
-        'ListChecks',
-        'LogIn',
-        'Database',
-        'Layers',
-        'Package',
-        'BarChart3',
-        'PieChart',
-        'LineChart',
-        'Table2',
-        'Eye',
-        'EyeOff',
-        'MoreHorizontal',
-        'Copy',
-        'Upload',
-        'CalendarDays',
-        'PanelLeft',
-        'PanelLeftClose',
-        'PanelLeftOpen',
-        'MessageCircle',
-        'PhoneCall',
-        'Star',
-        'ShieldCheck',
-        'FilePlus',
-        'FileEdit',
-        'FolderOpen',
-        'LayoutGrid',
-        'SlidersHorizontal',
-        'Settings2',
-        'SearchX',
-        'CircleHelp',
-        'UserX',
-        'Wallet',
-        'Tag',
-        'Store',
-        'Webhook',
-        'GitBranch',
-        'Link2',
-        'CreditCard',
-        'Truck',
-        'House',
-        'DoorOpen',
-        'BadgeCheck',
-        'CircleAlert',
-        // FASE 3 nav (Sidebar) + tema (Avatar dropdown) + notificaciones
-        'Building2',
-        'Calendar',
-        'Sun',
-        'Moon',
-        'Monitor',
-        'CheckCheck',
-        'Calculator',
-        // owners: MARKET_TREND_ICON (owners.ts)
-        'Minus',
-    ];
-    const mockIcons: Record<string, unknown> = {};
-    icons.forEach((name) => {
-        mockIcons[name] = (props: Record<string, unknown>) => {
-            const safeProps = props ?? {};
-            return React.createElement('svg', { 'data-testid': `icon-${name}`, ...safeProps });
-        };
-    });
-    return mockIcons;
-});
-
-global.React = React;
-
-declare global {
-    var React: typeof import('preact/compat');
-}
-
-global.React = React;

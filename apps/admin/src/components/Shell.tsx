@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { Calendar, Plus, Settings, ShoppingBag, UserRound, Users } from 'lucide-preact';
-import { commandPaletteOpen, mobileMenuOpen } from '../store/app';
+import { commandPaletteOpen, mobileMenuOpen, sidebarCollapsed } from '../store/app';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { BreadcrumbNav } from './Breadcrumb';
@@ -118,7 +118,10 @@ export function Shell({ children }: { children: ComponentChildren }) {
                 aria-hidden={!mobileMenuOpen.value}
                 data-testid="sidebar-scrim"
             />
-            <div className={styles['shell-main']} data-testid="shell-main">
+            <div
+                className={`${styles['shell-main']}${sidebarCollapsed.value ? ` ${styles['is-collapsed']}` : ''}`}
+                data-testid="shell-main"
+            >
                 <Topbar />
                 <div className={styles['breadcrumb-row']} data-testid="breadcrumb-row">
                     <BreadcrumbNav />

@@ -1,156 +1,201 @@
-import { useEffect, useState } from 'preact/hooks';
-import { useCountUp } from '../hooks/useCountUp';
-import { useReveal } from '../hooks/useReveal';
-import { textOf, useSiteContent } from '../lib/content';
-import { ArrowRight, Building2, Clock, Gem, Shield, Users } from 'lucide-preact';
-import styles from '../styles/modules/Stats.module.css';
+// apps/landing/src/components/Stats.tsx
+import { useRef, useEffect } from 'preact/hooks';
+import { 
+  useScrollAnimation, 
+  useCountUp, 
+  useParallax,
+  useTilt 
+} from '@/lib/motion';
+import styles from './Stats.module.css';
 
-interface Stat {
-    target: number;
-    suffix: string;
-    icon: string;
-    title: string;
-    desc: string;
+interface StatItem {
+  id: number;
+  icon: string;
+  number: number;
+  suffix?: string;
+  title: string;
+  description: string;
+  featured?: boolean;
 }
 
-function buildStats(settingsStats: Record<string, unknown>): Stat[] {
-    const n = (key: string, fallback: number) =>
-        typeof settingsStats[key] === 'number' ? (settingsStats[key] as number) : fallback;
-    return [
-        {
-            target: n('comercializadas', 320),
-            suffix: '+',
-            icon: 'fa-building',
-            title: 'Propiedades comercializadas',
-            desc: 'Más de trescientas operaciones exitosas concretadas.',
-        },
-        {
-            target: n('clientes', 1850),
-            suffix: '+',
-            icon: 'fa-users',
-            title: 'Clientes satisfechos',
-            desc: 'Personas que confiaron en nuestro equipo.',
-        },
-        {
-            target: n('exito', 98),
-            suffix: '%',
-            icon: 'fa-shield-alt',
-            title: 'Operaciones exitosas',
-            desc: 'Resultados respaldados por experiencia y compromiso.',
-        },
-        {
-            target: n('anios', 15),
-            suffix: ' años',
-            icon: 'fa-clock',
-            title: 'Construyendo confianza',
-            desc: 'Trayectoria acompañando a compradores e inversores.',
-        },
-    ];
-}
-
-function getLucideIcon(name: string) {
-    const iconMap: Record<string, any> = {
-        'fa-building': Building2,
-        'fa-users': Users,
-        'fa-shield-alt': Shield,
-        'fa-clock': Clock,
-    };
-    return iconMap[name] || Building2;
-}
-
-function StatCard({ stat, started, delay }: { stat: Stat; started: boolean; delay: number }) {
-    const value = useCountUp(stat.target, started);
-    const StatIcon = getLucideIcon(stat.icon);
-    return (
-        <div className={`${styles.statCard} ${styles.visible}`} data-delay={delay}>
-            <div className={styles.statCardContent}>
-                <div className={styles.statCardIcon} aria-hidden="true">
-                    <StatIcon className={styles.icon} aria-hidden="true" />
-                </div>
-                <div className={styles.statCardNumber}>
-                    <span className={styles.statNumberValue}>{value}</span>
-                    <span className={styles.accentSymbol}>{stat.suffix}</span>
-                </div>
-                <h3 className={styles.statCardTitle}>{stat.title}</h3>
-                <p className={styles.statCardDesc}>{stat.desc}</p>
-            </div>
-        </div>
-    );
-}
+const statsData: StatItem[] = [
+  {
+    id: 1,
+    icon: '🏡',
+    number: 320,
+    suffix: '+',
+    title: 'Propiedades',
+    description: 'En cartera exclusiva con los mejores estándares de calidad.',
+    featured: true,
+  },
+  {
+    id: 2,
+    icon: '👥',
+    number: 150,
+    suffix: '+',
+    title: 'Clientes',
+    description: 'Satisfechos que confían en nuestro servicio premium.',
+  },
+  {
+    id: 3,
+    icon: '⭐',
+    number: 98,
+    suffix: '%',
+    title: 'Satisfacción',
+    description: 'Nuestros clientes nos recomiendan y vuelven a confiar en nosotros.',
+  },
+  {
+    id: 4,
+    icon: '📅',
+    number: 6,
+    suffix: '+',
+    title: 'Años de Experiencia',
+    description: 'Construyendo relaciones y proyectos con excelencia.',
+  },
+];
 
 export function Stats() {
-    const rootRef = useReveal<HTMLElement>('.stat-card', {
-        threshold: 0.15,
-        rootMargin: '0px 0px -50px 0px',
-    });
-    const [started, setStarted] = useState(false);
-    const { content, settings } = useSiteContent();
+  // Scroll reveal para el header
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
+    threshold: 0.2,
+    once: true,
+  });
 
-    const section = content.estadisticas ?? {};
-    const label = textOf(section.label, 'text', 'Nuestra trayectoria');
-    const title = textOf(section.title, 'text', 'Los números hablan por nosotros.');
-    const description = textOf(
-        section.description,
-        'text',
-        'Cada operación representa una historia, una familia y un compromiso cumplido. Estos resultados reflejan el trabajo de un equipo dedicado a ofrecer experiencias inmobiliarias excepcionales.',
-    );
+  // Scroll reveal para el grid
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({
+    threshold: 0.1,
+    once: true,
+  });
 
-    const stats = buildStats(settings.stats ?? {});
+  // Parallax para el fondo
+  const { ref: parallaxRef, style: parallaxStyle } = useParallax({
+    speed: 0.1,
+    direction: 'vertical',
+    relativeToViewport: true,
+  });
 
-    useEffect(() => {
-        const root = rootRef.current;
-        if (!root) return;
-        const first = root.querySelector('.stat-card');
-        if (!first) return;
+  return (
+    <section className={styles.statsPremium} ref={parallaxRef}>
+      {/* Fondo decorativo con parallax */}
+      <div className={styles.statsBg} style={parallaxStyle} aria-hidden="true" />
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setTimeout(() => setStarted(true), 600);
-                        observer.disconnect();
-                    }
-                });
-            },
-            { threshold: 0.15, rootMargin: '0px 0px -50px 0px' },
-        );
-        observer.observe(first);
-        return () => observer.disconnect();
-    }, [rootRef]);
-
-    return (
-        <section
-            className={styles.statsPremium}
-            id="estadisticas"
-            aria-label="Nuestras estadísticas"
-            ref={rootRef}
+      <div className="container">
+        {/* Header */}
+        <div 
+          className={`${styles.statsHeader} ${headerVisible ? styles.visible : ''}`}
+          ref={headerRef}
         >
-            <div className="container">
-                <header className={styles.statsHeader}>
-                    <span className={styles.statsLabel}>{label}</span>
-                    <h2 className={styles.statsTitle}>{title}</h2>
-                    <p className={styles.statsDesc}>{description}</p>
-                </header>
-                <div className={styles.statsGrid} id="statsGrid">
-                    {stats.map((stat, i) => (
-                        <StatCard key={stat.title} stat={stat} started={started} delay={i * 120} />
-                    ))}
-                </div>
-                <div className={styles.statsCta} id="statsCta">
-                    <div className={styles.statsCtaIcon}>
-                        <Gem className={styles.icon} aria-hidden="true" />
-                        <span>Más que cifras</span>
-                    </div>
-                    <div className={styles.statsCtaText}>
-                        Construimos relaciones duraderas basadas en confianza, transparencia y
-                        resultados.
-                    </div>
-                    <button className={styles.btnStats}>
-                        VER NUESTRAS PROPIEDADES{' '}
-                        <ArrowRight className={styles.icon} aria-hidden="true" />
-                    </button>
-                </div>
-            </div>
-        </section>
-    );
+          <span className={styles.statsLabel}>Estadísticas</span>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.highlight}>Números</span> que hablan
+          </h2>
+          <p className={styles.statsDesc}>
+            La confianza de nuestros clientes y los resultados obtenidos
+            respaldan nuestro compromiso con la excelencia.
+          </p>
+        </div>
+
+        {/* Grid de estadísticas */}
+        <div 
+          className={`${styles.statsGrid} ${gridVisible ? styles.visible : ''}`}
+          ref={gridRef}
+        >
+          {statsData.map((stat, index) => (
+            <StatCard key={stat.id} stat={stat} index={index} isGridVisible={gridVisible} />
+          ))}
+        </div>
+
+        {/* CTA Inferior */}
+        <div 
+          className={`${styles.statsCta} ${gridVisible ? styles.visible : ''}`}
+        >
+          <div className={styles.statsCtaIcon}>
+            <span>🏆</span>
+            <span>Líderes en el mercado</span>
+          </div>
+          <p className={styles.statsCtaText}>
+            Unimos experiencia, innovación y compromiso para ofrecerte el mejor servicio inmobiliario.
+          </p>
+          <button className={styles.btnStats}>
+            Conocé más
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Componente individual de Stat Card
+function StatCard({ 
+  stat, 
+  index, 
+  isGridVisible 
+}: { 
+  stat: StatItem; 
+  index: number; 
+  isGridVisible: boolean;
+}) {
+  // Tilt 3D para la card
+  const { ref, style: tiltStyle } = useTilt({
+    maxAngle: 8,
+    transitionSpeed: 300,
+    glow: true,
+    glowIntensity: 0.3,
+  });
+
+  // Scroll reveal individual
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+    threshold: 0.15,
+    once: true,
+    delay: index * 150,
+  });
+
+  // Count-up animado (se activa cuando el grid es visible)
+  const countUp = useCountUp(stat.number, {
+    duration: 2000 + (index * 200), // Cada card dura un poco más
+    start: isGridVisible,
+    easing: easeOutExpo,
+  });
+
+  return (
+    <article 
+      className={`${styles.statCard} ${cardVisible ? styles.visible : ''} ${stat.featured ? styles.featured : ''}`}
+      ref={(el) => {
+        if (el) {
+          ref.current = el;
+          cardRef.current = el;
+        }
+      }}
+      style={tiltStyle}
+    >
+      <div className={styles.statCardContent}>
+        <div className={styles.statCardIcon}>{stat.icon}</div>
+        <div className={styles.statCardNumber}>
+          {countUp.value}
+          {stat.suffix && <span className={styles.accentSymbol}>{stat.suffix}</span>}
+        </div>
+        <h3 className={styles.statCardTitle}>{stat.title}</h3>
+        <p className={styles.statCardDesc}>{stat.description}</p>
+      </div>
+
+      {/* Efecto de glow que sigue al mouse */}
+      <div 
+        className={styles.cardGlow}
+        style={{
+          '--mouse-x': '50%',
+          '--mouse-y': '50%',
+        }}
+        aria-hidden="true"
+      />
+    </article>
+  );
+}
+
+// Función de easing personalizada para el count-up
+function easeOutExpo(t: number): number {
+  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
 }

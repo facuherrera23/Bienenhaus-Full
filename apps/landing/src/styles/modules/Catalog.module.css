@@ -1,13 +1,17 @@
-/**
- * Catalog Module Styles
- * Extracted from landing.css lines 800-1330
- * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
- */
+/* apps/landing/src/styles/modules/Catalog.module.css */
+
+/* ============================================================
+   CATALOG — Sección de propiedades
+   ============================================================ */
 
 .catalog {
     padding-top: calc(var(--navbar-height) + 80px);
-    padding-bottom: 80px;
+    padding-bottom: var(--bh-space-20);
 }
+
+/* ============================================================
+   HEADER — Con scroll reveal
+   ============================================================ */
 
 .catalogHeader {
     display: grid;
@@ -15,6 +19,14 @@
     gap: var(--bh-space-10);
     align-items: start;
     margin-bottom: var(--bh-space-15);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--bh-ease-premium);
+}
+
+.catalogHeader.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .catalogHeaderLeft {
@@ -22,13 +34,29 @@
 }
 
 .catalogLabel {
-    font-size: var(--bh-text-md);
+    font-size: var(--bh-text-sm);
     font-weight: var(--bh-weight-semibold);
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--bh-accent);
-    display: block;
+    display: inline-block;
     margin-bottom: var(--bh-space-4);
+    position: relative;
+}
+
+.catalogLabel::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--bh-accent);
+    transition: width 0.6s ease 0.4s;
+}
+
+.catalogHeader.visible .catalogLabel::after {
+    width: 40px;
 }
 
 .catalogTitle {
@@ -71,11 +99,25 @@
     align-items: center;
     gap: var(--bh-space-3);
     font-family: var(--bh-font-sans);
+    position: relative;
+    overflow: hidden;
+}
+
+.btnOutline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btnOutline:hover::after {
+    transform: translateX(100%);
 }
 
 .btnOutline svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
-    font-size: var(--bh-text-md);
 }
 
 .btnOutline:hover {
@@ -88,6 +130,10 @@
 .btnOutline:hover svg {
     transform: translateX(4px);
 }
+
+/* ============================================================
+   SEARCH BAR — Con glow expansivo
+   ============================================================ */
 
 .searchBar {
     background: rgba(20, 20, 20, 0.55);
@@ -161,13 +207,12 @@
 
 .searchInputWrapper input:focus {
     border-color: var(--bh-accent);
-    box-shadow:
-        0 0 20px var(--bh-accent-glow-soft),
-        inset 0 0 20px rgba(32, 184, 171, 0.03);
+    box-shadow: 
+        0 0 30px var(--bh-accent-glow-soft),
+        inset 0 0 30px rgba(32, 184, 171, 0.03);
 }
 
-.searchInputWrapper input:focus + svg,
-.searchInputWrapper input:focus ~ svg {
+.searchInputWrapper input:focus + svg {
     color: var(--bh-accent);
 }
 
@@ -260,34 +305,37 @@
     cursor: pointer;
 }
 
+.btnSearch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.15) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btnSearch:hover::after {
+    transform: translateX(100%);
+}
+
 .btnSearch svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
 }
 
 .btnSearch:hover {
     transform: scale(1.04);
-    box-shadow: var(--bh-shadow-glow-lg);
+    box-shadow: 
+        0 0 40px var(--bh-accent-glow-soft),
+        0 0 80px rgba(32, 184, 171, 0.05);
 }
 
 .btnSearch:hover svg {
     transform: translateX(4px);
 }
 
-.ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(0);
-    animation: rippleAnim 600ms ease-out forwards;
-    pointer-events: none;
-}
-
-@keyframes rippleAnim {
-    to {
-        transform: scale(4);
-        opacity: 0;
-    }
-}
+/* ============================================================
+   FILTERS SECTION
+   ============================================================ */
 
 .filtersSection {
     display: flex;
@@ -346,81 +394,6 @@
     font-weight: var(--bh-weight-normal);
 }
 
-.dropdownWrapper {
-    position: relative;
-}
-
-.dropdownTrigger {
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-full);
-    color: var(--bh-text-primary);
-    font-size: var(--bh-text-sm);
-    font-weight: var(--bh-weight-medium);
-    font-family: var(--bh-font-sans);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--bh-space-2);
-    transition: all var(--bh-dur-med) var(--bh-ease-premium);
-    cursor: pointer;
-    min-width: 160px;
-}
-
-.dropdownTrigger:hover {
-    border-color: var(--bh-accent);
-}
-
-.dropdownTrigger svg {
-    font-size: var(--bh-text-xs);
-    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
-}
-
-.dropdownTrigger.open svg {
-    transform: rotate(180deg);
-}
-
-.dropdownMenu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    min-width: 200px;
-    background: var(--bh-bg-secondary);
-    border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-xl);
-    padding: var(--bh-space-2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px) scale(0.96);
-    transition: all var(--bh-dur-med) var(--bh-ease-premium);
-    z-index: var(--bh-z-dropdown);
-    box-shadow: var(--bh-shadow-xl);
-}
-
-.dropdownMenu.open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-}
-
-.dropdownMenu li {
-    padding: 10px 16px;
-    border-radius: var(--bh-radius-md);
-    color: var(--bh-text-secondary);
-    font-size: var(--bh-text-md);
-    font-weight: var(--bh-weight-normal);
-    cursor: pointer;
-    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
-    list-style: none;
-}
-
-.dropdownMenu li:hover {
-    background: rgba(32, 184, 171, 0.08);
-    color: var(--bh-text-primary);
-}
-
 .viewToggles {
     display: flex;
     gap: var(--bh-space-1);
@@ -452,106 +425,44 @@
     color: var(--bh-accent);
 }
 
-/* Catalog Grid & Cards */
+/* ============================================================
+   PROPERTY GRID — Con stagger reveal
+   ============================================================ */
+
 .catalogGrid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--bh-space-9);
+    gap: var(--bh-space-7);
 }
 
-.catalogEmpty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--bh-space-3);
-    padding: var(--bh-space-16) var(--bh-space-5);
-    text-align: center;
-    color: var(--bh-text-tertiary);
+.catalogGrid.visible .propertyCard {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-.catalogEmpty svg {
-    font-size: 36px;
-    color: var(--bh-text-tertiary);
-    opacity: 0.7;
-}
-
-.catalogEmpty p {
-    font-size: var(--bh-text-md);
-    color: var(--bh-text-secondary);
-}
-
-/* Load More */
-.loadMoreWrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--bh-space-3);
-    padding: var(--bh-space-10) var(--bh-space-5) var(--bh-space-5);
-}
-
-.btnLoadMore {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--bh-space-2);
-    padding: 16px 40px;
-    font-size: var(--bh-text-sm);
-    font-weight: var(--bh-weight-bold);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--bh-text-primary);
-    background: transparent;
-    border: 2px solid var(--bh-border);
-    border-radius: var(--bh-radius-full);
-    cursor: pointer;
-    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
-}
-
-.btnLoadMore:hover {
-    border-color: var(--bh-accent);
-    color: var(--bh-accent);
-    background: var(--bh-accent-soft);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(31, 200, 195, 0.15);
-}
-
-.btnLoadMore:focus-visible {
-    outline: 2px solid var(--bh-accent);
-    outline-offset: 3px;
-}
-
-.btnLoadMore svg {
-    font-size: var(--bh-text-xs);
-    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
-}
-
-.btnLoadMore:hover svg {
-    transform: translateY(3px);
-}
-
-.loadMoreHint {
-    font-size: var(--bh-text-sm);
-    color: var(--bh-text-tertiary);
-}
-
-.cardOperation {
-    display: inline-block;
-    font-size: var(--bh-text-xs);
-    font-weight: var(--bh-weight-bold);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--bh-accent);
-    margin-bottom: var(--bh-space-1);
-}
+/* ============================================================
+   PROPERTY CARD — Con tilt, glow y animaciones
+   ============================================================ */
 
 .propertyCard {
     background: var(--bh-bg-card);
     border-radius: var(--bh-radius-3xl);
     overflow: hidden;
     border: 1px solid var(--bh-border);
-    transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
     opacity: 0;
     transform: translateY(40px);
+    transform-style: preserve-3d;
+    will-change: transform;
 }
+
+/* Stagger delays para cada card */
+.propertyCard:nth-child(1) { transition-delay: 0ms; }
+.propertyCard:nth-child(2) { transition-delay: 100ms; }
+.propertyCard:nth-child(3) { transition-delay: 200ms; }
+.propertyCard:nth-child(4) { transition-delay: 300ms; }
+.propertyCard:nth-child(5) { transition-delay: 400ms; }
+.propertyCard:nth-child(6) { transition-delay: 500ms; }
 
 .propertyCard.visible {
     opacity: 1;
@@ -559,10 +470,45 @@
 }
 
 .propertyCard:hover {
-    transform: translateY(-8px) scale(1.01);
+    transform: translateY(-8px) scale(1.02);
     border-color: var(--bh-accent);
-    box-shadow: var(--bh-shadow-glow-lg);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 40px var(--bh-accent-glow-soft);
 }
+
+.cardInner {
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================================
+   GLOW DINÁMICO — Sigue al mouse
+   ============================================================ */
+
+.cardGlow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(31, 200, 195, 0.06) 0%,
+        rgba(31, 200, 195, 0.02) 30%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: var(--bh-radius-3xl);
+}
+
+.propertyCard:hover .cardGlow {
+    opacity: 1;
+}
+
+/* ============================================================
+   CARD IMAGE — Con zoom
+   ============================================================ */
 
 .cardImageWrapper {
     position: relative;
@@ -576,6 +522,7 @@
     height: 100%;
     object-fit: cover;
     transition: transform var(--bh-dur-xslow) var(--bh-ease-premium);
+    will-change: transform;
 }
 
 .propertyCard:hover .cardImageWrapper img {
@@ -588,6 +535,10 @@
     background: linear-gradient(to bottom, transparent 40%, rgba(5, 7, 8, 0.6) 100%);
     pointer-events: none;
 }
+
+/* ============================================================
+   BADGE — Con pulse glow
+   ============================================================ */
 
 .cardBadge {
     position: absolute;
@@ -603,7 +554,21 @@
     text-transform: uppercase;
     box-shadow: 0 0 30px var(--bh-accent-glow-soft);
     backdrop-filter: blur(4px);
+    animation: pulseGlow 2s ease-in-out infinite;
 }
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+    }
+    50% {
+        box-shadow: 0 0 40px var(--bh-accent-glow-soft), 0 0 80px rgba(31, 200, 195, 0.1);
+    }
+}
+
+/* ============================================================
+   FAVORITE BUTTON — Con heart burst
+   ============================================================ */
 
 .cardFavorite {
     position: absolute;
@@ -623,6 +588,7 @@
     font-size: var(--bh-text-lg);
     transition: all var(--bh-dur-med) var(--bh-ease-premium);
     cursor: pointer;
+    z-index: 2;
 }
 
 .cardFavorite:hover {
@@ -634,14 +600,42 @@
 
 .cardFavorite.liked {
     color: var(--bh-danger);
+    animation: heartBurst 0.6s var(--bh-ease-premium);
 }
 
-.cardFavorite.liked svg {
-    font-weight: 900;
+@keyframes heartBurst {
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.6);
+        box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
+    }
+    60% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
+
+/* ============================================================
+   CARD CONTENT
+   ============================================================ */
 
 .cardBody {
     padding: var(--bh-space-6) var(--bh-space-6) var(--bh-space-7);
+    transform: translateZ(20px);
+}
+
+.cardOperation {
+    display: inline-block;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-bold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--bh-accent);
+    margin-bottom: var(--bh-space-1);
 }
 
 .cardPrice {
@@ -731,9 +725,10 @@
     bottom: 0;
     left: 0;
     width: 0;
-    height: 1.5px;
+    height: 2px;
     background: var(--bh-accent);
     transition: width var(--bh-dur-med) var(--bh-ease-premium);
+    border-radius: 2px;
 }
 
 .btnCard:hover {
@@ -746,66 +741,118 @@
 
 .btnCard svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
-    font-size: var(--bh-text-xs);
 }
 
 .btnCard:hover svg {
     transform: translateX(4px);
 }
 
-/* Skeleton */
-.skeletonGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--bh-space-9);
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.catalogEmpty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-16) var(--bh-space-5);
+    text-align: center;
+    color: var(--bh-text-tertiary);
 }
 
-.skeletonCard {
-    background: var(--bh-bg-card);
-    border-radius: var(--bh-radius-3xl);
+.catalogEmpty svg {
+    font-size: 48px;
+    color: var(--bh-text-tertiary);
+    opacity: 0.7;
+}
+
+.catalogEmpty p {
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-secondary);
+}
+
+/* ============================================================
+   LOAD MORE — Con ripple
+   ============================================================ */
+
+.loadMoreWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-10) var(--bh-space-5) var(--bh-space-5);
+}
+
+.btnLoadMore {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    padding: 16px 40px;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-bold);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--bh-text-primary);
+    background: transparent;
+    border: 2px solid var(--bh-border);
+    border-radius: var(--bh-radius-full);
+    cursor: pointer;
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    position: relative;
     overflow: hidden;
-    border: 1px solid var(--bh-border);
 }
 
-.skeletonImage {
-    aspect-ratio: 16/10;
-    background: var(--bh-bg-secondary);
+.btnLoadMore::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
 }
 
-.skeletonBody {
-    padding: var(--bh-space-6);
+.btnLoadMore:hover::after {
+    transform: translateX(100%);
 }
 
-.skeletonLine {
-    background: var(--bh-bg-secondary);
-    border-radius: var(--bh-radius-sm);
-    height: 14px;
+.btnLoadMore:hover {
+    border-color: var(--bh-accent);
+    color: var(--bh-accent);
+    background: rgba(31, 200, 195, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(31, 200, 195, 0.15);
 }
 
-.shimmer {
-    background: linear-gradient(
-        90deg,
-        var(--bh-bg-secondary) 25%,
-        var(--bh-bg-card) 50%,
-        var(--bh-bg-secondary) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+.btnLoadMore:focus-visible {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: 3px;
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+.btnLoadMore svg {
+    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
-/* Responsive */
+.btnLoadMore:hover svg {
+    transform: translateY(3px);
+}
+
+.loadMoreHint {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 1280px) {
+    .catalogTitle {
+        font-size: var(--bh-text-5xl);
+    }
     .catalogGrid {
-        gap: var(--bh-space-7);
+        gap: var(--bh-space-6);
     }
 }
 
@@ -828,7 +875,7 @@
         gap: var(--bh-space-6);
     }
     .catalogTitle {
-        font-size: var(--bh-text-5xl);
+        font-size: var(--bh-text-4xl);
     }
     .catalogHeader {
         grid-template-columns: 1fr;
@@ -836,20 +883,6 @@
     }
     .catalogHeaderRight {
         padding-top: 0;
-    }
-    .filtersPills {
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        padding-bottom: var(--bh-space-2);
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
-    }
-    .filterPill {
-        scroll-snap-align: start;
-        flex-shrink: 0;
-    }
-    .skeletonGrid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -859,7 +892,7 @@
         padding-bottom: var(--bh-space-15);
     }
     .catalogTitle {
-        font-size: var(--bh-text-4xl);
+        font-size: var(--bh-text-3xl);
     }
     .catalogDesc {
         font-size: var(--bh-text-md);
@@ -894,11 +927,6 @@
     .resultsCount {
         font-size: var(--bh-text-sm);
     }
-    .dropdownTrigger {
-        min-width: 140px;
-        font-size: var(--bh-text-xs);
-        padding: 8px 16px;
-    }
     .viewToggles {
         padding: var(--bh-space-1);
     }
@@ -907,10 +935,6 @@
         font-size: var(--bh-text-sm);
     }
     .catalogGrid {
-        grid-template-columns: 1fr;
-        gap: var(--bh-space-5);
-    }
-    .skeletonGrid {
         grid-template-columns: 1fr;
         gap: var(--bh-space-5);
     }
@@ -932,5 +956,34 @@
     }
     .cardFeatures li {
         font-size: var(--bh-text-xs);
+    }
+    .cardFavorite {
+        width: 36px;
+        height: 36px;
+        font-size: var(--bh-text-md);
+    }
+}
+
+@media (max-width: 390px) {
+    .catalogTitle {
+        font-size: var(--bh-text-2xl);
+    }
+    .cardPrice {
+        font-size: 22px;
+    }
+    .cardTitle {
+        font-size: var(--bh-text-md);
+    }
+    .cardBody {
+        padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-4);
+    }
+    .pill {
+        padding: 4px 10px;
+        font-size: var(--bh-text-xs);
+        min-width: 30px;
+    }
+    .btnSearch {
+        font-size: var(--bh-text-xs);
+        height: 42px;
     }
 }

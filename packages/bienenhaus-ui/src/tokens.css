@@ -25,6 +25,8 @@
     /* Admin-specific surface aliases */
     --bh-bg-app: var(--bh-bg-primary);
     --bh-bg-sidebar: var(--bh-bg-secondary);
+    --bh-bg-topbar: rgba(8, 9, 11, 0.86); /* Topbar translucent scrim over content */
+    --bh-bg-media: rgba(10, 13, 16, 0.85); /* Media placeholder/gallery backdrop */
 
     /* ---- Borders ---- */
     --bh-border: rgba(255, 255, 255, 0.06); /* Default card/divider borders */
@@ -36,6 +38,7 @@
     --bh-accent: #1fc8c3; /* Primary accent: CTAs, links, focus, badges */
     --bh-accent-hover: #2dddd5; /* Hover state for accent elements */
     --bh-accent-soft: rgba(31, 200, 195, 0.12); /* Subtle accent backgrounds */
+    --bh-accent-deep: #0f8577; /* Gradient depth end (logo, hero panels) */
     --bh-accent-glow: #56e7de; /* Glow color for shadows */
     --bh-accent-glow-soft: rgba(31, 200, 195, 0.15); /* Subtle glow shadows */
 
@@ -44,6 +47,7 @@
     --bh-text-secondary: #bfc6cc; /* Descriptions, meta, secondary info */
     --bh-text-tertiary: #8a949c; /* Captions, placeholders, disabled, muted */
     --bh-text-disabled: #5b646b; /* Explicit disabled text */
+    --bh-white: #ffffff; /* Text on accent/solid surfaces, light surfaces */
 
     /* ---- Status Colors ---- */
     --bh-success: #4ade80; /* Success states, confirmations */
@@ -52,8 +56,14 @@
     --bh-warning-soft: rgba(250, 204, 21, 0.12);
     --bh-danger: #f87171; /* Errors, destructive actions */
     --bh-danger-soft: rgba(248, 113, 113, 0.12);
+    --bh-danger-bg: rgba(248, 113, 113, 0.1); /* Danger button background */
+    --bh-danger-bg-hover: rgba(248, 113, 113, 0.18); /* Danger button hover */
+    --bh-danger-border: rgba(248, 113, 113, 0.35); /* Danger icon button border */
     --bh-info: #60a5fa; /* Informational */
     --bh-info-soft: rgba(96, 165, 250, 0.12);
+    --bh-purple: #a78bfa; /* Publish/featured states (activity icons) */
+    --bh-purple-soft: rgba(167, 139, 250, 0.12);
+    --bh-neutral-soft: rgba(127, 127, 127, 0.1); /* Neutral activity icons */
 
     /* ============================================================
      TYPOGRAPHY

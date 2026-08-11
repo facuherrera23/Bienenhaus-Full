@@ -139,9 +139,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(10, 13, 16, 0.85);
+      background: var(--bh-bg-media);
       border: 1px solid var(--bh-border);
-      border-radius: 8px;
+      border-radius: var(--bh-radius-sm);
       color: var(--bh-text-secondary);
       cursor: pointer;
       backdrop-filter: blur(8px);
@@ -181,7 +181,7 @@
       align-items: center;
       gap: var(--bh-space-1);
       padding: var(--bh-space-1) var(--bh-space-2);
-      background: rgba(10, 13, 16, 0.85);
+      background: var(--bh-bg-media);
       border-radius: var(--bh-radius-sm);
       font-size: var(--bh-text-xs);
       font-weight: var(--bh-weight-semibold);

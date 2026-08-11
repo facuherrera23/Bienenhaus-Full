@@ -1,448 +1,416 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { JSX } from 'preact';
-import { useReveal } from '../hooks/useReveal';
-import { textOf, useSiteContent } from '../lib/content';
-import { PropertyCard } from './PropertyCard';
-import { PropertyModal } from './PropertyModal';
-import { type PropertyCardData, useProperties } from '../lib/supabase-data';
-import { Suspense } from 'preact/compat';
-import { AlertTriangle, ArrowRight, ChevronDown, Grid, List, Map, Search } from 'lucide-preact';
-import styles from '../styles/modules/Catalog.module.css';
+// apps/landing/src/components/Catalog.tsx
+import { useState, useMemo } from 'preact/hooks';
+import { useScrollAnimation, useTilt, useRipple } from '@/lib/motion';
+import styles from './Catalog.module.css';
 
-type ViewMode = 'grid' | 'list' | 'map';
-
-const SORT_OPTIONS = [
-    'Más recientes',
-    'Mayor precio',
-    'Menor precio',
-    'Mayor superficie',
-    'Destacadas',
+// Datos de ejemplo (reemplazar con datos reales de Supabase)
+const propertiesData = [
+  {
+    id: 1,
+    title: 'Penthouse de Lujo',
+    price: '$1,200,000',
+    location: 'Palermo, CABA',
+    operation: 'Venta',
+    type: 'Penthouse',
+    bedrooms: 4,
+    bathrooms: 3,
+    area: 280,
+    garage: 2,
+    description: 'Penthouse exclusivo con terraza privada y vistas panorámicas.',
+    image: '/assets/images/properties/penthouse.jpg',
+    featured: true,
+  },
+  {
+    id: 2,
+    title: 'Casa en Barrio Cerrado',
+    price: '$850,000',
+    location: 'Nordelta, Bs As',
+    operation: 'Venta',
+    type: 'Casa',
+    bedrooms: 5,
+    bathrooms: 4,
+    area: 350,
+    garage: 3,
+    description: 'Amplia casa con jardín y pileta en exclusivo barrio privado.',
+    image: '/assets/images/properties/casa.jpg',
+    featured: false,
+  },
+  // ... más propiedades
 ];
 
-const PAGE_SIZE = 6;
-
-const PRICE_RANGES: { value: string; label: string; min: number; max: number }[] = [
-    { value: '', label: 'Cualquier precio', min: 0, max: Number.POSITIVE_INFINITY },
-    { value: 'lt100k', label: 'Hasta USD 100.000', min: 0, max: 100_000 },
-    { value: '100-200', label: 'USD 100.000 - 200.000', min: 100_000, max: 200_000 },
-    { value: '200-500', label: 'USD 200.000 - 500.000', min: 200_000, max: 500_000 },
-    { value: 'gt500', label: 'USD 500.000+', min: 500_000, max: Number.POSITIVE_INFINITY },
-];
-
-function priceOf(p: PropertyCardData): number {
-    return Number(String(p.price).replace(/[^0-9]/g, '')) || 0;
-}
-
-function gridTemplateColumns(view: ViewMode, w: number): string {
-    if (view === 'list' || view === 'map') return '1fr';
-    if (w <= 768) return '1fr';
-    if (w <= 1024) return 'repeat(2, 1fr)';
-    return 'repeat(3, 1fr)';
-}
+const operationTypes = ['Todos', 'Venta', 'Alquiler'];
+const propertyTypes = ['Todos', 'Casa', 'Penthouse', 'Departamento', 'PH'];
 
 export function Catalog() {
-    const gridRef = useRef<HTMLDivElement>(null);
-    const rootRef = useReveal<HTMLElement>('.property-card', {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px',
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOperation, setSelectedOperation] = useState('Todos');
+  const [selectedType, setSelectedType] = useState('Todos');
+  const [selectedLocation, setSelectedLocation] = useState('Todos');
+  const [priceRange, setPriceRange] = useState('Todos');
+  const [selectedBedrooms, setSelectedBedrooms] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  // Scroll reveal para el header
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
+    threshold: 0.2,
+    once: true,
+  });
+
+  // Scroll reveal para el grid
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({
+    threshold: 0.05,
+    once: true,
+  });
+
+  // Filtrar propiedades
+  const filteredProperties = useMemo(() => {
+    return propertiesData.filter(prop => {
+      const matchesSearch = prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           prop.location.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesOperation = selectedOperation === 'Todos' || prop.operation === selectedOperation;
+      const matchesType = selectedType === 'Todos' || prop.type === selectedType;
+      const matchesBedrooms = selectedBedrooms === null || prop.bedrooms >= selectedBedrooms;
+      return matchesSearch && matchesOperation && matchesType && matchesBedrooms;
     });
-    const { content } = useSiteContent();
+  }, [searchTerm, selectedOperation, selectedType, selectedBedrooms]);
 
-    const { data: properties, loading, error, refetch } = useProperties();
+  const visibleProperties = filteredProperties.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProperties.length;
 
-    // Derive unique locations and types from properties
-    const LOCATIONS = useMemo(
-        () => ['Todas', ...Array.from(new Set(properties.map((p) => p.location).filter(Boolean)))],
-        [properties],
-    );
-    const FILTERS = useMemo(
-        () => ['Todas', ...Array.from(new Set(properties.map((p) => p.type).filter(Boolean)))],
-        [properties],
-    );
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 6);
+  };
 
-    const section = content.catalogo ?? {};
-    const label = textOf(section.label, 'text', 'Encontrá tu próximo hogar');
-    const title = textOf(section.title, 'text', 'Propiedades seleccionadas para vos.');
-    const description = textOf(
-        section.description,
-        'text',
-        'Explorá una selección exclusiva de propiedades cuidadosamente elegidas en las mejores zonas.',
-    );
+  return (
+    <section className={styles.catalog} id="catalog">
+      <div className="container">
+        {/* Header */}
+        <div 
+          className={`${styles.catalogHeader} ${headerVisible ? styles.visible : ''}`}
+          ref={headerRef}
+        >
+          <div className={styles.catalogHeaderLeft}>
+            <span className={styles.catalogLabel}>Catálogo</span>
+            <h2 className={styles.catalogTitle}>
+              Propiedades <span className={styles.highlight}>Exclusivas</span>
+            </h2>
+            <p className={styles.catalogDesc}>
+              Descubrí nuestra selección premium de propiedades en las mejores ubicaciones.
+            </p>
+          </div>
+          <div className={styles.catalogHeaderRight}>
+            <button className={styles.btnOutline}>
+              Ver todas
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-    const [view, setView] = useState<ViewMode>('grid');
-    const [viewportW, setViewportW] = useState<number>(() =>
-        typeof window !== 'undefined' ? window.innerWidth : 1440,
-    );
-    const [typeFilter, setTypeFilter] = useState('');
-    const [search, setSearch] = useState('');
-    const [operation, setOperation] = useState('');
-    const [location, setLocation] = useState('Todas');
-    const [priceRange, setPriceRange] = useState('');
-    const [bedroom, setBedroom] = useState(0);
-    const [sortOpen, setSortOpen] = useState(false);
-    const [sortLabel, setSortLabel] = useState(SORT_OPTIONS[0]);
-    const [searchFocused, setSearchFocused] = useState(false);
-    const [selectedProperty, setSelectedProperty] = useState<PropertyCardData | null>(null);
-    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+        {/* Search Bar */}
+        <div className={styles.searchBar}>
+          <div className={styles.searchGroup}>
+            <label>Buscar</label>
+            <div className={styles.searchInputWrapper}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar propiedades..."
+                value={searchTerm}
+                onInput={(e) => setSearchTerm((e.target as HTMLInputElement).value)}
+              />
+            </div>
+          </div>
 
-    const openModal = (p: PropertyCardData) => setSelectedProperty(p);
-    const closeModal = () => setSelectedProperty(null);
-
-    useEffect(() => {
-        const onResize = () => setViewportW(window.innerWidth);
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, []);
-
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        const range = PRICE_RANGES.find((r) => r.value === priceRange) ?? PRICE_RANGES[0];
-        return properties.filter((p) => {
-            if (typeFilter && p.type !== typeFilter) return false;
-            if (operation && p.operation !== operation) return false;
-            if (location !== 'Todas' && p.location !== location) return false;
-            const price = priceOf(p);
-            if (price < range.min || price > range.max) return false;
-            if (bedroom > 0 && (bedroom === 4 ? p.beds < 4 : p.beds !== bedroom)) return false;
-            if (q && !`${p.title} ${p.location} ${p.desc}`.toLowerCase().includes(q)) return false;
-            return true;
-        });
-    }, [properties, search, operation, location, priceRange, bedroom, typeFilter]);
-
-    const sorted = useMemo(() => {
-        const arr = [...filtered];
-        switch (sortLabel) {
-            case 'Mayor precio':
-                arr.sort((a, b) => priceOf(b) - priceOf(a));
-                break;
-            case 'Menor precio':
-                arr.sort((a, b) => priceOf(a) - priceOf(b));
-                break;
-            case 'Mayor superficie':
-                arr.sort((a, b) => b.area - a.area);
-                break;
-            case 'Destacadas':
-                arr.sort((a, b) => Number(b.featured ?? false) - Number(a.featured ?? false));
-                break;
-            default:
-                break;
-        }
-        return arr;
-    }, [filtered, sortLabel]);
-
-    useEffect(() => {
-        setVisibleCount(PAGE_SIZE);
-    }, [filtered, sortLabel]);
-
-    const resetFilters = () => {
-        setSearch('');
-        setOperation('');
-        setLocation('Todas');
-        setPriceRange('');
-        setBedroom(0);
-        setTypeFilter('');
-        setSortLabel(SORT_OPTIONS[0]);
-        setVisibleCount(PAGE_SIZE);
-    };
-
-    const displayed = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
-    const hasMore = visibleCount < sorted.length;
-
-    const loadMore = () => setVisibleCount((c) => Math.min(c + PAGE_SIZE, sorted.length));
-
-    const handleSearchRipple = (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => {
-        const btn = e.currentTarget;
-        const rect = btn.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-
-        const ripple = document.createElement('span');
-        ripple.className = styles.ripple;
-        ripple.style.width = ripple.style.height = `${size}px`;
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        btn.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    };
-
-    if (loading) {
-        return (
-            <main className={styles.catalog} id="catalogo" ref={rootRef}>
-                <div className="container">
-                    <header className={styles.catalogHeader}>
-                        <div className={styles.catalogHeaderLeft}>
-                            <span className={styles.catalogLabel}>{label}</span>
-                            <h2 className={styles.catalogTitle}>{title}</h2>
-                            <p className={styles.catalogDesc}>{description}</p>
-                        </div>
-                    </header>
-                    <div className={styles.catalogLoading}>
-                        <div className="spinner-large"></div>
-                        <p>Cargando propiedades...</p>
-                    </div>
-                </div>
-            </main>
-        );
-    }
-
-    if (error) {
-        return (
-            <main className={styles.catalog} id="catalogo" ref={rootRef}>
-                <div className="container">
-                    <header className={styles.catalogHeader}>
-                        <div className={styles.catalogHeaderLeft}>
-                            <span className={styles.catalogLabel}>{label}</span>
-                            <h2 className={styles.catalogTitle}>{title}</h2>
-                            <p className={styles.catalogDesc}>{description}</p>
-                        </div>
-                    </header>
-                    <div className={styles.catalogError}>
-                        <AlertTriangle className={styles.icon} aria-hidden="true" />
-                        <p>Error cargando propiedades: {error}</p>
-                        <button className={styles.btnOutline} onClick={refetch}>
-                            Reintentar
-                        </button>
-                    </div>
-                </div>
-            </main>
-        );
-    }
-
-    return (
-        <>
-            <main
-                className={styles.catalog}
-                id="catalogo"
-                ref={rootRef}
-                aria-label="Catálogo de propiedades"
+          <div className={styles.searchGroup}>
+            <label>Operación</label>
+            <select 
+              value={selectedOperation}
+              onChange={(e) => setSelectedOperation((e.target as HTMLSelectElement).value)}
             >
-                <div className="container">
-                    <header className={styles.catalogHeader}>
-                        <div className={styles.catalogHeaderLeft}>
-                            <span className={styles.catalogLabel}>{label}</span>
-                            <h2 className={styles.catalogTitle}>{title}</h2>
-                            <p className={styles.catalogDesc}>{description}</p>
-                        </div>
-                        <div className={styles.catalogHeaderRight}>
-                            <button className={styles.btnOutline} onClick={resetFilters}>
-                                VER TODAS <ArrowRight className={styles.icon} aria-hidden="true" />
-                            </button>
-                        </div>
-                    </header>
+              {operationTypes.map(op => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          </div>
 
-                    <div className={styles.searchBar}>
-                        <div className={styles.searchGroup}>
-                            <label htmlFor="search-input">Buscar</label>
-                            <div
-                                className={styles.searchInputWrapper}
-                                style={{
-                                    boxShadow: searchFocused
-                                        ? '0 0 20px rgba(32, 184, 171, 0.08)'
-                                        : 'none',
-                                }}
-                            >
-                                <Search className={styles.icon} aria-hidden="true" />
-                                <input
-                                    id="search-input"
-                                    type="text"
-                                    placeholder="Buscar propiedad..."
-                                    value={search}
-                                    onFocus={() => setSearchFocused(true)}
-                                    onBlur={() => setSearchFocused(false)}
-                                    onInput={(e) =>
-                                        setSearch((e.currentTarget as HTMLInputElement).value)
-                                    }
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            const btn = document.getElementById('searchBtn');
-                                            if (btn) btn.click();
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                        <div className={styles.searchGroup}>
-                            <label htmlFor="operation-select">Operación</label>
-                            <select
-                                id="operation-select"
-                                value={operation}
-                                onChange={(e) =>
-                                    setOperation((e.currentTarget as HTMLSelectElement).value)
-                                }
-                            >
-                                <option value="">Todas</option>
-                                <option value="venta">Venta</option>
-                                <option value="alquiler">Alquiler</option>
-                            </select>
-                        </div>
-                        <div className={styles.searchGroup}>
-                            <label htmlFor="location-select">Ubicación</label>
-                            <select
-                                id="location-select"
-                                value={location}
-                                onChange={(e) =>
-                                    setLocation((e.currentTarget as HTMLSelectElement).value)
-                                }
-                            >
-                                {LOCATIONS.map((l) => (
-                                    <option key={l} value={l}>
-                                        {l}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.searchGroup}>
-                            <label htmlFor="price-select">Precio</label>
-                            <select
-                                id="price-select"
-                                value={priceRange}
-                                onChange={(e) =>
-                                    setPriceRange((e.currentTarget as HTMLSelectElement).value)
-                                }
-                            >
-                                {PRICE_RANGES.map((r) => (
-                                    <option key={r.value} value={r.value}>
-                                        {r.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.searchGroup}>
-                            <label>Dormitorios</label>
-                            <div className={styles.bedroomPills}>
-                                {['1', '2', '3', '4+'].map((value, i) => {
-                                    const num = i + 1;
-                                    return (
-                                        <button
-                                            key={value}
-                                            className={`${styles.pill}${bedroom === num ? ` ${styles.active}` : ''}`}
-                                            onClick={() => setBedroom((b) => (b === num ? 0 : num))}
-                                        >
-                                            {value}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        <button
-                            className={styles.btnSearch}
-                            id="searchBtn"
-                            onClick={handleSearchRipple}
-                        >
-                            BUSCAR <ArrowRight className={styles.icon} aria-hidden="true" />
-                        </button>
-                    </div>
+          <div className={styles.searchGroup}>
+            <label>Tipo</label>
+            <select 
+              value={selectedType}
+              onChange={(e) => setSelectedType((e.target as HTMLSelectElement).value)}
+            >
+              {propertyTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
 
-                    <div className={styles.filtersSection}>
-                        <div className={styles.filtersPills}>
-                            {FILTERS.map((value) => (
-                                <button
-                                    key={value}
-                                    className={`${styles.filterPill}${typeFilter === value ? ` ${styles.active}` : ''}`}
-                                    onClick={() => setTypeFilter((v) => (v === value ? '' : value))}
-                                >
-                                    {value.charAt(0).toUpperCase() + value.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-                        <div className={styles.filtersRight}>
-                            <span className={styles.resultsCount}>
-                                {sorted.length} {sorted.length === 1 ? 'propiedad' : 'propiedades'}
-                            </span>
-                            <div className={styles.dropdownWrapper}>
-                                <button
-                                    className={`${styles.dropdownTrigger}${sortOpen ? ` ${styles.open}` : ''}`}
-                                    id="sortTrigger"
-                                    onClick={() => setSortOpen((o) => !o)}
-                                >
-                                    {sortLabel}{' '}
-                                    <ChevronDown className={styles.icon} aria-hidden="true" />
-                                </button>
-                                {sortOpen && (
-                                    <ul
-                                        className={`${styles.dropdownMenu} ${styles.open}`}
-                                        id="sortMenu"
-                                        role="listbox"
-                                    >
-                                        {SORT_OPTIONS.map((option) => (
-                                            <li
-                                                key={option}
-                                                role="option"
-                                                onClick={() => {
-                                                    setSortLabel(option);
-                                                    setSortOpen(false);
-                                                }}
-                                            >
-                                                {option}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                            <div className={styles.viewToggles}>
-                                {(
-                                    [
-                                        ['grid', Grid],
-                                        ['list', List],
-                                        ['map', Map],
-                                    ] as const
-                                ).map(([mode, Icon]) => (
-                                    <button
-                                        key={mode}
-                                        className={`${styles.viewBtn}${view === mode ? ` ${styles.active}` : ''}`}
-                                        data-view={mode}
-                                        onClick={() => setView(mode)}
-                                    >
-                                        <Icon className={styles.icon} aria-hidden="true" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+          <div className={styles.searchGroup}>
+            <label>Precio</label>
+            <select 
+              value={priceRange}
+              onChange={(e) => setPriceRange((e.target as HTMLSelectElement).value)}
+            >
+              <option value="Todos">Todos</option>
+              <option value="0-500000">Hasta $500k</option>
+              <option value="500000-1000000">$500k - $1M</option>
+              <option value="1000000+">Más de $1M</option>
+            </select>
+          </div>
 
-                    {sorted.length === 0 && (
-                        <div className={styles.catalogEmpty}>
-                            <Search className={styles.icon} aria-hidden="true" />
-                            <p>No encontramos propiedades con esos criterios.</p>
-                            <button className={styles.btnOutline} onClick={resetFilters}>
-                                Limpiar filtros
-                            </button>
-                        </div>
-                    )}
+          <div className={styles.searchGroup}>
+            <label>Dormitorios</label>
+            <div className={styles.bedroomPills}>
+              {[1, 2, 3, 4].map(num => (
+                <button
+                  key={num}
+                  className={`${styles.pill} ${selectedBedrooms === num ? styles.active : ''}`}
+                  onClick={() => setSelectedBedrooms(selectedBedrooms === num ? null : num)}
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                className={`${styles.pill} ${selectedBedrooms === 5 ? styles.active : ''}`}
+                onClick={() => setSelectedBedrooms(selectedBedrooms === 5 ? null : 5)}
+              >
+                4+
+              </button>
+            </div>
+          </div>
 
-                    <div
-                        className={styles.catalogGrid}
-                        id="catalogGrid"
-                        ref={gridRef}
-                        style={{ gridTemplateColumns: gridTemplateColumns(view, viewportW) }}
-                    >
-                        {displayed.map((property, index) => (
-                            <PropertyCard
-                                key={property.id}
-                                property={property}
-                                index={index}
-                                onClick={() => openModal(property)}
-                            />
-                        ))}
-                    </div>
+          <button className={styles.btnSearch}>
+            Buscar
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
-                    {hasMore && (
-                        <div className={styles.loadMoreWrapper}>
-                            <button className={styles.btnLoadMore} onClick={loadMore}>
-                                CARGAR MÁS <ArrowRight className={styles.icon} aria-hidden="true" />
-                            </button>
-                            <p className={styles.loadMoreHint}>
-                                Mostrando {displayed.length} de {sorted.length} propiedades
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </main>
+        {/* Filters */}
+        <div className={styles.filtersSection}>
+          <div className={styles.filtersPills}>
+            {['Todos', 'Destacadas', 'Nuevas', 'Oportunidad'].map(filter => (
+              <button
+                key={filter}
+                className={`${styles.filterPill} ${filter === 'Todos' ? styles.active : ''}`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+          <div className={styles.filtersRight}>
+            <span className={styles.resultsCount}>
+              {filteredProperties.length} propiedades
+            </span>
+            <div className={styles.viewToggles}>
+              <button className={`${styles.viewBtn} ${styles.active}`}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                  <rect x="1" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                  <rect x="11" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                  <rect x="11" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </button>
+              <button className={styles.viewBtn}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="1" width="15" height="4" stroke="currentColor" strokeWidth="1.5"/>
+                  <rect x="1" y="7" width="15" height="4" stroke="currentColor" strokeWidth="1.5"/>
+                  <rect x="1" y="13" width="15" height="4" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
-            <Suspense fallback={<div className={styles.modalLoading}>Cargando detalles...</div>}>
-                <PropertyModal property={selectedProperty} onClose={closeModal} />
-            </Suspense>
-        </>
-    );
+        {/* Property Grid */}
+        <div 
+          className={`${styles.catalogGrid} ${gridVisible ? styles.visible : ''}`}
+          ref={gridRef}
+        >
+          {visibleProperties.length > 0 ? (
+            visibleProperties.map((property, index) => (
+              <PropertyCard key={property.id} property={property} index={index} />
+            ))
+          ) : (
+            <div className={styles.catalogEmpty}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M8 8L16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M16 8L8 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <p>No se encontraron propiedades</p>
+            </div>
+          )}
+        </div>
+
+        {/* Load More */}
+        {hasMore && (
+          <div className={styles.loadMoreWrapper}>
+            <LoadMoreButton onClick={handleLoadMore} />
+            <span className={styles.loadMoreHint}>
+              Mostrando {visibleCount} de {filteredProperties.length} propiedades
+            </span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Componente de Property Card con Tilt 3D
+function PropertyCard({ property, index }: { property: any; index: number }) {
+  const [isLiked, setIsLiked] = useState(false);
+  const { ref, style: tiltStyle } = useTilt({
+    maxAngle: 8,
+    transitionSpeed: 300,
+    glow: true,
+    glowIntensity: 0.3,
+  });
+
+  const { ref: cardRef, isVisible: cardVisible } = useScrollAnimation({
+    threshold: 0.15,
+    once: true,
+    delay: index * 100,
+  });
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+    // Aquí iría la lógica de favoritos
+  };
+
+  return (
+    <article 
+      className={`${styles.propertyCard} ${cardVisible ? styles.visible : ''}`}
+      ref={(el) => {
+        if (el) {
+          ref.current = el;
+          cardRef.current = el;
+        }
+      }}
+      style={tiltStyle}
+    >
+      <div className={styles.cardInner}>
+        {/* Image */}
+        <div className={styles.cardImageWrapper}>
+          <img 
+            src={property.image} 
+            alt={property.title}
+            loading="lazy"
+          />
+          <div className={styles.cardOverlay} aria-hidden="true" />
+
+          {/* Badge */}
+          {property.featured && (
+            <span className={styles.cardBadge}>Destacada</span>
+          )}
+
+          {/* Favorite Button */}
+          <button 
+            className={`${styles.cardFavorite} ${isLiked ? styles.liked : ''}`}
+            onClick={handleLike}
+            aria-label={isLiked ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'}>
+              <path d="M12 21C12 21 3 15 3 8.5C3 5 5.5 3 8 3C10 3 11.5 4.5 12 6C12.5 4.5 14 3 16 3C18.5 3 21 5 21 8.5C21 15 12 21 12 21Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className={styles.cardBody}>
+          <span className={styles.cardOperation}>{property.operation}</span>
+          <div className={styles.cardPrice}>{property.price}</div>
+          <h3 className={styles.cardTitle}>{property.title}</h3>
+          <div className={styles.cardLocation}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 7.5C8.10457 7.5 9 6.60457 9 5.5C9 4.39543 8.10457 3.5 7 3.5C5.89543 3.5 5 4.39543 5 5.5C5 6.60457 5.89543 7.5 7 7.5Z" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M7 12.5C10 9.5 12 7.5 12 5.5C12 2.73858 9.76142 0.5 7 0.5C4.23858 0.5 2 2.73858 2 5.5C2 7.5 4 9.5 7 12.5Z" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+            {property.location}
+          </div>
+
+          {/* Features */}
+          <ul className={styles.cardFeatures}>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="0.5" y="0.5" width="13" height="13" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M0.5 7H13.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M7 0.5V13.5" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+              {property.area} m²
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M7 2V7L10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              {property.bedrooms} dorm.
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="0.5" y="0.5" width="13" height="13" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M3.5 4.5H10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M3.5 9.5H10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              {property.bathrooms} baños
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="0.5" y="0.5" width="13" height="13" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M8.5 3V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M11 8.5H8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              {property.garage} cocheras
+            </li>
+          </ul>
+
+          <p className={styles.cardDesc}>{property.description}</p>
+
+          <button className={styles.btnCard}>
+            Ver detalles
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M7 3L10 6L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Glow effect */}
+        <div 
+          className={styles.cardGlow}
+          style={{
+            '--mouse-x': '50%',
+            '--mouse-y': '50%',
+          }}
+          aria-hidden="true"
+        />
+      </div>
+    </article>
+  );
+}
+
+// Componente Load More con Ripple
+function LoadMoreButton({ onClick }: { onClick: () => void }) {
+  const { RippleEffect } = useRipple();
+
+  return (
+    <RippleEffect>
+      <button className={styles.btnLoadMore} onClick={onClick}>
+        Cargar más
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M7 2L12 7L7 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      </button>
+    </RippleEffect>
+  );
 }

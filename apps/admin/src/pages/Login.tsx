@@ -1,9 +1,10 @@
+// apps/admin/src/pages/Login.tsx
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { AlertTriangle } from 'lucide-preact';
+import { AlertTriangle, Lock, Mail, User } from 'lucide-preact';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword, authSession } from '../store/app';
-import styles from './Login.module.css';
+import styles from '../styles/Login.module.css';
 
 const RATE_LIMIT_KEY = 'bh_login_attempts';
 const MAX_ATTEMPTS = 5;
@@ -56,6 +57,8 @@ export function Login() {
     const [loading, setLoading] = useState(false);
     const [lockout, setLockout] = useState(false);
     const [lockoutRemaining, setLockoutRemaining] = useState(0);
+    const [lockoutProgress, setLockoutProgress] = useState(100);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (authSession.value) {
@@ -69,17 +72,35 @@ export function Login() {
             setLockout(true);
             const remaining = getLockoutRemainingMs();
             setLockoutRemaining(remaining);
+            setLockoutProgress((remaining / LOCKOUT_MS) * 100);
+            
             const interval = setInterval(() => {
                 const rem = getLockoutRemainingMs();
                 setLockoutRemaining(rem);
+                setLockoutProgress((rem / LOCKOUT_MS) * 100);
                 if (rem <= 0) {
                     setLockout(false);
                     clearInterval(interval);
                 }
-            }, 10000);
+            }, 1000);
             return () => clearInterval(interval);
         }
     }, []);
+
+    // Countdown for lockout display
+    useEffect(() => {
+        if (!lockout) return;
+        const interval = setInterval(() => {
+            const rem = getLockoutRemainingMs();
+            setLockoutRemaining(rem);
+            setLockoutProgress((rem / LOCKOUT_MS) * 100);
+            if (rem <= 0) {
+                setLockout(false);
+                clearInterval(interval);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [lockout]);
 
     const handleSubmit = async (e: Event) => {
         e.preventDefault();
@@ -107,6 +128,7 @@ export function Login() {
                 if (newCount >= MAX_ATTEMPTS) {
                     setLockout(true);
                     setLockoutRemaining(LOCKOUT_MS);
+                    setLockoutProgress(100);
                     setError(`Demasiados intentos fallidos. Cuenta bloqueada por 15 minutos.`);
                 } else {
                     const remaining = MAX_ATTEMPTS - newCount;
@@ -131,25 +153,23 @@ export function Login() {
         }
     };
 
-    // Countdown for lockout display
-    useEffect(() => {
-        if (!lockout) return;
-        const interval = setInterval(() => {
-            const rem = getLockoutRemainingMs();
-            setLockoutRemaining(rem);
-            if (rem <= 0) {
-                setLockout(false);
-                clearInterval(interval);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [lockout]);
-
     return (
-        <div className={styles['login-page']}>
-            <form className={styles['login-card']} onSubmit={handleSubmit}>
-                <div className={styles['login-brand']}>
-                    <span className={styles['sidebar-logo']} aria-hidden="true">
+        <div className={styles.loginPage}>
+            {/* Partículas flotantes */}
+            <div className={styles.particles} aria-hidden="true">
+                {Array.from({ length: 20 }).map((_, i) => (
+                    <div key={i} className={styles.particle} />
+                ))}
+            </div>
+
+            {/* Glow de fondo */}
+            <div className={styles.loginGlow} aria-hidden="true" />
+
+            {/* Formulario */}
+            <form className={styles.loginCard} onSubmit={handleSubmit}>
+                {/* Brand */}
+                <div className={styles.loginBrand}>
+                    <span className={styles.logoIcon} aria-hidden="true">
                         B
                     </span>
                     <div>
@@ -159,65 +179,95 @@ export function Login() {
                 </div>
 
                 <h1>Iniciar sesión</h1>
-                <p className={styles['login-hint']}>
+                <p className={styles.loginHint}>
                     {authSession.value
                         ? 'Ya tenés una sesión activa.'
                         : 'Ingresá con tu usuario del panel.'}
                 </p>
 
-                <label className="field">
+                {/* Email */}
+                <label className={styles.field}>
                     <span>Email</span>
-                    <input
-                        type="email"
-                        value={email}
-                        placeholder="admin@bienenhaus.com"
-                        required
-                        onInput={(e) => setEmail((e.currentTarget as HTMLInputElement).value)}
-                    />
+                    <div className={styles.inputWrapper}>
+                        <input
+                            type="email"
+                            value={email}
+                            placeholder=" "
+                            required
+                            onInput={(e) => setEmail((e.currentTarget as HTMLInputElement).value)}
+                            disabled={loading || lockout}
+                        />
+                        <Mail size={18} className={styles.inputIcon} />
+                        <label>admin@bienenhaus.com</label>
+                    </div>
                 </label>
 
-                <label className="field">
+                {/* Password */}
+                <label className={styles.field}>
                     <span>Contraseña</span>
-                    <input
-                        type="password"
-                        value={password}
-                        placeholder="••••••••"
-                        required
-                        onInput={(e) => setPassword((e.currentTarget as HTMLInputElement).value)}
-                    />
+                    <div className={styles.inputWrapper}>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            placeholder=" "
+                            required
+                            onInput={(e) => setPassword((e.currentTarget as HTMLInputElement).value)}
+                            disabled={loading || lockout}
+                        />
+                        <Lock size={18} className={styles.inputIcon} />
+                        <label>••••••••</label>
+                    </div>
                 </label>
 
-                {error && <p className={styles['login-error']}>{error}</p>}
+                {error && <p className={styles.loginError}>{error}</p>}
 
                 {lockout && (
-                    <div className={styles['login-lockout']} role="alert" aria-live="assertive">
-                        <span className={styles['login-lockout__icon']} aria-hidden="true">
+                    <div className={styles.loginLockout} role="alert" aria-live="assertive">
+                        <span className={styles.loginLockout__icon} aria-hidden="true">
                             <AlertTriangle size={18} strokeWidth={2.25} />
                         </span>
-                        <div className={styles['login-lockout__body']}>
-                            <strong className={styles['login-lockout__title']}>Cuenta bloqueada</strong>
-                            <span className={styles['login-lockout__text']}>
+                        <div className={styles.loginLockout__body}>
+                            <strong className={styles.loginLockout__title}>Cuenta bloqueada</strong>
+                            <span className={styles.loginLockout__text}>
                                 Probá de nuevo en{' '}
                                 <span
-                                    className={styles['login-lockout__timer']}
+                                    className={styles.loginLockout__timer}
                                     aria-label={`Tiempo restante: ${formatCountdown(lockoutRemaining)}`}
                                 >
                                     {formatCountdown(lockoutRemaining)}
                                 </span>
                             </span>
+                            <div className={styles.lockoutProgress}>
+                                <div
+                                    className={styles.lockoutProgressBar}
+                                    style={{ width: `${lockoutProgress}%` }}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
 
                 <button
-                    className="btn btn--primary btn--block"
+                    className={`btn btn--primary btn--block btn--lg`}
                     type="submit"
                     disabled={loading || lockout}
                 >
-                    {loading ? 'Ingresando…' : 'Entrar'}
+                    {loading ? (
+                        <>
+                            <span className="spin" style={{ display: 'inline-block' }}>
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/>
+                                    <path d="M9 1C13.4183 1 17 4.58172 17 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                            </span>
+                            Ingresando…
+                        </>
+                    ) : (
+                        'Entrar'
+                    )}
                 </button>
 
-                <p className={styles['login-legal']}>
+                <p className={styles.loginLegal}>
                     Primer acceso: usá las credenciales del seed. El sistema te pedirá cambiar la
                     contraseña.
                 </p>

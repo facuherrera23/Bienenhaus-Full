@@ -1,11 +1,11 @@
-/**
- * Contact Module Styles
- * Extracted from landing.css lines 2740-3490
- * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
- */
+/* apps/landing/src/styles/modules/Contact.module.css */
+
+/* ============================================================
+   CONTACT — Sección de contacto
+   ============================================================ */
 
 .contact {
-    padding: var(--bh-space-40) 0 var(--bh-space-45);
+    padding: var(--bh-space-35) 0 var(--bh-space-40);
     background: var(--bh-bg-primary);
     position: relative;
     overflow: hidden;
@@ -27,19 +27,47 @@
     z-index: 1;
 }
 
+/* ============================================================
+   HEADER — Con scroll reveal
+   ============================================================ */
+
 .contactHeader {
     max-width: 780px;
     margin-bottom: var(--bh-space-15);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--bh-ease-premium);
+}
+
+.contactHeader.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .contactLabel {
-    font-size: var(--bh-text-md);
+    font-size: var(--bh-text-sm);
     font-weight: var(--bh-weight-semibold);
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--bh-accent);
-    display: block;
+    display: inline-block;
     margin-bottom: var(--bh-space-4);
+    position: relative;
+}
+
+.contactLabel::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--bh-accent);
+    transition: width 0.6s ease 0.4s;
+}
+
+.contactHeader.visible .contactLabel::after {
+    width: 40px;
 }
 
 .contactTitle {
@@ -79,11 +107,25 @@
     align-items: center;
     gap: var(--bh-space-3);
     font-family: var(--bh-font-sans);
+    position: relative;
+    overflow: hidden;
+}
+
+.btnContactSecondary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btnContactSecondary:hover::after {
+    transform: translateX(100%);
 }
 
 .btnContactSecondary svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
-    font-size: var(--bh-text-md);
 }
 
 .btnContactSecondary:hover {
@@ -97,12 +139,20 @@
     transform: translateX(4px);
 }
 
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
 .contactLayout {
     display: grid;
     grid-template-columns: 35% 65%;
     gap: var(--bh-space-12);
     align-items: start;
 }
+
+/* ============================================================
+   CONTACT INFO — Con scroll reveal
+   ============================================================ */
 
 .contactInfo {
     background: rgba(255, 255, 255, 0.02);
@@ -113,7 +163,7 @@
     padding: var(--bh-space-10) var(--bh-space-8);
     opacity: 0;
     transform: translateY(30px);
-    transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
 }
 
 .contactInfo.visible {
@@ -187,6 +237,10 @@
     font-weight: var(--bh-weight-normal);
 }
 
+/* ============================================================
+   RESPONSE / HORARIOS
+   ============================================================ */
+
 .contactResponse {
     margin-top: var(--bh-space-6);
     padding: var(--bh-space-5) var(--bh-space-6);
@@ -206,12 +260,6 @@
 
 .contactResponse .responseLabel svg {
     color: var(--bh-accent);
-}
-
-.contactResponse .responseText {
-    font-size: var(--bh-text-md);
-    color: var(--bh-text-secondary);
-    margin-top: var(--bh-space-1);
 }
 
 .contactResponse .responseHours {
@@ -239,6 +287,10 @@
     color: var(--bh-text-secondary);
 }
 
+/* ============================================================
+   SOCIAL ICONS
+   ============================================================ */
+
 .contactSocial {
     display: flex;
     gap: var(--bh-space-3);
@@ -261,14 +313,19 @@
     font-size: var(--bh-text-xl);
     transition: all var(--bh-dur-med) var(--bh-ease-premium);
     cursor: pointer;
+    text-decoration: none;
 }
 
 .contactSocial .socialCircle:hover {
     border-color: var(--bh-accent);
     color: var(--bh-accent);
     box-shadow: 0 0 20px var(--bh-accent-glow-soft);
-    transform: scale(1.1);
+    transform: scale(1.1) rotate(-4deg);
 }
+
+/* ============================================================
+   MAPA MINI
+   ============================================================ */
 
 .contactMap {
     margin-top: var(--bh-space-6);
@@ -293,11 +350,10 @@
 }
 
 .contactMap .mapPlaceholder svg {
-    font-size: 32px;
     color: var(--bh-accent);
 }
 
-.contactMap .mapPin {
+.mapPin {
     position: absolute;
     width: 20px;
     height: 20px;
@@ -307,9 +363,10 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    animation: pinBounce 2s ease-in-out infinite;
 }
 
-.contactMap .mapPin::after {
+.mapPin::after {
     content: '';
     position: absolute;
     top: -10px;
@@ -320,6 +377,19 @@
     border-bottom: 12px solid var(--bh-accent);
 }
 
+@keyframes pinBounce {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -70%) scale(1.1);
+    }
+}
+
+/* ============================================================
+   CONTACT FORM — Con floating labels
+   ============================================================ */
+
 .contactFormWrapper {
     background: rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(20px);
@@ -329,13 +399,17 @@
     padding: var(--bh-space-12);
     opacity: 0;
     transform: translateY(30px);
-    transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
 }
 
 .contactFormWrapper.visible {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* ============================================================
+   FORM INDICATORS
+   ============================================================ */
 
 .formIndicators {
     display: flex;
@@ -365,6 +439,10 @@
     color: var(--bh-text-primary);
     font-weight: var(--bh-weight-medium);
 }
+
+/* ============================================================
+   INTENT PILLS
+   ============================================================ */
 
 .formStepLabel {
     font-size: var(--bh-text-sm);
@@ -414,11 +492,19 @@
     box-shadow: 0 0 30px var(--bh-accent-glow-soft);
 }
 
+/* ============================================================
+   FORM ROW
+   ============================================================ */
+
 .formRow {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--bh-space-4);
 }
+
+/* ============================================================
+   FORM GROUP — Con floating labels
+   ============================================================ */
 
 .formGroup {
     margin-bottom: var(--bh-space-5);
@@ -427,20 +513,23 @@
     animation: fadeUp var(--bh-dur-med) var(--bh-ease-premium) forwards;
 }
 
-.formGroup.hidden {
-    display: none;
-}
+.formGroup:nth-child(1) { animation-delay: 0.1s; }
+.formGroup:nth-child(2) { animation-delay: 0.15s; }
+.formGroup:nth-child(3) { animation-delay: 0.2s; }
+.formGroup:nth-child(4) { animation-delay: 0.25s; }
+.formGroup:nth-child(5) { animation-delay: 0.3s; }
+.formGroup:nth-child(6) { animation-delay: 0.35s; }
+.formGroup:nth-child(7) { animation-delay: 0.4s; }
 
-.formGroup label {
-    font-size: var(--bh-text-sm);
-    font-weight: var(--bh-weight-medium);
-    color: var(--bh-text-secondary);
-    margin-bottom: var(--bh-space-1);
-    display: block;
-}
-
-.formGroup label .required {
-    color: var(--bh-accent);
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .formGroup .inputWrapper {
@@ -449,20 +538,46 @@
     align-items: center;
 }
 
-.formGroup .inputWrapper .inputIcon {
+/* Floating label */
+.formGroup .inputWrapper label {
     position: absolute;
-    left: 16px;
-    color: var(--bh-text-tertiary);
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: var(--bh-text-md);
-    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+    color: var(--bh-text-tertiary);
+    transition: all 0.2s ease;
     pointer-events: none;
+    font-weight: var(--bh-weight-normal);
+}
+
+/* Para textarea, la label flota diferente */
+.formGroup .inputWrapper textarea ~ label {
+    top: 16px;
+    transform: none;
+}
+
+/* Estado flotante */
+.formGroup .inputWrapper input:focus ~ label,
+.formGroup .inputWrapper input:not(:placeholder-shown) ~ label,
+.formGroup .inputWrapper textarea:focus ~ label,
+.formGroup .inputWrapper textarea:not(:placeholder-shown) ~ label {
+    top: 6px;
+    font-size: 10px;
+    color: var(--bh-accent);
+    transform: translateY(0);
+}
+
+.formGroup .inputWrapper textarea:focus ~ label,
+.formGroup .inputWrapper textarea:not(:placeholder-shown) ~ label {
+    top: 8px;
 }
 
 .formGroup .inputWrapper input,
 .formGroup .inputWrapper select,
 .formGroup .inputWrapper textarea {
     width: 100%;
-    padding: 14px 16px 14px 44px;
+    padding: 16px 16px 16px 44px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--bh-border-input);
     border-radius: var(--bh-radius-xl);
@@ -475,8 +590,7 @@
 
 .formGroup .inputWrapper input::placeholder,
 .formGroup .inputWrapper textarea::placeholder {
-    color: var(--bh-text-tertiary);
-    font-weight: var(--bh-weight-normal);
+    color: transparent;
 }
 
 .formGroup .inputWrapper input:hover,
@@ -489,67 +603,36 @@
 .formGroup .inputWrapper select:focus,
 .formGroup .inputWrapper textarea:focus {
     border-color: var(--bh-accent);
-    box-shadow:
-        0 0 25px var(--bh-accent-glow-soft),
-        inset 0 0 20px rgba(31, 200, 195, 0.02);
+    box-shadow: 
+        0 0 30px var(--bh-accent-glow-soft),
+        inset 0 0 30px rgba(32, 184, 171, 0.02);
 }
 
-.formGroup .inputWrapper input:focus + .inputIcon,
+.formGroup .inputWrapper textarea {
+    padding: 16px 16px 16px 44px;
+    min-height: 120px;
+    resize: vertical;
+    font-family: var(--bh-font-sans);
+    line-height: 1.5;
+}
+
+.formGroup .inputWrapper .inputIcon {
+    position: absolute;
+    left: 16px;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-md);
+    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+    pointer-events: none;
+}
+
+.formGroup .inputWrapper input:focus + .inputIcon + label,
 .formGroup .inputWrapper input:focus ~ .inputIcon,
-.formGroup .inputWrapper textarea:focus + .inputIcon,
+.formGroup .inputWrapper textarea:focus + .inputIcon + label,
 .formGroup .inputWrapper textarea:focus ~ .inputIcon {
     color: var(--bh-accent);
 }
 
-.formGroup .inputWrapper select {
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A949C' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    padding-right: 44px;
-    cursor: pointer;
-}
-
-.formGroup .inputWrapper select option {
-    background: var(--bh-bg-secondary);
-    color: var(--bh-text-primary);
-}
-
-.formGroup .inputWrapper textarea {
-    padding: 14px 16px 14px 44px;
-    min-height: 120px;
-    resize: vertical;
-    font-family: var(--bh-font-sans);
-}
-
-.formGroup.error .inputWrapper input,
-.formGroup.error .inputWrapper select,
-.formGroup.error .inputWrapper textarea {
-    border-color: var(--bh-danger);
-    box-shadow: 0 0 20px var(--bh-danger-soft);
-}
-
-.formGroup .errorMessage {
-    font-size: var(--bh-text-xs);
-    color: var(--bh-danger);
-    margin-top: var(--bh-space-1);
-    display: none;
-    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
-}
-
-.formGroup.error .errorMessage {
-    display: block;
-}
-
-.formError {
-    display: block;
-    font-size: var(--bh-text-xs);
-    color: var(--bh-danger);
-    margin-top: var(--bh-space-1);
-    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
-}
-
+/* Success check */
 .formGroup .inputWrapper .successCheck {
     position: absolute;
     right: 16px;
@@ -570,78 +653,35 @@
     border-color: var(--bh-accent);
 }
 
-.formGroup .dropZone {
-    border: 2px dashed var(--bh-border);
-    border-radius: var(--bh-radius-xl);
-    padding: var(--bh-space-8) var(--bh-space-5);
-    text-align: center;
-    transition: all var(--bh-dur-med) var(--bh-ease-premium);
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.02);
+/* Error state */
+.formGroup.error .inputWrapper input,
+.formGroup.error .inputWrapper select,
+.formGroup.error .inputWrapper textarea {
+    border-color: var(--bh-danger);
+    box-shadow: 0 0 20px var(--bh-danger-soft);
 }
 
-.formGroup .dropZone:hover {
-    border-color: var(--bh-accent);
-    background: rgba(31, 200, 195, 0.03);
-}
-
-.formGroup .dropZone.dragOver {
-    border-color: var(--bh-accent);
-    background: rgba(31, 200, 195, 0.06);
-    box-shadow: 0 0 30px var(--bh-accent-glow-soft);
-}
-
-.formGroup .dropZone .dropIcon {
-    font-size: 32px;
-    color: var(--bh-accent);
-    margin-bottom: var(--bh-space-2);
-}
-
-.formGroup .dropZone .dropText {
-    font-size: var(--bh-text-md);
-    color: var(--bh-text-secondary);
-}
-
-.formGroup .dropZone .dropHint {
+.formGroup .errorMessage {
     font-size: var(--bh-text-xs);
-    color: var(--bh-text-tertiary);
-    margin-top: var(--bh-space-1);
-}
-
-.formGroup .fileList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--bh-space-2);
-    margin-top: var(--bh-space-3);
-}
-
-.formGroup .fileItem {
-    display: flex;
-    align-items: center;
-    gap: var(--bh-space-2);
-    padding: 6px 14px 6px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--bh-radius-full);
-    font-size: var(--bh-text-sm);
-    color: var(--bh-text-secondary);
-    border: 1px solid var(--bh-border);
-}
-
-.formGroup .fileItem .removeFile {
     color: var(--bh-danger);
-    cursor: pointer;
-    font-size: var(--bh-text-md);
-    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+    margin-top: var(--bh-space-1);
+    display: none;
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
 }
 
-.formGroup .fileItem .removeFile:hover {
-    transform: scale(1.2);
+.formGroup.error .errorMessage {
+    display: block;
 }
+
+/* ============================================================
+   CHECKBOX GROUP
+   ============================================================ */
 
 .formGroup.checkboxGroup {
     display: flex;
     align-items: flex-start;
     gap: var(--bh-space-3);
+    margin-top: var(--bh-space-2);
 }
 
 .formGroup.checkboxGroup input[type='checkbox'] {
@@ -651,6 +691,30 @@
     margin-top: 2px;
     accent-color: var(--bh-accent);
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-sm);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    padding: 0;
+}
+
+.formGroup.checkboxGroup input[type='checkbox']:checked {
+    background: var(--bh-accent);
+    border-color: var(--bh-accent);
+    position: relative;
+}
+
+.formGroup.checkboxGroup input[type='checkbox']:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bh-bg-primary);
+    font-size: 14px;
+    font-weight: var(--bh-weight-bold);
 }
 
 .formGroup.checkboxGroup label {
@@ -667,8 +731,16 @@
 }
 
 .formGroup.checkboxGroup label a:hover {
-    color: var(--bh-accent-glow);
+    color: var(--bh-accent-hover);
 }
+
+.formGroup.checkboxGroup .required {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   SUBMIT BUTTON — Con ripple
+   ============================================================ */
 
 .btnSubmit {
     width: 100%;
@@ -698,56 +770,13 @@
 
 .btnSubmit:hover {
     transform: scale(1.02);
-    box-shadow: var(--bh-shadow-glow-lg);
+    box-shadow: 
+        0 0 40px var(--bh-accent-glow-soft),
+        0 0 80px rgba(32, 184, 171, 0.05);
 }
 
 .btnSubmit:hover svg {
     transform: translateX(4px);
-}
-
-.btnSubmit .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(0);
-    animation: rippleAnim 600ms ease-out forwards;
-    pointer-events: none;
-}
-
-@keyframes rippleAnim {
-    to {
-        transform: scale(4);
-        opacity: 0;
-    }
-}
-
-.submitSuccess {
-    display: none;
-    text-align: center;
-    padding: var(--bh-space-10) var(--bh-space-5);
-    animation: fadeUp var(--bh-dur-xslow) var(--bh-ease-premium) forwards;
-}
-
-.submitSuccess.show {
-    display: block;
-}
-
-.submitSuccess .successIcon {
-    font-size: 64px;
-    color: var(--bh-accent);
-    margin-bottom: var(--bh-space-4);
-}
-
-.submitSuccess .successTitle {
-    font-family: var(--bh-font-display);
-    font-size: var(--bh-text-2xl);
-    color: var(--bh-text-primary);
-    margin-bottom: var(--bh-space-2);
-}
-
-.submitSuccess .successText {
-    font-size: var(--bh-text-lg);
-    color: var(--bh-text-secondary);
 }
 
 .btnSubmit .spinner {
@@ -769,14 +798,73 @@
     display: none;
 }
 
+.btnSubmit[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
 
-/* Responsive */
+/* ============================================================
+   SUCCESS STATE
+   ============================================================ */
+
+.submitSuccess {
+    display: none;
+    text-align: center;
+    padding: var(--bh-space-10) var(--bh-space-5);
+}
+
+.submitSuccess.show {
+    display: block;
+    animation: fadeUp var(--bh-dur-slow) var(--bh-ease-premium) forwards;
+}
+
+.submitSuccess .successIcon {
+    font-size: 64px;
+    color: var(--bh-accent);
+    margin-bottom: var(--bh-space-4);
+}
+
+.submitSuccess .successIcon svg {
+    animation: scaleIn 0.6s var(--bh-ease-premium) forwards;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.submitSuccess .successTitle {
+    font-family: var(--bh-font-display);
+    font-size: var(--bh-text-2xl);
+    color: var(--bh-text-primary);
+    margin-bottom: var(--bh-space-2);
+}
+
+.submitSuccess .successText {
+    font-size: var(--bh-text-lg);
+    color: var(--bh-text-secondary);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 1280px) {
+    .contactTitle {
+        font-size: var(--bh-text-5xl);
+    }
     .contactLayout {
         gap: var(--bh-space-9);
     }
@@ -787,7 +875,7 @@
 
 @media (max-width: 1024px) {
     .contact {
-        padding: var(--bh-space-30) 0 var(--bh-space-35);
+        padding: var(--bh-space-25) 0 var(--bh-space-30);
     }
     .contactTitle {
         font-size: var(--bh-text-4xl);
@@ -886,19 +974,23 @@
         padding: 6px 14px;
         font-size: var(--bh-text-sm);
     }
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
     .formGroup .inputWrapper input,
     .formGroup .inputWrapper select,
     .formGroup .inputWrapper textarea {
-        padding: 12px 14px 12px 38px;
+        padding: 14px 14px 14px 38px;
         font-size: var(--bh-text-md);
         border-radius: var(--bh-radius-lg);
     }
+    .formGroup .inputWrapper label {
+        left: 38px;
+    }
     .formGroup .inputWrapper textarea {
         min-height: 100px;
-        padding: 12px 14px 12px 38px;
-    }
-    .formGroup .dropZone {
-        padding: var(--bh-space-6) var(--bh-space-4);
+        padding: 14px 14px 14px 38px;
     }
     .btnSubmit {
         height: 56px;
@@ -910,5 +1002,35 @@
     }
     .submitSuccess .successTitle {
         font-size: var(--bh-text-xl);
+    }
+}
+
+@media (max-width: 390px) {
+    .contactTitle {
+        font-size: var(--bh-text-2xl);
+    }
+    .contactInfo {
+        padding: var(--bh-space-5) var(--bh-space-4);
+    }
+    .contactFormWrapper {
+        padding: var(--bh-space-4) var(--bh-space-3);
+    }
+    .formGroup .inputWrapper input,
+    .formGroup .inputWrapper select,
+    .formGroup .inputWrapper textarea {
+        padding: 12px 12px 12px 34px;
+        font-size: var(--bh-text-sm);
+    }
+    .formGroup .inputWrapper label {
+        left: 34px;
+        font-size: var(--bh-text-sm);
+    }
+    .formPill {
+        padding: 4px 12px;
+        font-size: var(--bh-text-xs);
+    }
+    .btnSubmit {
+        height: 48px;
+        font-size: var(--bh-text-sm);
     }
 }

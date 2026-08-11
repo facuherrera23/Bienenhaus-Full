@@ -26,9 +26,9 @@
 
       background: var(--bh-card-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 16px;
+      border-radius: var(--bh-radius-lg);
       padding: 24px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--bh-shadow-sm);
 
 }
 

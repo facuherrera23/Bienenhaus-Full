@@ -1,8 +1,8 @@
-/**
- * Team Module Styles
- * Extracted from landing.css lines 1814-2127
- * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
- */
+/* apps/landing/src/styles/modules/Team.module.css */
+
+/* ============================================================
+   TEAM — Sección con efectos premium
+   ============================================================ */
 
 .team {
     padding: var(--bh-space-25) 0 var(--bh-space-30);
@@ -11,32 +11,9 @@
     overflow: hidden;
 }
 
-.team::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    left: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(31, 200, 195, 0.02) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.team::after {
-    content: '';
-    position: absolute;
-    bottom: -40%;
-    right: -15%;
-    width: 800px;
-    height: 800px;
-    background: radial-gradient(circle, rgba(31, 200, 195, 0.015) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.team .container {
-    position: relative;
-    z-index: 1;
-}
+/* ============================================================
+   HEADER — Con scroll reveal
+   ============================================================ */
 
 .teamHeader {
     display: grid;
@@ -44,6 +21,14 @@
     gap: var(--bh-space-10);
     align-items: start;
     margin-bottom: var(--bh-space-15);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--bh-ease-premium);
+}
+
+.teamHeader.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .teamHeaderLeft {
@@ -51,13 +36,29 @@
 }
 
 .teamLabel {
-    font-size: var(--bh-text-md);
+    font-size: var(--bh-text-sm);
     font-weight: var(--bh-weight-semibold);
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--bh-accent);
-    display: block;
+    display: inline-block;
     margin-bottom: var(--bh-space-4);
+    position: relative;
+}
+
+.teamLabel::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--bh-accent);
+    transition: width 0.6s ease 0.4s;
+}
+
+.teamHeader.visible .teamLabel::after {
+    width: 40px;
 }
 
 .teamTitle {
@@ -100,11 +101,25 @@
     align-items: center;
     gap: var(--bh-space-3);
     font-family: var(--bh-font-sans);
+    position: relative;
+    overflow: hidden;
+}
+
+.btnTeam::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btnTeam:hover::after {
+    transform: translateX(100%);
 }
 
 .btnTeam svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
-    font-size: var(--bh-text-md);
 }
 
 .btnTeam:hover {
@@ -118,23 +133,44 @@
     transform: translateX(4px);
 }
 
+/* ============================================================
+   GRID — Con stagger reveal
+   ============================================================ */
+
 .teamGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--bh-space-9);
+    gap: var(--bh-space-7);
 }
+
+.teamGrid.visible .teamCard {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================================
+   TEAM CARD — Con tilt, glow y animaciones
+   ============================================================ */
 
 .teamCard {
     background: var(--bh-bg-secondary);
     border-radius: var(--bh-radius-3xl);
     overflow: hidden;
     border: 1px solid var(--bh-border);
-    transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
     opacity: 0;
     transform: translateY(40px);
     position: relative;
     cursor: default;
+    transform-style: preserve-3d;
+    will-change: transform;
 }
+
+/* Stagger delays para cada card */
+.teamCard:nth-child(1) { transition-delay: 0ms; }
+.teamCard:nth-child(2) { transition-delay: 100ms; }
+.teamCard:nth-child(3) { transition-delay: 200ms; }
+.teamCard:nth-child(4) { transition-delay: 300ms; }
 
 .teamCard.visible {
     opacity: 1;
@@ -144,26 +180,41 @@
 .teamCard:hover {
     transform: translateY(-10px) scale(1.02);
     border-color: var(--bh-accent);
-    box-shadow: var(--bh-shadow-glow-lg);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 40px var(--bh-accent-glow-soft);
 }
 
-.teamCard::before {
-    content: '';
+/* ============================================================
+   GLOW DINÁMICO — Sigue al mouse
+   ============================================================ */
+
+.cardGlow {
     position: absolute;
     inset: 0;
     background: radial-gradient(
         circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(31, 200, 195, 0.06) 0%,
-        transparent 60%
+        rgba(31, 200, 195, 0.02) 30%,
+        transparent 70%
     );
     opacity: 0;
-    transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+    transition: opacity 0.4s ease;
     pointer-events: none;
     z-index: 1;
 }
 
-.teamCard:hover::before {
+.teamCard:hover .cardGlow {
     opacity: 1;
+}
+
+/* ============================================================
+   IMAGEN — Con zoom y overlay
+   ============================================================ */
+
+.teamCardInner {
+    position: relative;
+    z-index: 2;
 }
 
 .teamImageWrapper {
@@ -173,35 +224,45 @@
     background: var(--bh-bg-secondary);
 }
 
-.teamImageWrapper img {
+.teamImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.8s var(--bh-ease-premium);
+    will-change: transform;
 }
 
-.teamCard:hover .teamImageWrapper img {
+.teamCard:hover .teamImage {
     transform: scale(1.05);
 }
 
 .teamImageOverlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, transparent 50%, rgba(5, 7, 8, 0.5) 100%);
+    background: linear-gradient(
+        to bottom,
+        transparent 40%,
+        rgba(5, 7, 8, 0.6) 100%
+    );
     pointer-events: none;
     z-index: 1;
     opacity: 0;
-    transition: opacity var(--bh-dur-xslow) var(--bh-ease-premium);
+    transition: opacity var(--bh-dur-slow) var(--bh-ease-premium);
 }
 
 .teamCard:hover .teamImageOverlay {
     opacity: 1;
 }
 
+/* ============================================================
+   CONTENIDO — Con transform Z
+   ============================================================ */
+
 .teamBody {
     padding: var(--bh-space-7) var(--bh-space-6) var(--bh-space-6);
     position: relative;
     z-index: 2;
+    transform: translateZ(20px);
 }
 
 .teamName {
@@ -243,6 +304,10 @@
     overflow: hidden;
 }
 
+/* ============================================================
+   ESPECIALIDADES — Pills animadas
+   ============================================================ */
+
 .teamSpecialties {
     display: flex;
     gap: var(--bh-space-2);
@@ -271,13 +336,17 @@
     transform: scale(1.05);
 }
 
+/* ============================================================
+   SOCIAL BUTTONS — Stagger reveal
+   ============================================================ */
+
 .teamSocial {
     display: flex;
     gap: var(--bh-space-2);
     padding-top: 2px;
 }
 
-.teamSocial .socialBtn {
+.socialBtn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -294,58 +363,36 @@
     cursor: pointer;
     opacity: 0;
     transform: translateY(10px);
+    text-decoration: none;
 }
 
-.teamCard:hover .teamSocial .socialBtn {
+/* Stagger reveal al hacer hover en la card */
+.teamCard:hover .socialBtn {
     opacity: 1;
     transform: translateY(0);
 }
 
-.teamSocial .socialBtn:nth-child(1) {
-    transition-delay: 0ms;
-}
-.teamSocial .socialBtn:nth-child(2) {
-    transition-delay: 60ms;
-}
-.teamSocial .socialBtn:nth-child(3) {
-    transition-delay: 120ms;
-}
+.teamCard:hover .socialBtn:nth-child(1) { transition-delay: 0ms; }
+.teamCard:hover .socialBtn:nth-child(2) { transition-delay: 60ms; }
+.teamCard:hover .socialBtn:nth-child(3) { transition-delay: 120ms; }
 
-.teamSocial .socialBtn:hover {
+.socialBtn:hover {
     border-color: var(--bh-accent);
     color: var(--bh-accent);
     box-shadow: 0 0 20px var(--bh-accent-glow-soft);
     transform: scale(1.1);
 }
 
-.teamEmpty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--bh-space-3);
-    padding: var(--bh-space-16) var(--bh-space-5);
-    text-align: center;
-    color: var(--bh-text-tertiary);
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
-.teamEmpty svg {
-    font-size: 36px;
-    color: var(--bh-text-tertiary);
-    opacity: 0.7;
-}
-
-.teamEmpty p {
-    font-size: var(--bh-text-md);
-    color: var(--bh-text-secondary);
-}
-
-/* Responsive */
 @media (max-width: 1280px) {
     .teamTitle {
         font-size: var(--bh-text-5xl);
     }
     .teamGrid {
-        gap: var(--bh-space-7);
+        gap: var(--bh-space-6);
     }
 }
 
@@ -366,11 +413,15 @@
     .teamHeaderRight {
         padding-top: 0;
     }
+    .btnTeam {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 768px) {
     .team {
-        padding: var(--bh-space-20) 0 var(--bh-space-25);
+        padding: var(--bh-space-15) 0 var(--bh-space-20);
     }
     .teamGrid {
         grid-template-columns: 1fr;
@@ -392,11 +443,6 @@
     .teamBody {
         padding: var(--bh-space-5) var(--bh-space-5) var(--bh-space-5);
     }
-    .btnTeam {
-        width: 100%;
-        justify-content: center;
-        padding: 14px 24px;
-    }
     .teamHeader {
         grid-template-columns: 1fr;
         gap: var(--bh-space-5);
@@ -404,13 +450,35 @@
     .teamHeaderRight {
         padding-top: 0;
     }
-    .teamSocial .socialBtn {
+    .socialBtn {
         width: 36px;
         height: 36px;
         font-size: var(--bh-text-md);
     }
-    .teamCard:hover .teamSocial .socialBtn {
+    /* En mobile mostramos los botones sociales siempre */
+    .teamCard .socialBtn {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@media (max-width: 390px) {
+    .teamTitle {
+        font-size: var(--bh-text-2xl);
+    }
+    .teamBody {
+        padding: var(--bh-space-4) var(--bh-space-4) var(--bh-space-4);
+    }
+    .teamName {
+        font-size: 20px;
+    }
+    .teamPill {
+        font-size: 10px;
+        padding: 4px 12px;
+    }
+    .socialBtn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
 }

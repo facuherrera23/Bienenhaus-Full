@@ -1,256 +1,248 @@
-import { useRef, useState } from 'preact/hooks';
-import { faIcon, listOf, textOf, useSiteContent } from '../lib/content';
-import type { ComponentType} from 'preact/compat';
-import { lazy, Suspense } from 'preact/compat';
-import type { VideoModalProps } from './VideoModal';
-import { ArrowRight, ChevronDown, Home, MapPin, Play, Shield, Users } from 'lucide-preact';
-import styles from '../styles/modules/Hero.module.css';
+// apps/landing/src/components/Hero.tsx
+import { useRef, useEffect, useState } from 'preact/hooks';
+import { 
+  useMouseGlow, 
+  useCountUp, 
+  useScrollAnimation,
+  useRipple 
+} from '@/lib/motion';
+import styles from './Hero.module.css';
 
-const VideoModal = lazy(() => import('./VideoModal')) as unknown as ComponentType<VideoModalProps>;
-
-// Map FontAwesome icon names to Lucide icons
-function getLucideIcon(name: string) {
-    const iconMap: Record<string, any> = {
-        'fa-home': Home,
-        'fa-user-tie': Users,
-        'fa-map-marker-alt': MapPin,
-        'fa-shield-alt': Shield,
-        'fa-crown': Home,
-        'fa-handshake': Users,
-        'fa-clipboard-list': Home,
-        'fa-clock': Shield,
-    };
-    return iconMap[name] || Home;
+interface HeroProps {
+  onVideoOpen?: () => void;
 }
 
-interface HeroStat {
-    icon: string;
-    value: string;
-    title: string;
-    note: string;
-}
+export function Hero({ onVideoOpen }: HeroProps) {
+  // Mouse glow para el cursor follower
+  const { glowRef, mouseX, mouseY, isActive } = useMouseGlow();
+  
+  // Ripple para botones
+  const { RippleEffect } = useRipple();
+  
+  // Scroll reveal para las estadísticas
+  const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({
+    threshold: 0.3,
+    once: true,
+  });
 
-interface HeroFeature {
-    icon: string;
-    title: string;
-    desc: string;
-}
+  // Contadores animados para las estadísticas
+  const propertiesCount = useCountUp(320, { 
+    duration: 2000, 
+    start: statsVisible 
+  });
+  
+  const clientsCount = useCountUp(150, { 
+    duration: 2000, 
+    start: statsVisible 
+  });
+  
+  const yearsCount = useCountUp(6, { 
+    duration: 1500, 
+    start: statsVisible 
+  });
 
-const heroImageSources = [
-    {
-        width: 1920,
-        avif: '/assets/images/hero/hero-baner-xl.avif',
-        webp: '/assets/images/hero/hero-baner-xl.webp',
-    },
-    {
-        width: 1280,
-        avif: '/assets/images/hero/hero-baner-lg.avif',
-        webp: '/assets/images/hero/hero-baner-lg.webp',
-    },
-    {
-        width: 1024,
-        avif: '/assets/images/hero/hero-baner-md.avif',
-        webp: '/assets/images/hero/hero-baner-md.webp',
-    },
-    {
-        width: 640,
-        avif: '/assets/images/hero/hero-baner-sm.avif',
-        webp: '/assets/images/hero/hero-baner-sm.webp',
-    },
-    {
-        width: 320,
-        avif: '/assets/images/hero/hero-baner-xs.avif',
-        webp: '/assets/images/hero/hero-baner-xs.webp',
-    },
-];
+  // Scroll suave para el indicador
+  const handleScrollDown = () => {
+    const catalogSection = document.getElementById('catalog');
+    if (catalogSection) {
+      catalogSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-export function Hero() {
-    const featureBarRef = useRef<HTMLDivElement>(null);
-    const { content, settings } = useSiteContent();
-    const [showVideo, setShowVideo] = useState(false);
+  return (
+    <section className={styles.hero} ref={glowRef}>
+      {/* Ken Burns Background */}
+      <div className={styles.heroBg}>
+        <img
+          src="/assets/images/hero-bg.jpg"
+          className={styles.heroBgImg}
+          alt="BIENENHAUS PROPIEDADES - Propiedades exclusivas"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
 
-    const hero = content.hero ?? {};
-    const eyebrow = textOf(hero.eyebrow, 'text', 'Encontrá tu lugar');
-    const title = (hero.title ?? {}) as { line1?: string; line2?: string };
-    const description = textOf(
-        hero.description,
-        'text',
-        'Selección premium en las mejores zonas. Asesoramiento personalizado en cada paso.',
-    );
+      {/* Overlays existentes */}
+      <div className={styles.heroOverlayH} aria-hidden="true" />
+      <div className={styles.heroOverlayV} aria-hidden="true" />
 
-    const stats: HeroStat[] = listOf(hero.stats).map((s) => ({
-        icon: faIcon(textOf(s, 'icon')),
-        value: textOf(s, 'value'),
-        title: textOf(s, 'title'),
-        note: textOf(s, 'note'),
-    }));
+      {/* Cursor Follower Glow */}
+      <div
+        className={`${styles.heroGlow} ${isActive ? styles.isActive : ''}`}
+        style={{ 
+          left: `${mouseX}px`, 
+          top: `${mouseY}px` 
+        }}
+        aria-hidden="true"
+      />
 
-    const features: HeroFeature[] = listOf(hero.features).map((f) => ({
-        icon: faIcon(textOf(f, 'icon')),
-        title: textOf(f, 'title'),
-        desc: textOf(f, 'text'),
-    }));
+      {/* Partículas flotantes */}
+      <div aria-hidden="true">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className={styles.particle} />
+        ))}
+      </div>
 
-    const videoUrl = textOf(
-        settings.hero_video_url,
-        'value',
-        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    );
-    const videoTitle = textOf(settings.hero_video_title, 'value', 'BIENENHAUS PROPIEDADES');
+      {/* Contenido principal */}
+      <div className="container">
+        <div className={styles.heroContent}>
+          {/* Hero Left */}
+          <div className={styles.heroLeft}>
+            <span className={styles.heroDeco} aria-hidden="true" />
 
-    return (
-        <section className={styles.hero} id="inicio" aria-label="Presentación principal">
-            <picture
-                className={styles.heroBg}
-                role="img"
-                aria-label="Mansión moderna de arquitectura minimalista"
-            >
-                {heroImageSources.map((src) => (
-                    <>
-                        <source
-                            srcSet={src.avif}
-                            type="image/avif"
-                            media={`(min-width: ${src.width}px)`}
-                        />
-                        <source
-                            srcSet={src.webp}
-                            type="image/webp"
-                            media={`(min-width: ${src.width}px)`}
-                        />
-                    </>
-                ))}
-                <img
-                    src="/assets/images/hero/hero-baner.png"
-                    alt="Mansión moderna de arquitectura minimalista en zona residencial exclusiva"
-                    aria-hidden="true"
-                    className={styles.heroBgImg}
-                    loading="eager"
-                    fetchPriority="high"
-                />
-            </picture>
-            <div className={styles.heroOverlayH} aria-hidden="true"></div>
-            <div className={styles.heroOverlayV} aria-hidden="true"></div>
+            <span className={styles.eyebrow}>
+              Bienenhaus Propiedades
+            </span>
 
-            <div className={styles.heroContent} role="main">
-                <div className={styles.heroLeft}>
-                    <span className={styles.heroDeco} aria-hidden="true"></span>
-                    <p className={styles.eyebrow}>{eyebrow}</p>
-                    <h1 className={styles.heroTitle}>
-                        <span className={`${styles.line} ${styles.line1}`}>
-                            {title.line1 ?? 'Propiedades exclusivas.'}
-                        </span>
-                        <span className={`${styles.line} ${styles.line2}`}>
-                            {' '}
-                            {title.line2 ?? 'Experiencias extraordinarias.'}
-                        </span>
-                    </h1>
-                    <p className={styles.heroDesc}>{description}</p>
+            <h1 className={styles.heroTitle}>
+              <span className={styles.line1}>Descubrí tu</span>
+              <span className={styles.line2}>lugar en el mundo</span>
+            </h1>
 
-                    <div className={styles.heroDivider} aria-hidden="true">
-                        <span className={styles.dot}></span>
-                        <span className={styles.line}></span>
-                    </div>
+            <p className={styles.heroDesc}>
+              Propiedades exclusivas en las mejores zonas.
+              Asesoramiento personalizado en cada paso.
+            </p>
 
-                    <div className={styles.heroActions}>
-                        <a href="#catalogo" className={styles.btnPrimary}>
-                            Ver propiedades
-                            <ArrowRight className={styles.icon} aria-hidden="true" />
-                        </a>
-                        <button
-                            className={styles.btnVideo}
-                            id="videoBtn"
-                            onClick={() => setShowVideo(true)}
-                        >
-                            <span className={styles.playCircle} aria-hidden="true">
-                                <Play className={styles.icon} aria-hidden="true" />
-                            </span>
-                            Ver video
-                        </button>
-                    </div>
-                </div>
-
-                <div className={styles.heroRight}>
-                    <aside
-                        className={styles.statsPanel}
-                        aria-label="Estadísticas de la inmobiliaria"
-                    >
-                        {stats.map((stat) => {
-                            const StatIcon = getLucideIcon(stat.icon);
-                            return (
-                                <div className={styles.statRow} key={stat.title}>
-                                    <span className={styles.statIcon} aria-hidden="true">
-                                        <StatIcon className={styles.icon} aria-hidden="true" />
-                                    </span>
-                                    <div>
-                                        <p className={styles.statNumber}>{stat.value}</p>
-                                        <p className={styles.statLabel}>{stat.title}</p>
-                                        <p className={styles.statDesc}>{stat.note}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        <div className={styles.statRowTrust}>
-                            <span className={styles.statIcon} aria-hidden="true">
-                                <Shield className={styles.icon} aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className={styles.trustTitle}>Confianza & Seguridad</p>
-                                <p className={styles.trustDesc}>
-                                    Transacciones seguras y asesoramiento profesional durante todo
-                                    el proceso.
-                                </p>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
+            <div className={styles.heroDivider} aria-hidden="true">
+              <span className={styles.dot} />
+              <span className={styles.line} />
             </div>
 
-            <button
-                className={styles.scrollIndicator}
-                id="scrollIndicator"
-                aria-label="Desplazarse hacia abajo"
-                onClick={() =>
-                    featureBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-                }
-            >
-                <ChevronDown className={styles.icon} aria-hidden="true" />
-            </button>
-
-            <div
-                className={styles.featureBar}
-                id="featureBar"
-                aria-label="Nuestros diferenciales"
-                ref={featureBarRef}
-            >
-                {features.map((feature) => {
-                    const FeatureIcon = getLucideIcon(feature.icon);
-                    return (
-                        <div className={styles.featureItem} key={feature.title}>
-                            <span className={styles.featureIcon} aria-hidden="true">
-                                <FeatureIcon className={styles.icon} aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className={styles.featureTitle}>{feature.title}</p>
-                                <p className={styles.featureDesc}>{feature.desc}</p>
-                            </div>
-                        </div>
-                    );
-                })}
+            <div className={styles.heroActions}>
+              <RippleEffect>
+                <a href="/catalogo" className={styles.btnPrimary}>
+                  Ver Propiedades
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </a>
+              </RippleEffect>
+              
+              <button className={styles.btnVideo} onClick={onVideoOpen}>
+                <span className={styles.playCircle}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M4.5 2L14.25 9L4.5 16V2Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                </span>
+                Ver Video
+              </button>
             </div>
+          </div>
 
-            {showVideo && (
-                <Suspense
-                    fallback={<div className={styles.videoModalLoading}>Cargando video...</div>}
-                >
-                    <VideoModal
-                        isOpen={showVideo}
-                        onClose={() => setShowVideo(false)}
-                        videoUrl={videoUrl}
-                        title={videoTitle}
-                    />
-                </Suspense>
-            )}
-        </section>
-    );
+          {/* Hero Right - Stats Panel */}
+          <div className={styles.heroRight} ref={statsRef}>
+            <div className={styles.statsPanel}>
+              <div className={styles.statRow}>
+                <div className={styles.statIcon}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 12L5 10L9 14L13 10L19 16L21 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M3 18V12" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M21 18V14" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.statNumber}>
+                    {propertiesCount.value}+
+                  </div>
+                  <div className={styles.statLabel}>Propiedades</div>
+                  <div className={styles.statDesc}>en cartera exclusiva</div>
+                </div>
+              </div>
+
+              <div className={styles.statRow}>
+                <div className={styles.statIcon}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M5 20V19C5 15.6863 7.68629 13 11 13H13C16.3137 13 19 15.6863 19 19V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.statNumber}>
+                    {clientsCount.value}+
+                  </div>
+                  <div className={styles.statLabel}>Clientes</div>
+                  <div className={styles.statDesc}>satisfechos</div>
+                </div>
+              </div>
+
+              <div className={styles.statRow}>
+                <div className={styles.statIcon}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M12 6V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.statNumber}>
+                    {yearsCount.value}+
+                  </div>
+                  <div className={styles.statLabel}>Años</div>
+                  <div className={styles.statDesc}>de experiencia</div>
+                </div>
+              </div>
+
+              <div className={`${styles.statRow} ${styles.statRowTrust}`}>
+                <div className={styles.statIcon}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.trustTitle}>Confianza y Transparencia</div>
+                  <div className={styles.trustDesc}>
+                    Acompañamos cada paso con honestidad y compromiso
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <button 
+        className={styles.scrollIndicator} 
+        aria-label="Scroll hacia abajo"
+        onClick={handleScrollDown}
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 6L9 13L16 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {/* Feature Bar */}
+      <div className={styles.featureBar}>
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>🏡</span>
+          <div>
+            <div className={styles.featureTitle}>Propiedades Premium</div>
+            <div className={styles.featureDesc}>Selección exclusiva</div>
+          </div>
+        </div>
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>📍</span>
+          <div>
+            <div className={styles.featureTitle}>Mejores Zonas</div>
+            <div className={styles.featureDesc}>Ubicaciones estratégicas</div>
+          </div>
+        </div>
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>🤝</span>
+          <div>
+            <div className={styles.featureTitle}>Asesoramiento</div>
+            <div className={styles.featureDesc}>Personalizado en cada paso</div>
+          </div>
+        </div>
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>📊</span>
+          <div>
+            <div className={styles.featureTitle}>6+ Años</div>
+            <div className={styles.featureDesc}>de experiencia en el mercado</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

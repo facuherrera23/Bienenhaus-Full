@@ -9,17 +9,16 @@ import {
     useMutation,
     useUpdate,
 } from './api';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import {
-    type AgentAvailability,
-    DAY_LABELS,
-    DEFAULT_REMINDERS,
+    VISIT_STATUS_LABEL,
+    VISIT_STATUS_TONE,
     MEETING_TYPE_LABEL,
+    type AgentAvailability,
     type QrCheckin,
     type RecurrenceRule,
     type RecurringVisit,
     type ReminderConfig,
-    VISIT_STATUS_LABEL,
-    VISIT_STATUS_TONE,
     type VisitFormValues,
     type VisitRow,
     type VisitStatus,
@@ -31,6 +30,8 @@ import {
     createRecurringVisit,
     createReminders,
     createVisit,
+    DAY_LABELS,
+    DEFAULT_REMINDERS,
     deleteAgentAvailability,
     fetchAgentAvailability,
     fetchDeletedVisits,
@@ -38,6 +39,7 @@ import {
     fetchVisits,
     fetchVisitsByAgent,
     fetchVisitsByDateRange,
+    fetchVisitsByDateRangePaginated,
     fetchVisitsByLead,
     generateOccurrences,
     generateQrCode,
@@ -147,6 +149,30 @@ export function useVisitsByDateRange(from: string, to: string, agentId?: string)
         orderBy: 'starts_at',
         ascending: true,
         transform: toVisitRow,
+    });
+}
+
+export function useVisitsInfinite(filters?: {
+    agent_id?: string;
+    lead_id?: string;
+    property_id?: string;
+    status?: VisitStatus;
+    from?: string;
+    to?: string;
+    pageSize?: number;
+}) {
+    return useInfiniteQuery({
+        queryKey: ['visits-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchVisitsByDateRangePaginated(
+            filters?.from ?? '',
+            filters?.to ?? '',
+            filters?.agent_id,
+            pageParam,
+            filters?.pageSize ?? 100
+        ),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        initialPageParam: 1,
+        enabled: !!(filters?.from && filters?.to),
     });
 }
 

@@ -21,7 +21,7 @@
       padding: 16px;
       background: var(--bh-card-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 12px;
+      border-radius: var(--bh-radius-md);
 
 }
 
@@ -53,7 +53,7 @@
 
       background: var(--bh-card-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 12px;
+      border-radius: var(--bh-radius-md);
       overflow: hidden;
 
 }
@@ -163,7 +163,7 @@
       padding: 4px 8px;
       background: var(--bh-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 6px;
+      border-radius: var(--bh-radius-xs);
       font-size: 11.5px;
       color: var(--bh-text-secondary);
       cursor: pointer;
@@ -202,7 +202,7 @@
 .day-more:hover {
 
       background: rgba(31, 200, 195, 0.1);
-      border-radius: 4px;
+      border-radius: var(--bh-radius-xs);
 
 }
 
@@ -210,7 +210,7 @@
 
       background: var(--bh-card-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 12px;
+      border-radius: var(--bh-radius-md);
       overflow: hidden;
 
 }
@@ -311,7 +311,7 @@
       padding: 10px 12px;
       background: var(--bh-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 8px;
+      border-radius: var(--bh-radius-sm);
       cursor: pointer;
       transition: all var(--dur-fast);
 
@@ -321,7 +321,7 @@
 
       border-color: var(--bh-accent);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--bh-shadow-md);
 
 }
 
@@ -364,7 +364,7 @@
       color: var(--bh-accent);
       font-size: 10px;
       font-weight: 600;
-      border-radius: 4px;
+      border-radius: var(--bh-radius-xs);
       text-transform: uppercase;
 
 }

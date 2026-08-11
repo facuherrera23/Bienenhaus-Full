@@ -1,0 +1,3 @@
+-- Migración vacía (no-op): su contenido original (rate_limit_logs, uq_ml_webhook_event)
+-- duplicaba la migración 0056_ml_dead_letter_queue.sql. Se mantiene el archivo para
+-- preservar el orden de versiones en historiales que ya la registraron.

@@ -80,7 +80,7 @@
 
 .chat-search:focus-within {
     border-color: var(--bh-border-focus);
-    box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    box-shadow: var(--bh-ring-focus);
 }
 
 .chat-search input {
@@ -585,7 +585,7 @@
 
 .message-input-wrapper:focus-within {
     border-color: var(--bh-border-focus);
-    box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    box-shadow: var(--bh-ring-focus);
 }
 
 .attach-btn {
@@ -819,7 +819,7 @@
 
 .chat-page :global(.modal-content .field select:focus) {
     border-color: var(--bh-border-focus);
-    box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    box-shadow: var(--bh-ring-focus);
 }
 
 /* ============================================================

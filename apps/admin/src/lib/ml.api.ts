@@ -6,7 +6,7 @@ import {
     useMutation,
     useRpc,
 } from './api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import {
     ML_OPERATION_LABEL,
     ML_SYNC_STATUS_LABEL,
@@ -25,6 +25,7 @@ import {
     type MlQueueRow,
     type MlSettings,
     type MlSyncStatus,
+    type MlDeadLetterRow,
 } from '../types/ml';
 import {
     answerMlQuestion,
@@ -51,6 +52,13 @@ import {
     toMlMetaRow,
     toMlQueueRow,
     updateMlAutoReplyTemplate,
+    fetchMlDeadLetter,
+    retryDeadLetter,
+    deleteDeadLetter,
+    revokeMlTokens,
+    fetchMlQueueInfinite,
+    fetchMlMetaInfinite,
+    fetchMlQuestionsInfinite,
 } from './ml';
 
 // ============================================================
@@ -74,7 +82,7 @@ export function useMlQueue(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, string | number | boolean | undefined> = {};
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
@@ -89,6 +97,15 @@ export function useMlQueue(filters?: {
         orderBy: 'created_at',
         ascending: false,
         transform: toMlQueueRow,
+    });
+}
+
+export function useMlQueueInfinite(filters?: { status?: MlSyncStatus; operation?: MlOperation; pageSize?: number }) {
+    return useInfiniteQuery({
+        queryKey: ['ml-queue-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchMlQueueInfinite(pageParam, filters?.pageSize ?? 50),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        initialPageParam: 1,
     });
 }
 
@@ -110,6 +127,15 @@ export function useMlMeta(filters?: { property_id?: string; page?: number; pageS
     });
 }
 
+export function useMlMetaInfinite(filters?: { property_id?: string; pageSize?: number }) {
+    return useInfiniteQuery({
+        queryKey: ['ml-meta-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchMlMetaInfinite(pageParam, filters?.pageSize ?? 100),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        initialPageParam: 1,
+    });
+}
+
 // ============================================================
 // Query Hooks - Questions & Orders
 // ============================================================
@@ -128,6 +154,15 @@ export function useMlQuestions(filters?: { status?: string; page?: number; pageS
         pageSize: filters?.pageSize ?? 50,
         orderBy: 'received_at',
         ascending: false,
+    });
+}
+
+export function useMlQuestionsInfinite(filters?: { status?: string; pageSize?: number }) {
+    return useInfiniteQuery({
+        queryKey: ['ml-questions-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchMlQuestionsInfinite(pageParam, filters?.pageSize ?? 50),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        initialPageParam: 1,
     });
 }
 
@@ -286,6 +321,50 @@ export function useDisconnectMl() {
     });
 }
 
+export function useRevokeMlTokens() {
+    return useMutation({
+        mutationFn: async () => {
+            return revokeMlTokens();
+        },
+    });
+}
+
+// ============================================================
+// Query Hooks - Dead Letter Queue
+// ============================================================
+
+export function useMlDeadLetter(filters?: { status?: string; page?: number; pageSize?: number }) {
+    return useQuery({
+        queryKey: ['ml-dead-letter', filters],
+        queryFn: () => fetchMlDeadLetter(filters),
+    });
+}
+
+export function useMlDeadLetterInfinite(filters?: { status?: string; pageSize?: number }) {
+    return useInfiniteQuery({
+        queryKey: ['ml-dead-letter-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchMlDeadLetter({ page: pageParam, pageSize: filters?.pageSize ?? 50 }),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        initialPageParam: 1,
+    });
+}
+
+export function useRetryDeadLetter() {
+    return useMutation({
+        mutationFn: async (id: number) => {
+            return retryDeadLetter(id);
+        },
+    });
+}
+
+export function useDeleteDeadLetter() {
+    return useMutation({
+        mutationFn: async (id: number) => {
+            return deleteDeadLetter(id);
+        },
+    });
+}
+
 // ============================================================
 // Export
 // ============================================================
@@ -394,6 +473,10 @@ export {
     buildAuthorizeUrl,
     disconnectMl,
     embedProperty,
+    revokeMlTokens,
+    fetchMlDeadLetter,
+    retryDeadLetter,
+    deleteDeadLetter,
 };
 
 // ============================================================
@@ -416,6 +499,7 @@ export type {
     MlMetrics,
     MlItemMetrics,
     MlAutoReplyTemplate,
+    MlDeadLetterRow,
 };
 export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
 export type { QueueApiRow, MetaApiRow };

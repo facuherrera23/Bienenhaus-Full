@@ -1,4 +1,6 @@
 import type { Database } from './database';
+// ⚠️ REVISAR: si tu dashboard es React (no Preact), cambiá esta línea a:
+// import { type LucideIcon, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import { type LucideIcon, Minus, TrendingDown, TrendingUp } from 'lucide-preact';
 
 // ============================================================

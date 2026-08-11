@@ -1,752 +1,504 @@
-import { useRef, useState } from 'preact/hooks';
-import { contactFieldConfigs } from '../data/contactFieldConfigs';
-import { useReveal } from '../hooks/useReveal';
-import { textOf, useSiteContent } from '../lib/content';
-import { getNextWhatsAppUrl, useSiteSettings } from '../lib/site-settings';
-import {
-    ArrowRight,
-    Calculator,
-    CheckCircle,
-    Clock,
-    DollarSign,
-    File,
-    FileText,
-    Home,
-    Image,
-    Key,
-    Loader2,
-    type LucideIcon,
-    Mail,
-    MapPin,
-    MessageSquare,
-    MoreHorizontal,
-    Star,
-    TrendingUp,
-    UploadCloud,
-    X,
-} from 'lucide-preact';
-import { FacebookIcon, InstagramIcon, LinkedinIcon, WhatsappIcon } from '../lib/brand-icons';
-import styles from '../styles/modules/Contact.module.css';
+// apps/landing/src/components/Contact.tsx
+import { useState } from 'preact/hooks';
+import { useScrollAnimation, useRipple } from '@/lib/motion';
+import styles from './Contact.module.css';
 
-const INTENTS = [
-    { value: 'comprar', icon: 'fa-home', label: 'Quiero comprar' },
-    { value: 'vender', icon: 'fa-hand-holding-usd', label: 'Quiero vender' },
-    { value: 'alquilar', icon: 'fa-key', label: 'Quiero alquilar' },
-    { value: 'invertir', icon: 'fa-chart-line', label: 'Quiero invertir' },
-    { value: 'tasar', icon: 'fa-calculator', label: 'Quiero tasar' },
-    { value: 'otro', icon: 'fa-ellipsis-h', label: 'Otro' },
-];
-
-const REQUIRED_BASE_FIELDS = ['nombre', 'apellido', 'email', 'whatsapp', 'ciudad'];
-
-interface AttachedFile {
-    name: string;
-    size: number;
-    type: string;
+interface FormData {
+  name: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  intent: string;
+  message: string;
+  privacy: boolean;
 }
 
-function getLucideIcon(name: string) {
-    const iconMap: Record<string, LucideIcon> = {
-        'fa-home': Home,
-        'fa-hand-holding-usd': DollarSign,
-        'fa-key': Key,
-        'fa-chart-line': TrendingUp,
-        'fa-calculator': Calculator,
-        'fa-ellipsis-h': MoreHorizontal,
-    };
-    return iconMap[name] || Home;
-}
-
-function getFileIcon(type: string) {
-    if (type.includes('pdf')) return FileText;
-    if (type.includes('image')) return Image;
-    return File;
-}
+const intentOptions = ['Comprar', 'Vender', 'Alquilar', 'Invertir', 'Tasar', 'Otro'];
 
 export function Contact() {
-    const rootRef = useReveal<HTMLElement>('.contact-info, .contact-form-wrapper', {
-        threshold: 0.1,
-        rootMargin: '0px',
-    });
-    const { content, settings } = useSiteContent();
-    const { settings: siteSettings } = useSiteSettings();
-    const whatsappUrl = getNextWhatsAppUrl(siteSettings);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    city: '',
+    intent: 'Comprar',
+    message: '',
+    privacy: false,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
-    const section = content.contacto ?? {};
-    const label = textOf(section.label, 'text', 'Contacto');
-    const title = textOf(section.title, 'text', 'Hablemos sobre tu próxima propiedad.');
-    const description = textOf(
-        section.description,
-        'text',
-        'Ya sea para vender, alquilar, tasar o encontrar una propiedad, nuestro equipo está listo para acompañarte.',
-    );
+  // Scroll reveal para el header
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
+    threshold: 0.2,
+    once: true,
+  });
 
-    const contactInfo = [
-        {
-            icon: 'fa-map-marker-alt',
-            label: 'Ubicación',
-            value:
-                siteSettings.contact.address ||
-                textOf(settings.contact_address, 'value', 'Córdoba, Argentina'),
-        },
-        {
-            icon: 'fa-envelope',
-            label: 'Email',
-            value:
-                siteSettings.contact.email ||
-                textOf(settings.contact_email, 'value', 'info@bienenhaus.com'),
-        },
-        {
-            icon: 'fa-clock',
-            label: 'Horarios',
-            value: `Lun-Vie ${siteSettings.contact.hours?.weekdays || '09:00 - 18:00'} / Sáb ${siteSettings.contact.hours?.saturdays || '09:00 - 13:00'}`,
-        },
-        { icon: 'fa-whatsapp', label: 'WhatsApp', value: whatsappUrl },
-    ];
+  // Scroll reveal para el formulario
+  const { ref: formRef, isVisible: formVisible } = useScrollAnimation({
+    threshold: 0.1,
+    once: true,
+  });
 
-    const hours = settings.contact_hours ?? {};
+  // Scroll reveal para la info de contacto
+  const { ref: infoRef, isVisible: infoVisible } = useScrollAnimation({
+    threshold: 0.1,
+    once: true,
+    delay: 200,
+  });
 
-    const [intent, setIntent] = useState('comprar');
-    const [values, setValues] = useState<Record<string, string>>({});
-    const [errors, setErrors] = useState<Record<string, boolean>>({});
-    const [tried, setTried] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [files, setFiles] = useState<AttachedFile[]>([]);
-    const [dragOver, setDragOver] = useState(false);
-    const [fileError, setFileError] = useState('');
-    const [submitError, setSubmitError] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const { RippleEffect } = useRipple();
 
-    const config = contactFieldConfigs[intent] ?? contactFieldConfigs.otro;
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    // Limpiar error del campo
+    if (errors[name as keyof FormData]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
 
-    const groupClass = (name: string): string => {
-        const cls = [styles.formGroup];
-        if (errors[name]) cls.push(styles.error);
-        else if (tried && values[name]?.trim()) cls.push(styles.success);
-        return cls.join(' ');
-    };
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
 
-    const addFiles = (list: FileList | null) => {
-        if (!list) return;
-        const next: AttachedFile[] = [];
-        Array.from(list).forEach((file) => {
-            if (file.size > 10 * 1024 * 1024) {
-                setFileError('El archivo excede el tamaño máximo de 10MB');
-                return;
-            }
-            if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
-                setFileError('Solo se permiten archivos PDF, JPG o PNG');
-                return;
-            }
-            next.push({ name: file.name, size: file.size, type: file.type });
-        });
-        if (next.length) {
-            setFileError('');
-            setFiles((prev) => [...prev, ...next]);
-        }
-    };
+    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
+    if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es requerido';
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es requerido';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    if (!formData.phone.trim()) newErrors.phone = 'El teléfono es requerido';
+    if (!formData.privacy) newErrors.privacy = 'Debes aceptar la política de privacidad';
 
-    const removeFile = (name: string) => setFiles((prev) => prev.filter((f) => f.name !== name));
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    const handleSubmit = async (e: Event) => {
-        e.preventDefault();
-        const form = e.currentTarget as HTMLFormElement;
-        const formData = new FormData(form);
-        const nextValues: Record<string, string> = {};
-        formData.forEach((value, key) => {
-            nextValues[key] = String(value);
-        });
-        setValues(nextValues);
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-        const nextErrors: Record<string, boolean> = {};
-        REQUIRED_BASE_FIELDS.forEach((name) => {
-            if (!(nextValues[name] ?? '').trim()) nextErrors[name] = true;
-        });
+    setIsSubmitting(true);
+    
+    // Simular envío (reemplazar con llamada real a Supabase)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    
+    // Resetear después de 5 segundos
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setFormData({
+        name: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        city: '',
+        intent: 'Comprar',
+        message: '',
+        privacy: false,
+      });
+    }, 5000);
+  };
 
-        const privacyChecked = nextValues['privacy'] === 'on';
-        if (!privacyChecked) nextErrors['privacy'] = true;
+  return (
+    <section className={styles.contact} id="contact">
+      <div className="container">
+        {/* Header */}
+        <div 
+          className={`${styles.contactHeader} ${headerVisible ? styles.visible : ''}`}
+          ref={headerRef}
+        >
+          <span className={styles.contactLabel}>Contacto</span>
+          <h2 className={styles.contactTitle}>
+            <span className={styles.highlight}>Hablemos</span> de tu próximo hogar
+          </h2>
+          <p className={styles.contactDesc}>
+            Completá el formulario y te contactaremos a la brevedad para
+            asesorarte personalmente.
+          </p>
+          <button className={styles.btnContactSecondary}>
+            Llamar ahora
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M9 3L13 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
-        setErrors(nextErrors);
-        setTried(true);
+        {/* Layout */}
+        <div className={styles.contactLayout}>
+          {/* Información de contacto */}
+          <div 
+            className={`${styles.contactInfo} ${infoVisible ? styles.visible : ''}`}
+            ref={infoRef}
+          >
+            <h3 className={styles.contactInfoTitle}>Información de contacto</h3>
 
-        if (Object.keys(nextErrors).length > 0) {
-            const firstError = form.querySelector('.form-group.error');
-            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-
-        // Honeypot field
-        const honeypot = nextValues['website'] || '';
-
-        setLoading(true);
-        setSubmitError('');
-        try {
-            const res = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-submit`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        name: `${nextValues.nombre} ${nextValues.apellido}`,
-                        email: nextValues.email,
-                        phone: nextValues.whatsapp,
-                        subject: nextValues.asunto || nextValues.interes || 'Consulta web',
-                        message: nextValues.mensaje || '',
-                        website: honeypot,
-                    }),
-                },
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                if (res.status === 429) {
-                    throw new Error(data.error || 'Demasiados intentos. Intente en 1 hora.');
-                }
-                throw new Error(data.error || 'Error enviando la consulta');
-            }
-
-            setLoading(false);
-            setSubmitted(true);
-        } catch (err) {
-            setLoading(false);
-            setSubmitError(err instanceof Error ? err.message : 'Error de conexión. Intente nuevamente.');
-        }
-    };
-
-    return (
-        <section className={styles.contact} id="contacto" aria-label="Contacto" ref={rootRef}>
-            <div className="container">
-                <header className={styles.contactHeader}>
-                    <span className={styles.contactLabel}>{label}</span>
-                    <h2 className={styles.contactTitle}>{title}</h2>
-                    <p className={styles.contactDesc}>{description}</p>
-                    <button className={styles.btnContactSecondary}>
-                        Agendar una reunión{' '}
-                        <ArrowRight className={styles.icon} aria-hidden="true" />
-                    </button>
-                </header>
-
-                <div className={styles.contactLayout}>
-                    <div className={`${styles.contactInfo} ${styles.visible}`} id="contactInfo">
-                        <h3 className={styles.contactInfoTitle}>Contacto directo</h3>
-                        {contactInfo.map((item) => {
-                            const ContactIcon = getLucideIcon(item.icon);
-                            return (
-                                <div className={styles.contactInfoItem} key={item.label}>
-                                    <span className={styles.icon}>
-                                        <ContactIcon className={styles.icon} aria-hidden="true" />
-                                    </span>
-                                    <div className={styles.content}>
-                                        <span className={styles.label}>{item.label}</span>
-                                        <span className={styles.value}>{item.value}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div className={styles.contactResponse}>
-                            <div className={styles.responseLabel}>
-                                <Clock className={styles.icon} aria-hidden="true" /> Tiempo de
-                                respuesta
-                            </div>
-                            <p className={styles.responseText}>
-                                Respondemos todas las consultas en menos de 24 horas hábiles.
-                            </p>
-                            <div className={styles.responseHours}>
-                                <div className={styles.hourBlock}>
-                                    <span className={styles.day}>Lunes a Viernes</span>
-                                    <span className={styles.time}>
-                                        {textOf(hours, 'weekdays', '09:00 - 18:00')}
-                                    </span>
-                                </div>
-                                <div className={styles.hourBlock}>
-                                    <span className={styles.day}>Sábados</span>
-                                    <span className={styles.time}>
-                                        {textOf(hours, 'saturdays', '09:00 - 13:00')}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.contactSocial}>
-                            <a
-                                href={siteSettings.social.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.socialCircle}
-                                aria-label="Instagram"
-                            >
-                                <InstagramIcon className={styles.icon} aria-hidden={true} />
-                            </a>
-                            <a
-                                href={siteSettings.social.facebook}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.socialCircle}
-                                aria-label="Facebook"
-                            >
-                                <FacebookIcon className={styles.icon} aria-hidden={true} />
-                            </a>
-                            <a
-                                href={siteSettings.social.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.socialCircle}
-                                aria-label="LinkedIn"
-                            >
-                                <LinkedinIcon className={styles.icon} aria-hidden={true} />
-                            </a>
-                            <a
-                                href={whatsappUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.socialCircle}
-                                aria-label="WhatsApp"
-                            >
-                                <WhatsappIcon className={styles.icon} aria-hidden={true} />
-                            </a>
-                        </div>
-                        <div className={styles.contactMap}>
-                            <div className={styles.mapPlaceholder}>
-                                <MapPin className={styles.icon} aria-hidden="true" />
-                                <span>Mapa interactivo</span>
-                            </div>
-                            <div className={styles.mapPin}></div>
-                        </div>
-                    </div>
-
-                    <div className={`${styles.contactFormWrapper} ${styles.visible}`} id="contactFormWrapper">
-                        {submitted ? (
-                            <div
-                                className={`${styles.submitSuccess} ${styles.show}`}
-                                id="submitSuccess"
-                            >
-                                <div className={styles.successIcon}>
-                                    <CheckCircle className={styles.icon} aria-hidden="true" />
-                                </div>
-                                <div className={styles.successTitle}>¡Consulta enviada!</div>
-                                <div className={styles.successText}>
-                                    Nuestro equipo se pondrá en contacto contigo en las próximas 24
-                                    horas.
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className={styles.formIndicators}>
-                                    <div className={styles.formIndicator}>
-                                        <Star className={styles.icon} aria-hidden="true" />
-                                        <span>
-                                            <span className={styles.highlight}>★★★★★</span> Atención
-                                            personalizada
-                                        </span>
-                                    </div>
-                                    <div className={styles.formIndicator}>
-                                        <Clock className={styles.icon} aria-hidden="true" />
-                                        <span>
-                                            <span className={styles.highlight}>24h</span> Tiempo de
-                                            respuesta
-                                        </span>
-                                    </div>
-                                    <div className={styles.formIndicator}>
-                                        <CheckCircle className={styles.icon} aria-hidden="true" />
-                                        <span>
-                                            <span className={styles.highlight}>100%</span>{' '}
-                                            Asesoramiento profesional
-                                        </span>
-                                    </div>
-                                </div>
-                                <form id="contactForm" noValidate onSubmit={handleSubmit}>
-                                    <div className={styles.formPills} id="formPills">
-                                        {INTENTS.map((intentOption) => {
-                                            const IntentIcon = getLucideIcon(intentOption.icon);
-                                            return (
-                                                <button
-                                                    type="button"
-                                                    key={intentOption.value}
-                                                    className={`${styles.formPill}${intent === intentOption.value ? ` ${styles.active}` : ''}`}
-                                                    data-value={intentOption.value}
-                                                    onClick={() => setIntent(intentOption.value)}
-                                                >
-                                                    <IntentIcon
-                                                        className={styles.icon}
-                                                        aria-hidden="true"
-                                                    />{' '}
-                                                    {intentOption.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    <div className={styles.formRow}>
-                                        <div
-                                            className={groupClass('nombre')}
-                                            style={{ animationDelay: '0.1s' }}
-                                        >
-                                            <label htmlFor="nombre">
-                                                Nombre <span className={styles.required}>*</span>
-                                            </label>
-                                            <div className={styles.inputWrapper}>
-                                                <Mail
-                                                    className={styles.inputIcon}
-                                                    aria-hidden="true"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    placeholder="Tu nombre"
-                                                    required
-                                                />
-                                                <CheckCircle
-                                                    className={styles.successCheck}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <span className={styles.errorMessage}>
-                                                Por favor ingresá tu nombre
-                                            </span>
-                                        </div>
-                                        <div
-                                            className={groupClass('apellido')}
-                                            style={{ animationDelay: '0.15s' }}
-                                        >
-                                            <label htmlFor="apellido">
-                                                Apellido <span className={styles.required}>*</span>
-                                            </label>
-                                            <div className={styles.inputWrapper}>
-                                                <Mail
-                                                    className={styles.inputIcon}
-                                                    aria-hidden="true"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    id="apellido"
-                                                    name="apellido"
-                                                    placeholder="Tu apellido"
-                                                    required
-                                                />
-                                                <CheckCircle
-                                                    className={styles.successCheck}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <span className={styles.errorMessage}>
-                                                Por favor ingresá tu apellido
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.formRow}>
-                                        <div
-                                            className={groupClass('email')}
-                                            style={{ animationDelay: '0.2s' }}
-                                        >
-                                            <label htmlFor="email">
-                                                Correo electrónico{' '}
-                                                <span className={styles.required}>*</span>
-                                            </label>
-                                            <div className={styles.inputWrapper}>
-                                                <Mail
-                                                    className={styles.inputIcon}
-                                                    aria-hidden="true"
-                                                />
-                                                <input
-                                                    type="email"
-                                                    id="email"
-                                                    name="email"
-                                                    placeholder="tu@email.com"
-                                                    required
-                                                />
-                                                <CheckCircle
-                                                    className={styles.successCheck}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <span className={styles.errorMessage}>
-                                                Por favor ingresá un correo válido
-                                            </span>
-                                        </div>
-                                        <div
-                                            className={groupClass('whatsapp')}
-                                            style={{ animationDelay: '0.25s' }}
-                                        >
-                                            <label htmlFor="whatsapp">
-                                                WhatsApp / Teléfono{' '}
-                                                <span className={styles.required}>*</span>
-                                            </label>
-                                            <div className={styles.inputWrapper}>
-                                                <WhatsappIcon
-                                                    className={styles.inputIcon}
-                                                    aria-hidden={true}
-                                                />
-                                                <input
-                                                    type="tel"
-                                                    id="whatsapp"
-                                                    name="whatsapp"
-                                                    placeholder="+54 9 351 000-0000"
-                                                    required
-                                                />
-                                                <CheckCircle
-                                                    className={styles.successCheck}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <span className={styles.errorMessage}>
-                                                Por favor ingresá tu WhatsApp
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.formRow}>
-                                        <div
-                                            className={groupClass('ciudad')}
-                                            style={{ animationDelay: '0.2s' }}
-                                        >
-                                            <label htmlFor="ciudad">
-                                                Ciudad <span className={styles.required}>*</span>
-                                            </label>
-                                            <div className={styles.inputWrapper}>
-                                                <MapPin
-                                                    className={styles.inputIcon}
-                                                    aria-hidden="true"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    id="ciudad"
-                                                    name="ciudad"
-                                                    placeholder="¿En qué ciudad estás?"
-                                                    required
-                                                />
-                                                <CheckCircle
-                                                    className={styles.successCheck}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <span className={styles.errorMessage}>
-                                                Por favor ingresá tu ciudad
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div id="dynamicFields">
-                                        {config.fields.map((field, index) => {
-                                            const FieldIcon = getLucideIcon(field.icon);
-                                            return (
-                                                <div
-                                                    className={styles.formGroup}
-                                                    style={{
-                                                        animationDelay: `${0.35 + index * 0.05}s`,
-                                                    }}
-                                                    key={field.name}
-                                                >
-                                                    <label htmlFor={field.name}>
-                                                        {field.label}
-                                                    </label>
-                                                    <div className={styles.inputWrapper}>
-                                                        <FieldIcon
-                                                            className={styles.inputIcon}
-                                                            aria-hidden="true"
-                                                        />
-                                                        {field.type === 'select' ? (
-                                                            <select
-                                                                id={field.name}
-                                                                name={field.name}
-                                                            >
-                                                                {field.options?.map((opt) => (
-                                                                    <option value={opt} key={opt}>
-                                                                        {opt}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        ) : field.type === 'textarea' ? (
-                                                            <textarea
-                                                                id={field.name}
-                                                                name={field.name}
-                                                                placeholder={
-                                                                    field.placeholder || ''
-                                                                }
-                                                                rows={3}
-                                                            ></textarea>
-                                                        ) : (
-                                                            <input
-                                                                type="text"
-                                                                id={field.name}
-                                                                name={field.name}
-                                                                placeholder={
-                                                                    field.placeholder || ''
-                                                                }
-                                                            />
-                                                        )}
-                                                        <CheckCircle
-                                                            className={styles.successCheck}
-                                                            aria-hidden="true"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    <div
-                                        className={styles.formGroup}
-                                        style={{ animationDelay: '0.4s' }}
-                                    >
-                                        <label htmlFor="mensaje">Mensaje</label>
-                                        <div className={styles.inputWrapper}>
-                                            <MessageSquare
-                                                className={styles.inputIcon}
-                                                aria-hidden="true"
-                                            />
-                                            <textarea
-                                                id="mensaje"
-                                                name="mensaje"
-                                                placeholder="Contanos un poco más sobre lo que necesitás..."
-                                            ></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        className={styles.formGroup}
-                                        style={{ animationDelay: '0.45s' }}
-                                    >
-                                        <label htmlFor="fileInput">Adjuntar archivos</label>
-                                        <div
-                                            className={`${styles.dropZone}${dragOver ? ` ${styles.dragOver}` : ''}`}
-                                            id="dropZone"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            onDragOver={(e) => {
-                                                e.preventDefault();
-                                                setDragOver(true);
-                                            }}
-                                            onDragLeave={() => setDragOver(false)}
-                                            onDrop={(e) => {
-                                                e.preventDefault();
-                                                setDragOver(false);
-                                                if (e.dataTransfer) addFiles(e.dataTransfer.files);
-                                            }}
-                                        >
-                                            <div className={styles.dropIcon}>
-                                                <UploadCloud
-                                                    className={styles.icon}
-                                                    aria-hidden="true"
-                                                />
-                                            </div>
-                                            <div className={styles.dropText}>
-                                                Arrastrá archivos aquí o hacé clic para
-                                                seleccionarlos
-                                            </div>
-                                            <div className={styles.dropHint}>
-                                                PDF, JPG, PNG · Máximo 10MB
-                                            </div>
-                                            <input
-                                                type="file"
-                                                id="fileInput"
-                                                multiple
-                                                accept=".pdf,.jpg,.jpeg,.png"
-                                                style={{ display: 'none' }}
-                                                ref={fileInputRef}
-                                                onChange={(e) => {
-                                                    addFiles(e.currentTarget.files);
-                                                    e.currentTarget.value = '';
-                                                }}
-                                            />
-                                        </div>
-                                        {files.length > 0 && (
-                                            <div className={styles.fileList} id="fileList">
-                                                {files.map((file) => {
-                                                    const FileIcon = getFileIcon(file.type);
-                                                    return (
-                                                        <div
-                                                            className={styles.fileItem}
-                                                            key={file.name}
-                                                        >
-                                                            <FileIcon
-                                                                className={styles.icon}
-                                                                aria-hidden="true"
-                                                            />
-                                                            <span>{file.name}</span>
-                                                            <span
-                                                                style={{
-                                                                    fontSize: '11px',
-                                                                    color: 'var(--bh-text-tertiary)',
-                                                                }}
-                                                            >
-                                                                {(file.size / 1024).toFixed(0)}KB
-                                                            </span>
-                                                            <span
-                                                                className={styles.removeFile}
-                                                                onClick={() =>
-                                                                    removeFile(file.name)
-                                                                }
-                                                            >
-                                                                <X
-                                                                    className={styles.icon}
-                                                                    aria-hidden="true"
-                                                                />
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                        {fileError && (
-                                            <span className={styles.formError} role="alert">
-                                                {fileError}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div
-                                        className={`${styles.checkboxGroup} ${styles.formGroup}${errors.privacy ? ` ${styles.error}` : ''}`}
-                                        style={{ animationDelay: '0.5s' }}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            id="privacy"
-                                            name="privacy"
-                                            required
-                                        />
-                                        <label htmlFor="privacy">
-                                            Acepto la <a href="#">Política de Privacidad</a>{' '}
-                                            <span className={styles.required}>*</span>
-                                        </label>
-                                    </div>
-
-                                    {/* Honeypot - invisible to humans */}
-                                    <input
-                                        type="text"
-                                        name="website"
-                                        style={{ display: 'none' }}
-                                        tabIndex={-1}
-                                        autoComplete="off"
-                                        aria-hidden="true"
-                                    />
-
-                                    {submitError && (
-                                        <span className={styles.formError} role="alert">
-                                            {submitError}
-                                        </span>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        className={`${styles.btnSubmit}${loading ? ` ${styles.loading}` : ''}`}
-                                        id="submitBtn"
-                                        disabled={loading}
-                                    >
-                                        <span className={styles.btnText}>
-                                            {loading ? 'ENVIANDO...' : 'ENVIAR CONSULTA'}
-                                        </span>
-                                        <ArrowRight className={styles.icon} aria-hidden="true" />
-                                        <Loader2 className={styles.spinner} aria-hidden="true" />
-                                    </button>
-                                </form>
-                            </>
-                        )}
-                    </div>
-                </div>
+            <div className={styles.contactInfoItem}>
+              <div className={styles.icon}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M2 4L9 9L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <rect x="1" y="2" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </div>
+              <div className={styles.content}>
+                <span className={styles.label}>Email</span>
+                <span className={styles.value}>bienenhaus.propiedades@gmail.com</span>
+              </div>
             </div>
-        </section>
-    );
+
+            <div className={styles.contactInfoItem}>
+              <div className={styles.icon}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M4 2L6 5L4.5 7L6.5 10L8.5 12L10.5 10.5L13 12L15 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <rect x="1" y="1" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </div>
+              <div className={styles.content}>
+                <span className={styles.label}>Teléfono</span>
+                <span className={styles.value}>+54 9 3516 37-9651</span>
+              </div>
+            </div>
+
+            <div className={styles.contactInfoItem}>
+              <div className={styles.icon}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 10.5C10.6569 10.5 12 9.15685 12 7.5C12 5.84315 10.6569 4.5 9 4.5C7.34315 4.5 6 5.84315 6 7.5C6 9.15685 7.34315 10.5 9 10.5Z" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M9 17C13 13.5 16 10.5 16 7.5C16 3.63401 12.866 0.5 9 0.5C5.13401 0.5 2 3.63401 2 7.5C2 10.5 5 13.5 9 17Z" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </div>
+              <div className={styles.content}>
+                <span className={styles.label}>Ubicación</span>
+                <span className={styles.value}>Córdoba, Argentina</span>
+              </div>
+            </div>
+
+            {/* Horarios de atención */}
+            <div className={styles.contactResponse}>
+              <div className={styles.responseLabel}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M8 3V8L11 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Horarios de atención
+              </div>
+              <div className={styles.responseHours}>
+                <div className={styles.hourBlock}>
+                  <span className={styles.day}>Lun - Vie</span>
+                  <span className={styles.time}>9:00 - 18:00</span>
+                </div>
+                <div className={styles.hourBlock}>
+                  <span className={styles.day}>Sábado</span>
+                  <span className={styles.time}>10:00 - 14:00</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Redes sociales */}
+            <div className={styles.contactSocial}>
+              <a href="#" className={styles.socialCircle} aria-label="Instagram">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="1" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="9" cy="9" r="4" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="13.5" cy="4.5" r="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </a>
+              <a href="#" className={styles.socialCircle} aria-label="Facebook">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M12 3H10.5C9.11929 3 8 4.11929 8 5.5V7.5H6V10.5H8V15.5H11V10.5H13L13.5 7.5H11V5.5C11 5.22386 11.2239 5 11.5 5H13.5V3H12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+              <a href="#" className={styles.socialCircle} aria-label="YouTube">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="4" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M8 7L11.5 9L8 11V7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+              <a href="#" className={styles.socialCircle} aria-label="LinkedIn">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M13 6.5C14.1935 6.5 15.3381 6.97411 16.182 7.81802C17.0259 8.66193 17.5 9.80653 17.5 11V17.5H13.5V11C13.5 10.6022 13.342 10.2206 13.0607 9.93934C12.7794 9.65804 12.3978 9.5 12 9.5C11.6022 9.5 11.2206 9.65804 10.9393 9.93934C10.658 10.2206 10.5 10.6022 10.5 11V17.5H6.5V11C6.5 9.80653 6.97411 8.66193 7.81802 7.81802C8.66193 6.97411 9.80653 6.5 11 6.5H13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4.5 6.5H0.5V17.5H4.5V6.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="2.5" cy="2.5" r="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              </a>
+            </div>
+
+            {/* Mapa mini */}
+            <div className={styles.contactMap}>
+              <div className={styles.mapPlaceholder}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="12" cy="9" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                Córdoba, Argentina
+              </div>
+              <div className={styles.mapPin} aria-hidden="true" />
+            </div>
+          </div>
+
+          {/* Formulario */}
+          <div 
+            className={`${styles.contactFormWrapper} ${formVisible ? styles.visible : ''}`}
+            ref={formRef}
+          >
+            {!isSubmitted ? (
+              <form onSubmit={handleSubmit} noValidate>
+                {/* Indicadores */}
+                <div className={styles.formIndicators}>
+                  <div className={styles.formIndicator}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <span>Respuesta en <span className={styles.highlight}>24hs</span></span>
+                  </div>
+                  <div className={styles.formIndicator}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 7L5 10L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <span>Asesoramiento <span className={styles.highlight}>personalizado</span></span>
+                  </div>
+                </div>
+
+                {/* Pills de intención */}
+                <span className={styles.formStepLabel}>¿Qué necesitas?</span>
+                <div className={styles.formPills}>
+                  {intentOptions.map(intent => (
+                    <button
+                      key={intent}
+                      type="button"
+                      className={`${styles.formPill} ${formData.intent === intent ? styles.active : ''}`}
+                      onClick={() => setFormData(prev => ({ ...prev, intent }))}
+                    >
+                      {intent}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Nombre y Apellido */}
+                <div className={styles.formRow}>
+                  <div className={`${styles.formGroup} ${errors.name ? styles.error : ''}`}>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder=" "
+                        value={formData.name}
+                        onChange={handleChange}
+                        className={errors.name ? styles.error : ''}
+                      />
+                      <label htmlFor="name">Nombre <span className={styles.required}>*</span></label>
+                      <span className={styles.inputIcon}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M2 14V13C2 10.2386 4.23858 8 7 8H9C11.7614 8 14 10.2386 14 13V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                      <span className={styles.successCheck}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                    </div>
+                    {errors.name && <span className={styles.errorMessage}>{errors.name}</span>}
+                  </div>
+
+                  <div className={`${styles.formGroup} ${errors.lastName ? styles.error : ''}`}>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        placeholder=" "
+                        value={formData.lastName}
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="lastName">Apellido <span className={styles.required}>*</span></label>
+                      <span className={styles.inputIcon}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M2 14V13C2 10.2386 4.23858 8 7 8H9C11.7614 8 14 10.2386 14 13V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                      <span className={styles.successCheck}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                    </div>
+                    {errors.lastName && <span className={styles.errorMessage}>{errors.lastName}</span>}
+                  </div>
+                </div>
+
+                {/* Email y Teléfono */}
+                <div className={styles.formRow}>
+                  <div className={`${styles.formGroup} ${errors.email ? styles.error : ''}`}>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder=" "
+                        value={formData.email}
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="email">Email <span className={styles.required}>*</span></label>
+                      <span className={styles.inputIcon}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M2 3L8 7L14 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <rect x="1" y="2" width="14" height="12" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                      </span>
+                      <span className={styles.successCheck}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                    </div>
+                    {errors.email && <span className={styles.errorMessage}>{errors.email}</span>}
+                  </div>
+
+                  <div className={`${styles.formGroup} ${errors.phone ? styles.error : ''}`}>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        placeholder=" "
+                        value={formData.phone}
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="phone">Teléfono <span className={styles.required}>*</span></label>
+                      <span className={styles.inputIcon}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 2L5 4L4 6L6 8L8 10L9 9L11 10L13 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                      </span>
+                      <span className={styles.successCheck}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </span>
+                    </div>
+                    {errors.phone && <span className={styles.errorMessage}>{errors.phone}</span>}
+                  </div>
+                </div>
+
+                {/* Ciudad */}
+                <div className={styles.formGroup}>
+                  <div className={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      id="city"
+                      name="city"
+                      placeholder=" "
+                      value={formData.city}
+                      onChange={handleChange}
+                    />
+                    <label htmlFor="city">Ciudad</label>
+                    <span className={styles.inputIcon}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 9.5C9.38071 9.5 10.5 8.38071 10.5 7C10.5 5.61929 9.38071 4.5 8 4.5C6.61929 4.5 5.5 5.61929 5.5 7C5.5 8.38071 6.61929 9.5 8 9.5Z" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M8 15C11 12.5 13.5 10 13.5 7C13.5 3.96243 11.0376 1.5 8 1.5C4.96243 1.5 2.5 3.96243 2.5 7C2.5 10 5 12.5 8 15Z" stroke="currentColor" strokeWidth="1.5"/>
+                      </svg>
+                    </span>
+                    <span className={styles.successCheck}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mensaje */}
+                <div className={styles.formGroup}>
+                  <div className={styles.inputWrapper}>
+                    <textarea
+                      id="message"
+                      name="message"
+                      placeholder=" "
+                      value={formData.message}
+                      onChange={handleChange}
+                      rows={4}
+                    />
+                    <label htmlFor="message">Mensaje</label>
+                    <span className={styles.inputIcon}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M2 4L8 8L14 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        <rect x="1" y="2" width="14" height="12" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                      </svg>
+                    </span>
+                    <span className={styles.successCheck}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8L6 11L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Privacidad */}
+                <div className={`${styles.formGroup} ${styles.checkboxGroup} ${errors.privacy ? styles.error : ''}`}>
+                  <input
+                    type="checkbox"
+                    id="privacy"
+                    name="privacy"
+                    checked={formData.privacy}
+                    onChange={handleChange}
+                  />
+                  <label htmlFor="privacy">
+                    Acepto la <a href="/politica-privacidad">política de privacidad</a> y el tratamiento de mis datos.
+                    <span className={styles.required}>*</span>
+                  </label>
+                </div>
+                {errors.privacy && <span className={styles.errorMessage}>{errors.privacy}</span>}
+
+                {/* Submit */}
+                <RippleEffect>
+                  <button 
+                    type="submit" 
+                    className={`${styles.btnSubmit} ${isSubmitting ? styles.loading : ''}`}
+                    disabled={isSubmitting}
+                  >
+                    <span className={styles.spinner} />
+                    <span className={styles.btnText}>
+                      Enviar consulta
+                    </span>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M3 9H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M10 4L15 9L10 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </RippleEffect>
+              </form>
+            ) : (
+              /* Success State */
+              <div className={`${styles.submitSuccess} ${styles.show}`}>
+                <div className={styles.successIcon}>
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M20 32L28 40L44 24" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <h3 className={styles.successTitle}>¡Mensaje enviado!</h3>
+                <p className={styles.successText}>
+                  Gracias por contactarnos. Te responderemos a la brevedad.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

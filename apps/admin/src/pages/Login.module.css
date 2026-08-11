@@ -9,16 +9,16 @@
  * pages belong to the global design system (styles.css) and are NOT migrated.
  */
 
-.sidebar-logo {
+.login-brand .sidebar-logo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: none;
     width: 30px;
     height: 30px;
-    border-radius: 9px;
-    background: linear-gradient(135deg, var(--bh-accent), #0f8577);
-    color: #fff;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-deep));
+    color: var(--bh-white);
     font-weight: 800;
     font-size: 15px;
 }
@@ -40,10 +40,10 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 30px 28px;
+    padding: 36px 32px;
     background: var(--bh-bg-card);
     border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-md);
+    border-radius: var(--bh-radius-xl);
     box-shadow: var(--bh-shadow-md);
 }
 

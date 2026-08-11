@@ -1,46 +1,45 @@
-import { supabase } from './supabase';
-import type {
-    ChatChannel,
-    ChatChannelType,
-    ChatMessage,
-    ChatMessageRead,
-    ChatParticipant,
-    MessageType,
-} from '../types/chat';
-import type { Database } from '../types/database';
-import { CHANNEL_TYPE_LABEL, MESSAGE_TYPE_LABEL } from '../types/chat';
-
-// ============================================================
-// Re-export types and constants
+﻿// ============================================================
+// Chat Types
 // ============================================================
 
-export type {
-    ChatChannel,
-    ChatChannelType,
-    ChatParticipant,
-    ChatMessage,
-    MessageType,
-    ChatMessageRead,
+export type ChatChannelType = 'direct' | 'group' | 'property' | 'lead';
+export type MessageType = 'text' | 'file' | 'image' | 'system';
+
+export const MESSAGE_TYPE_LABEL: Record<MessageType, string> = {
+    text: 'Texto',
+    file: 'Archivo',
+    image: 'Imagen',
+    system: 'Sistema',
 };
 
-export { MESSAGE_TYPE_LABEL, CHANNEL_TYPE_LABEL };
+export const CHANNEL_TYPE_LABEL: Record<ChatChannelType, string> = {
+    direct: 'Directo',
+    group: 'Grupal',
+    property: 'Propiedad',
+    lead: 'Lead',
+};
 
 // ============================================================
 // DB row types with embedded relations
 // ============================================================
 
+import { supabase } from './supabase';
+import type { Database } from '../types/database';
+
 type MessageEmbedded = Database['public']['Tables']['chat_messages']['Row'] & {
-    sender: { name: string; photo_url: string } | { name: string; photo_url: string }[] | null;
-    reply_to: MessageEmbedded | null;
-    reads: Array<
+    sender: { name: string; photo_url: string | null } | { name: string; photo_url: string | null }[] | null;
+    reply_to?: MessageEmbedded | MessageEmbedded[] | null;
+    reads?: Array<
         Database['public']['Tables']['chat_message_reads']['Row'] & { agent: { name: string } }
     >;
 };
 
 type ChannelApiRow = Database['public']['Tables']['chat_channels']['Row'] & {
-    participants: (Database['public']['Tables']['chat_channel_participants']['Row'] & {
-        agent: { name: string; email: string; photo_url: string };
-    })[];
+    participants: Array<
+        Database['public']['Tables']['chat_channel_participants']['Row'] & {
+            agent: { name: string; email: string | null; photo_url: string | null };
+        }
+    >;
     last_message: MessageEmbedded[];
 };
 
@@ -50,17 +49,17 @@ type MessageApiRow = MessageEmbedded;
 // Embed helpers
 // ============================================================
 
-function embedAgentName(v: { name: string } | { name: string }[] | null): string | null {
+export function embedAgentName(v: { name: string } | { name: string }[] | null): string | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0]?.name ?? null) : v.name;
 }
 
-function embedAgentEmail(v: { email: string } | { email: string }[] | null): string | null {
+export function embedAgentEmail(v: { email: string | null } | { email: string | null }[] | null): string | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0]?.email ?? null) : v.email;
 }
 
-function embedAgentPhoto(v: { photo_url: string } | { photo_url: string }[] | null): string | null {
+export function embedAgentPhoto(v: { photo_url: string | null } | { photo_url: string | null }[] | null): string | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0]?.photo_url ?? null) : v.photo_url;
 }
@@ -69,8 +68,7 @@ function embedAgentPhoto(v: { photo_url: string } | { photo_url: string }[] | nu
 // Mappers
 // ============================================================
 
-function toChannelRow(c: ChannelApiRow): ChatChannel {
-    // Construir el last_message con todas las propiedades requeridas
+export function toChannelRow(c: ChannelApiRow): ChatChannel {
     let lastMessage: ChatMessage | null = null;
     if (c.last_message && c.last_message.length > 0) {
         const msg = c.last_message[0];
@@ -103,7 +101,8 @@ function toChannelRow(c: ChannelApiRow): ChatChannel {
     };
 }
 
-function toMessageRow(m: MessageEmbedded): ChatMessage {
+export function toMessageRow(m: MessageApiRow): ChatMessage {
+    const replyTo = Array.isArray(m.reply_to) ? (m.reply_to[0] ?? null) : m.reply_to;
     return {
         id: m.id,
         channel_id: m.channel_id,
@@ -120,7 +119,7 @@ function toMessageRow(m: MessageEmbedded): ChatMessage {
         deleted_at: m.deleted_at,
         sender_name: embedAgentName(m.sender),
         sender_photo_url: embedAgentPhoto(m.sender),
-        reply_to: m.reply_to ? toMessageRow(m.reply_to) : null,
+        reply_to: replyTo ? toMessageRow(replyTo) : null,
         read_by: (m.reads ?? []).map((r) => ({
             id: r.id,
             message_id: r.message_id,
@@ -132,73 +131,92 @@ function toMessageRow(m: MessageEmbedded): ChatMessage {
 }
 
 // ============================================================
-// SELECT strings
+// Public Types
 // ============================================================
 
-const CHANNEL_SELECT = `
-  id, type, name, property_id, lead_id, created_by, created_at, updated_at, deleted_at,
-  participants:chat_channel_participants!inner(
-    id, channel_id, agent_id, joined_at, last_read_at, notifications_enabled,
-    agent:agents(name, email, photo_url)
-  ),
-  last_message:chat_messages!chat_messages_channel_id_fkey(
-    id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-    reply_to_id, edited_at, created_at, updated_at, deleted_at,
-    sender:agents(name, photo_url),
-    reply_to:reply_to_id(
-      id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-      reply_to_id, edited_at, created_at, updated_at, deleted_at,
-      sender:agents(name, photo_url)
-    ),
-    reads:chat_message_reads(
-      id, message_id, agent_id, read_at,
-      agent:agents(name)
-    )
-  )
-`.trim();
+export interface ChatChannel {
+    id: string;
+    type: ChatChannelType;
+    name: string | null;
+    property_id: string | null;
+    lead_id: string | null;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    participants: ChannelParticipant[];
+    last_message: ChatMessage | null;
+    unread_count: number;
+}
 
-const MESSAGE_SELECT = `
-  id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-  reply_to_id, edited_at, created_at, updated_at, deleted_at,
-  sender:agents(name, photo_url),
-  reply_to:chat_messages!chat_messages_reply_to_id_fkey(
-    id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-    reply_to_id, edited_at, created_at, updated_at, deleted_at,
-    sender:agents(name, photo_url)
-  ),
-  reads:chat_message_reads(
-    id, message_id, agent_id, read_at,
-    agent:agents(name)
-  )
-`.trim();
+export interface ChannelParticipant {
+    id: string;
+    channel_id: string;
+    agent_id: string;
+    joined_at: string;
+    last_read_at: string | null;
+    notifications_enabled: boolean;
+    agent_name: string | null;
+    agent_email: string | null;
+    agent_photo_url: string | null;
+}
 
-const SINGLE_MESSAGE_SELECT = `
-  id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-  reply_to_id, edited_at, created_at, updated_at, deleted_at,
-  sender:agents(name, photo_url),
-  reply_to:chat_messages!chat_messages_reply_to_id_fkey(
-    id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
-    reply_to_id, edited_at, created_at, updated_at, deleted_at,
-    sender:agents(name, photo_url)
-  ),
-  reads:chat_message_reads(
-    id, message_id, agent_id, read_at,
-    agent:agents(name)
-  )
-`.trim();
+export interface ChatMessage {
+    id: string;
+    channel_id: string;
+    sender_id: string;
+    content: string;
+    message_type: MessageType;
+    file_url: string | null;
+    file_name: string | null;
+    file_size: number | null;
+    reply_to_id: string | null;
+    edited_at: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    sender_name: string | null;
+    sender_photo_url: string | null;
+    reply_to: ChatMessage | null;
+    read_by: MessageRead[];
+}
+
+export interface MessageRead {
+    id: string;
+    message_id: string;
+    agent_id: string;
+    read_at: string;
+    agent_name: string | null;
+}
 
 // ============================================================
-// API Functions - Channels
+// Channel API
 // ============================================================
 
 export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
     const { data, error } = await supabase
         .from('chat_channels')
-        .select(CHANNEL_SELECT)
+        .select(`
+            id, type, name, property_id, lead_id, created_by, created_at, updated_at, deleted_at,
+            participants:chat_channel_participants!inner(
+                id, channel_id, agent_id, joined_at, last_read_at, notifications_enabled,
+                agent:agents(name, email, photo_url)
+            ),
+            last_message:chat_messages!chat_messages_channel_id_fkey(
+                id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                sender:agents(name, photo_url),
+                reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+                    id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                    reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                    sender:agents(name, photo_url)
+                ),
+                reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
+            )
+        `)
         .eq('chat_channel_participants.agent_id', agentId)
         .is('deleted_at', null)
-        .order('updated_at', { ascending: false, foreignTable: 'last_message' })
-        .returns<ChannelApiRow[]>();
+        .order('updated_at', { ascending: false });
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toChannelRow);
@@ -207,10 +225,26 @@ export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
 export async function fetchChannel(channelId: string): Promise<ChatChannel> {
     const { data, error } = await supabase
         .from('chat_channels')
-        .select(CHANNEL_SELECT)
+        .select(`
+            id, type, name, property_id, lead_id, created_by, created_at, updated_at, deleted_at,
+            participants:chat_channel_participants!inner(
+                id, channel_id, agent_id, joined_at, last_read_at, notifications_enabled,
+                agent:agents(name, email, photo_url)
+            ),
+            last_message:chat_messages!chat_messages_channel_id_fkey(
+                id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                sender:agents(name, photo_url),
+                reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+                    id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                    reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                    sender:agents(name, photo_url)
+                ),
+                reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
+            )
+        `)
         .eq('id', channelId)
-        .is('deleted_at', null)
-        .maybeSingle<ChannelApiRow>();
+        .maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('Canal no encontrado');
@@ -221,50 +255,26 @@ export async function createDirectChannel(
     agentIds: string[],
     creatorId: string,
 ): Promise<ChatChannel> {
-    // Verificar si ya existe un canal directo entre estos agentes
-    const { data: existing } = await supabase
-        .from('chat_channels')
-        .select(
-            `
-      id, type,
-      participants:chat_channel_participants!inner(agent_id)
-    `,
-        )
-        .eq('type', 'direct')
-        .is('deleted_at', null)
-        .returns<Array<{ id: string; type: string; participants: Array<{ agent_id: string }> }>>();
-
-    if (existing) {
-        for (const ch of existing) {
-            const participantAgentIds = ch.participants.map((p) => p.agent_id).sort();
-            const targetIds = [...agentIds].sort();
-            if (JSON.stringify(participantAgentIds) === JSON.stringify(targetIds)) {
-                return await fetchChannel(ch.id);
-            }
-        }
-    }
-
-    // Crear nuevo canal
-    const { data: channel, error } = await supabase
+    const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
         .insert({ type: 'direct', created_by: creatorId })
         .select('id')
         .single();
 
-    if (error) throw new Error(error.message);
+    if (channelError) throw new Error(channelError.message);
 
     const participants = agentIds.map((agentId) => ({
         channel_id: channel.id,
         agent_id: agentId,
     }));
 
-    const { error: partError } = await supabase
+    const { error: participantsError } = await supabase
         .from('chat_channel_participants')
         .insert(participants);
 
-    if (partError) throw new Error(partError.message);
+    if (participantsError) throw new Error(participantsError.message);
 
-    return await fetchChannel(channel.id);
+    return fetchChannel(channel.id);
 }
 
 export async function createGroupChannel(
@@ -272,26 +282,26 @@ export async function createGroupChannel(
     agentIds: string[],
     creatorId: string,
 ): Promise<ChatChannel> {
-    const { data: channel, error } = await supabase
+    const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
         .insert({ type: 'group', name, created_by: creatorId })
         .select('id')
         .single();
 
-    if (error) throw new Error(error.message);
+    if (channelError) throw new Error(channelError.message);
 
     const participants = agentIds.map((agentId) => ({
         channel_id: channel.id,
         agent_id: agentId,
     }));
 
-    const { error: partError } = await supabase
+    const { error: participantsError } = await supabase
         .from('chat_channel_participants')
         .insert(participants);
 
-    if (partError) throw new Error(partError.message);
+    if (participantsError) throw new Error(participantsError.message);
 
-    return await fetchChannel(channel.id);
+    return fetchChannel(channel.id);
 }
 
 export async function createPropertyChannel(
@@ -303,29 +313,28 @@ export async function createPropertyChannel(
         .from('properties')
         .select('title')
         .eq('id', propertyId)
-        .maybeSingle();
+        .single();
 
-    const { data: channel, error } = await supabase
+    const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
-        .insert({
-            type: 'property',
-            name: prop?.title ?? 'Propiedad',
-            property_id: propertyId,
-            created_by: creatorId,
-        })
+        .insert({ type: 'property', name: prop?.title ?? 'Propiedad', property_id: propertyId, created_by: creatorId })
         .select('id')
         .single();
 
-    if (error) throw new Error(error.message);
+    if (channelError) throw new Error(channelError.message);
 
     const participants = agentIds.map((agentId) => ({
         channel_id: channel.id,
         agent_id: agentId,
     }));
 
-    await supabase.from('chat_channel_participants').insert(participants);
+    const { error: participantsError } = await supabase
+        .from('chat_channel_participants')
+        .insert(participants);
 
-    return await fetchChannel(channel.id);
+    if (participantsError) throw new Error(participantsError.message);
+
+    return fetchChannel(channel.id);
 }
 
 export async function createLeadChannel(
@@ -337,73 +346,52 @@ export async function createLeadChannel(
         .from('leads')
         .select('name, last_name')
         .eq('id', leadId)
-        .maybeSingle();
+        .single();
 
-    const { data: channel, error } = await supabase
+    const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
-        .insert({
-            type: 'lead',
-            name: lead ? `${lead.name} ${lead.last_name}` : 'Lead',
-            lead_id: leadId,
-            created_by: creatorId,
-        })
+        .insert({ type: 'lead', name: lead ? `${lead.name} ${lead.last_name}` : 'Lead', lead_id: leadId, created_by: creatorId })
         .select('id')
         .single();
 
-    if (error) throw new Error(error.message);
+    if (channelError) throw new Error(channelError.message);
 
     const participants = agentIds.map((agentId) => ({
         channel_id: channel.id,
         agent_id: agentId,
     }));
 
-    await supabase.from('chat_channel_participants').insert(participants);
-
-    return await fetchChannel(channel.id);
-}
-
-export async function addParticipant(channelId: string, agentId: string): Promise<void> {
-    const { error } = await supabase
+    const { error: participantsError } = await supabase
         .from('chat_channel_participants')
-        .insert({ channel_id: channelId, agent_id: agentId })
-        .select()
-        .single();
+        .insert(participants);
 
-    if (error) throw new Error(error.message);
-}
+    if (participantsError) throw new Error(participantsError.message);
 
-export async function removeParticipant(channelId: string, agentId: string): Promise<void> {
-    const { error } = await supabase
-        .from('chat_channel_participants')
-        .delete()
-        .eq('channel_id', channelId)
-        .eq('agent_id', agentId);
-
-    if (error) throw new Error(error.message);
-}
-
-export async function updateLastRead(channelId: string, agentId: string): Promise<void> {
-    const { error } = await supabase
-        .from('chat_channel_participants')
-        .update({ last_read_at: new Date().toISOString() })
-        .eq('channel_id', channelId)
-        .eq('agent_id', agentId);
-
-    if (error) throw new Error(error.message);
+    return fetchChannel(channel.id);
 }
 
 // ============================================================
-// API Functions - Messages
+// Message API
 // ============================================================
 
 export async function fetchMessages(
     channelId: string,
-    limit = 50,
     before?: string,
+    limit = 50,
 ): Promise<ChatMessage[]> {
     let query = supabase
         .from('chat_messages')
-        .select(MESSAGE_SELECT)
+        .select(`
+            id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+            reply_to_id, edited_at, created_at, updated_at, deleted_at,
+            sender:agents(name, photo_url),
+            reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+                id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                sender:agents(name, photo_url)
+            ),
+            reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
+        `)
         .eq('channel_id', channelId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -413,20 +401,28 @@ export async function fetchMessages(
         query = query.lt('created_at', before);
     }
 
-    const { data, error } = await query.returns<MessageApiRow[]>();
+    const { data, error } = await query;
 
     if (error) throw new Error(error.message);
-    const messages = (data ?? []).map(toMessageRow).reverse();
-    return messages;
+    return (data ?? []).map(toMessageRow);
 }
 
 export async function fetchMessage(messageId: string): Promise<ChatMessage> {
     const { data, error } = await supabase
         .from('chat_messages')
-        .select(SINGLE_MESSAGE_SELECT)
+        .select(`
+            id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+            reply_to_id, edited_at, created_at, updated_at, deleted_at,
+            sender:agents(name, photo_url),
+            reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+                id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                sender:agents(name, photo_url)
+            ),
+            reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
+        `)
         .eq('id', messageId)
-        .is('deleted_at', null)
-        .maybeSingle<MessageApiRow>();
+        .maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('Mensaje no encontrado');
@@ -438,14 +434,16 @@ export async function sendMessage(
     senderId: string,
     content: string,
     options?: {
-        message_type?: 'text' | 'file' | 'image';
-        file_url?: string;
-        file_name?: string;
-        file_size?: number;
-        reply_to_id?: string;
+        message_type?: MessageType;
+        file_url?: string | null;
+        file_name?: string | null;
+        file_size?: number | null;
+        reply_to_id?: string | null;
     },
 ): Promise<ChatMessage> {
-    const { data, error } = await supabase
+    const start = Date.now();
+
+    const { data: message, error } = await supabase
         .from('chat_messages')
         .insert({
             channel_id: channelId,
@@ -457,12 +455,23 @@ export async function sendMessage(
             file_size: options?.file_size ?? null,
             reply_to_id: options?.reply_to_id ?? null,
         })
-        .select(MESSAGE_SELECT)
-        .single<MessageApiRow>();
+        .select(`
+            id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+            reply_to_id, edited_at, created_at, updated_at, deleted_at,
+            sender:agents(name, photo_url),
+            reply_to:chat_messages!chat_messages_reply_to_id_fkey(
+                id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
+                reply_to_id, edited_at, created_at, updated_at, deleted_at,
+                sender:agents(name, photo_url)
+            ),
+            reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
+        `)
+        .single();
 
     if (error) throw new Error(error.message);
-    if (!data) throw new Error('No se pudo enviar el mensaje');
-    return toMessageRow(data);
+
+    logChatAction({ action: 'sendMessage', channel_id: channelId, sender_id: senderId, message_id: message.id, duration_ms: Date.now() - start });
+    return toMessageRow(message);
 }
 
 export async function editMessage(messageId: string, content: string): Promise<void> {
@@ -492,7 +501,6 @@ export async function markAsRead(messageId: string, agentId: string): Promise<vo
 }
 
 export async function markChannelAsRead(channelId: string, agentId: string): Promise<void> {
-    // Obtener mensajes ya leídos
     const { data: readMessages } = await supabase
         .from('chat_message_reads')
         .select('message_id')
@@ -500,7 +508,6 @@ export async function markChannelAsRead(channelId: string, agentId: string): Pro
 
     const readMessageIds = readMessages?.map((m: { message_id: string }) => m.message_id) ?? [];
 
-    // Obtener mensajes no leídos
     let query = supabase
         .from('chat_messages')
         .select('id')
@@ -513,7 +520,6 @@ export async function markChannelAsRead(channelId: string, agentId: string): Pro
 
     const { data: unreadMessages } = await query;
 
-    // Marcar como leídos
     if (unreadMessages?.length) {
         const reads = unreadMessages.map((m: { id: string }) => ({
             message_id: m.id,
@@ -523,7 +529,6 @@ export async function markChannelAsRead(channelId: string, agentId: string): Pro
         await supabase.from('chat_message_reads').upsert(reads);
     }
 
-    // Actualizar last_read_at
     await supabase
         .from('chat_channel_participants')
         .update({ last_read_at: new Date().toISOString() })
@@ -588,4 +593,39 @@ export function subscribeToChannelMessages(
     return () => {
         supabase.removeChannel(channel);
     };
+}
+
+// ============================================================
+// Structured Logging
+// ============================================================
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface ChatLogEntry {
+    timestamp: string;
+    level: LogLevel;
+    action: string;
+    channel_id?: string;
+    message_id?: string;
+    sender_id?: string;
+    duration_ms?: number;
+    error?: string;
+    metadata?: Record<string, unknown>;
+}
+
+function log(level: LogLevel, entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
+    const out: ChatLogEntry = { timestamp: new Date().toISOString(), level, ...entry };
+    console.log(JSON.stringify(out));
+}
+
+export function logChatAction(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
+    log('info', entry);
+}
+
+export function logChatWarn(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
+    log('warn', entry);
+}
+
+export function logChatError(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
+    log('error', entry);
 }

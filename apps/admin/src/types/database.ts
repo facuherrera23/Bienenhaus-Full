@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -7,10 +7,30 @@
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -1121,6 +1141,79 @@ export type Database = {
           },
         ]
       }
+      ml_sync_dead_letter: {
+        Row: {
+          attempts: number
+          created_at: string | null
+          id: number
+          last_error: string | null
+          max_attempts: number
+          ml_item_id: number | null
+          moved_at: string | null
+          operation: Database["public"]["Enums"]["ml_operation"]
+          original_queue_id: number
+          payload: Json | null
+          property_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          attempts: number
+          created_at?: string | null
+          id?: number
+          last_error?: string | null
+          max_attempts: number
+          ml_item_id?: number | null
+          moved_at?: string | null
+          operation: Database["public"]["Enums"]["ml_operation"]
+          original_queue_id: number
+          payload?: Json | null
+          property_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string | null
+          id?: number
+          last_error?: string | null
+          max_attempts?: number
+          ml_item_id?: number | null
+          moved_at?: string | null
+          operation?: Database["public"]["Enums"]["ml_operation"]
+          original_queue_id?: number
+          payload?: Json | null
+          property_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ml_sync_dead_letter_original_queue_id_fkey"
+            columns: ["original_queue_id"]
+            isOneToOne: false
+            referencedRelation: "ml_sync_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ml_sync_dead_letter_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ml_sync_dead_letter_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ml_sync_history: {
         Row: {
           attempt: number
@@ -1725,6 +1818,45 @@ export type Database = {
           },
           {
             foreignKeyName: "property_action_plans_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_drafts: {
+        Row: {
+          admin_user_id: string | null
+          form_values: Json
+          id: string
+          property_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_user_id?: string | null
+          form_values: Json
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string | null
+          form_values?: Json
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_drafts_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_drafts_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
@@ -2397,6 +2529,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_logs: {
+        Row: {
+          created_at: string | null
+          id: number
+          key: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          key: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          key?: string
+        }
+        Relationships: []
+      }
       recurring_visits: {
         Row: {
           base_visit_id: string
@@ -2489,6 +2639,7 @@ export type Database = {
           id: string
           is_public: boolean
           key: string
+          locale: string
           updated_at: string
           updated_by: string | null
           value: Json
@@ -2500,6 +2651,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           key: string
+          locale?: string
           updated_at?: string
           updated_by?: string | null
           value?: Json
@@ -2511,6 +2663,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           key?: string
+          locale?: string
           updated_at?: string
           updated_by?: string | null
           value?: Json
@@ -2520,6 +2673,41 @@ export type Database = {
           {
             foreignKeyName: "site_settings_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings_versions: {
+        Row: {
+          change_summary: string | null
+          changed_by: string | null
+          changed_keys: string[]
+          created_at: string | null
+          id: string
+          snapshot: Json
+        }
+        Insert: {
+          change_summary?: string | null
+          changed_by?: string | null
+          changed_keys: string[]
+          created_at?: string | null
+          id?: string
+          snapshot: Json
+        }
+        Update: {
+          change_summary?: string | null
+          changed_by?: string | null
+          changed_keys?: string[]
+          created_at?: string | null
+          id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_versions_changed_by_fkey"
+            columns: ["changed_by"]
             isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
@@ -2550,6 +2738,30 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      trash_retention_policies: {
+        Row: {
+          auto_delete_enabled: boolean | null
+          entity: string
+          notify_before_days: number | null
+          retention_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          auto_delete_enabled?: boolean | null
+          entity: string
+          notify_before_days?: number | null
+          retention_days?: number
+          updated_at?: string | null
+        }
+        Update: {
+          auto_delete_enabled?: boolean | null
+          entity?: string
+          notify_before_days?: number | null
+          retention_days?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2901,12 +3113,38 @@ export type Database = {
         Returns: number
       }
       complete_password_change: { Args: never; Returns: undefined }
+      create_admin_user: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_role?: Database["public"]["Enums"]["admin_role"]
+          p_user_id: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_login_at: string | null
+          must_change_password: boolean
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "admin_users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["admin_role"] }
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       log_audit: {
         Args: {
           p_action: string
@@ -2931,6 +3169,10 @@ export type Database = {
         Returns: number
       }
       ml_get_connection: { Args: never; Returns: Json }
+      reorder_property_images: {
+        Args: { p_image_ids: string[]; p_property_id: string }
+        Returns: undefined
+      }
       submit_contact: {
         Args: {
           p_city?: string
@@ -2949,6 +3191,10 @@ export type Database = {
       subscribe_newsletter: {
         Args: { p_email: string; p_hp?: string; p_source?: string }
         Returns: boolean
+      }
+      update_admin_last_login: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -3182,6 +3428,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       action_plan_category: [

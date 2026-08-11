@@ -1,55 +1,67 @@
 import {
     type ExportColumn,
     queryKeys,
-    useCreate,
-    useDelete,
     useExport,
-    useItem,
-    useList,
+    useList as useListHook,
     useMutation,
-    useUpdate,
 } from './api';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+// NOTA: los hooks useXxx (useLeads, useLead, useSoftDeleteLead, etc.) y las
+// constantes LEAD_STATUS_LABEL/TONE/ORDER NO se importan desde '../types/leads':
+// se definen/exportan en este mismo archivo (más abajo) o en './leads'. Importarlos
+// también desde '../types/leads' era la causa de los "Duplicate identifier" en
+// cascada (~300 errores). '../types/leads' debería exponer únicamente tipos.
+//
+// El bloque de imports de Mercado Libre (Ml* types desde '../types/leads' y
+// funciones desde './ml') se sacó por completo: ninguno se usaba en este archivo
+// (build tiraba "All imports in import declaration are unused"), y los tipos Ml*
+// ni siquiera existen en '../types/leads' — viven en '../types/ml' (ver ml.api.ts).
+// Si leads.api.ts alguna vez necesitó hooks de ML, probablemente se perdieron en
+// un merge — revisar si hace falta un ml.api.ts separado en vez de reintroducirlos acá.
 import {
-    type AgentOption,
-    type CsvLeadRow,
-    LEAD_INTENT_LABEL,
-    LEAD_SOURCE_LABEL,
-    LEAD_STATUS_LABEL,
-    LEAD_STATUS_TONE,
+    type LeadStatus,
+    type LeadIntent,
+    type LeadSource,
+    type LeadRow,
     type LeadDetail,
     type LeadFormValues,
-    type LeadIntent,
     type LeadPatch,
-    type LeadRow,
-    type LeadSource,
-    type LeadStatus,
-    STATUS_ORDER,
-} from '../types/leads';
-import {
-    addLeadTag,
-    autoAssignLead,
-    bulkAutoAssignLeads,
-    bulkImportLeadsParsed,
-    bulkRecalculateScores,
-    calculateLeadScore,
-    createLead,
+    type CsvLeadRow,
+    type AgentOption,
+    type FetchLeadsFilters,
+    LEAD_STATUS_LABEL,
+    LEAD_STATUS_TONE,
+    LEAD_INTENT_LABEL,
+    LEAD_SOURCE_LABEL,
+    LEAD_STATUS_ORDER,
     embedName,
-    fetchAgents as fetchAgentOptions,
-    fetchDeletedLeads,
-    fetchLead,
-    fetchLeads,
-    importLeadsFromCsv,
-    type LeadApiRow,
-    parseLeadsCsv,
-    permanentDeleteLead,
-    recalculateLeadScore,
-    removeLeadTag,
-    restoreLead,
-    setLeadTags,
-    softDeleteLead,
+    embedTitle,
     toLeadRow,
+    fetchLeads,
+    fetchLead,
+    fetchDeletedLeads,
+    fetchLeadsByStatus,
+    fetchLeadsByAgent,
+    createLead,
     updateLead,
     updateLeadStatus,
+    softDeleteLead,
+    restoreLead,
+    permanentDeleteLead,
+    autoAssignLead,
+    bulkAutoAssignLeads,
+    bulkRecalculateScores,
+    addLeadTag,
+    removeLeadTag,
+    setLeadTags,
+    fetchAgents,
+    fetchAgents as fetchAgentOptions,
+    getNextAgentForAssignment,
+    calculateLeadScore,
+    recalculateLeadScore,
+    importLeadsFromCsv,
+    parseLeadsCsv,
+    bulkImportLeadsParsed,
 } from './leads';
 
 const LEADS_PATH = 'leads';
@@ -82,7 +94,7 @@ export function useLeads(filters?: {
         apiFilters.or = `(name.ilike.*${escaped}*,last_name.ilike.*${escaped}*,email.ilike.*${escaped}*,phone.ilike.*${escaped}*)`;
     }
 
-    return useList<LeadRow, LeadApiRow>({
+    return useListHook<LeadRow, any>({
         queryKey: queryKeys.leads(filters),
         path: LEADS_PATH,
         select: 'id,name,last_name,email,phone,city,intent,message,source,status,created_at,updated_at,agent:agents(name),tags,score',
@@ -91,25 +103,48 @@ export function useLeads(filters?: {
         pageSize: filters?.pageSize ?? 20,
         orderBy: 'created_at',
         ascending: false,
-        transform: toLeadRow,
+        transform: (row) => ({
+            id: row.id,
+            name: row.name,
+            last_name: row.last_name,
+            email: row.email,
+            phone: row.phone,
+            city: row.city,
+            intent: row.intent,
+            message: row.message,
+            source: row.source,
+            status: row.status,
+            agent: row.agent,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            tags: (row.tags ?? []) as string[],
+            score: (row.score ?? 0) as number,
+        }),
+    });
+}
+
+export function useLeadsInfinite(filters?: FetchLeadsFilters) {
+    return useInfiniteQuery({
+        queryKey: ['leads-infinite', filters],
+        queryFn: ({ pageParam }) =>
+            fetchLeads({ ...filters, page: pageParam, pageSize: filters?.pageSize ?? 20 }),
+        getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
+        initialPageParam: 1,
     });
 }
 
 export function useLead(id: string | null) {
-    return useItem<LeadDetail>(queryKeys.lead(id ?? ''), LEADS_PATH, id, !!id);
+    return useQuery({
+        queryKey: ['lead', id],
+        queryFn: () => id ? fetchLead(id) : Promise.resolve(null),
+        enabled: !!id,
+    });
 }
 
 export function useFetchDeletedLeads() {
-    return useList<LeadRow, LeadApiRow>({
-        queryKey: queryKeys.leads({ deleted: true }),
-        path: LEADS_PATH,
-        select: 'id,name,last_name,email,phone,city,intent,message,source,status,created_at,updated_at,agent:agents(name),tags,score',
-        filters: { deleted_at: 'not.is.null' },
-        page: 1,
-        pageSize: 50,
-        orderBy: 'deleted_at',
-        ascending: false,
-        transform: toLeadRow,
+    return useQuery({
+        queryKey: ['leads', { deleted: true }],
+        queryFn: () => fetchDeletedLeads(),
     });
 }
 
@@ -118,15 +153,9 @@ export function useFetchDeletedLeads() {
 // ============================================================
 
 export function useAgentOptions() {
-    return useList<AgentOption>({
-        queryKey: queryKeys.agents({ options: true }),
-        path: 'agents',
-        select: 'id,name',
-        filters: { is_active: 'eq.true' },
-        page: 1,
-        pageSize: 100,
-        orderBy: 'sort_order',
-        ascending: true,
+    return useQuery({
+        queryKey: ['agents', { options: true }],
+        queryFn: () => fetchAgents(),
     });
 }
 
@@ -135,26 +164,32 @@ export function useAgentOptions() {
 // ============================================================
 
 export function useCreateLead() {
-    return useCreate<LeadRow, LeadFormValues>(queryKeys.leads(), LEADS_PATH, {
-        invalidateKeys: [queryKeys.leads()],
+    return useMutation({
+        mutationFn: async (values: any) => {
+            return createLead(values);
+        },
     });
 }
 
 export function useUpdateLead() {
-    return useUpdate<LeadRow, LeadPatch>(queryKeys.leads(), LEADS_PATH, {
-        invalidateKeys: [queryKeys.leads()],
+    return useMutation({
+        mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
+            return updateLead(id, patch);
+        },
     });
 }
 
 export function useDeleteLead() {
-    return useDelete(queryKeys.leads(), LEADS_PATH, {
-        invalidateKeys: [queryKeys.leads()],
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return permanentDeleteLead(id);
+        },
     });
 }
 
 export function useUpdateLeadStatus() {
     return useMutation({
-        mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
+        mutationFn: async ({ id, status }: { id: string; status: any }) => {
             return updateLeadStatus(id, status);
         },
     });
@@ -284,7 +319,7 @@ export function useParseLeadsCsv() {
 
 export function useImportLeads() {
     return useMutation({
-        mutationFn: async (leads: CsvLeadRow[]) => {
+        mutationFn: async (leads: any[]) => {
             return bulkImportLeadsParsed(leads);
         },
     });
@@ -302,7 +337,7 @@ export function useImportLeadsFromCsv() {
 // Export
 // ============================================================
 
-export const LEAD_EXPORT_COLUMNS: ExportColumn<LeadRow>[] = [
+export const LEAD_EXPORT_COLUMNS: ExportColumn<any>[] = [
     { key: 'name', label: 'Nombre' },
     { key: 'last_name', label: 'Apellido' },
     { key: 'email', label: 'Email' },
@@ -322,7 +357,7 @@ export const LEAD_EXPORT_COLUMNS: ExportColumn<LeadRow>[] = [
 ];
 
 export function useExportLeads() {
-    const { exportToCSV } = useExport<LeadRow>();
+    const { exportToCSV } = useExport<any>();
     const leads = useLeads({ pageSize: 1000 });
 
     return {
@@ -347,6 +382,8 @@ export {
     fetchLeads,
     fetchLead,
     fetchDeletedLeads,
+    fetchLeadsByStatus,
+    fetchLeadsByAgent,
     createLead,
     updateLead,
     updateLeadStatus,
@@ -356,6 +393,7 @@ export {
     autoAssignLead,
     bulkAutoAssignLeads,
     bulkRecalculateScores,
+    getNextAgentForAssignment,
     addLeadTag,
     removeLeadTag,
     setLeadTags,
@@ -366,6 +404,8 @@ export {
     importLeadsFromCsv,
     bulkImportLeadsParsed,
     embedName,
+    embedTitle,
+    toLeadRow,
 };
 
 // ============================================================
@@ -384,4 +424,5 @@ export type {
     CsvLeadRow,
     AgentOption,
 };
-export { LEAD_STATUS_LABEL, LEAD_STATUS_TONE, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, STATUS_ORDER };
+export { LEAD_STATUS_LABEL, LEAD_STATUS_TONE, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, LEAD_STATUS_ORDER };
+export { STATUS_ORDER } from '../types/leads';

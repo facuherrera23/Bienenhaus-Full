@@ -9,7 +9,7 @@
   justify-content: center;
   gap: var(--bh-space-2);
   border: 1px solid transparent;
-  border-radius: var(--bh-radius-sm);
+  border-radius: var(--bh-radius-full);
   padding: var(--bh-space-2) var(--bh-space-4);
   font-size: var(--bh-text-sm);
   font-weight: var(--bh-weight-semibold);

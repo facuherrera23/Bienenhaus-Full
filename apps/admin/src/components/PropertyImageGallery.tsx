@@ -24,12 +24,15 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [draggedId, setDraggedId] = useState<string | null>(null);
+    const [focusedIndex, setFocusedIndex] = useState<number>(-1);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryRef = useRef<HTMLDivElement>(null);
+    const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     useEffect(() => {
         if (!propertyId || isNew) {
             setImages([]);
+            setFocusedIndex(-1);
             return;
         }
         loadImages();
@@ -153,6 +156,90 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
         }
     };
 
+    // Keyboard accessibility handlers
+    const handleKeyDown = (e: KeyboardEvent, index: number) => {
+        const maxIndex = images.length - 1;
+        
+        // Ctrl/Cmd + flecha reordena la imagen; flecha sola solo mueve el foco
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowRight' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            moveImage(index, 'next');
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowLeft' || e.key === 'ArrowUp')) {
+            e.preventDefault();
+            moveImage(index, 'prev');
+            return;
+        }
+
+        switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+                e.preventDefault();
+                setFocusedIndex(Math.min(index + 1, images.length - 1));
+                itemRefs.current[index + 1]?.focus();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                e.preventDefault();
+                setFocusedIndex(Math.max(index - 1, 0));
+                itemRefs.current[index - 1]?.focus();
+                break;
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                if (images[index]) {
+                    handleSetCover(images[index].id);
+                }
+                break;
+            case 'Delete':
+            case 'Backspace':
+                e.preventDefault();
+                if (images[index]) {
+                    handleDelete(images[index].id);
+                }
+                break;
+            case 'Home':
+                e.preventDefault();
+                setFocusedIndex(0);
+                itemRefs.current[0]?.focus();
+                break;
+            case 'End':
+                e.preventDefault();
+                setFocusedIndex(maxIndex);
+                itemRefs.current[maxIndex]?.focus();
+                break;
+        }
+    };
+
+    const moveImage = (index: number, direction: 'prev' | 'next') => {
+        if (direction === 'prev' && index > 0) {
+            const newOrder = [...images];
+            const [moved] = newOrder.splice(index, 1);
+            newOrder.splice(index - 1, 0, moved);
+            reorderAndUpdate(newOrder);
+            setFocusedIndex(index - 1);
+        } else if (direction === 'next' && index < images.length - 1) {
+            const newOrder = [...images];
+            const [moved] = newOrder.splice(index, 1);
+            newOrder.splice(index + 1, 0, moved);
+            reorderAndUpdate(newOrder);
+            setFocusedIndex(index + 1);
+        }
+    };
+
+    const reorderAndUpdate = async (newOrder: PropertyImage[]) => {
+        if (!propertyId) return;
+        try {
+            await reorderPropertyImages(propertyId, newOrder.map((i) => i.id));
+            setImages(newOrder);
+            onImagesChange?.(newOrder);
+        } catch {
+            pushToast({ type: 'error', title: 'No se pudo reordenar' });
+            loadImages(); // revert
+        }
+    };
+
     const handleDragStart = (e: DragEvent, id: string) => {
         setDraggedId(id);
         if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
@@ -202,7 +289,13 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                     Arrastra para reordenar. La primera imagen es la portada. Click en la estrella
                     para cambiar portada.
                     <br />
-                    <small>JPG, PNG, WebP · máx 10 MB · se convierten a WebP automáticamente</small>
+                    <small>
+                        JPG, PNG, WebP · máx 10 MB · se convierten a WebP automáticamente
+                    </small>
+                    <br />
+                    <small className="muted">
+                        Navegación: ←/→ para moverse, Ctrl+←/→ para reordenar, Enter/Space = portada, Delete = eliminar, Home/End = primero/último
+                    </small>
                 </p>
             </div>
 
@@ -212,6 +305,8 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                role="list"
+                aria-label="Galería de imágenes de la propiedad"
             >
                 <input
                     ref={fileInputRef}
@@ -224,9 +319,9 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                 />
 
                 {loading ? (
-                    <div className={styles['image-gallery-grid']} aria-busy="true" aria-live="polite">
+                    <div className={styles['image-gallery-grid']} aria-busy="true" aria-live="polite" role="list">
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <div className="image-gallery-skeleton" key={i}>
+                            <div className="image-gallery-skeleton" key={i} role="listitem">
                                 <div className="image-gallery-skeleton-thumb" />
                                 <div className="image-gallery-skeleton-bar" />
                                 <div className="image-gallery-skeleton-bar image-gallery-skeleton-bar--short" />
@@ -234,7 +329,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         ))}
                     </div>
                 ) : images.length === 0 ? (
-                    <div className={styles['gallery-empty']} onClick={() => fileInputRef.current?.click()}>
+                    <div className={styles['gallery-empty']} onClick={() => fileInputRef.current?.click()} role="listitem">
                         <div className="gallery-empty-icon">
                             <Upload size={48} strokeWidth={1.5} />
                         </div>
@@ -247,16 +342,22 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         </button>
                     </div>
                 ) : (
-                    <div className={styles['image-gallery-grid']}>
+                    <div className={styles['image-gallery-grid']} role="list">
                         {images.map((img, index) => (
                             <div
                                 key={img.id}
-                                className={`${styles['image-gallery-item']}${img.is_cover ? ' is-cover' : ''}${draggedId === img.id ? ` ${styles['dragging']}` : ''}`}
+                                ref={(el) => { itemRefs.current[index] = el; }}
+                                className={`${styles['image-gallery-item']}${img.is_cover ? ' is-cover' : ''}${draggedId === img.id ? ` ${styles['dragging']}` : ''}${focusedIndex === index ? ` ${styles['focused']}` : ''}`}
                                 draggable={true}
                                 onDragStart={(e) => handleDragStart(e, img.id)}
                                 onDragOver={handleDragOverItem}
                                 onDrop={(e) => handleDropItem(e, img.id)}
                                 onDragEnd={handleDragEnd}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label={`Imagen ${index + 1}${img.is_cover ? ' (portada actual)' : ''}`}
+                                aria-roledescription="imagen de galería"
                             >
                                 <div className={styles['image-thumb']}>
                                     <img
@@ -273,29 +374,33 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                         onClick={() => handleSetCover(img.id)}
                                         title={
                                             img.is_cover
-                                                ? 'Es la portada'
-                                                : 'Establecer como portada'
+                                                ? 'Es la portada (Enter/Space para cambiar)'
+                                                : 'Establecer como portada (Enter/Space)'
                                         }
                                         disabled={uploading}
+                                        aria-label={img.is_cover ? 'Es la portada actual' : 'Establecer como portada'}
+                                        aria-pressed={img.is_cover}
                                     >
                                         <Star
                                             size={16}
                                             fill={img.is_cover ? 'currentColor' : 'none'}
+                                            aria-hidden="true"
                                         />
                                     </button>
                                     <button
                                         type="button"
                                         className={`${styles['image-action-btn']} danger`}
                                         onClick={() => handleDelete(img.id)}
-                                        title="Eliminar"
+                                        title="Eliminar (Delete/Backspace)"
                                         disabled={uploading}
+                                        aria-label="Eliminar imagen"
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={16} aria-hidden="true" />
                                     </button>
                                 </div>
                                 <div
                                     className="image-drag-handle"
-                                    title="Arrastrar para reordenar"
+                                    title="Arrastrar para reordenar (←/→ para mover)"
                                     aria-hidden="true"
                                 >
                                     <Move size={14} />

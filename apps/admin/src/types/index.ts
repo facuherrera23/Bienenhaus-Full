@@ -4,6 +4,8 @@ export * from './ml';
 export * from './newsletter';
 export * from './chat';
 export * from './admin';
+export * from './owners';
+export * from './valuations';
 
 // Export agents explicitly to avoid naming conflicts
 export type {
@@ -28,4 +30,10 @@ export type {
     QrCheckin,
     AgentAvailability as AgentAvailabilityVisit,
 } from './visits';
-export { DAY_LABELS as VisitDayLabels } from './visits';
+export {
+    DAY_LABELS as VisitDayLabels,
+    VISIT_STATUS_LABEL,
+    VISIT_STATUS_TONE,
+    MEETING_TYPE_LABEL,
+    DEFAULT_REMINDERS,
+} from './visits';

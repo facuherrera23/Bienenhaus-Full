@@ -1,14 +1,22 @@
-import styles from '../styles/modules/TransitionStrip.module.css';
+// apps/landing/src/components/TransitionStrip.tsx
+import { useScrollAnimation } from '@/lib/motion';
+import styles from './TransitionStrip.module.css';
 
 export function TransitionStrip() {
-    return (
-        <section className={styles.transitionStrip} aria-label="Transición">
-            <div className={styles.stripGlow}></div>
-            <div className={styles.stripLine}></div>
-            <p className={styles.stripText}>
-                Cada propiedad tiene una historia.{' '}
-                <span className="highlight">La próxima puede ser la tuya.</span>
-            </p>
-        </section>
-    );
+  const { ref, isVisible } = useScrollAnimation({
+    threshold: 0.3,
+    once: true,
+  });
+
+  return (
+    <div className={styles.transitionStrip} ref={ref}>
+      <div className={styles.stripLine} aria-hidden="true" />
+      <div className={styles.stripGlow} aria-hidden="true" />
+      <p className={`${styles.stripText} ${isVisible ? styles.visible : ''}`}>
+        <span className={styles.highlight}>Excelencia</span> · 
+        <span className={styles.highlight}> Confianza</span> · 
+        <span className={styles.highlight}> Compromiso</span>
+      </p>
+    </div>
+  );
 }

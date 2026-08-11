@@ -44,7 +44,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 12px;
-      border-radius: 8px 8px 0 0;
+      border-radius: var(--bh-radius-sm) var(--bh-radius-sm) 0 0;
       font-weight: 600;
       font-size: 13px;
 
@@ -54,7 +54,7 @@
 
       background: rgba(0, 0, 0, 0.1);
       padding: 2px 8px;
-      border-radius: 999px;
+      border-radius: var(--bh-radius-full);
       font-size: 11px;
       font-weight: 600;
 
@@ -64,7 +64,7 @@
 
       min-height: 400px;
       background: var(--bh-bg-hover);
-      border-radius: 0 0 8px 8px;
+      border-radius: 0 0 var(--bh-radius-sm) var(--bh-radius-sm);
       padding: 8px;
       overflow-y: auto;
       max-height: calc(100vh - 200px);
@@ -97,7 +97,7 @@
 
       background: var(--bh-bg-card);
       border: 1px solid var(--bh-border);
-      border-radius: 8px;
+      border-radius: var(--bh-radius-sm);
       padding: 12px;
       margin-bottom: 8px;
       box-shadow: var(--bh-shadow-sm);
@@ -136,7 +136,7 @@
       gap: 16px;
       padding: 12px;
       background: var(--bh-bg-hover);
-      border-radius: 8px;
+      border-radius: var(--bh-radius-sm);
       margin-bottom: 16px;
 
 }

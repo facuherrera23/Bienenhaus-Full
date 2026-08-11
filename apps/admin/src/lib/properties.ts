@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, supabaseUrl } from './supabase';
 import type { Database } from '../types/database';
 import type {
     Currency,
@@ -17,6 +17,10 @@ import {
     STATUS_LABEL,
     STATUS_TONE,
 } from '../types/properties';
+import {
+    validatePropertyForm,
+    validatePropertyImage,
+} from './_shared/properties-validation';
 
 // ============================================================
 // Re-export types and constants
@@ -52,10 +56,6 @@ interface PropertyDetailApiRow extends PropertyDbRow {
     images: { url: string; is_cover: boolean }[];
 }
 
-// ============================================================
-// Constants
-// ============================================================
-
 const PROPERTIES_SELECT = `
   id, code, title, status, listing_type, price, currency, area_total, 
   bedrooms, bathrooms, featured, published_at, updated_at, 
@@ -69,9 +69,9 @@ const PROPERTY_DETAIL_SELECT = `
   video_url, updated_at, location:locations(name), images:property_images(url, is_cover)
 `.trim();
 
-// ============================================================
-// Helpers
-// ============================================================
+const PROPERTY_IMAGES_SELECT = `
+  id, property_id, url, alt, position, is_cover, created_at
+`.trim();
 
 export function toNumeric(v: string | null | undefined): number | null {
     if (v === null || v === undefined || v.trim() === '') return null;
@@ -252,10 +252,15 @@ export async function fetchLocations(): Promise<LocationOption[]> {
 }
 
 // ============================================================
-// API Functions - CRUD
+// API Functions - CRUD (with Zod validation)
 // ============================================================
 
 export async function createProperty(values: PropertyFormValues): Promise<PropertyDetail> {
+    const validation = validatePropertyForm(values);
+    if (!validation.valid) {
+        throw new Error(validation.error ?? 'Datos de propiedad inválidos');
+    }
+
     const slug = slugify(values.title);
     const payload = {
         title: values.title,
@@ -295,6 +300,11 @@ export async function createProperty(values: PropertyFormValues): Promise<Proper
 }
 
 export async function updateProperty(id: string, values: PropertyFormValues): Promise<void> {
+    const validation = validatePropertyForm(values);
+    if (!validation.valid) {
+        throw new Error(validation.error ?? 'Datos de propiedad inválidos');
+    }
+
     const detail = await fetchProperty(id);
     const payload: Database['public']['Tables']['properties']['Update'] = {
         title: values.title,
@@ -427,13 +437,13 @@ export async function duplicateProperty(id: string): Promise<PropertyDetail> {
 }
 
 // ============================================================
-// API Functions - Images
+// API Functions - Images (Parallel Upload + Validation)
 // ============================================================
 
 export async function fetchPropertyImages(propertyId: string): Promise<PropertyImage[]> {
     const { data, error } = await supabase
         .from('property_images')
-        .select('*')
+        .select(PROPERTY_IMAGES_SELECT)
         .eq('property_id', propertyId)
         .order('position', { ascending: true })
         .returns<PropertyImage[]>();
@@ -447,6 +457,11 @@ export async function uploadPropertyImage(
     file: File,
     alt: string = '',
 ): Promise<PropertyImage> {
+    const validation = validatePropertyImage({ property_id: propertyId, file, alt });
+    if (!validation.valid) {
+        throw new Error(validation.error ?? 'Archivo inválido');
+    }
+
     const webpFile = await convertToWebP(file);
     const ext = 'webp';
     const path = `${propertyId}/${crypto.randomUUID()}.${ext}`;
@@ -490,16 +505,23 @@ export async function uploadPropertyImages(
     propertyId: string,
     files: File[],
 ): Promise<PropertyImage[]> {
-    const results: PropertyImage[] = [];
-    for (const file of files) {
+    const uploadOne = async (file: File) => {
         try {
-            const img = await uploadPropertyImage(propertyId, file, file.name);
-            results.push(img);
-        } catch {
-            // failed upload — skip and continue with remaining images
+            return await uploadPropertyImage(propertyId, file, file.name);
+        } catch (err) {
+            console.warn(`[uploadPropertyImages] Failed ${file.name}:`, err);
+            return null;
         }
-    }
-    return results;
+    };
+
+    const results = await Promise.allSettled(files.map(uploadOne));
+
+    const images: PropertyImage[] = [];
+    results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value) images.push(r.value);
+        else console.error(`Upload failed for ${files[i].name}:`, r.status === 'rejected' ? r.reason : 'no result');
+    });
+    return images;
 }
 
 export async function deletePropertyImage(imageId: string): Promise<void> {
@@ -541,22 +563,38 @@ export async function setPropertyCover(propertyId: string, imageId: string): Pro
 }
 
 export async function reorderPropertyImages(propertyId: string, imageIds: string[]): Promise<void> {
-    const updates = imageIds.map((id, index) =>
-        supabase
-            .from('property_images')
-            .update({ position: index })
-            .eq('id', id)
-            .eq('property_id', propertyId),
-    );
-
-    await Promise.all(updates);
+    const { error } = await supabase.rpc('reorder_property_images', {
+        p_property_id: propertyId,
+        p_image_ids: imageIds,
+    });
+    if (error) throw new Error(error.message);
 }
 
 // ============================================================
-// Helpers - Image Conversion
+// Helpers - Image Conversion (with server fallback)
 // ============================================================
 
 async function convertToWebP(file: File, quality = 0.85): Promise<File> {
+    // Try server-side conversion first (Edge Function)
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('quality', String(quality * 100));
+        
+        const res = await fetch(`${supabaseUrl}/functions/v1/convert-image`, {
+            method: 'POST',
+            body: formData,
+        });
+        
+        if (res.ok) {
+            const blob = await res.blob();
+            return new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' });
+        }
+    } catch {
+        // Fall through to client-side
+    }
+    
+    // Client-side fallback
     return new Promise((resolve) => {
         if (file.type === 'image/webp') {
             resolve(file);

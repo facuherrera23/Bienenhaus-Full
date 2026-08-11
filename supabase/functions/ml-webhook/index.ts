@@ -7,6 +7,8 @@ import {
 } from '../_shared/auto_reply.ts';
 import { ML_API } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
+import { checkRateLimit } from '../_shared/rate-limit.ts';
+import { MlQuestionSchema, MlOrderSchema, MlWebhookPayloadSchema, parseMlResponse } from '../_shared/ml.schemas.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -15,6 +17,8 @@ const ML_WEBHOOK_SECRET = Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
 });
+
+const RATE_LIMIT_FN = 'ml-webhook';
 
 function timingSafeEqual(a: string, b: string): boolean {
     const ba = new TextEncoder().encode(a);
@@ -25,69 +29,38 @@ function timingSafeEqual(a: string, b: string): boolean {
     return diff === 0;
 }
 
-/** ML Order response shape from /orders/{order_id} */
-interface MlOrderResponse {
-    id: string;
-    status: string;
-    shipping?: {
-        status: string;
-    };
-    payments?: Array<{
-        status: string;
-    }>;
-    order_items?: Array<{
-        item: {
-            id: number;
-        };
-    }>;
-    buyer?: {
-        id: number;
-        nickname: string;
-    };
-    total_amount?: number;
-    currency_id?: string;
-    date_created?: string;
-    date_closed?: string;
+interface LogEntry {
+    timestamp: string;
+    level: 'debug' | 'info' | 'warn' | 'error';
+    function: string;
+    topic?: string;
+    resource?: string;
+    user_id?: number;
+    status?: 'received' | 'processed' | 'failed' | 'deduplicated';
+    duration_ms?: number;
+    error?: string;
 }
 
-/** ML Question response shape from /questions/{question_id} */
-interface MlQuestionResponse {
-    item_id?: number;
-    text?: string;
-    from?: {
-        user_id?: number;
-        nickname?: string;
-    };
-    date_created?: string;
+function log(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
+    console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: 'info', ...entry }));
+}
+function logWarn(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
+    console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: 'warn', ...entry }));
+}
+function logError(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
+    console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: 'error', ...entry }));
 }
 
-/**
- * ML envía en x-meli-signature el auth_token fijo registrado al suscribir el tópico
- * (no firma el body). ML_WEBHOOK_SECRET debe ser ese mismo auth_token.
- * Si el secret no está configurado, el webhook rechaza las peticiones (401).
- */
 async function verifySignature(req: Request): Promise<boolean> {
-    if (!ML_WEBHOOK_SECRET) {
-        return false;
-    }
+    if (!ML_WEBHOOK_SECRET) return false;
     const signature = req.headers.get('x-meli-signature');
     if (!signature) return false;
     return timingSafeEqual(signature, ML_WEBHOOK_SECRET);
 }
 
-interface WebhookPayload {
-    user_id: number;
-    resource: string;
-    topic: 'questions' | 'orders' | 'items' | 'payments' | 'shipments';
-    application_id: number;
-    attempts: number;
-    sent: string;
-    received: string;
-}
-
 async function logWebhookEvent(
-    payload: WebhookPayload,
-    status: 'received' | 'processed' | 'failed',
+    payload: MlWebhookPayload,
+    status: 'received' | 'processed' | 'failed' | 'deduplicated',
     error?: string,
 ): Promise<void> {
     await supabase.from('ml_webhook_events').insert({
@@ -104,12 +77,10 @@ async function logWebhookEvent(
     });
 }
 
-async function handleQuestions(payload: WebhookPayload): Promise<void> {
-    // Resource format: /questions/{question_id}
+async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
     const questionId = payload.resource.split('/').pop();
     if (!questionId) return;
 
-    // 1) Si hay una plantilla de auto-respuesta activa, respondemos automáticamente
     const template = await getActiveTemplate(supabase, 'new_question');
 
     if (template) {
@@ -117,11 +88,10 @@ async function handleQuestions(payload: WebhookPayload): Promise<void> {
         try {
             token = await getMlAccessToken(supabase);
         } catch (err) {
-            console.warn('Auto-reply: no se pudo obtener token ML:', (err as Error).message);
+            logWarn({ function: 'ml-webhook', topic: 'questions', error: (err as Error).message });
         }
 
         if (token) {
-            // Consultamos la pregunta en ML para conocer el item y el texto
             const res = await fetch(`${ML_API}/questions/${questionId}?api_version=4`, {
                 headers: { authorization: `Bearer ${token}` },
             });
@@ -151,8 +121,7 @@ async function handleQuestions(payload: WebhookPayload): Promise<void> {
                         ml_item_id: mlItemId ?? 0,
                         question_text: typeof q?.text === 'string' ? q.text : null,
                         from_user_id: typeof q?.from?.user_id === 'number' ? q.from.user_id : null,
-                        from_user_nickname:
-                            typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
+                        from_user_nickname: typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
                         date_created: typeof q?.date_created === 'string' ? q.date_created : null,
                         status: 'answered',
                         answer_text: template.message,
@@ -162,27 +131,20 @@ async function handleQuestions(payload: WebhookPayload): Promise<void> {
                 );
 
                 try {
-                    await sendQuestionAnswer(
-                        supabase,
-                        questionId,
-                        template.message,
-                        token,
-                        `answer:${questionId}`,
-                    );
+                    await sendQuestionAnswer(supabase, questionId, template.message, token, `answer:${questionId}`);
                 } catch (err) {
-                    // Si ML rechaza la respuesta, dejamos la pregunta sin responder para retomarla manualmente
                     await supabase
                         .from('ml_questions')
                         .update({ status: 'unanswered', answer_text: null })
                         .eq('question_id', questionId);
-                    console.warn('Auto-reply falló:', (err as Error).message);
+                    logWarn({ function: 'ml-webhook', topic: 'questions', question_id: questionId, error: (err as Error).message });
                 }
                 return;
             }
         }
     }
 
-    // 2) Sin plantilla activa (o sin token): comportamiento original, solo registrar
+    // Sin plantilla activa: solo registrar
     const { data: item } = await supabase
         .from('property_ml_meta')
         .select('property_id, ml_item_id')
@@ -207,8 +169,7 @@ const ORDER_STATUS_TRIGGER: Record<string, string> = {
     delivered: 'order_delivered',
 };
 
-/** Deriva el estado interno (ml_orders.status) desde la orden de ML. */
-function deriveOrderStatus(order: MlOrderResponse | null): string {
+function deriveOrderStatus(order: MlOrderSchema | null): string {
     if (!order || order.status === 'cancelled') return 'cancelled';
     if (order.status === 'payment_required') return 'new';
 
@@ -223,8 +184,7 @@ function deriveOrderStatus(order: MlOrderResponse | null): string {
     return 'new';
 }
 
-async function handleOrders(payload: WebhookPayload): Promise<void> {
-    // Resource format: /orders/{order_id}
+async function handleOrders(payload: MlWebhookPayload): Promise<void> {
     const orderId = payload.resource.split('/').pop();
     if (!orderId) return;
 
@@ -232,23 +192,23 @@ async function handleOrders(payload: WebhookPayload): Promise<void> {
     try {
         token = await getMlAccessToken(supabase);
     } catch (err) {
-        console.warn('orders: no se pudo obtener token ML:', (err as Error).message);
+        logWarn({ function: 'ml-webhook', topic: 'orders', error: (err as Error).message });
     }
 
-    // Consultamos la orden en ML para conocer item, comprador y estado
-    let order: MlOrderResponse | null = null;
+    let order: MlOrderSchema | null = null;
     if (token) {
         const res = await fetch(`${ML_API}/orders/${orderId}`, {
             headers: { authorization: `Bearer ${token}` },
         });
         if (res.ok) {
             try {
-                order = (await res.json()) as MlOrderResponse;
+                const data = await res.json();
+                order = parseMlResponse(MlOrderSchema, data, 'mlOrder');
             } catch {
                 order = null;
             }
         } else {
-            console.warn(`orders: GET /orders/${orderId} -> ${res.status}`);
+            logWarn({ function: 'ml-webhook', topic: 'orders', order_id: orderId, status: res.status });
         }
     }
 
@@ -285,8 +245,7 @@ async function handleOrders(payload: WebhookPayload): Promise<void> {
     if (propertyId) orderPayload.property_id = propertyId;
     if (order) {
         if (typeof order.buyer?.id === 'number') orderPayload.buyer_id = order.buyer.id;
-        if (typeof order.buyer?.nickname === 'string')
-            orderPayload.buyer_nickname = order.buyer.nickname;
+        if (typeof order.buyer?.nickname === 'string') orderPayload.buyer_nickname = order.buyer.nickname;
         if (typeof order.total_amount === 'number') orderPayload.total_amount = order.total_amount;
         if (typeof order.currency_id === 'string') orderPayload.currency = order.currency_id;
         if (typeof order.date_created === 'string') orderPayload.date_created = order.date_created;
@@ -295,32 +254,21 @@ async function handleOrders(payload: WebhookPayload): Promise<void> {
 
     await supabase.from('ml_orders').upsert(orderPayload, { onConflict: 'order_id' });
 
-    // Auto-respuesta: solo cuando el estado cambia (o es la primera vez)
     const trigger = ORDER_STATUS_TRIGGER[status];
     if (trigger && token && prevStatus !== status) {
         const template = await getActiveTemplate(supabase, trigger);
         if (template) {
             try {
-                await sendOrderMessage(
-                    supabase,
-                    orderId,
-                    template.message,
-                    token,
-                    `order:${orderId}:${status}`,
-                );
-                console.info(`Auto-reply orden ${orderId} (${trigger}): enviado`);
+                await sendOrderMessage(supabase, orderId, template.message, token, `order:${orderId}:${status}`);
+                log({ function: 'ml-webhook', topic: 'orders', order_id: orderId, trigger, status: 'auto_reply_sent' });
             } catch (err) {
-                console.warn(
-                    `Auto-reply orden ${orderId} (${trigger}) falló:`,
-                    (err as Error).message,
-                );
+                logWarn({ function: 'ml-webhook', topic: 'orders', order_id: orderId, trigger, error: (err as Error).message });
             }
         }
     }
 }
 
-async function handleItems(payload: WebhookPayload): Promise<void> {
-    // Resource format: /items/{item_id}
+async function handleItems(payload: MlWebhookPayload): Promise<void> {
     const itemId = payload.resource.split('/').pop();
     if (!itemId) return;
 
@@ -331,7 +279,6 @@ async function handleItems(payload: WebhookPayload): Promise<void> {
         .maybeSingle();
 
     if (meta) {
-        // Trigger a sync for this property to update status
         await supabase.rpc('ml_enqueue', {
             p_property_id: meta.property_id,
             p_operation: 'update',
@@ -340,12 +287,10 @@ async function handleItems(payload: WebhookPayload): Promise<void> {
     }
 }
 
-async function handlePayments(payload: WebhookPayload): Promise<void> {
-    // Resource format: /payments/{payment_id}
+async function handlePayments(payload: MlWebhookPayload): Promise<void> {
     const paymentId = payload.resource.split('/').pop();
     if (!paymentId) return;
 
-    // Could link to order if needed
     await supabase.from('ml_payments').upsert({
         payment_id: paymentId,
         status: 'pending',
@@ -354,8 +299,7 @@ async function handlePayments(payload: WebhookPayload): Promise<void> {
     });
 }
 
-async function handleShipments(payload: WebhookPayload): Promise<void> {
-    // Resource format: /shipments/{shipment_id}
+async function handleShipments(payload: MlWebhookPayload): Promise<void> {
     const shipmentId = payload.resource.split('/').pop();
     if (!shipmentId) return;
 
@@ -368,24 +312,49 @@ async function handleShipments(payload: WebhookPayload): Promise<void> {
 }
 
 Deno.serve(async (req) => {
-    const respond = (status: number, body: Record<string, unknown>): Response =>
-        jsonResponse(status, body, req);
+    const respond = (status: number, body: Record<string, unknown>): Response => jsonResponse(status, body, req);
+
     if (!ML_WEBHOOK_SECRET) {
-        console.error('[ml-webhook] ML_WEBHOOK_SECRET missing — webhook disabled');
+        logError({ function: 'ml-webhook', error: 'ML_WEBHOOK_SECRET missing' });
         return respond(500, { error: 'ML_WEBHOOK_SECRET not configured' });
     }
 
     if (req.method === 'OPTIONS') return optionsResponse(req);
     if (req.method !== 'POST') return respond(405, { error: 'Method not allowed' });
 
+    // Rate Limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
+    const rlResult = await checkRateLimit('ml-webhook', clientIp);
+    if (!rlResult.allowed) {
+        return respond(429, { error: 'Rate limited', retry_after: rlResult.retryAfter });
+    }
+
+    // Verify signature
     const verified = await verifySignature(req);
     if (!verified) return respond(401, { error: 'Invalid signature' });
 
-    let payload: WebhookPayload;
+    let payload: MlWebhookPayload;
     try {
-        payload = await req.json();
+        const raw = await req.json();
+        payload = parseMlResponse(MlWebhookPayloadSchema, raw, 'ml-webhook');
     } catch {
         return respond(400, { error: 'Invalid JSON' });
+    }
+
+    const start = Date.now();
+
+    // Deduplication check
+    const { data: existingEvent } = await supabase
+        .from('ml_webhook_events')
+        .select('status')
+        .eq('resource', payload.resource)
+        .eq('attempts', payload.attempts)
+        .eq('topic', payload.topic)
+        .maybeSingle();
+
+    if (existingEvent && existingEvent.status === 'processed') {
+        log({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, attempts: payload.attempts, status: 'deduplicated' });
+        return respond(200, { ok: true, deduplicated: true });
     }
 
     await logWebhookEvent(payload, 'received');
@@ -408,12 +377,13 @@ Deno.serve(async (req) => {
                 await handleShipments(payload);
                 break;
             default:
-                console.warn(`Unhandled webhook topic: ${payload.topic}`);
+                logWarn({ function: 'ml-webhook', topic: payload.topic, status: 'unhandled' });
         }
         await logWebhookEvent(payload, 'processed');
+        log({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, duration_ms: Date.now() - start, status: 'processed' });
         return respond(200, { ok: true });
     } catch (err) {
-        console.error('[ml-webhook] handleOrders failed:', err);
+        logError({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, duration_ms: Date.now() - start, status: 'failed', error: (err as Error).message });
         await logWebhookEvent(payload, 'failed', (err as Error).message);
         return respond(500, { error: (err as Error).message });
     }

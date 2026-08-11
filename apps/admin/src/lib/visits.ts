@@ -19,6 +19,7 @@ import {
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
 } from '../types/visits';
+import { validateVisitForm, validateVisitPatch } from './_shared/visits-validation';
 
 // ============================================================
 // Re-export types and constants
@@ -57,7 +58,49 @@ export interface RecurringVisitApiRow extends Omit<RecurringVisitDbRow, 'rule'> 
     rule: RecurrenceRule;
 }
 
-type RecurringVisitWithBase = RecurringVisitApiRow & { base_visit: VisitRow };
+// base_visit viene de `.select('*, base_visit:visits(*)')` — son las columnas
+// crudas de la tabla visits (sin los joins de lead/property/agent), por eso
+// usa VisitDbRow y no el VisitRow enriquecido.
+interface RecurringVisitWithBase extends Omit<RecurringVisitDbRow, 'rule'> {
+    rule: RecurrenceRule;
+    base_visit: VisitDbRow;
+}
+
+// ============================================================
+// Structured Logging
+// ============================================================
+
+interface VisitLogEntry {
+    timestamp: string;
+    level: 'debug' | 'info' | 'warn' | 'error';
+    action: string;
+    visit_id?: string;
+    agent_id?: string;
+    lead_id?: string;
+    property_id?: string;
+    duration_ms?: number;
+    error?: string;
+    conflicts?: string[];
+    // unknown en vez de Record<string, unknown>: este campo es solo para
+    // logging, no necesita index signature y así acepta VisitFormValues,
+    // Partial<VisitFormValues> o cualquier otra forma sin castear.
+    metadata?: unknown;
+}
+
+function logVisitAction(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
+    const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'info', ...entry };
+    console.log(JSON.stringify(out));
+}
+
+function logVisitWarn(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
+    const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'warn', ...entry };
+    console.log(JSON.stringify(out));
+}
+
+function logVisitError(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
+    const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'error', ...entry };
+    console.log(JSON.stringify(out));
+}
 
 // ============================================================
 // Constants
@@ -130,6 +173,78 @@ export function toVisitRow(v: VisitApiRow): VisitRow {
         property_title: embedVisitTitle(v.property),
         agent_name: embedVisitName(v.agent),
     };
+}
+
+// ============================================================
+// Conflict Detection
+// ============================================================
+
+export async function checkConflicts(values: Partial<VisitFormValues>, excludeId?: string): Promise<string[]> {
+    const errors: string[] = [];
+
+    // Sin agent_id/starts_at/ends_at no hay nada que chequear (ej: un update
+    // que solo cambia 'notes'). Evita crashear con undefined más abajo.
+    if (!values.agent_id || !values.starts_at || !values.ends_at) {
+        return errors;
+    }
+
+    // 1. Agent availability
+    const { data: avail } = await supabase
+        .from('agent_availability')
+        .select('*')
+        .eq('agent_id', values.agent_id)
+        .eq('is_active', true);
+    
+    const visitDay = new Date(values.starts_at).getDay();
+    const visitStart = values.starts_at.split('T')[1].slice(0,5);
+    const visitEnd = values.ends_at.split('T')[1].slice(0,5);
+    
+    const hasSlot = avail?.some(a => 
+        a.day_of_week === visitDay && 
+        a.start_time <= visitStart && 
+        a.end_time >= visitEnd
+    );
+    if (!hasSlot) errors.push('Agente no disponible en ese horario');
+    
+    // 2. Double booking
+    const { data: conflicts } = await supabase
+        .from('visits')
+        .select('id, title, starts_at, ends_at')
+        .eq('agent_id', values.agent_id)
+        .is('deleted_at', null)
+        .neq('id', excludeId ?? '')
+        .lt('starts_at', values.ends_at)
+        .gt('ends_at', values.starts_at);
+    
+    if (conflicts?.length) errors.push(`Conflicto con: ${conflicts.map(c => c.title).join(', ')}`);
+    
+    // 3. Lead double booking
+    if (values.lead_id) {
+        const { data: leadConflicts } = await supabase
+            .from('visits')
+            .select('id')
+            .eq('lead_id', values.lead_id)
+            .is('deleted_at', null)
+            .neq('id', excludeId ?? '')
+            .lt('starts_at', values.ends_at)
+            .gt('ends_at', values.starts_at);
+        if (leadConflicts?.length) errors.push('Lead ya tiene visita en ese horario');
+    }
+    
+    // 4. Property double booking
+    if (values.property_id) {
+        const { data: propConflicts } = await supabase
+            .from('visits')
+            .select('id')
+            .eq('property_id', values.property_id)
+            .is('deleted_at', null)
+            .neq('id', excludeId ?? '')
+            .lt('starts_at', values.ends_at)
+            .gt('ends_at', values.starts_at);
+        if (propConflicts?.length) errors.push('Propiedad ya tiene visita en ese horario');
+    }
+    
+    return errors;
 }
 
 // ============================================================
@@ -208,6 +323,47 @@ export async function fetchVisitsByDateRange(
     return (data ?? []).map(toVisitRow);
 }
 
+export interface PaginatedVisits {
+    data: VisitRow[];
+    hasNextPage: boolean;
+    page: number;
+}
+
+// Variante paginada para scroll infinito. Se agrega aparte de
+// fetchVisitsByDateRange (que sigue trayendo todo el rango sin paginar)
+// para no romper a los callers existentes de esa firma.
+export async function fetchVisitsByDateRangePaginated(
+    from: string,
+    to: string,
+    agentId: string | undefined,
+    page: number,
+    pageSize: number,
+): Promise<PaginatedVisits> {
+    const fromIdx = (page - 1) * pageSize;
+    const toIdx = fromIdx + pageSize - 1;
+
+    let query = supabase
+        .from('visits')
+        .select(VISITS_SELECT, { count: 'exact' })
+        .is('deleted_at', null)
+        .gte('starts_at', from)
+        .lte('starts_at', to)
+        .order('starts_at', { ascending: true })
+        .range(fromIdx, toIdx);
+
+    if (agentId) {
+        query = query.eq('agent_id', agentId);
+    }
+
+    const { data, error, count } = await query.returns<VisitApiRow[]>();
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []).map(toVisitRow);
+    const hasNextPage = count != null ? toIdx + 1 < count : rows.length === pageSize;
+
+    return { data: rows, hasNextPage, page };
+}
+
 export async function fetchVisitsByLead(leadId: string): Promise<VisitRow[]> {
     const { data, error } = await supabase
         .from('visits')
@@ -248,10 +404,24 @@ export async function fetchVisitsByStatus(status: VisitStatus): Promise<VisitRow
 }
 
 // ============================================================
-// API Functions - CRUD
+// API Functions - CRUD with Validation
 // ============================================================
 
 export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
+    const validation = validateVisitForm(values);
+    if (!validation.valid) {
+        logVisitError({ action: 'createVisit', error: validation.error, metadata: values });
+        throw new Error(validation.error ?? 'Datos de visita inválidos');
+    }
+
+    // Check conflicts
+    const conflicts = await checkConflicts(values);
+    if (conflicts.length) {
+        logVisitWarn({ action: 'createVisit', conflicts, metadata: values });
+        throw new Error(conflicts.join('; '));
+    }
+
+    logVisitAction({ action: 'createVisit', metadata: values });
     const { data, error } = await supabase
         .from('visits')
         .insert({
@@ -278,6 +448,19 @@ export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
 }
 
 export async function updateVisit(id: string, values: Partial<VisitFormValues>): Promise<void> {
+    const validation = validateVisitPatch(values);
+    if (!validation.valid) {
+        logVisitError({ action: 'updateVisit', visit_id: id, error: validation.error });
+        throw new Error(validation.error ?? 'Datos de visita inválidos');
+    }
+
+    const conflicts = await checkConflicts(values, id);
+    if (conflicts.length) {
+        logVisitWarn({ action: 'updateVisit', visit_id: id, conflicts, metadata: values });
+        throw new Error(conflicts.join('; '));
+    }
+
+    logVisitAction({ action: 'updateVisit', visit_id: id, metadata: values });
     const patch: Database['public']['Tables']['visits']['Update'] = {};
 
     if (values.title !== undefined) patch.title = values.title;
@@ -310,6 +493,7 @@ export async function updateVisit(id: string, values: Partial<VisitFormValues>):
 }
 
 export async function updateVisitStatus(id: string, status: VisitStatus): Promise<void> {
+    logVisitAction({ action: 'updateVisitStatus', visit_id: id, metadata: { status } });
     const patch: Database['public']['Tables']['visits']['Update'] = { status };
 
     if (status === 'confirmada') {
@@ -332,6 +516,7 @@ export async function updateVisitStatus(id: string, status: VisitStatus): Promis
 // ============================================================
 
 export async function softDeleteVisit(id: string): Promise<void> {
+    logVisitAction({ action: 'softDeleteVisit', visit_id: id });
     const { error } = await supabase
         .from('visits')
         .update({ deleted_at: new Date().toISOString() })
@@ -341,12 +526,14 @@ export async function softDeleteVisit(id: string): Promise<void> {
 }
 
 export async function restoreVisit(id: string): Promise<void> {
+    logVisitAction({ action: 'restoreVisit', visit_id: id });
     const { error } = await supabase.from('visits').update({ deleted_at: null }).eq('id', id);
 
     if (error) throw new Error(error.message);
 }
 
 export async function permanentDeleteVisit(id: string): Promise<void> {
+    logVisitAction({ action: 'permanentDeleteVisit', visit_id: id });
     const { error } = await supabase.from('visits').delete().eq('id', id);
 
     if (error) throw new Error(error.message);
@@ -356,7 +543,7 @@ export async function permanentDeleteVisit(id: string): Promise<void> {
 // API Functions - Agent Availability
 // ============================================================
 
-export async function fetchAgentAvailability(agentId: string): Promise<AgentAvailability[]> {
+export async function fetchAgentAvailability(agentId: string): Promise<any[]> {
     const { data, error } = await supabase
         .from('agent_availability')
         .select('*')
@@ -366,12 +553,12 @@ export async function fetchAgentAvailability(agentId: string): Promise<AgentAvai
         .order('start_time', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return (data ?? []) as AgentAvailability[];
+    return (data ?? []) as any[];
 }
 
 export async function createAgentAvailability(
-    values: Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>,
-): Promise<AgentAvailability> {
+    values: Omit<any, 'id' | 'created_at' | 'updated_at'>,
+): Promise<any> {
     const { data, error } = await supabase
         .from('agent_availability')
         .insert(values)
@@ -379,12 +566,12 @@ export async function createAgentAvailability(
         .single();
 
     if (error) throw new Error(error.message);
-    return data as AgentAvailability;
+    return data;
 }
 
 export async function updateAgentAvailability(
     id: string,
-    values: Partial<AgentAvailability>,
+    values: Database['public']['Tables']['agent_availability']['Update'],
 ): Promise<void> {
     const { error } = await supabase.from('agent_availability').update(values).eq('id', id);
 
@@ -404,7 +591,7 @@ export async function deleteAgentAvailability(id: string): Promise<void> {
 export async function createRecurringVisit(
     baseVisitId: string,
     rule: RecurrenceRule,
-): Promise<RecurringVisit> {
+): Promise<any> {
     const nextOccurrence = calculateNextOccurrence(rule, new Date());
 
     const { data, error } = await supabase
@@ -417,7 +604,7 @@ export async function createRecurringVisit(
             is_active: true,
         })
         .select()
-        .single<RecurringVisitApiRow>();
+        .single();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('No se pudo crear la visita recurrente');
@@ -435,6 +622,7 @@ export async function generateOccurrences(
 
     if (error || !recurring) throw new Error('Recurring visit not found');
     if (!recurring.is_active) return { created: 0, skipped: 0 };
+    if (!recurring.rule) throw new Error('Recurring visit sin regla de recurrencia (rule)');
 
     const baseVisit = recurring.base_visit;
     const rule = recurring.rule;
@@ -443,7 +631,6 @@ export async function generateOccurrences(
     let created = 0;
     let skipped = 0;
 
-    // Generate up to 10 future occurrences or until end_date/count
     for (let i = 0; i < 10; i++) {
         if (nextOccurrence <= now) {
             nextOccurrence = calculateNextOccurrence(rule, nextOccurrence);
@@ -453,7 +640,6 @@ export async function generateOccurrences(
         if (rule.end_date && nextOccurrence > new Date(rule.end_date)) break;
         if (rule.count && recurring.occurrences_generated + created >= rule.count) break;
 
-        // Check exceptions
         const dateStr = nextOccurrence.toISOString().split('T')[0];
         if (rule.exceptions?.includes(dateStr)) {
             nextOccurrence = calculateNextOccurrence(rule, nextOccurrence);
@@ -461,7 +647,6 @@ export async function generateOccurrences(
             continue;
         }
 
-        // Check if already exists
         let query = supabase
             .from('visits')
             .select('id')
@@ -496,7 +681,6 @@ export async function generateOccurrences(
         nextOccurrence = calculateNextOccurrence(rule, nextOccurrence);
     }
 
-    // Update next_occurrence and count
     const { error: updError } = await supabase
         .from('recurring_visits')
         .update({
@@ -510,7 +694,7 @@ export async function generateOccurrences(
     return { created, skipped };
 }
 
-function getDurationMinutes(visit: VisitRow): number {
+function getDurationMinutes(visit: any): number {
     const start = new Date(visit.starts_at);
     const end = new Date(visit.ends_at);
     return Math.round((end.getTime() - start.getTime()) / 60000);
@@ -520,7 +704,7 @@ function addMinutes(date: Date, minutes: number): Date {
     return new Date(date.getTime() + minutes * 60000);
 }
 
-function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
+export function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
     const next = new Date(from);
 
     switch (rule.frequency) {
@@ -529,7 +713,6 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
             break;
         case 'weekly':
             if (rule.days_of_week && rule.days_of_week.length > 0) {
-                // Find next matching day of week
                 let daysAdded = 0;
                 for (let i = 1; i <= 7; i++) {
                     const candidate = new Date(next);
@@ -560,7 +743,6 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
             break;
     }
 
-    // Preserve time
     next.setHours(from.getHours(), from.getMinutes(), from.getSeconds(), from.getMilliseconds());
     return next;
 }
@@ -569,25 +751,27 @@ function calculateNextOccurrence(rule: RecurrenceRule, from: Date): Date {
 // API Functions - Reminders
 // ============================================================
 
+export type ReminderInput = Omit<
+    ReminderConfig,
+    'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'
+>;
+
 export async function createReminders(
     visitId: string,
-    reminders: Omit<
-        ReminderConfig,
-        'id' | 'visit_id' | 'is_sent' | 'sent_at' | 'created_at'
-    >[] = DEFAULT_REMINDERS,
-): Promise<ReminderConfig[]> {
+    reminders: ReminderInput[] = DEFAULT_REMINDERS,
+): Promise<Database['public']['Tables']['visit_reminders']['Row'][]> {
     const { data, error } = await supabase
         .from('visit_reminders')
         .insert(reminders.map((r) => ({ ...r, visit_id: visitId })))
-        .select()
-        .returns<ReminderConfig[]>();
+        .select();
 
     if (error) throw new Error(error.message);
     return data ?? [];
 }
 
 export async function processReminders(): Promise<{ sent: number; failed: number }> {
-    const res = await fetch(`${supabaseUrl}/functions/v1/visits-process-reminders`, {
+    const url = `${supabaseUrl}/functions/v1/visits-process-reminders`;
+    const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
     });
@@ -601,7 +785,7 @@ export async function processReminders(): Promise<{ sent: number; failed: number
 // API Functions - QR Check-in
 // ============================================================
 
-export async function generateQrCode(visitId: string): Promise<QrCheckin> {
+export async function generateQrCode(visitId: string): Promise<any> {
     const code = `VIS-${visitId.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`;
 
     const { data, error } = await supabase
@@ -611,7 +795,7 @@ export async function generateQrCode(visitId: string): Promise<QrCheckin> {
         .single();
 
     if (error) throw new Error(error.message);
-    return data as QrCheckin;
+    return data;
 }
 
 export async function checkInWithQr(
@@ -647,13 +831,12 @@ export async function checkInWithQr(
         return { success: false, message: 'Error al registrar' };
     }
 
-    // Also update visit status to 'en_curso'
     await supabase.from('visits').update({ status: 'en_curso' }).eq('id', checkin.visit_id);
 
     return { success: true, visit, message: 'Check-in registrado correctamente' };
 }
 
-export async function getQrCode(visitId: string): Promise<QrCheckin | null> {
+export async function getQrCode(visitId: string): Promise<any | null> {
     const { data } = await supabase
         .from('qr_checkins')
         .select('*')
@@ -662,5 +845,5 @@ export async function getQrCode(visitId: string): Promise<QrCheckin | null> {
         .limit(1)
         .maybeSingle();
 
-    return data as QrCheckin | null;
+    return data;
 }

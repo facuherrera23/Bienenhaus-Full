@@ -11,7 +11,7 @@
       padding: 4px;
       background: var(--bh-bg);
       border: 1px solid var(--bh-border);
-      border-radius: 10px;
+      border-radius: var(--bh-radius-sm);
       overflow-x: auto;
 
 }
@@ -24,7 +24,7 @@
       padding: 10px 16px;
       background: transparent;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--bh-radius-sm);
       color: var(--bh-text-tertiary);
       font-size: 13.5px;
       font-weight: 500;

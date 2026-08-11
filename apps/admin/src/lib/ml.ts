@@ -54,6 +54,10 @@ export type MetaApiRow = Database['public']['Tables']['property_ml_meta']['Row']
     property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
+export type DeadLetterApiRow = Database['public']['Tables']['ml_sync_dead_letter']['Row'] & {
+    property: { title: string; code: number } | { title: string; code: number }[] | null;
+};
+
 // ============================================================
 // Embed helper
 // ============================================================
@@ -107,6 +111,45 @@ export function toMlMetaRow(m: MetaApiRow): MlMetaRow {
     };
 }
 
+export function toDeadLetterRow(d: DeadLetterApiRow): {
+    id: number;
+    original_queue_id: number;
+    property_id: string;
+    operation: string;
+    attempts: number;
+    max_attempts: number;
+    last_error: string | null;
+    payload: Record<string, unknown>;
+    ml_item_id: number | null;
+    created_at: string | null;
+    moved_at: string | null;
+    resolved_at: string | null;
+    resolved_by: string | null;
+    resolution_notes: string | null;
+    property_title: string | null;
+    property_code: number | null;
+} {
+    const prop = embedProperty(d.property);
+    return {
+        id: d.id,
+        original_queue_id: d.original_queue_id,
+        property_id: d.property_id,
+        operation: d.operation,
+        attempts: d.attempts,
+        max_attempts: d.max_attempts,
+        last_error: d.last_error,
+        payload: d.payload as Record<string, unknown>,
+        ml_item_id: d.ml_item_id,
+        created_at: d.created_at,
+        moved_at: d.moved_at,
+        resolved_at: d.resolved_at ?? null,
+        resolved_by: d.resolved_by ?? null,
+        resolution_notes: d.resolution_notes ?? null,
+        property_title: prop.title,
+        property_code: prop.code,
+    };
+}
+
 // ============================================================
 // SELECT strings
 // ============================================================
@@ -117,6 +160,10 @@ const ML_QUEUE_SELECT = `
 
 const ML_META_SELECT = `
   property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property:properties(title, code)
+`.trim();
+
+const ML_DEAD_LETTER_SELECT = `
+  id, original_queue_id, property_id, operation, attempts, max_attempts, last_error, payload, ml_item_id, created_at, moved_at, resolved_at, resolved_by, resolution_notes, property:properties(title, code)
 `.trim();
 
 // ============================================================
@@ -215,35 +262,132 @@ export async function disconnectMl(): Promise<void> {
     if (error) throw new Error(error.message);
 }
 
+export async function revokeMlTokens(): Promise<void> {
+    // Get active connection to get access token
+    const { data: conn } = await supabase
+        .from('ml_connection')
+        .select('access_token_encrypted, access_token_iv')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (conn?.access_token_encrypted && conn?.access_token_iv) {
+        // Import decrypt dynamically to avoid circular dependency
+        const { decrypt } = await import('./_shared/crypto');
+        const accessToken = await decrypt(conn.access_token_encrypted, conn.access_token_iv);
+
+        // Call ML revoke endpoint
+        const res = await fetch('https://api.mercadolibre.com/oauth/revoke', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ token: accessToken }),
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`ML token revocation failed (${res.status}): ${text.slice(0, 300)}`);
+        }
+    }
+
+    // Then delete connection
+    await disconnectMl();
+}
+
 // ============================================================
 // API Functions - Queue
 // ============================================================
 
-export async function fetchMlQueue(): Promise<MlQueueRow[]> {
+export async function fetchMlQueue(filters?: {
+    status?: MlSyncStatus;
+    operation?: MlOperation;
+    page?: number;
+    pageSize?: number;
+}): Promise<MlQueueRow[]> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+    if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
+
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 50;
     const { data, error } = await supabase
         .from('ml_sync_queue')
         .select(ML_QUEUE_SELECT)
+        .match(apiFilters)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
         .returns<QueueApiRow[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toMlQueueRow);
 }
 
+export async function fetchMlQueueInfinite(pageParam = 1, pageSize = 50): Promise<{
+    data: MlQueueRow[];
+    page: number;
+    hasNextPage: boolean;
+}> {
+    const { data, error } = await supabase
+        .from('ml_sync_queue')
+        .select(ML_QUEUE_SELECT)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .range((pageParam - 1) * pageSize, pageParam * pageSize - 1)
+        .returns<QueueApiRow[]>();
+
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []).map(toMlQueueRow);
+    return {
+        data: rows,
+        page: pageParam,
+        hasNextPage: rows.length === pageSize,
+    };
+}
+
 // ============================================================
 // API Functions - Meta
 // ============================================================
 
-export async function fetchMlMeta(): Promise<MlMetaRow[]> {
+export async function fetchMlMeta(filters?: { property_id?: string; page?: number; pageSize?: number }): Promise<MlMetaRow[]> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+
+    if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
+
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 100;
     const { data, error } = await supabase
         .from('property_ml_meta')
         .select(ML_META_SELECT)
+        .match(apiFilters)
         .order('last_sync_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
         .returns<MetaApiRow[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toMlMetaRow);
+}
+
+export async function fetchMlMetaInfinite(pageParam = 1, pageSize = 100): Promise<{
+    data: MlMetaRow[];
+    page: number;
+    hasNextPage: boolean;
+}> {
+    const { data, error } = await supabase
+        .from('property_ml_meta')
+        .select(ML_META_SELECT)
+        .is('deleted_at', null)
+        .order('last_sync_at', { ascending: false })
+        .range((pageParam - 1) * pageSize, pageParam * pageSize - 1)
+        .returns<MetaApiRow[]>();
+
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []).map(toMlMetaRow);
+    return {
+        data: rows,
+        page: pageParam,
+        hasNextPage: rows.length === pageSize,
+    };
 }
 
 // ============================================================
@@ -282,24 +426,59 @@ export async function fetchMlListingTypes(): Promise<MlListingType[]> {
 // API Functions - Questions & Orders
 // ============================================================
 
-export async function fetchMlQuestions(): Promise<MlQuestion[]> {
+export async function fetchMlQuestions(filters?: { status?: string; page?: number; pageSize?: number }): Promise<MlQuestion[]> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
+
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 50;
     const { data, error } = await supabase
         .from('ml_questions')
         .select('*')
+        .match(apiFilters)
         .order('received_at', { ascending: false })
-        .limit(50)
+        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
         .returns<Database['public']['Tables']['ml_questions']['Row'][]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []) as MlQuestion[];
 }
 
-export async function fetchMlOrders(): Promise<MlOrder[]> {
+export async function fetchMlQuestionsInfinite(pageParam = 1, pageSize = 50): Promise<{
+    data: MlQuestion[];
+    page: number;
+    hasNextPage: boolean;
+}> {
+    const { data, error } = await supabase
+        .from('ml_questions')
+        .select('*')
+        .order('received_at', { ascending: false })
+        .range((pageParam - 1) * pageSize, pageParam * pageSize - 1)
+        .returns<Database['public']['Tables']['ml_questions']['Row'][]>();
+
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as MlQuestion[];
+    return {
+        data: rows,
+        page: pageParam,
+        hasNextPage: rows.length === pageSize,
+    };
+}
+
+export async function fetchMlOrders(filters?: { status?: string; page?: number; pageSize?: number }): Promise<MlOrder[]> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
+
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 50;
     const { data, error } = await supabase
         .from('ml_orders')
         .select('*')
+        .match(apiFilters)
         .order('received_at', { ascending: false })
-        .limit(50)
+        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
         .returns<Database['public']['Tables']['ml_orders']['Row'][]>();
 
     if (error) throw new Error(error.message);
@@ -371,7 +550,6 @@ export async function updateMlAutoReplyTemplate(
 
 export async function deleteMlAutoReplyTemplate(id: number): Promise<void> {
     const { error } = await supabase.from('ml_auto_reply_templates').delete().eq('id', id);
-
     if (error) throw new Error(error.message);
 }
 
@@ -394,4 +572,95 @@ export async function answerMlQuestion(questionId: string, answer: string): Prom
     });
 
     if (!res.ok) throw new Error(`Error respondiendo pregunta`);
+}
+
+// ============================================================
+// API Functions - Dead Letter Queue
+// ============================================================
+
+export async function fetchMlDeadLetter(filters?: {
+    status?: string;
+    page?: number;
+    pageSize?: number;
+}): Promise<{
+    data: Array<{
+        id: number;
+        original_queue_id: number;
+        property_id: string;
+        operation: string;
+        attempts: number;
+        max_attempts: number;
+        last_error: string | null;
+        payload: Record<string, unknown>;
+        ml_item_id: number | null;
+        created_at: string | null;
+        moved_at: string | null;
+        resolved_at: string | null;
+        resolved_by: string | null;
+        resolution_notes: string | null;
+        property_title: string | null;
+        property_code: number | null;
+    }>;
+    count: number;
+    page: number;
+    hasNextPage: boolean;
+}> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
+
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 50;
+
+    const { data, error, count } = await supabase
+        .from('ml_sync_dead_letter')
+        .select(ML_DEAD_LETTER_SELECT, { count: 'exact' })
+        .match(apiFilters)
+        .order('moved_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1)
+        .returns<any[]>();
+
+    if (error) throw new Error(error.message);
+    return {
+        data: (data ?? []).map(toDeadLetterRow),
+        count: count ?? 0,
+        page,
+        hasNextPage: (data?.length ?? 0) === 50,
+    };
+}
+
+export async function retryDeadLetter(id: number): Promise<void> {
+    // Get dead letter item
+    const { data: item, error } = await supabase
+        .from('ml_sync_dead_letter')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !item) throw new Error('Dead letter item not found');
+
+    // Re-insert into queue
+    const { error: insertError } = await supabase.from('ml_sync_queue').insert({
+        property_id: item.property_id,
+        operation: item.operation,
+        status: 'pending',
+        attempts: 0,
+        max_attempts: item.max_attempts,
+        next_attempt_at: new Date().toISOString(),
+        ml_item_id: item.ml_item_id,
+        payload: item.payload,
+    });
+
+    if (insertError) throw new Error(insertError.message);
+
+    // Mark as resolved
+    await supabase
+        .from('ml_sync_dead_letter')
+        .update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id ?? null })
+        .eq('id', id);
+}
+
+export async function deleteDeadLetter(id: number): Promise<void> {
+    const { error } = await supabase.from('ml_sync_dead_letter').delete().eq('id', id);
+    if (error) throw new Error(error.message);
 }

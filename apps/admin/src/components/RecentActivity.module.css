@@ -31,55 +31,55 @@
 
       width: 34px;
       height: 34px;
-      border-radius: 10px;
+      border-radius: var(--bh-radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       color: var(--bh-text-secondary);
-      background: rgba(127, 127, 127, 0.1);
+      background: var(--bh-neutral-soft);
 
 }
 
 .activity-icon:global(.is-create) {
 
-      color: #37a879;
-      background: rgba(55, 168, 121, 0.14);
+      color: var(--bh-success);
+      background: var(--bh-success-soft);
 
 }
 
 .activity-icon:global(.is-update), .activity-icon:global(.is-ml_sync) {
 
-      color: #4aa8d8;
-      background: rgba(74, 168, 216, 0.14);
+      color: var(--bh-info);
+      background: var(--bh-info-soft);
 
 }
 
 .activity-icon:global(.is-status_change) {
 
-      color: #d9a441;
-      background: rgba(217, 164, 65, 0.14);
+      color: var(--bh-warning);
+      background: var(--bh-warning-soft);
 
 }
 
 .activity-icon:global(.is-delete), .activity-icon:global(.is-ml_delete) {
 
-      color: #d64541;
-      background: rgba(214, 69, 65, 0.14);
+      color: var(--bh-danger);
+      background: var(--bh-danger-soft);
 
 }
 
 .activity-icon:global(.is-publish), .activity-icon:global(.is-unpublish), .activity-icon:global(.is-ml_publish), .activity-icon:global(.is-ml_update) {
 
-      color: #b076e8;
-      background: rgba(176, 118, 232, 0.14);
+      color: var(--bh-purple);
+      background: var(--bh-purple-soft);
 
 }
 
 .activity-icon:global(.is-login), .activity-icon:global(.is-logout) {
 
       color: var(--bh-text-secondary);
-      background: rgba(127, 127, 127, 0.1);
+      background: var(--bh-neutral-soft);
 
 }
 

@@ -166,7 +166,7 @@
       font-size: 11px;
       color: var(--bh-text-disabled);
       background: var(--bh-bg-input);
-      border-radius: 999px;
+      border-radius: var(--bh-radius-full);
       padding: 1px 7px;
 
 }
@@ -211,7 +211,7 @@
       white-space: nowrap;
       background: var(--bh-bg-input);
       padding: 4px 10px;
-      border-radius: 999px;
+      border-radius: var(--bh-radius-full);
 
 }
 

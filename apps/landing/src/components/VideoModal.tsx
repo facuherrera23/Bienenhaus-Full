@@ -1,89 +1,87 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { Loader2, X } from 'lucide-preact';
+// apps/landing/src/components/VideoModal.tsx
+import { useEffect, useState } from 'preact/hooks';
+import styles from './VideoModal.module.css';
 
-export interface VideoModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    videoUrl: string;
-    title?: string;
+interface VideoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  videoId?: string;
+  title?: string;
 }
 
-export function VideoModal({ isOpen, onClose, videoUrl, title }: VideoModalProps) {
-    const modalRef = useRef<HTMLDivElement>(null);
-    const iframeRef = useRef<HTMLIFrameElement>(null);
-    const [isLoading, setIsLoading] = useState(true);
+export function VideoModal({ isOpen, onClose, videoId = 'dQw4w9WgXcQ', title = 'Video' }: VideoModalProps) {
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoading(true);
-            document.body.style.overflow = 'hidden';
-            const handleKey = (e: KeyboardEvent) => {
-                if (e.key === 'Escape') onClose();
-            };
-            document.addEventListener('keydown', handleKey);
-            return () => {
-                document.body.style.overflow = '';
-                document.removeEventListener('keydown', handleKey);
-            };
-        }
-    }, [isOpen, onClose]);
-
-    const handleIframeLoad = () => {
-        setIsLoading(false);
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      setIsLoading(true);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
     };
+  }, [isOpen]);
 
-    const getEmbedUrl = (url: string): string => {
-        // YouTube
-        const ytMatch = url.match(
-            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-        );
-        if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
-
-        // Vimeo
-        const vmMatch = url.match(/(?:vimeo\.com\/)(\d+)/);
-        if (vmMatch) return `https://player.vimeo.com/video/${vmMatch[1]}?autoplay=1`;
-
-        // Fallback: assume it's already an embed URL
-        return url;
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
     };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    const embedUrl = getEmbedUrl(videoUrl);
-
-    return (
-        <div
-            className="video-modal-overlay"
-            onClick={onClose}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="video-modal-title"
+  return (
+    <div
+      className={styles.videoModalOverlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Video modal"
+    >
+      <div
+        className={styles.videoModal}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className={styles.videoModalClose}
+          onClick={onClose}
+          aria-label="Cerrar video"
         >
-            <div className="video-modal" onClick={(e) => e.stopPropagation()} ref={modalRef}>
-                <button className="video-modal-close" onClick={onClose} aria-label="Cerrar video">
-                    <X className="icon" aria-hidden="true" />
-                </button>
-                {title && (
-                    <h2 id="video-modal-title" className="video-modal-title">
-                        {title}
-                    </h2>
-                )}
-                <div className="video-modal-wrapper">
-                    {isLoading && (
-                        <div className="video-modal-loader">
-                            <Loader2 className="icon spin" aria-hidden="true" />
-                        </div>
-                    )}
-                    <iframe
-                        ref={iframeRef}
-                        src={embedUrl}
-                        title={title || 'Video'}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        onLoad={handleIframeLoad}
-                    />
-                </div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        {title && <h3 className={styles.videoModalTitle}>{title}</h3>}
+
+        <div className={styles.videoModalWrapper}>
+          {isLoading && (
+            <div className={styles.videoModalLoader}>
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2" opacity="0.3"/>
+                <path d="M20 2C30.5 2 38 9.5 38 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <animate attributeName="d" dur="1s" repeatCount="indefinite"
+                    values="M20 2C30.5 2 38 9.5 38 20;M20 2C9.5 2 2 9.5 2 20;M20 2C30.5 2 38 9.5 38 20"/>
+                </path>
+              </svg>
             </div>
+          )}
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title={title}
+            onLoad={() => setIsLoading(false)}
+          />
         </div>
-    );
+      </div>
+    </div>
+  );
 }

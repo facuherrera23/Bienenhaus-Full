@@ -92,7 +92,7 @@ export function ChatPage() {
     const { data: messages, isPending: messagesPending } = useQuery({
         queryKey: ['chat-messages', selectedChannelId],
         queryFn: () =>
-            selectedChannelId ? fetchMessages(selectedChannelId, 100) : Promise.resolve([]),
+            selectedChannelId ? fetchMessages(selectedChannelId, undefined, 100) : Promise.resolve([]),
         enabled: !!selectedChannelId,
     });
 
@@ -201,7 +201,7 @@ export function ChatPage() {
         setLoadingMore(true);
         try {
             const oldestMsg = messages?.[0];
-            const newMessages = await fetchMessages(selectedChannelId, 50, oldestMsg?.created_at);
+            const newMessages = await fetchMessages(selectedChannelId, oldestMsg?.created_at, 50);
             if (newMessages.length < 50) setHasMoreMessages(false);
             queryClient.setQueryData(['chat-messages', selectedChannelId], (old: ChatMessage[]) => [
                 ...newMessages,
@@ -983,7 +983,7 @@ export function ChatPage() {
                                             required
                                         >
                                             <option value="">Seleccionar lead</option>
-                                            {leads?.map((l) => (
+                                            {leads?.data?.map((l) => (
                                                 <option key={l.id} value={l.id}>
                                                     {l.name} {l.last_name} - {l.email}
                                                 </option>

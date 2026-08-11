@@ -139,7 +139,7 @@ select {
     gap: 16px;
     height: var(--bh-topbar-h);
     padding: 0 24px;
-    background: rgba(8, 9, 11, 0.86);
+    background: var(--bh-bg-topbar);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--bh-border);
 }
@@ -169,7 +169,7 @@ select {
     justify-content: center;
     gap: 7px;
     border: 1px solid transparent;
-    border-radius: var(--bh-radius-sm);
+    border-radius: var(--bh-radius-full);
     padding: 8px 14px;
     font-size: 13.5px;
     font-weight: 600;
@@ -191,7 +191,7 @@ select {
 
 .btn--primary {
     background: var(--bh-accent);
-    color: #fff;
+    color: var(--bh-white);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -258,7 +258,7 @@ select {
 .select,
 .toolbar-search {
     border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-sm);
+    border-radius: var(--bh-radius-md);
     background: var(--bh-bg-input);
 }
 
@@ -273,7 +273,7 @@ select {
 
 .field input:focus {
     border-color: var(--bh-border-focus);
-    box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    box-shadow: var(--bh-ring-focus);
 }
 
 .select {
@@ -378,7 +378,7 @@ select {
 .toolbar:focus-within {
     border-color: var(--bh-border-focus);
     box-shadow:
-        0 0 0 3px var(--bh-accent-soft),
+        var(--bh-ring-focus),
         0 0 16px var(--bh-accent-glow-soft);
 }
 
@@ -462,7 +462,7 @@ select {
     width: 46px;
     height: 34px;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: var(--bh-radius-xs);
     flex: none;
 }
 
@@ -470,7 +470,7 @@ select {
     width: 46px;
     height: 34px;
     flex: none;
-    border-radius: 6px;
+    border-radius: var(--bh-radius-xs);
     background: var(--bh-bg-hover);
     border: 1px dashed var(--bh-border-strong);
 }
@@ -493,7 +493,7 @@ select {
     padding: 4px 9px;
     font-size: 11.5px;
     font-weight: 700;
-    border-radius: 999px;
+    border-radius: var(--bh-radius-full);
 }
 
 .cell-property > div:last-child {
@@ -517,7 +517,7 @@ select {
 .badge {
     display: inline-block;
     padding: 3px 9px;
-    border-radius: 999px;
+    border-radius: var(--bh-radius-full);
     font-size: 11.5px;
     font-weight: 700;
     white-space: nowrap;
@@ -677,7 +677,7 @@ select {
 .field textarea {
     padding: 9px 11px;
     border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-sm);
+    border-radius: var(--bh-radius-md);
     background: var(--bh-bg-input);
     color: var(--bh-text-primary);
     font: inherit;
@@ -691,7 +691,7 @@ select {
 
 .field textarea:focus {
     border-color: var(--bh-border-focus);
-    box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    box-shadow: var(--bh-ring-focus);
 }
 
 .checkbox {
@@ -764,7 +764,7 @@ select {
 
 .chip {
     padding: 2px 9px;
-    border-radius: 999px;
+    border-radius: var(--bh-radius-full);
     font-size: 11.5px;
     font-weight: 600;
     background: var(--bh-bg-hover);
@@ -834,7 +834,7 @@ select {
     appearance: none;
     width: 38px;
     height: 22px;
-    border-radius: 999px;
+    border-radius: var(--bh-radius-full);
     background: var(--bh-border-strong);
     position: relative;
     cursor: pointer;
@@ -850,7 +850,7 @@ select {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--bh-white);
     transition: transform var(--bh-dur-fast) var(--bh-ease);
 }
 
@@ -870,17 +870,17 @@ select {
 }
 
 .btn--danger {
-    background: rgba(214, 69, 65, 0.1);
-    color: #d64541;
+    background: var(--bh-danger-bg);
+    color: var(--bh-danger);
 }
 
 .btn--danger:hover:not(:disabled) {
-    background: rgba(214, 69, 65, 0.18);
+    background: var(--bh-danger-bg-hover);
 }
 
 .icon-btn--danger {
-    color: #d64541;
-    border-color: rgba(214, 69, 65, 0.35);
+    color: var(--bh-danger);
+    border-color: var(--bh-danger-border);
 }
 
 /* --------------------------------------------------------------------------
@@ -919,7 +919,7 @@ select {
 
 .locale-tab.is-active {
     background: var(--bh-accent);
-    color: #fff;
+    color: var(--bh-white);
 }
 
 .site-layout {
@@ -944,7 +944,7 @@ select {
     border: 1px solid var(--bh-border);
     border-radius: var(--bh-radius-lg);
     overflow: hidden;
-    background: #fff;
+    background: var(--bh-white);
     box-shadow: var(--bh-shadow-lg);
 }
 
@@ -1303,39 +1303,39 @@ select {
 
 
 .activity-icon.is-create {
-    color: #37a879;
-    background: rgba(55, 168, 121, 0.14);
+    color: var(--bh-success);
+    background: var(--bh-success-soft);
 }
 
 .activity-icon.is-update,
 .activity-icon.is-ml_sync {
-    color: #4aa8d8;
-    background: rgba(74, 168, 216, 0.14);
+    color: var(--bh-info);
+    background: var(--bh-info-soft);
 }
 
 .activity-icon.is-status_change {
-    color: #d9a441;
-    background: rgba(217, 164, 65, 0.14);
+    color: var(--bh-warning);
+    background: var(--bh-warning-soft);
 }
 
 .activity-icon.is-delete,
 .activity-icon.is-ml_delete {
-    color: #d64541;
-    background: rgba(214, 69, 65, 0.14);
+    color: var(--bh-danger);
+    background: var(--bh-danger-soft);
 }
 
 .activity-icon.is-publish,
 .activity-icon.is-unpublish,
 .activity-icon.is-ml_publish,
 .activity-icon.is-ml_update {
-    color: #b076e8;
-    background: rgba(176, 118, 232, 0.14);
+    color: var(--bh-purple);
+    background: var(--bh-purple-soft);
 }
 
 .activity-icon.is-login,
 .activity-icon.is-logout {
     color: var(--bh-text-secondary);
-    background: rgba(127, 127, 127, 0.1);
+    background: var(--bh-neutral-soft);
 }
 
 
@@ -1377,7 +1377,7 @@ select {
     padding: 12px 16px;
     background: rgba(31, 200, 195, 0.06);
     border: 1px solid rgba(31, 200, 195, 0.2);
-    border-radius: 10px;
+    border-radius: var(--bh-radius-sm);
     margin-bottom: 12px;
     animation: slideDown var(--dur-fast) var(--ease-premium);
 }
@@ -1533,8 +1533,8 @@ select {
 .recharts-default-tooltip {
     background: var(--bh-card-bg) !important;
     border: 1px solid var(--bh-border) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    border-radius: var(--bh-radius-sm) !important;
+    box-shadow: var(--bh-shadow-lg) !important;
 }
 
 .recharts-tooltip-label {
@@ -1620,7 +1620,7 @@ select {
     position: relative;
     background: var(--bh-bg);
     border: 1px solid var(--bh-border);
-    border-radius: 14px;
+    border-radius: var(--bh-radius-lg);
     padding: 20px 24px;
     display: flex;
     align-items: flex-start;
@@ -1632,7 +1632,7 @@ select {
 @media (prefers-reduced-motion: no-preference) {
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--bh-shadow-lg);
         border-color: var(--bh-border-hover);
     }
 
@@ -1690,7 +1690,7 @@ select {
     justify-content: center;
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: var(--bh-radius-md);
     background: rgba(255, 255, 255, 0.05);
     color: var(--bh-text-tertiary);
     flex-shrink: 0;
@@ -1755,9 +1755,9 @@ select {
 .charts-section .chart-card {
     background: var(--bh-bg);
     border: 1px solid var(--bh-border);
-    border-radius: 14px;
+    border-radius: var(--bh-radius-lg);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--bh-shadow-sm);
 }
 
 .charts-section .chart-header {
@@ -1828,7 +1828,7 @@ select {
     height: 22px;
     padding: 0 6px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 11px;
+    border-radius: var(--bh-radius-md);
     font-size: 11.5px;
     font-weight: 700;
 }

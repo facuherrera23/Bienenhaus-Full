@@ -156,9 +156,9 @@
     letter-spacing: 0.05em;
     color: var(--bh-text-tertiary);
     padding: 2px 8px;
-    background: var(--bh-bg-hover);
-    border-radius: 999px;
-    flex-shrink: 0;
+      background: var(--bh-bg-hover);
+      border-radius: var(--bh-radius-full);
+      flex-shrink: 0;
 }
 
 .command-palette-selected-indicator {

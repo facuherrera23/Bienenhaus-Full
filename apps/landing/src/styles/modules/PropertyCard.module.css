@@ -1,38 +1,20 @@
-/**
- * PropertyCard Module Styles
- * Extracted from landing.css lines 1331-1590 (Card section)
- * Uses unified --bh-* tokens from @bienenhaus/ui/tokens.css
- */
-
-.cardOperation {
-    display: inline-block;
-    font-size: var(--bh-text-xs);
-    font-weight: var(--bh-weight-bold);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--bh-accent);
-    margin-bottom: var(--bh-space-1);
-}
+/* apps/landing/src/styles/modules/PropertyCard.module.css */
 
 .propertyCard {
     background: var(--bh-bg-card);
     border-radius: var(--bh-radius-3xl);
     overflow: hidden;
     border: 1px solid var(--bh-border);
-    transition: all var(--bh-dur-xslow) var(--bh-ease-premium);
-    opacity: 0;
-    transform: translateY(40px);
-}
-
-.propertyCard.visible {
-    opacity: 1;
-    transform: translateY(0);
+    transition: all var(--bh-dur-slow) var(--bh-ease-premium);
+    transform-style: preserve-3d;
+    will-change: transform;
+    cursor: pointer;
 }
 
 .propertyCard:hover {
-    transform: translateY(-8px) scale(1.01);
+    transform: translateY(-8px) scale(1.02);
     border-color: var(--bh-accent);
-    box-shadow: var(--bh-shadow-glow-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px var(--bh-accent-glow-soft);
 }
 
 .cardImageWrapper {
@@ -47,6 +29,7 @@
     height: 100%;
     object-fit: cover;
     transition: transform var(--bh-dur-xslow) var(--bh-ease-premium);
+    will-change: transform;
 }
 
 .propertyCard:hover .cardImageWrapper img {
@@ -74,6 +57,12 @@
     text-transform: uppercase;
     box-shadow: 0 0 30px var(--bh-accent-glow-soft);
     backdrop-filter: blur(4px);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px var(--bh-accent-glow-soft); }
+    50% { box-shadow: 0 0 40px var(--bh-accent-glow-soft), 0 0 80px rgba(31, 200, 195, 0.1); }
 }
 
 .cardFavorite {
@@ -91,9 +80,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--bh-text-lg);
     transition: all var(--bh-dur-med) var(--bh-ease-premium);
     cursor: pointer;
+    z-index: 2;
 }
 
 .cardFavorite:hover {
@@ -105,14 +94,29 @@
 
 .cardFavorite.liked {
     color: var(--bh-danger);
+    animation: heartBurst 0.6s var(--bh-ease-premium);
 }
 
-.cardFavorite.liked svg {
-    font-weight: 900;
+@keyframes heartBurst {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.6); box-shadow: 0 0 40px rgba(255, 71, 87, 0.4); }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); }
 }
 
 .cardBody {
     padding: var(--bh-space-6) var(--bh-space-6) var(--bh-space-7);
+    transform: translateZ(20px);
+}
+
+.cardOperation {
+    display: inline-block;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-bold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--bh-accent);
+    margin-bottom: var(--bh-space-1);
 }
 
 .cardPrice {
@@ -202,9 +206,10 @@
     bottom: 0;
     left: 0;
     width: 0;
-    height: 1.5px;
+    height: 2px;
     background: var(--bh-accent);
     transition: width var(--bh-dur-med) var(--bh-ease-premium);
+    border-radius: 2px;
 }
 
 .btnCard:hover {
@@ -217,77 +222,32 @@
 
 .btnCard svg {
     transition: transform var(--bh-dur-med) var(--bh-ease-premium);
-    font-size: var(--bh-text-xs);
 }
 
 .btnCard:hover svg {
     transform: translateX(4px);
 }
 
-/* Heart bounce animation */
-.heartBounce {
-    animation: heartBounce 400ms var(--bh-ease-premium);
-}
-
-@keyframes heartBounce {
-    0% {
-        transform: scale(1);
-    }
-    30% {
-        transform: scale(1.4);
-    }
-    60% {
-        transform: scale(0.9);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Skeleton */
-.skeletonCard {
-    background: var(--bh-bg-card);
-    border-radius: var(--bh-radius-3xl);
-    overflow: hidden;
-    border: 1px solid var(--bh-border);
-}
-
-.skeletonImage {
-    aspect-ratio: 16/10;
-    background: var(--bh-bg-secondary);
-}
-
-.skeletonBody {
-    padding: var(--bh-space-6);
-}
-
-.skeletonLine {
-    background: var(--bh-bg-secondary);
-    border-radius: var(--bh-radius-sm);
-    height: 14px;
-}
-
-.shimmer {
-    background: linear-gradient(
-        90deg,
-        var(--bh-bg-secondary) 25%,
-        var(--bh-bg-card) 50%,
-        var(--bh-bg-secondary) 75%
+.cardGlow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(31, 200, 195, 0.06) 0%,
+        rgba(31, 200, 195, 0.02) 30%,
+        transparent 70%
     );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: var(--bh-radius-3xl);
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+.propertyCard:hover .cardGlow {
+    opacity: 1;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .propertyCard {
         border-radius: var(--bh-radius-xl);
@@ -308,13 +268,9 @@
     .cardFeatures li {
         font-size: var(--bh-text-xs);
     }
-}
-
-@media (max-width: 390px) {
-    .cardPrice {
-        font-size: 22px;
-    }
-    .cardTitle {
+    .cardFavorite {
+        width: 36px;
+        height: 36px;
         font-size: var(--bh-text-md);
     }
 }

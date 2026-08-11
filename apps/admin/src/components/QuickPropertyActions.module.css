@@ -31,7 +31,7 @@
 
       width: 42px;
       height: 42px;
-      border-radius: 10px;
+      border-radius: var(--bh-radius-sm);
       object-fit: cover;
       flex-shrink: 0;
       border: 1px solid var(--bh-border);
@@ -43,7 +43,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(127, 127, 127, 0.1);
+      background: var(--bh-neutral-soft);
       color: var(--bh-text-tertiary);
 
 }
