@@ -63,7 +63,8 @@ export const ChatChannelSchema = z.object({
             sender_photo_url: z.string().url().nullable(),
         }).nullable(),
         unread_count: z.number().int().nonnegative().default(0),
-    });
+    }),
+});
 
 export const ChatMessageSchema = z.object({
     id: z.string().uuid(),
@@ -198,8 +199,10 @@ export type SendMessage = z.infer<typeof SendMessageSchema>;
 export type EditMessage = z.infer<typeof EditMessageSchema>;
 export type UploadFile = z.infer<typeof UploadFileSchema>;
 
-// Validation helpers
-export function validateChatMessageRealtime(data: unknown): { valid: boolean; error?: string; data?: any } {
+// Validation helpers with discriminated union return types
+export function validateChatMessageRealtime(
+    data: unknown
+): { valid: true; data: ChatMessageRealtime } | { valid: false; error: string } {
     const result = ChatMessageRealtimeSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -208,7 +211,9 @@ export function validateChatMessageRealtime(data: unknown): { valid: boolean; er
     return { valid: true, data: result.data };
 }
 
-export function validateSendMessage(data: unknown): { valid: boolean; error?: string; data?: any } {
+export function validateSendMessage(
+    data: unknown
+): { valid: true; data: SendMessage } | { valid: false; error: string } {
     const result = SendMessageSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];

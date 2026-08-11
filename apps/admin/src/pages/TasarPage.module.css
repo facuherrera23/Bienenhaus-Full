@@ -3,7 +3,7 @@
  * Clases: ambient-total, breadcrumb-sep, breadcrumbs, comparable-card, comparable-card-head, comparable-card-title, comparable-chars, comparable-empty, comparable-included, comparable-section, comparable-section-head, page-actions, valuation-banner, valuation-banner--error, valuation-banner--locked, valuation-nav, valuation-status-dot, valuation-status-dot--dirty, valuation-status-dot--saved, valuation-step-body, valuation-step-card, valuation-step-count, valuation-step-desc, valuation-step-head, valuation-step-title, wizard-step, wizard-step--active, wizard-step--done, wizard-step-icon, wizard-step-label, wizard-step-num, wizard-stepper
  */
 
-/* ========================================================================== M�dulo Tasar � Wizard de tasaci�n (pasada 1: esqueleto) ========================================================================== */ .breadcrumbs {
+/* ========================================================================== Módulo Tasar — Wizard de tasación (pasada 1: esqueleto) ========================================================================== */ .breadcrumbs {
 
       display: flex;
       align-items: center;
@@ -216,7 +216,7 @@
 }
 
 /* --- Cuerpo del paso --- */ .valuation-step-body {
-  
+   
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -224,7 +224,7 @@
 }
 
 /* --- Editor de comparables --- */ .comparable-section {
-  
+   
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -232,7 +232,7 @@
 }
 
 .comparable-section-head {
-  
+
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -244,7 +244,7 @@
 }
 
 .comparable-empty {
-  
+
       margin: 0;
       padding: 14px 16px;
       border: 1px dashed var(--bh-border-strong);
@@ -256,7 +256,7 @@
 }
 
 .comparable-card {
-  
+
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -268,7 +268,7 @@
 }
 
 .comparable-card-head {
-  
+
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -279,7 +279,7 @@
 }
 
 .comparable-card-title {
-  
+
       font-size: 13px;
       font-weight: 700;
       color: var(--bh-text-primary);
@@ -287,7 +287,7 @@
 }
 
 .comparable-chars {
-  
+
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 10px 12px;
@@ -297,13 +297,13 @@
 }
 
 .comparable-included {
-  
+
       align-self: flex-start;
 
 }
 
 /* --- Total de ambientes --- */ .ambient-total {
-  
+
       grid-column: 1 / -1;
       display: flex;
       align-items: center;
@@ -319,13 +319,13 @@
 }
 
 .ambient-total strong {
-  
+
       font-size: 15px;
       color: var(--bh-text-primary);
 
 }
 
-/* --- Navegaci�n --- */ .valuation-nav {
+/* --- Navegación --- */ .valuation-nav {
 
       display: flex;
       align-items: center;
@@ -335,4 +335,197 @@
       padding-top: 18px;
       border-top: 1px solid var(--bh-border);
 
+}
+
+
+/* ========================================================================== */
+/* Tasaciones — listado + formulario de una sola página                      */
+/* ========================================================================== */
+.valuation-list-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.valuation-list-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px auto;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--bh-border);
+}
+
+.valuation-search,
+.valuation-filter {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-md);
+  background: var(--bh-bg-input);
+  color: var(--bh-text-primary);
+  outline: none;
+}
+
+.valuation-search:focus,
+.valuation-filter:focus {
+  border-color: var(--bh-accent);
+  box-shadow: 0 0 0 3px var(--bh-accent-soft);
+}
+
+.valuation-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.valuation-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.valuation-table th,
+.valuation-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--bh-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.valuation-table th {
+  background: var(--bh-bg-input);
+  color: var(--bh-text-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.valuation-table td {
+  color: var(--bh-text-secondary);
+  font-size: 13px;
+}
+
+.valuation-table tbody tr:hover {
+  background: var(--bh-bg-input);
+}
+
+.valuation-table strong,
+.valuation-secondary {
+  display: block;
+}
+
+.valuation-secondary {
+  margin-top: 3px;
+  color: var(--bh-text-tertiary);
+  font-size: 11.5px;
+}
+
+.valuation-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: var(--bh-radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.valuation-status--draft {
+  background: rgba(250, 204, 21, .1);
+  color: var(--bh-warning);
+}
+
+.valuation-status--finalized {
+  background: rgba(34, 197, 94, .1);
+  color: var(--bh-success);
+}
+
+.valuation-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.valuation-empty {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: var(--bh-text-tertiary);
+  text-align: center;
+}
+
+.valuation-empty h2,
+.valuation-empty p {
+  margin: 0;
+}
+
+.valuation-empty h2 {
+  color: var(--bh-text-primary);
+}
+
+.valuation-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.valuation-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.valuation-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: var(--bh-radius-md);
+  background: var(--bh-accent-soft);
+  color: var(--bh-accent);
+}
+
+/* El nuevo formulario conserva todos los campos del wizard, pero los presenta
+   verticalmente para poder completar una tasación completa sin cambiar de pestaña. */
+.valuation-form-stack .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.valuation-form-stack .field {
+  width: 100%;
+}
+
+.valuation-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-bottom: 30px;
+}
+
+@media (max-width: 760px) {
+  .valuation-list-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .valuation-step-card {
+    padding: 18px;
+  }
+
+  .valuation-form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.valuation-form-stack .comparable-chars {
+  grid-template-columns: minmax(0, 1fr);
 }
