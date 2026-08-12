@@ -208,9 +208,9 @@ export function useCreateProperty() {
         PROPERTIES_PATH,
         {
             invalidateKeys: [
-                queryKeys.properties(),
-                queryKeys.leads(),
-                queryKeys.owners(),
+                ['properties'],
+                ['leads'],
+                ['owners'],
                 ['recent-activity'],
             ],
         },
@@ -223,9 +223,9 @@ export function useUpdateProperty() {
         PROPERTIES_PATH,
         {
             invalidateKeys: [
-                queryKeys.properties(),
-                queryKeys.leads(),
-                queryKeys.owners(),
+                ['properties'],
+                ['leads'],
+                ['owners'],
                 ['recent-activity'],
             ],
         },
@@ -235,9 +235,9 @@ export function useUpdateProperty() {
 export function useDeleteProperty() {
     return useDelete(queryKeys.properties(), PROPERTIES_PATH, {
         invalidateKeys: [
-            queryKeys.properties(),
-            queryKeys.leads(),
-            queryKeys.owners(),
+            ['properties'],
+            ['leads'],
+            ['owners'],
             ['recent-activity'],
         ],
     });
@@ -332,9 +332,9 @@ export function useSoftDeleteProperty() {
             return softDeleteProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
+            queryClient.invalidateQueries({ queryKey: ['leads'] });
+            queryClient.invalidateQueries({ queryKey: ['owners'] });
             queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });
@@ -347,9 +347,9 @@ export function useRestoreProperty() {
             return restoreProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
+            queryClient.invalidateQueries({ queryKey: ['leads'] });
+            queryClient.invalidateQueries({ queryKey: ['owners'] });
             queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });
@@ -362,9 +362,9 @@ export function usePermanentDeleteProperty() {
             return permanentDeleteProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.properties() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.leads() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.owners() });
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
+            queryClient.invalidateQueries({ queryKey: ['leads'] });
+            queryClient.invalidateQueries({ queryKey: ['owners'] });
             queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });

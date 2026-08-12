@@ -106,19 +106,19 @@ export function useFetchDeletedAgents() {
 
 export function useCreateAgent() {
     return useCreate<AgentRow, AgentFormValues>(queryKeys.agents(), AGENTS_PATH, {
-        invalidateKeys: [queryKeys.agents()],
+        invalidateKeys: [['agents']],
     });
 }
 
 export function useUpdateAgent() {
     return useUpdate<AgentRow, AgentFormValues>(queryKeys.agents(), AGENTS_PATH, {
-        invalidateKeys: [queryKeys.agents()],
+        invalidateKeys: [['agents']],
     });
 }
 
 export function useDeleteAgent() {
     return useDelete(queryKeys.agents(), AGENTS_PATH, {
-        invalidateKeys: [queryKeys.agents()],
+        invalidateKeys: [['agents']],
     });
 }
 
@@ -246,7 +246,7 @@ export function useCreateAgentAvailability() {
         AgentAvailability,
         Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>
     >(queryKeys.agents([{ availability: '' }]), 'agent_availability', {
-        invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+        invalidateKeys: [['agents']],
     });
 }
 
@@ -255,14 +255,14 @@ export function useUpdateAgentAvailability() {
         queryKeys.agents([{ availability: '' }]),
         'agent_availability',
         {
-            invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+            invalidateKeys: [['agents']],
         },
     );
 }
 
 export function useDeleteAgentAvailability() {
     return useDelete(queryKeys.agents([{ availability: '' }]), 'agent_availability', {
-        invalidateKeys: [queryKeys.agents([{ availability: '' }])],
+        invalidateKeys: [['agents']],
     });
 }
 

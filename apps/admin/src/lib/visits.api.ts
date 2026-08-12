@@ -197,19 +197,19 @@ export function useVisitsByLead(leadId: string | null) {
 
 export function useCreateVisit() {
     return useCreate<VisitRow, VisitFormValues>(queryKeys.visits(), VISITS_PATH, {
-        invalidateKeys: [queryKeys.visits()],
+        invalidateKeys: [['visits']],
     });
 }
 
 export function useUpdateVisit() {
     return useUpdate<VisitRow, Partial<VisitFormValues>>(queryKeys.visits(), VISITS_PATH, {
-        invalidateKeys: [queryKeys.visits()],
+        invalidateKeys: [['visits']],
     });
 }
 
 export function useDeleteVisit() {
     return useDelete(queryKeys.visits(), VISITS_PATH, {
-        invalidateKeys: [queryKeys.visits()],
+        invalidateKeys: [['visits']],
     });
 }
 
@@ -276,7 +276,7 @@ export function useCreateAgentAvailability() {
         AgentAvailability,
         Omit<AgentAvailability, 'id' | 'created_at' | 'updated_at'>
     >(queryKeys.visits([{ availability: '' }]), 'agent_availability', {
-        invalidateKeys: [queryKeys.visits([{ availability: '' }])],
+        invalidateKeys: [['visits']],
     });
 }
 
@@ -285,14 +285,14 @@ export function useUpdateAgentAvailability() {
         queryKeys.visits([{ availability: '' }]),
         'agent_availability',
         {
-            invalidateKeys: [queryKeys.visits([{ availability: '' }])],
+            invalidateKeys: [['visits']],
         },
     );
 }
 
 export function useDeleteAgentAvailability() {
     return useDelete(queryKeys.visits([{ availability: '' }]), 'agent_availability', {
-        invalidateKeys: [queryKeys.visits([{ availability: '' }])],
+        invalidateKeys: [['visits']],
     });
 }
 
