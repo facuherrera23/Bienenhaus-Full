@@ -6,8 +6,7 @@
  * into the workspace, replace `LocalMeta`/`LocalStory` with the canonical
  * `Meta`/`StoryObj` from `@storybook/preact` — the story bodies stay identical.
  */
-import { Metric } from './Metric';
-import type { MetricSize } from './Metric';
+import { Metric, type MetricSize } from './Metric';
 
 interface LocalStoryArgs {
   label?: string;

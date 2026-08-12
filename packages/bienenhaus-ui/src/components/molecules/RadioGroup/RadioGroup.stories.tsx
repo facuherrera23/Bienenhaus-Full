@@ -6,8 +6,7 @@
  * into the workspace, replace `LocalMeta`/`LocalStory` with the canonical
  * `Meta`/`StoryObj` from `@storybook/preact` — the story bodies stay identical.
  */
-import { RadioGroup } from './RadioGroup';
-import type { RadioOption } from './RadioGroup';
+import { RadioGroup, type RadioOption } from './RadioGroup';
 
 interface LocalStoryArgs {
   options: RadioOption[];

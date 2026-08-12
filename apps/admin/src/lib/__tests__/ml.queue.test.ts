@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchMlQueue, fetchMlMeta, fetchMlOverview } from '../ml';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fetchMlMeta, fetchMlOverview, fetchMlQueue } from '../ml';
 import type { MlOverview } from '../../types/ml';
 
 const { mockSupabase } = vi.hoisted(() => {

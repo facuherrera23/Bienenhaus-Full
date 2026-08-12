@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { StatCard } from './StatCard';
-import type { StatCardProps } from './StatCard';
+import { StatCard ,type  StatCardProps } from './StatCard';
 import styles from './StatCard.module.css';
 
 describe('StatCard', () => {

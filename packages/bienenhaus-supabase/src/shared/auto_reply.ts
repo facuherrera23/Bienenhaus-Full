@@ -5,13 +5,13 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
+    categorizeMlError,
+    fetchWithTimeout,
     getAccessToken,
     ML_API,
     type MlConnectionRow,
-    categorizeMlError,
     type MlErrorType,
     runMlApiCallWithRetry,
-    fetchWithTimeout,
 } from './ml.ts';
 
 /** Devuelve la plantilla activa para un trigger (p.ej. 'new_question'). */

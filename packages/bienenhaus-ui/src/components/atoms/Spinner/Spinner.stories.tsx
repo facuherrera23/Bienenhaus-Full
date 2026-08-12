@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { Spinner } from './Spinner';
-import type { SpinnerColor, SpinnerSize } from './Spinner';
+import { Spinner ,type  SpinnerColor,type  SpinnerSize } from './Spinner';
 
 const meta: Meta<typeof Spinner> = {
   title: 'Atoms/Spinner',

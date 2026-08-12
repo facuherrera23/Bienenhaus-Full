@@ -1,11 +1,11 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-    fetchMlSettings,
-    setMlAppId,
-    setMlEnabled,
-    setMlDefaults,
     buildAuthorizeUrl,
     embedProperty,
+    fetchMlSettings,
+    setMlAppId,
+    setMlDefaults,
+    setMlEnabled,
 } from '../ml';
 
 // Chain-mock de supabase: cada método devuelve la cadena y `await` resuelve el

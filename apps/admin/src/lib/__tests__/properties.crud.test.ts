@@ -1,6 +1,6 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createProperty, updateProperty, softDeleteProperty, restoreProperty, permanentDeleteProperty, duplicateProperty, fetchProperty } from '../properties';
-import type { PropertyFormValues, PropertyDetail } from '../../types/properties';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createProperty, duplicateProperty, fetchProperty, permanentDeleteProperty, restoreProperty, softDeleteProperty, updateProperty } from '../properties';
+import type { PropertyDetail, PropertyFormValues } from '../../types/properties';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {

@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
+    PropertyDetailSchema,
     PropertyFormSchema,
     PropertyImageSchema,
     PropertyRowSchema,
-    PropertyDetailSchema,
     validatePropertyForm,
     validatePropertyImage,
 } from '../_shared/properties-validation';

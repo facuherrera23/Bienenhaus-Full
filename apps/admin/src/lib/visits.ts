@@ -1,24 +1,22 @@
 import { supabase, supabaseUrl } from './supabase';
 import type { Database } from '../types/database';
-import type {
-    AgentAvailability,
-    QrCheckin,
-    RecurrenceRule,
-    RecurringVisit,
-    ReminderConfig,
-    VisitDbRow,
-    VisitFormValues,
-    VisitRow,
-    VisitStatus,
-    VisitType,
-} from '../types/visits';
 import {
+    type AgentAvailability,
     DAY_LABELS,
     DEFAULT_REMINDERS,
     MEETING_TYPE_LABEL,
+    type QrCheckin,
+    type RecurrenceRule,
+    type RecurringVisit,
+    type ReminderConfig,
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
-} from '../types/visits';
+
+    type VisitDbRow,
+    type VisitFormValues,
+    type VisitRow,
+    type VisitStatus,
+    type VisitType} from '../types/visits';
 import { validateVisitForm, validateVisitPatch } from './_shared/visits-validation';
 
 // ============================================================

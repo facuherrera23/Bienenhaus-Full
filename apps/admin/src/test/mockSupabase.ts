@@ -2,7 +2,7 @@
  * Shared Supabase mock chain builder for tests.
  * Provides a full chainable mock with all methods used by the codebase.
  */
-import { vi, type Mock } from 'vitest';
+import { type Mock, vi } from 'vitest';
 
 /**
  * Creates a complete mock chain with all Supabase query builder methods.

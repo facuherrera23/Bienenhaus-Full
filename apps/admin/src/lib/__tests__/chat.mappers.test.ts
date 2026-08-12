@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { toChannelRow, toMessageRow, embedAgentName, embedAgentEmail, embedAgentPhoto } from '../chat';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { embedAgentEmail, embedAgentName, embedAgentPhoto, toChannelRow, toMessageRow } from '../chat';
 
 describe('chat mappers', () => {
     const baseChannelApiRow = {

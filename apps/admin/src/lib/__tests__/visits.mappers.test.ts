@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { toVisitRow, embedVisitName, embedVisitEmail, embedVisitPhone, embedVisitTitle } from '../visits';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { embedVisitEmail, embedVisitName, embedVisitPhone, embedVisitTitle, toVisitRow } from '../visits';
 
 describe('visits mappers', () => {
     const baseApiRow = {

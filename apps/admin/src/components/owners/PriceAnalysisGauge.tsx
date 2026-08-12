@@ -1,5 +1,4 @@
-import type { PriceStatus } from '../../types/owners';
-import { formatPriceStatus, PRICE_STATUS_GAUGE_COLOR } from '../../types/owners';
+import { formatPriceStatus , PRICE_STATUS_GAUGE_COLOR, type PriceStatus } from '../../types/owners';
 
 interface PriceAnalysisGaugeProps {
     analysis: {

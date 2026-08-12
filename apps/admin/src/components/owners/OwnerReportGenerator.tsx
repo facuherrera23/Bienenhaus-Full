@@ -3,8 +3,7 @@ import { Calendar, Check, FileText, Plus, TrendingUp, X } from 'lucide-preact';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReportFormValues, reportSchema, type ReportType } from '../../lib/owners/schemas';
-import type { ActionPlanRow, CommunicationRow, PriceAnalysisRow } from '../../types/owners';
-import { REPORT_TYPE_LABEL } from '../../types/owners';
+import { type ActionPlanRow, type CommunicationRow, type PriceAnalysisRow , REPORT_TYPE_LABEL } from '../../types/owners';
 
 interface OwnerReportGeneratorProps {
     propertyId: string;

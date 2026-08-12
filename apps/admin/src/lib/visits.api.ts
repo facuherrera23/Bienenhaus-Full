@@ -11,14 +11,14 @@ import {
 } from './api';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
-    VISIT_STATUS_LABEL,
-    VISIT_STATUS_TONE,
-    MEETING_TYPE_LABEL,
     type AgentAvailability,
+    MEETING_TYPE_LABEL,
     type QrCheckin,
     type RecurrenceRule,
     type RecurringVisit,
     type ReminderConfig,
+    VISIT_STATUS_LABEL,
+    VISIT_STATUS_TONE,
     type VisitFormValues,
     type VisitRow,
     type VisitStatus,

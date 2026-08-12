@@ -5,7 +5,7 @@ export * from './newsletter';
 export * from './chat';
 export * from './admin';
 export * from './owners';
-export * from './valuations';
+export type * from './valuations';
 
 // Export agents explicitly to avoid naming conflicts
 export type {

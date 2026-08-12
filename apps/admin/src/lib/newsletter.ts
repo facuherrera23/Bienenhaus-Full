@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
-import type { NewsletterSource, NewsletterStatus, NewsletterSubscriber } from '../types/newsletter';
+import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL, type NewsletterSource , type NewsletterStatus, type NewsletterSubscriber } from '../types/newsletter';
 import type { Database } from '../types/database';
-import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL } from '../types/newsletter';
 
 // ============================================================
 // Re-export types and constants

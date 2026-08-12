@@ -7,8 +7,7 @@
  * `LocalMeta`/`LocalStory` with the canonical `Meta`/`StoryObj` from
  * `@storybook/preact` — the story bodies stay identical.
  */
-import { EmptyState } from './EmptyState';
-import type { EmptyStateProps, EmptyStateSize } from './EmptyState';
+import { EmptyState, type EmptyStateProps, type EmptyStateSize } from './EmptyState';
 import { Button } from '../../atoms/Button/Button';
 
 /* Inline icon helpers (no icon dependency — mirrors Metric approach). */

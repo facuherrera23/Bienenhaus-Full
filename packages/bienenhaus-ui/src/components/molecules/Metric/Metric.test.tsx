@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/preact';
-import { Metric } from './Metric';
-import type { MetricProps } from './Metric';
+import { Metric ,type  MetricProps } from './Metric';
 
 describe('Metric', () => {
   const defaultProps: MetricProps = {

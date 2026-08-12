@@ -20,17 +20,17 @@
 
 import { getCurrentUser, supabase } from './supabase';
 import type { Database, Json } from '../types/database';
-import type { ComparableDB } from '../types/valuationTypes';
-import type {
-    ComparableData,
-    NivelesComparacion,
-    TipoConstruccion,
-    ValuacionDBRow,
-    ValuacionDraftData,
-    ValuacionFilters,
-    ValuacionFormData,
+import { type 
+    ComparableData ,type ComparableDB,type 
+    NivelesComparacion,type 
+    TipoConstruccion,type 
+    ValuacionDBRow,type 
+    ValuacionDraftData,type 
+    ValuacionFilters,type 
+    ValuacionFormData,type 
     ValuacionServiceInterface,
 } from '../types/valuationTypes';
+
 
 // ============================================================================
 // Tipos de la DB (derivados de los generados en types/database.ts)

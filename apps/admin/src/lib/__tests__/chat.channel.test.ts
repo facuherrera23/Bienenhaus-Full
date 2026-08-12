@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createDirectChannel, createGroupChannel, createPropertyChannel, createLeadChannel, fetchChannels } from '../chat';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createDirectChannel, createGroupChannel, createLeadChannel, createPropertyChannel, fetchChannels } from '../chat';
 import type { ChatChannel } from '../../types/chat';
 
 const { mockSupabase } = vi.hoisted(() => {

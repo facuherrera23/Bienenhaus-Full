@@ -1,23 +1,21 @@
 import { supabase, supabaseUrl } from './supabase';
-import type { Json } from '../types/database';
-import type {
-    MlAutoReplyTemplate,
-    MlCategory,
-    MlConnectionInfo,
-    MlItemMetrics,
-    MlListingType,
-    MlMetaRow,
-    MlMetrics,
-    MlOperation,
-    MlOrder,
-    MlOverview,
-    MlQuestion,
-    MlQueueRow,
-    MlSettings,
-    MlSyncStatus,
-} from '../types/ml';
-import type { Database } from '../types/database';
-import { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE } from '../types/ml';
+import { type  Database ,type Json } from '../types/database';
+import {
+    ML_OPERATION_LABEL,
+    ML_SYNC_STATUS_LABEL,
+    ML_SYNC_STATUS_TONE,
+    type MlAutoReplyTemplate,
+    type MlCategory,
+    type MlConnectionInfo,
+    type MlItemMetrics,
+    type MlListingType,
+    type MlMetaRow,
+    type MlMetrics,
+    type MlOperation,
+    type MlOrder,
+    type MlOverview,
+    type MlQuestion,
+ type MlQueueRow, type MlSettings, type MlSyncStatus } from '../types/ml';
 
 // ============================================================
 // Re-export types and constants

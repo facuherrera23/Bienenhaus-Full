@@ -1,14 +1,14 @@
-﻿import { useState, useMemo, useCallback } from 'preact/hooks';
+﻿import { useCallback, useMemo, useState } from 'preact/hooks';
 import {
     Calendar,
     CalendarClock,
-    Clock,
     ChevronLeft,
     ChevronRight,
-    Search,
-    QrCode,
-    X,
+    Clock,
     Loader2,
+    QrCode,
+    Search,
+    X,
 } from 'lucide-preact';
 import { supabaseUrl } from '../lib/supabase';
 import { useAuthAccessToken } from '../lib/auth';

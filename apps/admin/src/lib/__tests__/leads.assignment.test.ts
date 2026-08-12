@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchAgents, getNextAgentForAssignment, autoAssignLead, bulkAutoAssignLeads } from '../leads';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { autoAssignLead, bulkAutoAssignLeads, fetchAgents, getNextAgentForAssignment } from '../leads';
 import type { AgentOption } from '../../types/leads';
 
 const { mockSupabase } = vi.hoisted(() => {

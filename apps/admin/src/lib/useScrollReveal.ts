@@ -1,5 +1,5 @@
 // apps/admin/src/lib/useScrollReveal.ts
-import { useRef, useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 interface ScrollRevealOptions {
   threshold?: number;

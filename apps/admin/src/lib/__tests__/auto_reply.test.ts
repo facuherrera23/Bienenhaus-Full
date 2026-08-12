@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
     getActiveTemplate,
     getMlAccessToken,
-    sendQuestionAnswer,
     sendOrderMessage,
+    sendQuestionAnswer,
 } from '../_shared/auto_reply';
 
 // Chain-mock de supabase: cada método devuelve la cadena y `await` resuelve el

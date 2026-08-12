@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { encrypt, decrypt } from '../_shared/crypto';
+import { describe, expect, it } from 'vitest';
+import { decrypt, encrypt } from '../_shared/crypto';
 
 describe('crypto', () => {
     const testSecret = 'test-secret-key-for-encryption-32chars!!';

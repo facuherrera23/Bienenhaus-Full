@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { Tooltip } from './Tooltip';
-import type { TooltipPosition } from './Tooltip';
+import { Tooltip ,type  TooltipPosition } from './Tooltip';
 
 const meta: Meta<typeof Tooltip> = {
   title: 'Atoms/Tooltip',

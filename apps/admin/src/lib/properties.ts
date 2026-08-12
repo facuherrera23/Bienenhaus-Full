@@ -1,22 +1,20 @@
 import { supabase, supabaseUrl } from './supabase';
 import type { Database } from '../types/database';
-import type {
-    Currency,
-    ListingType,
-    LocationOption,
-    PropertyCondition,
-    PropertyDetail,
-    PropertyFormValues,
-    PropertyImage,
-    PropertyRow,
-    PropertyStatus,
-} from '../types/properties';
 import {
     CONDITION_LABEL,
+    type Currency,
     LISTING_TYPE_LABEL,
+    type ListingType,
+    type LocationOption,
+    type PropertyCondition,
+    type PropertyDetail,
+    type PropertyFormValues,
+    type PropertyImage,
+
+    type PropertyRow,
+    type PropertyStatus,
     STATUS_LABEL,
-    STATUS_TONE,
-} from '../types/properties';
+    STATUS_TONE} from '../types/properties';
 import {
     validatePropertyForm,
     validatePropertyImage,

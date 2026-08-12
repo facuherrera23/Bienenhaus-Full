@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { test as setup, expect } from '@playwright/test';
+import { expect, test as setup } from '@playwright/test';
 import { TEST_EMAIL, TEST_PASSWORD } from './helpers';
 
 const authFile = './e2e/.auth/user.json';

@@ -6,8 +6,7 @@
  * into the workspace, replace `LocalMeta`/`LocalStory` with the canonical
  * `Meta`/`StoryObj` from `@storybook/preact` — the story bodies stay identical.
  */
-import { Select } from './Select';
-import type { SelectOption } from './Select';
+import { Select, type SelectOption } from './Select';
 
 const FRUITS: SelectOption[] = [
   { value: 'apple', label: 'Apple' },

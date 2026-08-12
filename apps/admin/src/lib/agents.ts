@@ -1,19 +1,17 @@
 import { supabase } from './supabase';
-import type {
-    AgentAvailability,
-    AgentCommission,
-    AgentFormValues,
-    AgentPermissions,
-    AgentRow,
-    AgentSchedule,
-} from '../types/agents';
-import type { Database } from '../types/database';
 import {
+    type AgentAvailability,
+    type AgentCommission,
+    type AgentFormValues,
+    type AgentPermissions,
+    type AgentRow,
+    type AgentSchedule,
+
     DAY_LABELS,
     DEFAULT_COMMISSION,
     DEFAULT_PERMISSIONS,
-    DEFAULT_SCHEDULE,
-} from '../types/agents';
+    DEFAULT_SCHEDULE} from '../types/agents';
+import type { Database } from '../types/database';
 
 // ============================================================
 // Re-export types and constants

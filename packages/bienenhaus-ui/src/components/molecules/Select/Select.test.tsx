@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { Select } from './Select';
-import type { SelectOption } from './Select';
+import { Select ,type  SelectOption } from './Select';
 
 const FRUITS: SelectOption[] = [
   { value: 'apple', label: 'Apple' },

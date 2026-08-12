@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { RadioGroup } from './RadioGroup';
-import type { RadioOption } from './RadioGroup';
+import { RadioGroup ,type  RadioOption } from './RadioGroup';
 
 const baseOptions: RadioOption[] = [
   { value: 'apple', label: 'Apple' },

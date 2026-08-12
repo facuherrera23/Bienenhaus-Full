@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { toMlQueueRow, toMlMetaRow, embedProperty } from '../ml';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { embedProperty, toMlMetaRow, toMlQueueRow } from '../ml';
 
 // Mock data
 const mockQueueApiRow = {

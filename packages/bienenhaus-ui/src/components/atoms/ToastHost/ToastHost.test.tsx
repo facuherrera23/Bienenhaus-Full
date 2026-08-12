@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { pushToast, ToastHost } from './ToastHost';
-import type { ToastItem } from './ToastHost';
+import { pushToast, ToastHost ,type  ToastItem } from './ToastHost';
 
 describe('ToastHost', () => {
   beforeEach(() => {

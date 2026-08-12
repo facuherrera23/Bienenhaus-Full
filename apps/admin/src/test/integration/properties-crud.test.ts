@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 const TEST_SUPABASE_URL = 'http://localhost:54321';

@@ -20,17 +20,15 @@ import {
     softDeleteSubscriber,
 } from '../lib/newsletter';
 import {
-    fetchDeletedOwners,
-    permanentDeleteOwner,
-    restoreOwner,
-    softDeleteOwner,
-} from '../lib/owners/owners';
-import {
     fetchDeletedActionPlans,
+    fetchDeletedOwners,
     permanentDeleteActionPlan,
+    permanentDeleteOwner,
+
     restoreActionPlan,
+    restoreOwner,
     softDeleteActionPlan,
-} from '../lib/owners/owners';
+    softDeleteOwner} from '../lib/owners/owners';
 
 // ============================================================================
 // Helpers (mismo patrón que properties.test.ts: la cadena se construye por

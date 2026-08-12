@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { slugify, toNumeric, toFormValues, embedLocationName } from '../properties';
+import { describe, expect, it } from 'vitest';
+import { embedLocationName, slugify, toFormValues, toNumeric } from '../properties';
 import type { PropertyDetail } from '../../types/properties';
 
 describe.skip('properties helpers', () => {

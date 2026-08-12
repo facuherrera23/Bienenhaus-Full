@@ -1,7 +1,6 @@
 import { Building2, Mail, MapPin, Phone, UserCheck } from 'lucide-preact';
 import { Link } from 'wouter-preact';
-import type { OwnerRow } from '../../types/owners';
-import { OWNER_PREFERRED_CONTACT_LABEL, OWNER_TYPE_LABEL } from '../../types/owners';
+import { OWNER_PREFERRED_CONTACT_LABEL , OWNER_TYPE_LABEL, type OwnerRow } from '../../types/owners';
 
 interface OwnerCardProps {
     owner: OwnerRow;

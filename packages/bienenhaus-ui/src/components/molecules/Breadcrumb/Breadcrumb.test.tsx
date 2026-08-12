@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { Breadcrumb } from './Breadcrumb';
-import type { BreadcrumbItem } from './Breadcrumb';
+import { Breadcrumb ,type  BreadcrumbItem } from './Breadcrumb';
 
 describe('Breadcrumb', () => {
   const twoItems: BreadcrumbItem[] = [

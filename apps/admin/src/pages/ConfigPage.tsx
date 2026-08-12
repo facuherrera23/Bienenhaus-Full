@@ -15,6 +15,7 @@ import {
     KeyRound,
     Languages,
     Loader2,
+    type LucideIcon,
     Plus,
     RefreshCw,
     RotateCcw,
@@ -25,7 +26,6 @@ import {
     Users,
     X,
     Zap,
-    type LucideIcon,
 } from 'lucide-preact';
 import type { ComponentChildren } from 'preact';
 import {
@@ -45,29 +45,29 @@ import { useMutation, useQuery } from '../lib/query/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { pushToast } from '../store/app';
 import {
-    type ContentSection,
-    type FieldMeta,
-    type ListMeta,
-    type SiteContentRow,
-    type SiteSettingRow,
-    type SiteSettingsVersionRow,
     CONTENT_KEY_LABELS,
-    LOCALES,
-    SECTION_KEYS,
-    SECTION_LABELS,
     contentFieldsFor,
+    type ContentSection,
     deleteSiteImage,
     fetchSiteContent,
     fetchSiteSettings,
     fetchSiteSettingsVersions,
+    type FieldMeta,
     genericFields,
     isListField,
+    type ListMeta,
     listMetaFor,
+    LOCALES,
     restoreSiteSettingsVersion,
+    SECTION_KEYS,
+    SECTION_LABELS,
     settingFieldsFor,
+    type SiteContentRow,
+    type SiteSettingRow,
+    type SiteSettingsVersionRow,
+    uploadSiteImage,
     upsertSiteContent,
     upsertSiteSettingWithVersion,
-    uploadSiteImage,
 } from '../lib/site';
 import { validateSetting } from '../lib/site-validation';
 import styles from './ConfigPage.module.css';

@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { checkConflicts, calculateNextOccurrence } from '../visits';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { calculateNextOccurrence, checkConflicts } from '../visits';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {

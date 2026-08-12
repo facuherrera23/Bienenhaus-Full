@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { EmptyState } from './EmptyState';
-import type { EmptyStateProps } from './EmptyState';
+import { EmptyState ,type  EmptyStateProps } from './EmptyState';
 
 describe('EmptyState', () => {
   const defaultProps: EmptyStateProps = {

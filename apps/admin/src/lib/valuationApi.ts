@@ -21,8 +21,8 @@ import {
     saveDraft,
     toValuacionDBRow,
     update,
-} from './valuationService';
-import type { ValuationRow } from './valuationService';
+type  ValuationRow } from './valuationService';
+
 import type {
     ValuacionDBRow,
     ValuacionDraftData,

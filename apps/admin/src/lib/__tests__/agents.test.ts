@@ -1,8 +1,8 @@
-import type { Mock } from 'vitest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach , beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { supabase } from '../supabase';
 import { from } from '../../test/setup';
 import {
+    type  AgentApiRow,
     calculateCommission,
     createAgent,
     deleteAgentPhoto,
@@ -22,16 +22,13 @@ import {
     updateAgentCommission,
     updateAgentPermissions,
     updateAgentSchedule,
-    uploadAgentPhoto,
-} from '../agents';
-import type { AgentApiRow } from '../agents';
+uploadAgentPhoto } from '../agents';
 import {
+    type  AgentRow,
+    type  AgentSchedule,
     DAY_LABELS,
     DEFAULT_COMMISSION,
-    DEFAULT_PERMISSIONS,
-    DEFAULT_SCHEDULE,
-} from '../../types/agents';
-import type { AgentRow, AgentSchedule } from '../../types/agents';
+DEFAULT_PERMISSIONS,DEFAULT_SCHEDULE } from '../../types/agents';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {

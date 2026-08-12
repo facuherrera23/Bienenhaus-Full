@@ -23,64 +23,63 @@ import {
 
   // Schema de validación (runtime)
   ValuacionConValidacionesSchema
-} from '../schemas/valuationSchemas';
-
-import type {
+,type 
   // Types inferidos de Zod
-  Comparable,
-  ComparableDB,
-  Servicios,
-  Ambientes,
-  Comodidades,
-  ServiciosBasicos,
-  CaracteristicasBarrio,
-  DescripcionBarrio,
-  AnalisisComparativoInput,
-  AnalisisComparativoResultados,
-  ValuacionInput,
-  ValuacionResultados,
-  ValuacionFormData,
-  ValuacionDraftData,
-  ValuacionDBRow,
-  ComparableData,
-  ServiciosData,
-  AmbientesData,
-  ComodidadesData,
-  ServiciosBasicosData,
-  CaracteristicasBarrioData,
-  DescripcionBarrioData,
-  AnalisisComparativoInputData,
-  AnalisisComparativoResultadosData,
-  ValuacionInputData,
-  ValuacionResultadosData,
+  Comparable,type 
+  ComparableDB,type 
+  Servicios,type 
+  Ambientes,type 
+  Comodidades,type 
+  ServiciosBasicos,type 
+  CaracteristicasBarrio,type 
+  DescripcionBarrio,type 
+  AnalisisComparativoInput,type 
+  AnalisisComparativoResultados,type 
+  ValuacionInput,type 
+  ValuacionResultados,type 
+  ValuacionFormData,type 
+  ValuacionDraftData,type 
+  ValuacionDBRow,type 
+  ComparableData,type 
+  ServiciosData,type 
+  AmbientesData,type 
+  ComodidadesData,type 
+  ServiciosBasicosData,type 
+  CaracteristicasBarrioData,type 
+  DescripcionBarrioData,type 
+  AnalisisComparativoInputData,type 
+  AnalisisComparativoResultadosData,type 
+  ValuacionInputData,type 
+  ValuacionResultadosData,type 
   ValuacionConValidaciones
-,
+,type 
   // Enums (Zod schemas — se usan con `typeof XEnum`)
-  TipoInmuebleEnum,
-  DestinoEnum,
-  NivelCalidadEnum,
-  NivelLuminosidadEnum,
-  OrientacionEnum,
-  TipoConstruccionEnum,
-  TipoTechoEnum,
-  EstacionamientoEnum,
-  SiNoNAEnum,
-  ServicioNivelEnum,
-  RubroNivelEnum,
-  TipologiaEdiliciaEnum,
-  CalidadPredomEnum,
-  PrevalenciaEnum,
-  NivelSocioEnum,
-  BarrioTipoEnum,
-  ConstruidoPctEnum,
-  IndiceCrecimientoEnum,
-  VigilanciaEnum,
-  TendenciaValoresEnum,
-  DemandaOfertaEnum,
-  TiempoComercializacionEnum,
-  CambiosUsoEnum,
-  FacilidadesEstacionamientoEnum,
+  TipoInmuebleEnum,type 
+  DestinoEnum,type 
+  NivelCalidadEnum,type 
+  NivelLuminosidadEnum,type 
+  OrientacionEnum,type 
+  TipoConstruccionEnum,type 
+  TipoTechoEnum,type 
+  EstacionamientoEnum,type 
+  SiNoNAEnum,type 
+  ServicioNivelEnum,type 
+  RubroNivelEnum,type 
+  TipologiaEdiliciaEnum,type 
+  CalidadPredomEnum,type 
+  PrevalenciaEnum,type 
+  NivelSocioEnum,type 
+  BarrioTipoEnum,type 
+  ConstruidoPctEnum,type 
+  IndiceCrecimientoEnum,type 
+  VigilanciaEnum,type 
+  TendenciaValoresEnum,type 
+  DemandaOfertaEnum,type 
+  TiempoComercializacionEnum,type 
+  CambiosUsoEnum,type 
+  FacilidadesEstacionamientoEnum,type 
   NivelesComparacionEnum} from '../schemas/valuationSchemas';
+
 
 // ============================================================================
 // RE-EXPORTS — Enums y Constantes

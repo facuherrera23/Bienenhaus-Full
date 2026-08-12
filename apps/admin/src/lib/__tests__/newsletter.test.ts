@@ -1,5 +1,4 @@
-import type { Mock } from 'vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach , describe, expect, it, type Mock, vi } from 'vitest';
 import { supabase } from '../supabase';
 import { from } from '../../test/setup';
 import {
@@ -23,8 +22,7 @@ import {
 import {
     NEWSLETTER_SOURCE_LABEL,
     NEWSLETTER_STATUS_LABEL,
-} from '../../types/newsletter';
-import type { NewsletterSubscriber } from '../../types/newsletter';
+type  NewsletterSubscriber } from '../../types/newsletter';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {

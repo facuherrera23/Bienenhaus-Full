@@ -18,6 +18,7 @@ import {
     LEAD_STATUS_LABEL,
     LEAD_STATUS_ORDER,
     LEAD_STATUS_TONE,
+    type  LeadApiRow,
     parseLeadsCsv,
     permanentDeleteLead,
     recalculateLeadScore,
@@ -28,9 +29,7 @@ import {
     toLeadDetail,
     toLeadRow,
     updateLead,
-    updateLeadStatus,
-} from '../leads';
-import type { LeadApiRow } from '../leads';
+updateLeadStatus } from '../leads';
 import { LeadIntentSchema, LeadSourceSchema, LeadStatusSchema } from '../_shared/leads-validation';
 
 // ============================================================================

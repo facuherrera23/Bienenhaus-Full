@@ -1,11 +1,10 @@
 import { AlertCircle, Calendar, User } from 'lucide-preact';
-import type { ActionPlanRow, ActionPlanStatus } from '../../types/owners';
-import {
-    ACTION_PLAN_CATEGORY_LABEL,
-    ACTION_PLAN_PRIORITY_LABEL,
+import { ACTION_PLAN_CATEGORY_LABEL, ACTION_PLAN_PRIORITY_LABEL ,
     ACTION_PLAN_PRIORITY_TONE,
     ACTION_PLAN_STATUS_LABEL,
     ACTION_PLAN_STATUS_TONE,
+    type ActionPlanRow,
+    type ActionPlanStatus,
 } from '../../types/owners';
 
 interface ActionPlanCardProps {

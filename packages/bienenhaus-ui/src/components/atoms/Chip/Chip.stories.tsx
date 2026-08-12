@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { Chip } from './Chip';
-import type { ChipVariant } from './Chip';
+import { Chip ,type  ChipVariant } from './Chip';
 
 /** A representative leading icon used across stories. */
 const HomeIcon = () => (

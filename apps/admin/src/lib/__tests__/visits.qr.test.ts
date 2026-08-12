@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateQrCheckin } from '../_shared/visits-validation';
 
 describe('visits QR validation', () => {

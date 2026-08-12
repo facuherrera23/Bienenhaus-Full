@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { Divider } from './Divider';
-import type {
-  DividerOrientation,
-  DividerThickness,
+import { Divider ,type 
+  DividerOrientation,type 
+  DividerThickness,type 
   DividerVariant,
 } from './Divider';
 

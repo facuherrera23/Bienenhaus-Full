@@ -1,6 +1,5 @@
 import { AlertTriangle, Check, Info, type LucideIcon, X } from 'lucide-preact';
-import { toasts } from '../store/app';
-import type { ToastItem } from '../store/app';
+import { type  ToastItem ,toasts } from '../store/app';
 import styles from './ToastHost.module.css';
 
 

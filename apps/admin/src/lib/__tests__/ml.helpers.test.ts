@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { slugify, toNumeric, toFormValues } from '../properties';
+import { describe, expect, it, vi } from 'vitest';
+import { slugify, toFormValues, toNumeric } from '../properties';
 import type { PropertyDetail } from '../../types/ml';
 
 describe('ml helpers', () => {

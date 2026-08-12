@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateLeadScore, recalculateLeadScore, bulkRecalculateScores, parseLeadsCsv, importLeadsFromCsv, bulkImportLeadsParsed } from '../leads';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { bulkImportLeadsParsed, bulkRecalculateScores, calculateLeadScore, importLeadsFromCsv, parseLeadsCsv, recalculateLeadScore } from '../leads';
 import type { LeadFormValues } from '../../types/leads';
 
 const { mockSupabase } = vi.hoisted(() => {

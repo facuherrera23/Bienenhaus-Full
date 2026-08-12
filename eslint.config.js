@@ -1,11 +1,13 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import importPlugin from 'eslint-plugin-import';
 
 export default tseslint.config(
     js.configs.recommended,
     ...tseslint.configs.recommended,
     prettier,
+    importPlugin.flatConfigs.recommended,
     {
         ignores: [
             '**/dist/**',
@@ -51,7 +53,7 @@ export default tseslint.config(
             'no-console': ['error', { allow: ['warn', 'error'] }],
             'no-debugger': 'error',
             'no-alert': 'error',
-            'no-duplicate-imports': 'error',
+            'import/no-duplicates': ['error', { 'prefer-inline': true }],
             'no-unreachable': 'error',
             'no-constant-condition': 'warn',
             'prefer-const': 'error',
