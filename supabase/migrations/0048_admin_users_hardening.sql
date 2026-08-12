@@ -51,3 +51,10 @@ create policy admin_users_super_admin_update on public.admin_users
 drop policy if exists admin_users_super_admin_delete on public.admin_users;
 create policy admin_users_super_admin_delete on public.admin_users
   for delete using (public.is_super_admin());
+
+-- ============================================================================
+-- Grandfathering: promover admins existentes a super_admin (evita lockout)
+-- ============================================================================
+update public.admin_users
+set role = 'super_admin'
+where role = 'admin';
