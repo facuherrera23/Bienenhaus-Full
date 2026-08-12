@@ -11,6 +11,7 @@ import {
     type MlItem,
 } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
+import { requireAdmin } from '../_shared/auth.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
 import {
     MlItemSchema,
@@ -69,22 +70,11 @@ const logger = {
 // ============================================================
 
 async function isAuthorized(req: Request): Promise<boolean> {
+    // x-sync-secret bypasses JWT for server-to-server sync triggers.
     const secret = Deno.env.get('ML_SYNC_SECRET');
     if (secret && req.headers.get('x-sync-secret') === secret) return true;
 
-    const auth = req.headers.get('authorization') ?? '';
-    if (!auth.startsWith('Bearer ')) return false;
-    const token = auth.slice(7);
-
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) return false;
-    const { data: admins } = await supabase
-        .from('admin_users')
-        .select('role, is_active')
-        .eq('id', data.user.id)
-        .limit(1);
-    const admin = admins?.[0];
-    return !!admin && admin.is_active && ['super_admin', 'admin', 'staff'].includes(admin.role);
+    return (await requireAdmin(req, supabase)) !== null;
 }
 
 // ============================================================
