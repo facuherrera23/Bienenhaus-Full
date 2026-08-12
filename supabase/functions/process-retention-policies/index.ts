@@ -1,28 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 
 Deno.serve(async (req) => {
-    if (req.method === 'OPTIONS') {
-        return new Response(null, {
-            status: 204,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            },
-        });
-    }
+    if (req.method === 'OPTIONS') return optionsResponse(req);
 
     if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-            status: 405,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
+        return jsonResponse(405, { error: 'Method not allowed' }, req);
     }
 
     try {
@@ -106,14 +89,9 @@ Deno.serve(async (req) => {
             }
         }
 
-        return new Response(JSON.stringify({ ok: true, processed: policies?.length ?? 0 }), {
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return jsonResponse(200, { ok: true, processed: policies?.length ?? 0 }, req);
     } catch (err) {
         console.error('[process-retention-policies] Error:', err);
-        return new Response(JSON.stringify({ error: (err as Error).message }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return jsonResponse(500, { error: (err as Error).message }, req);
     }
 });
