@@ -36,7 +36,7 @@ import type {
 // Tipos de la DB (derivados de los generados en types/database.ts)
 // ============================================================================
 
-type ValuationRow = Database['public']['Tables']['property_valuations']['Row'];
+export type ValuationRow = Database['public']['Tables']['property_valuations']['Row'];
 type ValuationInsert = Database['public']['Tables']['property_valuations']['Insert'];
 type ValuationUpdate = Database['public']['Tables']['property_valuations']['Update'];
 type ComparableRow = Database['public']['Tables']['valuation_comparables']['Row'];
@@ -207,7 +207,7 @@ async function getCurrentUserId(): Promise<string | null> {
  * null → undefined (los tipos de dominio son opcionales, no nullable), salvo
  * los campos normalizados abajo. `comparables` se hidrata aparte.
  */
-function toValuacionDBRow(row: ValuationRow): ValuacionDBRow {
+export function toValuacionDBRow(row: ValuationRow): ValuacionDBRow {
     const out: Record<string, unknown> = {};
     for (const [dbCol, value] of Object.entries(row)) {
         const formKey = DB_TO_FORM[dbCol];

@@ -19,8 +19,10 @@ import {
     finalize,
     loadDraft,
     saveDraft,
+    toValuacionDBRow,
     update,
 } from './valuationService';
+import type { ValuationRow } from './valuationService';
 import type {
     ValuacionDBRow,
     ValuacionDraftData,
@@ -33,10 +35,11 @@ import type {
 // ============================================================
 
 export function useValuations(filters?: ValuacionFilters) {
-    return useList<ValuacionDBRow, ValuacionDBRow>({
+    return useList<ValuacionDBRow, ValuationRow>({
         queryKey: queryKeys.valuations(filters),
         path: 'property_valuations',
         select: '*',
+        transform: toValuacionDBRow,
         filters: {
             deleted_at: 'is.null',
             ...(filters?.status === 'draft' ? { finalized_at: 'is.null' } : {}),
@@ -101,10 +104,7 @@ export function useCreateValuation() {
         queryKeys.valuations(),
         'property_valuations',
         {
-            invalidateKeys: [
-                queryKeys.valuations(),
-                queryKeys.valuationDrafts(),
-            ],
+            invalidateKeys: [['valuations'], ['valuation-drafts']],
         },
     );
 }
@@ -114,20 +114,14 @@ export function useUpdateValuation() {
         queryKeys.valuations(),
         'property_valuations',
         {
-            invalidateKeys: [
-                queryKeys.valuations(),
-                queryKeys.valuationDrafts(),
-            ],
+            invalidateKeys: [['valuations'], ['valuation-drafts']],
         },
     );
 }
 
 export function useDeleteValuation() {
     return useDelete(queryKeys.valuations(), 'property_valuations', {
-        invalidateKeys: [
-            queryKeys.valuations(),
-            queryKeys.valuationDrafts(),
-        ],
+        invalidateKeys: [['valuations'], ['valuation-drafts']],
     });
 }
 
@@ -142,8 +136,8 @@ export function useFinalizeValuation() {
             return finalize(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuations() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuationDrafts() });
+            queryClient.invalidateQueries({ queryKey: ['valuations'] });
+            queryClient.invalidateQueries({ queryKey: ['valuation-drafts'] });
         },
     });
 }
@@ -155,8 +149,8 @@ export function useEnableEditValuation() {
             return enableEdit(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuations() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuationDrafts() });
+            queryClient.invalidateQueries({ queryKey: ['valuations'] });
+            queryClient.invalidateQueries({ queryKey: ['valuation-drafts'] });
         },
     });
 }
@@ -172,8 +166,8 @@ export function useDeleteDraftValuation() {
             return deleteDraft(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuationDrafts() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuations() });
+            queryClient.invalidateQueries({ queryKey: ['valuation-drafts'] });
+            queryClient.invalidateQueries({ queryKey: ['valuations'] });
         },
     });
 }
@@ -185,8 +179,8 @@ export function useSaveValuationDraft() {
             return saveDraft(data.form, data.id);
         },
         onSuccess: (savedId) => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuationDrafts() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.valuations() });
+            queryClient.invalidateQueries({ queryKey: ['valuation-drafts'] });
+            queryClient.invalidateQueries({ queryKey: ['valuations'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.valuation(savedId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.valuationDraft(savedId) });
         },
