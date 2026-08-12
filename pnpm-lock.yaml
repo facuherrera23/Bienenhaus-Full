@@ -93,6 +93,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@bienenhaus/supabase':
+        specifier: workspace:*
+        version: link:../../packages/bienenhaus-supabase
       '@bienenhaus/ui':
         specifier: workspace:*
         version: link:../../packages/bienenhaus-ui

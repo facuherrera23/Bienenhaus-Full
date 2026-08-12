@@ -84,3 +84,7 @@ export function onAuthStateChange(
 ) {
     return supabase.auth.onAuthStateChange(callback);
 }
+
+export { createClient };
+
+

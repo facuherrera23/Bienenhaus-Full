@@ -1,5 +1,5 @@
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
+import { createClient, type SupabaseClient, type Session } from '@bienenhaus/supabase';
 
 // ============================================================
 // Environment Variables Validation
