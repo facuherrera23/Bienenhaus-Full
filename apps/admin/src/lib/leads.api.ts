@@ -114,7 +114,7 @@ export function useLeads(filters?: {
             message: row.message,
             source: row.source,
             status: row.status,
-            agent: row.agent,
+            agent: embedName(row.agent),
             created_at: row.created_at,
             updated_at: row.updated_at,
             tags: (row.tags ?? []) as string[],
