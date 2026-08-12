@@ -1,9 +1,0 @@
-node_modules
-dist
-coverage
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-*.html
-!apps/landing/index.html
-!apps/admin/index.html
