@@ -68,14 +68,14 @@ landing/
 │       │   ├── styles/       # styles.css + shell.css, sidebar.css, topbar.css
 │       │   ├── types/        # database.ts (generado) + tipos por dominio (admin, leads, agents, ml, owners, valuationTypes, etc.)
 │       │   ├── test/         # Vitest setup + supabase-mock
-│       │   └── e2e/          # Playwright (7 suites + performance audit)
+│       │   └── e2e/          # Playwright (7 suites + auth.setup + global-setup)
 │       ├── index.html
 │       ├── vite.config.ts    # base: '/admin/', proxy Supabase en dev
 │       └── package.json
 │
 ├── packages/
 │   ├── bienenhaus-ui/        # Design system compartido: atoms (Avatar, Badge, Button, Chip, Divider, IconButton, Spinner, ToastHost, Tooltip) + molecules (Breadcrumb, Checkbox, Dropdown, EmptyState, FormField, Input, Metric, Pagination, RadioGroup, SearchInput, Select, StatCard, Switch, Tabs, Textarea) + tokens.css. Cada componente con stories y tests.
-│   └── bienenhaus-supabase/  # Cliente Supabase compartido (singleton) para landing + admin. Elimina 3 instancias/clientes duplicados. createServerClient + helpers de auth.
+│   └── bienenhaus-supabase/  # Cliente Supabase compartido (singleton). Usado por la landing (supabase-data). Helpers compartidos: auth, crypto (AES-256-GCM), ml, visits, auto_reply. ⚠️ El admin conserva su cliente tipado propio (deuda pendiente de migrar).
 │
 ├── scripts/
 │   ├── serve.mjs             # Demo server single-port (Node http, SPA fallback, proxy Supabase)
@@ -88,7 +88,7 @@ landing/
 ├── supabase/
 │   ├── config.toml           # Config local (ports, auth, realtime, storage, MFA)
 │   ├── seed.sql              # Seed PRODUCTION-READY (taxonomías + site settings, SIN datos demo)
-│   ├── migrations/           # 45 migraciones SQL (0001_foundation → 0046_valuation_add_missing_columns)
+│   ├── migrations/           # 60 migraciones SQL (0001_foundation → 0061_combined_security_hardening)
 │   │   ├── 0001_foundation.sql            # Schema base + enums + taxonomías
 │   │   ├── 0002_admin_auth.sql            # Tabla admin_users + roles
 │   │   ├── 0003_taxonomies.sql            # categories, property_types, locations, features
@@ -133,30 +133,49 @@ landing/
 │   │   ├── 0043_security_hardening_rpc_fix.sql
 │   │   ├── 0044_valuation.sql             # Módulo Tasar: property_valuations, comparables, images, history, geocode_cache
 │   │   ├── 0045_valuation_trigger_grants.sql
-│   │   └── 0046_valuation_add_missing_columns.sql
-│   ├── functions/            # 14 Edge Functions (Deno 2)
+│   │   ├── 0046_valuation_add_missing_columns.sql
+│   │   ├── 0047_fix_ml_auto_triggers.sql
+│   │   ├── 0048_admin_users_hardening.sql
+│   │   ├── 0049_admin_password_change_rpc.sql
+│   │   ├── 0050_restrict_sync_agents_realtime.sql
+│   │   ├── 0051_restrict_sync_agents_authenticated.sql
+│   │   ├── 0053_trash_retention.sql       # trash_retention_policies
+│   │   ├── 0054_site_settings_versions.sql # site_settings_versions (versionado CMS)
+│   │   ├── 0055_site_settings_i18n.sql    # locale es-AR en site_settings
+│   │   ├── 0056_ml_dead_letter_queue.sql  # ml_sync_dead_letter + rate_limit_logs
+│   │   ├── 0057_ml_webhook_dedup.sql
+│   │   ├── 0058_property_drafts.sql       # property_drafts (borradores de propiedades)
+│   │   ├── 0059_ml_production_hardening.sql
+│   │   ├── 0060_ml_connection_client_credentials.sql # client_id/secret cifrados en ml_connection
+│   │   └── 0061_combined_security_hardening.sql # RLS en tablas Tasar + retención + i18n
+│   ├── functions/            # 17 Edge Functions (Deno 2)
 │   │   ├── admin-user-invite/          # Invitar/reset/remove admin users
 │   │   ├── audit-log/                  # Log de acciones de staff
+│   │   ├── chat-upload/                # Upload de adjuntos del chat interno
 │   │   ├── contact-submit/             # Formulario contacto landing (rate-limit + emails Resend)
+│   │   ├── convert-image/              # Conversión/optimización de imágenes (WebP)
 │   │   ├── ml-answer-question/         # Auto-respuesta a preguntas ML
 │   │   ├── ml-bulk-enqueue/            # Encola sync masivo desde el admin
 │   │   ├── ml-categories/              # Sync categorías ML
-│   │   ├── ml-ingest/                  # (legacy, solo local) Ingesta de propiedades
 │   │   ├── ml-listing-types/           # Sync listing types ML
 │   │   ├── ml-metrics/                 # Métricas de publicación ML
 │   │   ├── ml-oauth/                   # OAuth ML callback
+│   │   ├── ml-revoke-tokens/           # Revoca tokens ML
 │   │   ├── ml-sync/                    # Queue processor (publish/update/delete ML)
 │   │   ├── ml-webhook/                 # Webhook ML (preguntas, órdenes)
+│   │   ├── process-retention-policies/ # Procesa políticas de retención de papelera
 │   │   ├── qr-checkin/                 # Check-in por QR de visitas
 │   │   ├── visits-process-reminders/   # Recordatorios de visitas
-│   │   └── _shared/                    # crypto (AES-256-GCM), ml (API helpers), auth
+│   │   └── _shared/                    # crypto (AES-256-GCM), http (CORS+respond), ml (API helpers), auth, rate-limit, validaciones (leads/properties/visits/chat/site), auto_reply, visits
 │   └── config.toml
 │
 ├── docs/
 │   ├── adr/                  # 4 ADRs (arquitectura, auth, ML, testing)
 │   ├── api/                  # edge-functions.md
-│   ├── runbooks/             # backup-restore, deploy, incident-response, rollback
-│   └── features/             # valuation/ (architecture.md + audit.md)
+│   ├── design/               # Capturas + guías de diseño (landing/admin)
+│   ├── features/             # valuation/ (architecture.md + audit.md)
+│   ├── reviews/              # Planes de remediación por módulo
+│   └── runbooks/             # backup-restore, deploy, incident-response, rollback
 │
 ├── .github/workflows/        # 4 workflows (CI, Deploy Pages, Backup diario, Lighthouse CI)
 ├── package.json              # Workspace root (pnpm)
@@ -195,7 +214,7 @@ landing/
 | **PostgREST**      | -       | API REST auto-generada                                    |
 | **Realtime**       | -       | WebSockets para chat/visitas/agentes                      |
 | **Storage**        | -       | Buckets: property-images, agent-photos, site-images, chat-files |
-| **Edge Functions** | Deno 2  | 14 funciones (webhooks ML, OAuth, sync, visitas, contact) |
+| **Edge Functions** | Deno 2  | 17 funciones (webhooks ML, OAuth, sync, visitas, contact, chat, retention) |
 | **Deno**           | 2       | Runtime edge functions                                    |
 
 ### Base de Datos (PostgreSQL 17)
@@ -263,7 +282,7 @@ corepack pnpm dlx supabase db reset
 npx supabase db reset
 ```
 
-Ejecuta las **45 migraciones** + `seed.sql`.
+Ejecuta las **60 migraciones** + `seed.sql`.
 
 > **Seed production-ready**: el seed NO incluye datos demo. Solo crea taxonomías
 > (categorías, tipos de propiedad, ubicaciones, features, tags) y el contenido
@@ -347,12 +366,15 @@ Lee `process.env.PORT` (default 5173). Proxy a Supabase local en `127.0.0.1:5432
 # Terminal 1: Supabase
 corepack pnpm dlx supabase start
 
-# Terminal 2: Landing (puerto 5174)
+# Terminal 2: Landing (puerto 5173)
 pnpm dev
 
-# Terminal 3: Admin (puerto 5175)
+# Terminal 3: Admin (puerto 5174)
 pnpm dev:admin
 ```
+
+> El admin dev server usa el puerto **5174** (baseURL de los E2E de Playwright).
+> La landing usa el **5173**.
 
 ### Demo Single-Port (Producción-like)
 
@@ -385,25 +407,30 @@ pnpm dev:admin
 
 | Script           | Descripción                                                |
 | ---------------- | ---------------------------------------------------------- |
-| `pnpm dev`       | Levanta landing en dev (puerto 5174)                       |
-| `pnpm dev:admin` | Levanta admin en dev (puerto 5175)                         |
+| `pnpm dev`       | Levanta landing en dev (puerto 5173)                       |
+| `pnpm dev:admin` | Levanta admin en dev (puerto 5174)                         |
 | `pnpm build`     | Build todas las apps (`pnpm -r build`)                     |
 | `pnpm demo`      | Inicia demo server single-port (`node scripts/serve.mjs`)  |
 | `pnpm typecheck` | Typecheck todas las apps (`pnpm -r typecheck`)             |
-| `pnpm test`      | Tests unitarios (admin)                                    |
+| `pnpm test`      | Tests unitarios (`pnpm -r test`)                           |
+| `pnpm test:coverage` | Tests unitarios con cobertura (admin)                  |
 | `pnpm test:e2e`  | Tests E2E Playwright (admin)                               |
 | `pnpm format`    | Prettier en todo el repo                                   |
 
 ### Apps (`apps/landing/package.json`, `apps/admin/package.json`)
 
-| Script           | Descripción                   |
-| ---------------- | ----------------------------- |
-| `pnpm dev`       | `vite` (dev server + HMR)     |
-| `pnpm build`     | `tsc --noEmit && vite build`  |
-| `pnpm preview`   | `vite preview`                |
-| `pnpm typecheck` | `tsc --noEmit`                |
-| `pnpm test`      | `vitest run` (admin)          |
-| `pnpm test:e2e`  | `playwright test` (admin)     |
+| Script              | Descripción                       |
+| ------------------- | --------------------------------- |
+| `pnpm dev`          | `vite` (dev server + HMR)         |
+| `pnpm build`        | `tsc --noEmit && vite build`      |
+| `pnpm preview`      | `vite preview`                    |
+| `pnpm typecheck`    | `tsc --noEmit`                    |
+| `pnpm test`         | `vitest run` (admin)              |
+| `pnpm test:watch`   | `vitest` (admin)                  |
+| `pnpm test:ui`      | `vitest --ui` (admin)             |
+| `pnpm test:coverage`| `vitest run --coverage` (admin)   |
+| `pnpm test:integration` | `vitest run --config vitest.integration.config.ts` (admin) |
+| `pnpm test:e2e`     | `playwright test` (admin)         |
 
 ### Supabase CLI
 
@@ -434,7 +461,7 @@ pnpm dev:admin
 
 ### Migraciones
 
-- Ubicación: `supabase/migrations/*.sql` (**45 archivos**, numerados 0001–0046)
+- Ubicación: `supabase/migrations/*.sql` (**60 archivos**, numerados 0001–0061)
 - Naming: `NNNN_descripcion_corta.sql`
 - Aplicar: `supabase db push` / `supabase db reset`
 - Crear nueva: `supabase migration new nombre_corto`
@@ -461,8 +488,13 @@ pnpm dev:admin
 | `geocode_cache`             | Cache de geocoding (Nominatim)                                                  |
 | `ml_connection`             | Conexión ML (tokens cifrados AES-256-GCM)                                       |
 | `ml_sync_queue`             | Cola sync (publish/update/delete, retries)                                      |
+| `ml_sync_dead_letter`       | Cola de mensajes muertos de sync ML (0056)                                      |
 | `property_ml_meta`          | Estado publicación ML por propiedad                                             |
 | `agents_realtime`           | Tabla shadow para realtime de agentes                                           |
+| `property_drafts`           | Borradores de propiedades (0058)                                                |
+| `site_settings_versions`    | Versionado de contenido CMS (0054)                                              |
+| `trash_retention_policies`  | Políticas de retención de papelera (0053)                                       |
+| `rate_limit_logs`           | Logs de rate limiting (0056)                                                    |
 
 ---
 
@@ -494,24 +526,27 @@ Base: `http://localhost:54321/functions/v1/`
 | -------------------------- | --------------------------------------- | ------------------------------------------------------ |
 | `admin-user-invite`        | POST `{action, email, full_name, role}` | Invite/reset/remove admin users                        |
 | `audit-log`                | POST                                    | Registra acciones de staff en `activity_log`           |
+| `chat-upload`              | POST                                    | Upload de adjuntos del chat interno                    |
 | `contact-submit`           | POST                                    | Formulario de contacto landing (honeypot + rate limit + email Resend) |
+| `convert-image`            | POST                                    | Conversión/optimización de imágenes (WebP)             |
 | `ml-answer-question`       | POST                                    | Auto-respuesta a preguntas de publicaciones ML         |
 | `ml-bulk-enqueue`          | POST                                    | Encola propiedades para sync masivo                    |
 | `ml-categories`            | GET                                     | Sincroniza categorías ML                               |
 | `ml-listing-types`         | GET                                     | Sincroniza listing types ML                            |
 | `ml-metrics`               | GET                                     | Métricas de publicación ML                             |
 | `ml-oauth`                 | GET `/callback?code=&state=`            | OAuth callback ML, guarda tokens cifrados              |
+| `ml-revoke-tokens`         | POST                                    | Revoca tokens de conexión ML                           |
 | `ml-sync`                  | POST                                    | Procesa cola `ml_sync_queue` (publish/update/delete)   |
 | `ml-webhook`               | POST                                    | Webhook ML (preguntas, órdenes de compra)              |
+| `process-retention-policies` | POST (scheduled)                     | Procesa políticas de retención de papelera             |
 | `qr-checkin`               | POST                                    | Check-in de visita por QR                              |
 | `visits-process-reminders` | POST (scheduled)                        | Genera recordatorios de visitas                        |
-
-> `ml-ingest` existe solo en local (legacy, no desplegada).
 
 #### Autenticación Edge Functions
 
 - Header: `Authorization: Bearer <service_role_key>` o `x-sync-secret: <ML_SYNC_SECRET>`
 - Validación: `is_admin()` / `is_staff()` via JWT
+- Helpers compartidos en `_shared/`: `http.ts` (CORS + `respond()`), `rate-limit.ts`, validaciones Zod por dominio (leads, properties, visits, chat, site), `crypto.ts` (AES-256-GCM)
 
 ---
 
@@ -709,12 +744,13 @@ node scripts/serve.mjs
 ```bash
 pnpm test            # Unit (Vitest): admin + @bienenhaus/ui
 pnpm test:e2e        # E2E (Playwright): login, admin-pages, create-property,
-                     #   owners-crud, visits-agents-ml, tasar, visual + performance-audit
+                     #   owners-crud, visits-agents-ml, tasar, visual
 ```
 
 - **Unit**: componentes (`Shell`, `Sidebar`, `Topbar`, `ErrorBoundary`, `OwnerForm`, componentes de `@bienenhaus/ui`), lógica pura (`csv`, `validators`, `valuationCalculations`), APIs (`owners/api`)
-- **E2E**: corre contra Supabase local (`supabase start` + `db reset` + usuario de test)
+- **E2E**: corre contra Supabase local (`supabase start` + `db reset` + usuario de test); el proyecto `setup` autentica una vez (`auth.setup.ts`) y comparte `storageState` entre suites (`workers=1` para evitar carreras sobre los fixtures)
 - **Visual regression**: `visual.spec.ts` con baselines por plataforma (no corre en CI/Linux sin baselines)
+- **Estado actual (2026-08)**: suite E2E completa verde — 20 passed, 5 skipped (baselines visuales). Fix aplicado: invalidación con prefijos puros en `valuationApi.ts`, `properties.api.ts`, `agents.api.ts` y `visits.api.ts` (compatibilidad con TanStack Query ≥ 5.101, que no tolera `undefined` en claves de invalidación)
 
 ### Estructura componente típico (admin)
 
@@ -750,6 +786,9 @@ Mejoras coherentes con la arquitectura actual:
 - [x] **Backup automatizado** — hecho: `.github/workflows/backup.yml` (pg_dump diario, retención 90 días)
 - [x] **Monitoreo** — Sentry integrado en el admin + Lighthouse CI; pendiente uptime monitor
 - [x] **CI/CD completo** — hecho: CI (typecheck/test/E2E/build) + Deploy Pages + Backup + Lighthouse
+- [x] **E2E estable** — hecho (2026-08): 7 suites verdes tras fix de invalidación de query keys (TanStack Query ≥ 5.101)
+- [ ] **Unificar clientes Supabase** — migrar el admin al paquete `@bienenhaus/supabase` (elimina 2ª/3ª instancia)
+- [x] **Extender fix de invalidación** — hecho (2026-08): prefijos puros en `agents.api.ts` + `visits.api.ts`; `ml.api.ts` verificado OK (invalidaciones de página con claves literales puras)
 
 ---
 
@@ -769,19 +808,29 @@ Mejoras coherentes con la arquitectura actual:
 
 | Aspecto                    | Estado | Comentario                                                                                            |
 | -------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| **README**                 | ✅     | Actualizado a estado 2026-08-07 (45 migraciones, módulos Tasar/Propietarios, @bienenhaus/supabase)   |
-| **Tests automatizados**    | ✅     | Vitest (admin + @bienenhaus/ui) + Playwright E2E (7 suites + performance-audit)                       |
+| **README**                 | ✅     | Actualizado a estado 2026-08-12 (60 migraciones, 17 edge functions, puertos dev reales, E2E verde)   |
+| **Tests automatizados**    | ✅     | Vitest (admin + @bienenhaus/ui) + Playwright E2E (7 suites)                                          |
 | **CI/CD**                  | ✅     | GitHub Actions: CI (typecheck/test/E2E/build) + Deploy Pages + Backup diario + Lighthouse CI          |
 | **Docker Compose prod**    | ❌     | Solo Supabase local CLI                                                                               |
 | **Variables producción**   | ⚠️     | Documentadas; faltan algunos vars/secrets en el repo (ej. `VITE_SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`) |
 | **Edge Functions secrets** | ⚠️     | Requieren `supabase secrets set` en cloud                                                             |
 | **Tipado DB → TS**         | ✅     | Tipos generados (`database.ts`) + esquemas Zod con tipos derivados                                    |
-| **Tests E2E críticos**     | ✅     | Login, admin-pages, create-property, owners-crud, visits-agents-ml, tasar, visual                     |
+| **Tests E2E críticos**     | ✅     | Login, admin-pages, create-property, owners-crud, visits-agents-ml, tasar, visual — **verde**         |
 | **Documentación API**      | ⚠️     | `docs/api/edge-functions.md` + OpenAPI auto-generada; sin OpenAPI custom                              |
 | **Monitoreo/Logs**         | ✅     | Sentry en admin (release por commit) + Lighthouse CI + Supabase logs; falta uptime monitor            |
-| **Dead code**              | ✅     | Limpiado: scripts de debug, archivos AI sueltos, CONTEXTO_PROYECTO.md, modulo-tasar.md               |
+| **Dead code**              | ✅     | Limpiado: `ml-ingest` eliminado, scripts de debug, archivos AI sueltos, `CORRECCIONES_IA/` pendiente  |
 
 > **Recomendación**: Antes de ir a producción, setear los secrets/variables que
 > faltan en el repo (Sentry DSN, Supabase access token), configurar SMTP si se
 > necesitan emails de auth, y documentar runbooks de incidentes (caída
 > Supabase, rate limit ML, migración fallida).
+
+### Deuda técnica conocida (2026-08)
+
+| Deuda | Detalle |
+| ----- | ------- |
+| **Clientes Supabase duplicados** | 3 instancias: admin (`supabase.ts` tipado), landing (`supabase-data.ts` via `@bienenhaus/supabase`), landing fetch directo (`supabase.ts`). Migrar admin al paquete compartido. |
+| **Invalidación de query keys** | Fix completo (2026-08): prefijos puros en `valuationApi.ts`, `properties.api.ts`, `agents.api.ts`, `visits.api.ts`; `ml.api.ts` verificado OK (invalidaciones de página con claves literales puras, sin `queryKeys.x()` con `undefined`). |
+| **Lint debt** | ~258 errores pre-existentes en 91 archivos (`no-explicit-any`, `no-duplicate-imports`); CI lint es diff-scoped. |
+| **Coverage unit** | Pocos tests unitarios para módulos críticos (sync ML, chat, visits). |
+| **Docs operativas** | Sin ADRs nuevos post-004, runbooks parciales. |
