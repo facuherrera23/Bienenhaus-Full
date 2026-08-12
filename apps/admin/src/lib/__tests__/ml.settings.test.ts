@@ -101,7 +101,7 @@ describe('ml settings', () => {
             enqueue([], null);
             await fetchMlSettings();
             expect(fn('from')).toHaveBeenCalledWith('site_settings');
-            expect(fn('in')).toHaveBeenCalledWith('key', ['ml_app_id', 'ml_defaults']);
+            expect(fn('in')).toHaveBeenCalledWith('key', ['ml_app_id', 'ml_defaults', 'ml_client_secret']);
         });
     });
 
