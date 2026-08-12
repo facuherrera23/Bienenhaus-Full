@@ -1,6 +1,14 @@
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": ["oh-my-openagent@latest"],
+
+    // ============================================================
+    // AGENTS — Built-in agents + Bienenhaus specialized agents
+    // Bienenhaus agents are defined as markdown files in
+    // .opencode/agents/ (architect, qa, debugger, database,
+    // frontend, backend) and override the bare model config here.
+    // Built-in agents keep their oh-my-openagent prompts.
+    // ============================================================
     "agent": {
         "build": { "model": "opencode/nemotron-3-ultra-free" },
         "plan": { "model": "opencode/nemotron-3-ultra-free" },
@@ -17,7 +25,36 @@
         "hephaestus": { "model": "opencode/nemotron-3-ultra-free" },
         "OpenCode-Builder": { "model": "opencode/nemotron-3-ultra-free" }
     },
+
+    // ============================================================
+    // MCP SERVERS
+    // Organized by category:
+    //
+    // CORE (always-on, low context cost):
+    //   - github         GitHub MCP (existing)
+    //   - context7       Up-to-date library docs (NEW)
+    //   - supabase       Supabase schema/data/RLS (existing, OAuth)
+    //   - playwright     Browser inspection & E2E (existing)
+    //
+    // INFRASTRUCTURE (local dev):
+    //   - filesystem     File operations (existing)
+    //   - docker         Docker containers for local Supabase (existing)
+    //
+    // PRODUCTION (opt-in, requires OAuth):
+    //   - sentry         Production errors & regressions (NEW)
+    //
+    // RESEARCH (low cost, on-demand):
+    //   - gh_grep        Code examples search across GitHub (NEW)
+    //
+    // NOTES:
+    //   - Web search (websearch) + web fetch (webfetch) are
+    //     OpenCode BUILT-IN tools. No MCP needed.
+    //   - Tool search/triage: no stable solution exists in v1.18.
+    //     Scout subagent (built-in) covers external research.
+    //     Risk of breaking the env outweighs benefit — NOT installed.
+    // ============================================================
     "mcp": {
+        // ---- CORE ----
         "github": {
             "type": "local",
             "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
@@ -27,11 +64,11 @@
             "enabled": true,
             "timeout": 30000,
         },
-        "playwright": {
-            "type": "local",
-            "command": ["npx", "-y", "@playwright/mcp@latest"],
+        "context7": {
+            "type": "remote",
+            "url": "https://mcp.context7.com/mcp",
             "enabled": true,
-            "timeout": 60000,
+            "timeout": 30000,
         },
         "supabase": {
             "type": "remote",
@@ -40,6 +77,14 @@
             "oauth": {},
             "timeout": 30000,
         },
+        "playwright": {
+            "type": "local",
+            "command": ["npx", "-y", "@playwright/mcp@latest"],
+            "enabled": true,
+            "timeout": 60000,
+        },
+
+        // ---- INFRASTRUCTURE ----
         "filesystem": {
             "type": "local",
             "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
@@ -60,6 +105,31 @@
             ],
             "enabled": true,
             "timeout": 30000,
+        },
+
+        // ---- PRODUCTION ----
+        // Sentry MCP requires one-time OAuth: `opencode mcp auth sentry`
+        // Reads errors, stack traces, and regressions from Sentry.io.
+        // Bienenhaus uses @sentry/browser in the admin panel.
+        "sentry": {
+            "type": "remote",
+            "url": "https://mcp.sentry.dev/mcp",
+            "oauth": {},
+            "enabled": true,
+            "timeout": 30000,
+        },
+
+        // ---- RESEARCH ----
+        // NOTE: `grep_app` (https://mcp.grep.app) is ALREADY registered by the
+        // oh-my-openagent plugin (see `opencode mcp list` above — "grep_app").
+        // It serves grep.app code-pattern search. To avoid a duplicate server
+        // pointing at the same endpoint, gh_grep is DISABLED here — use the
+        // built-in `grep_app` server instead.
+        "gh_grep": {
+            "type": "remote",
+            "url": "https://mcp.grep.app",
+            "enabled": false,
+            "timeout": 15000,
         },
     },
 }
