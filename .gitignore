@@ -39,6 +39,13 @@ coverage/
 test-results/
 playwright-report/
 
+# Playwright auth state (local/CI only)
+e2e/.auth/
+apps/admin/e2e/.auth/
+
+# Patch backup (CORRECCIONES_IA apply scripts)
+.patch-backup-e2e/
+
 # Supabase CLI temp
 supabase/.temp/
 

@@ -27,15 +27,15 @@ test.describe('Login', () => {
         await expect(dashboardHeading).toBeVisible({ timeout: 60000 });
 
         // Wait for data queries to resolve (quick-list renders when properties query returns)
-        await expect(page.locator('.quick-item').first()).toBeVisible({ timeout: 60000 });
+        await expect(page.locator('li[class*="quick-item"]').first()).toBeVisible({ timeout: 60000 });
 
         // KPIs compute from resolved queries — seed inserts exactly 3 published properties.
         await expect(
             page
                 .locator('section[aria-labelledby="kpi-title"]')
-                .locator('.kpi-card')
+                .locator('[class*="kpiCard"]')
                 .filter({ hasText: 'Propiedades Publicadas' })
-                .locator('.kpi-value'),
+                .locator('[class*="kpiValue"]'),
         ).toHaveText('3', { timeout: 30000 });
     });
 

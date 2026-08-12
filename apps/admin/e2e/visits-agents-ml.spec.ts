@@ -11,7 +11,7 @@ test.describe('Visitas page', () => {
         await page.waitForURL((url) => url.hash.includes('/visitas'));
 
         // Wait for visits to load (calendar or list view)
-        await expect(page.locator('.visits-page, .visits-toolbar').first()).toBeVisible({
+        await expect(page.locator('[class*="visits-toolbar"]').first()).toBeVisible({
             timeout: 30000,
         });
 
@@ -30,7 +30,7 @@ test.describe('Visitas page', () => {
 
         // If there's a visit with "visita" in title/lead/property, it should remain visible
         // The calendar view doesn't filter visibly in the same way, so check for no crash
-        await expect(page.locator('.visits-page')).toBeVisible();
+        await expect(page.locator('[class*="visits-page"]')).toBeVisible();
     });
 });
 
@@ -50,7 +50,9 @@ test.describe('Agentes page', () => {
         );
 
         // Esperar a que aparezcan las tarjetas de agentes
-        await expect(page.locator('.agent-card')).toHaveCount(2, { timeout: 30000 });
+        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, {
+            timeout: 30000,
+        });
     });
 });
 

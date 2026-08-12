@@ -80,13 +80,14 @@ test.describe('Propietarios - CRUD', () => {
         await page.waitForURL((url) => /\/propietarios\/[0-9a-f-]+$/.test(url.hash), {
             timeout: 30000,
         });
-        page.once('dialog', (d) => d.accept());
         await page.getByRole('button', { name: /papelera/i }).click();
-        await page.waitForURL(
-            (url) =>
-                url.hash.includes('/propietarios') && !url.hash.includes('/propietarios/nuevo'),
-            { timeout: 30000 },
-        );
+        // La app usa un ConfirmDialog custom (no window.confirm nativo)
+        const confirmDialog = page.getByRole('dialog', { name: 'Enviar a papelera' });
+        await expect(confirmDialog).toBeVisible({ timeout: 10000 });
+        await confirmDialog.getByRole('button', { name: 'Enviar' }).click();
+        await page.waitForURL((url) => /^#\/propietarios\/?$/.test(url.hash), {
+            timeout: 30000,
+        });
 
         // Ya no está en el grid de activos
         await expect(page.locator('.owner-card').filter({ hasText: name })).toHaveCount(0, {

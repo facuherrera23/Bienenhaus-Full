@@ -51,7 +51,7 @@ test.describe('Agentes - listado con lead_count', () => {
         );
 
         // Esperar a que aparezcan las tarjetas de agentes
-        await expect(page.locator('.agent-card')).toHaveCount(2, { timeout: 30000 });
+        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, { timeout: 30000 });
     });
 });
 
@@ -65,7 +65,7 @@ test.describe('Visitas - vista de calendario', () => {
         await page.waitForURL((url) => url.hash.includes('/visitas'));
 
         // Esperar toolbar
-        await expect(page.locator('.visits-toolbar')).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('[class*="visits-toolbar"]')).toBeVisible({ timeout: 30000 });
 
         // Buscar input
         await expect(page.getByPlaceholder('Buscar visita, cliente, propiedad...')).toBeVisible();

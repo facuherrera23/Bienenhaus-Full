@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Vite's loadEnv gives `.env.local` precedence over `.env`, so a developer's
 // local override pointing at the cloud project would silently make the E2E
@@ -23,7 +24,12 @@ function loadDotEnv(file: string): Record<string, string> {
     return vars;
 }
 
-const localEnv = loadDotEnv(path.resolve(process.cwd(), '.env'));
+// adminDir = apps/admin. process.cwd() NO sirve acá: al correr
+// `npx playwright test --config apps/admin/...` desde el root del repo, cwd =
+// root y `.env` no existe → el webServer no inyectaría nada y Vite caería en
+// `.env.local` (que apunta al cloud en este repo).
+const adminDir = path.dirname(fileURLToPath(import.meta.url));
+const localEnv = loadDotEnv(path.resolve(adminDir, '.env'));
 
 export default defineConfig({
     testDir: './e2e',
@@ -35,15 +41,41 @@ export default defineConfig({
     // workers=1 evita carreras entre specs que insertan/borran los mismos datos.
     workers: 1,
     reporter: process.env.CI ? 'github' : 'html',
+    timeout: 60_000,
+    expect: {
+        timeout: 10_000,
+    },
     use: {
         baseURL: 'http://localhost:5174',
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
+        actionTimeout: 10_000,
+        navigationTimeout: 20_000,
     },
-    projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+    projects: [
+        {
+            name: 'setup',
+            testMatch: /auth\.setup\.ts/,
+        },
+        {
+            name: 'chromium',
+            // auth.setup.ts ya corre en el proyecto `setup`; excluirlo acá evita
+            // que se ejecute dos veces (y falle por el auto-redirect del login).
+            testIgnore: /login\.spec\.ts|auth\.setup\.ts/,
+            use: { ...devices['Desktop Chrome'], storageState: './e2e/.auth/user.json' },
+            dependencies: ['setup'],
+        },
+        {
+            // login.spec.ts prueba login válido/inválido REAL: sin storageState.
+            name: 'login',
+            testMatch: /login\.spec\.ts/,
+            use: { ...devices['Desktop Chrome'], storageState: undefined },
+        },
+    ],
     webServer: {
-        command: 'npx pnpm dev',
+        command: 'pnpm dev',
         url: 'http://localhost:5174',
+        cwd: adminDir,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
         env: {
