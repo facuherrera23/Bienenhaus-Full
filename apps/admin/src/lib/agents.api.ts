@@ -71,7 +71,7 @@ export function useAgents(filters?: {
     return useList<AgentRow, AgentApiRow>({
         queryKey: queryKeys.agents(filters),
         path: AGENTS_PATH,
-        select: '*',
+        select: '*,leads(count)',
         filters: apiFilters,
         page: filters?.page ?? 1,
         pageSize: filters?.pageSize ?? 20,
