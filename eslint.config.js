@@ -9,6 +9,15 @@ export default tseslint.config(
     prettier,
     importPlugin.flatConfigs.recommended,
     {
+        // `vitest/config` es un subpath export (exports map) que el resolver de
+        // eslint-plugin-import (node) no resuelve → import/no-unresolved falso
+        // positivo. Los configs de vitest (vitest.config.ts, vitest.integration.config.ts)
+        // se validan igualmente por tsc y por vitest al ejecutarse.
+        settings: {
+            'import/core-modules': ['vitest/config'],
+        },
+    },
+    {
         ignores: [
             '**/dist/**',
             '**/node_modules/**',
