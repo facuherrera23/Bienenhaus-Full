@@ -11,216 +11,216 @@
  */
 
 .wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  gap: var(--bh-space-2);
-  padding: 0 var(--bh-space-3);
-  border: 1px solid var(--bh-border-input);
-  border-radius: var(--bh-radius-md);
-  background-color: var(--bh-bg-input);
-  color: var(--bh-text-primary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-md);
-  line-height: var(--bh-leading-normal);
-  transition:
-    border-color var(--bh-dur-fast) var(--bh-ease-premium),
-    background-color var(--bh-dur-fast) var(--bh-ease-premium),
-    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: var(--bh-space-2);
+    padding: 0 var(--bh-space-3);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    background-color: var(--bh-bg-input);
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-md);
+    line-height: var(--bh-leading-normal);
+    transition:
+        border-color var(--bh-dur-fast) var(--bh-ease-premium),
+        background-color var(--bh-dur-fast) var(--bh-ease-premium),
+        box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 /* ============================================================
    FOCUS — 2px accent ring with offset
    ============================================================ */
 .wrapper.focused {
-  border-color: var(--bh-border-focus);
-  box-shadow: 0 0 0 2px var(--bh-accent-soft);
+    border-color: var(--bh-border-focus);
+    box-shadow: 0 0 0 2px var(--bh-accent-soft);
 }
 
 /* ============================================================
    SIZES — height + horizontal padding scale
    ============================================================ */
 .sm {
-  min-height: 32px;
-  padding: 0 var(--bh-space-2);
-  font-size: var(--bh-text-sm);
+    min-height: 32px;
+    padding: 0 var(--bh-space-2);
+    font-size: var(--bh-text-sm);
 }
 
 .md {
-  min-height: 40px;
-  padding: 0 var(--bh-space-3);
-  font-size: var(--bh-text-md);
+    min-height: 40px;
+    padding: 0 var(--bh-space-3);
+    font-size: var(--bh-text-md);
 }
 
 .lg {
-  min-height: 48px;
-  padding: 0 var(--bh-space-4);
-  font-size: var(--bh-text-lg);
+    min-height: 48px;
+    padding: 0 var(--bh-space-4);
+    font-size: var(--bh-text-lg);
 }
 
 /* ============================================================
    DISABLED
    ============================================================ */
 .wrapper.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* ============================================================
    LOADING — visual cue only; layout handled by slot swap
    ============================================================ */
 .wrapper.loading {
-  cursor: progress;
+    cursor: progress;
 }
 
 /* ============================================================
    LEFT ICON SLOT — search magnifier
    ============================================================ */
 .iconSlot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--bh-text-tertiary);
-  line-height: 1;
-  pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--bh-text-tertiary);
+    line-height: 1;
+    pointer-events: none;
 }
 
 .searchIcon {
-  width: 1em;
-  height: 1em;
-  display: block;
+    width: 1em;
+    height: 1em;
+    display: block;
 }
 
 /* ============================================================
    INPUT — fills remaining space, transparent bg
    ============================================================ */
 .input {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--bh-text-primary);
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  padding: 0;
-  cursor: text;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--bh-text-primary);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    padding: 0;
+    cursor: text;
 }
 
 .input::placeholder {
-  color: var(--bh-text-tertiary);
+    color: var(--bh-text-tertiary);
 }
 
 .input:disabled {
-  cursor: not-allowed;
+    cursor: not-allowed;
 }
 
 /* ============================================================
    SHORTCUT BADGE — hidden while focused or when there's a value
    ============================================================ */
 .shortcut {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 var(--bh-space-1);
-  border: 1px solid var(--bh-border-strong);
-  border-radius: var(--bh-radius-sm);
-  background-color: var(--bh-bg-hover);
-  color: var(--bh-text-tertiary);
-  font-family: var(--bh-font-mono);
-  font-size: var(--bh-text-xs);
-  font-weight: var(--bh-weight-medium);
-  line-height: 1;
-  letter-spacing: var(--bh-tracking-wide);
-  user-select: none;
-  pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 var(--bh-space-1);
+    border: 1px solid var(--bh-border-strong);
+    border-radius: var(--bh-radius-sm);
+    background-color: var(--bh-bg-hover);
+    color: var(--bh-text-tertiary);
+    font-family: var(--bh-font-mono);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    line-height: 1;
+    letter-spacing: var(--bh-tracking-wide);
+    user-select: none;
+    pointer-events: none;
 }
 
 /* ============================================================
    SPINNER SLOT — replaces clear button while loading
    ============================================================ */
 .spinnerSlot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--bh-accent);
-  line-height: 1;
-  animation: bh-search-spin 0.8s linear infinite;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--bh-accent);
+    line-height: 1;
+    animation: bh-search-spin 0.8s linear infinite;
 }
 
 .spinnerSvg {
-  width: 1em;
-  height: 1em;
-  display: block;
+    width: 1em;
+    height: 1em;
+    display: block;
 }
 
 /* ============================================================
    CLEAR BUTTON — ghost icon button, hover state
    ============================================================ */
 .clearBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: var(--bh-radius-sm);
-  background-color: transparent;
-  color: var(--bh-text-tertiary);
-  cursor: pointer;
-  line-height: 1;
-  outline: none;
-  transition:
-    background-color var(--bh-dur-fast) var(--bh-ease-premium),
-    color var(--bh-dur-fast) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: var(--bh-radius-sm);
+    background-color: transparent;
+    color: var(--bh-text-tertiary);
+    cursor: pointer;
+    line-height: 1;
+    outline: none;
+    transition:
+        background-color var(--bh-dur-fast) var(--bh-ease-premium),
+        color var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .clearBtn svg {
-  width: 14px;
-  height: 14px;
-  display: block;
+    width: 14px;
+    height: 14px;
+    display: block;
 }
 
 .clearBtn:hover:not(:disabled) {
-  background-color: var(--bh-bg-hover);
-  color: var(--bh-text-primary);
+    background-color: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
 }
 
 .clearBtn:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 2px);
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 2px);
 }
 
 /* ============================================================
    ANIMATION
    ============================================================ */
 @keyframes bh-search-spin {
-  to {
-    transform: rotate(360deg);
-  }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .wrapper {
-    transition: none;
-  }
+    .wrapper {
+        transition: none;
+    }
 
-  .spinnerSlot {
-    animation: none;
-  }
+    .spinnerSlot {
+        animation: none;
+    }
 }

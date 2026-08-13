@@ -6,17 +6,17 @@
 
 ## Estado Actual (Resumen)
 
-| Área | % Completo | Bloqueadores para 100% |
-|------|------------|------------------------|
-| OAuth & Conexión | 95% | Redirect URI hardcodeado, salt fijo crypto, race condition multi-admin |
-| Sync Queue & Worker | 90% | Sin dead letter queue, imágenes secuenciales, batch size fijo, error categorization duplicada |
-| Webhooks & Auto-reply | 85% | ML_WEBHOOK_SECRET obligatorio sin fallback, deduplicación faltante, solo loggea payments/shipments |
-| Métricas | 80% | N+1 problem, sin cache, timeout fijo, solo 50 orders |
-| Admin UI | 90% | Sin paginación real, sin filtros avanzados, skeleton genérico |
-| Type Safety | 70% | as unknown as, any implícito, casts sin validación en paths críticos |
-| Testing | 0% | Cero tests — unit, integration, E2E, contract |
-| Observabilidad | 60% | Logs sin estructura, sin métricas latencia, sin alertas |
-| Seguridad | 85% | Rate limiting solo en ML APIs, secrets no rotados, token revocation faltante |
+| Área                  | % Completo | Bloqueadores para 100%                                                                             |
+| --------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| OAuth & Conexión      | 95%        | Redirect URI hardcodeado, salt fijo crypto, race condition multi-admin                             |
+| Sync Queue & Worker   | 90%        | Sin dead letter queue, imágenes secuenciales, batch size fijo, error categorization duplicada      |
+| Webhooks & Auto-reply | 85%        | ML_WEBHOOK_SECRET obligatorio sin fallback, deduplicación faltante, solo loggea payments/shipments |
+| Métricas              | 80%        | N+1 problem, sin cache, timeout fijo, solo 50 orders                                               |
+| Admin UI              | 90%        | Sin paginación real, sin filtros avanzados, skeleton genérico                                      |
+| Type Safety           | 70%        | as unknown as, any implícito, casts sin validación en paths críticos                               |
+| Testing               | 0%         | Cero tests — unit, integration, E2E, contract                                                      |
+| Observabilidad        | 60%        | Logs sin estructura, sin métricas latencia, sin alertas                                            |
+| Seguridad             | 85%        | Rate limiting solo en ML APIs, secrets no rotados, token revocation faltante                       |
 
 ---
 
@@ -25,6 +25,7 @@
 El módulo se considera 100% funcional cuando TODOS los siguientes criterios se cumplen:
 
 ### Funcionalidad Core
+
 - [ ] OAuth flow completo sin race conditions, con revocación de tokens al desconectar
 - [ ] Sync queue procesa jobs con dead letter queue visible y recuperable desde UI
 - [ ] Webhooks manejan todos los topics (questions, orders, items, payments, shipments) con deduplicación
@@ -33,32 +34,37 @@ El módulo se considera 100% funcional cuando TODOS los siguientes criterios se 
 - [ ] Imágenes se suben en paralelo (Promise.allSettled)
 
 ### Type Safety (Strict)
+
 - [ ] Cero any en código ML (ml.ts, crypto.ts, auto_reply.ts, edge functions)
 - [ ] Cero as unknown as / as Type sin validación runtime (Zod schemas)
 - [ ] Tipos generados de DB sincronizados con tipos manuales (ml.ts ↔ database.ts)
 - [ ] RPC callRpc type-safe sin casts
 
 ### Testing (Cobertura Mínima)
-| Tipo | Cobertura Mínima | Archivos Objetivo |
-|------|------------------|-------------------|
-| Unit | 80% | ml.ts, crypto.ts, auto_reply.ts, ml.api.ts mappers |
-| Integration | 50% | OAuth flow, sync queue job, webhook handling |
-| E2E | 3 flujos críticos | Connect → Publish → Webhook order → Auto-reply |
-| Contract | 100% | ML API response schemas validados con Zod |
+
+| Tipo        | Cobertura Mínima  | Archivos Objetivo                                  |
+| ----------- | ----------------- | -------------------------------------------------- |
+| Unit        | 80%               | ml.ts, crypto.ts, auto_reply.ts, ml.api.ts mappers |
+| Integration | 50%               | OAuth flow, sync queue job, webhook handling       |
+| E2E         | 3 flujos críticos | Connect → Publish → Webhook order → Auto-reply     |
+| Contract    | 100%              | ML API response schemas validados con Zod          |
 
 ### Observabilidad
+
 - [ ] Structured JSON logs con job_id, duration_ms, ml_api_latency_ms, status
 - [ ] Métricas Prometheus/Grafana: ml_sync_job_duration, ml_webhook_latency, ml_queue_depth, ml_sync_success_rate
 - [ ] Alertas: jobs failed > 3 en 1h, queue depth > 100, webhook 5xx > 5%
 - [ ] Dashboard admin: queue status real-time, sync history con filtros, métricas cached
 
 ### Performance
+
 - [ ] Sync job <1s (actual ~3-5s) — paralelización imágenes + batch ML API
 - [ ] Webhook processing <100ms (actual ~200-500ms)
 - [ ] Metrics fetch <2s (actual ~5-10s) — cache 5min + batch requests
 - [ ] Queue pagination infinita + filtros en UI
 
 ### Seguridad
+
 - [ ] Rate limiting propio en todas edge functions ML (no solo ML APIs)
 - [ ] Secrets rotados documentados + procedimiento
 - [ ] Token revocation en disconnect
@@ -71,13 +77,16 @@ El módulo se considera 100% funcional cuando TODOS los siguientes criterios se 
 ### FASE 1 — CRÍTICO (Bloquean 100%) — ~4 días
 
 #### 1.1 Dead Letter Queue + UI Recuperación
+
 Archivos nuevos:
+
 - supabase/migrations/0037_ml_dead_letter_queue.sql — tabla ml_sync_dead_letter
 - supabase/functions/ml-sync/index.ts — mover jobs failed > max_attempts a dead letter
 - apps/admin/src/lib/ml.api.ts — useMlDeadLetter, useRetryDeadLetter, useDeleteDeadLetter
 - apps/admin/src/pages/MercadoLibrePage.tsx — pestaña Dead Letter con tabla + acciones
 
 Tabla ml_sync_dead_letter:
+
 ```sql
 CREATE TABLE ml_sync_dead_letter (
     id BIGSERIAL PRIMARY KEY,
@@ -102,7 +111,9 @@ CREATE INDEX idx_ml_dead_letter_moved_at ON ml_sync_dead_letter(moved_at DESC);
 Lógica en ml-sync: Al fallar job con attempts >= max_attempts → INSERT en dead_letter + DELETE de queue + log en ml_sync_history con status='dead_letter'.
 
 #### 1.2 Type Safety — Zod Schemas para ML API
+
 Archivo nuevo: supabase/functions/_shared/ml.schemas.ts
+
 ```typescript
 import { z } from 'zod';
 
@@ -157,6 +168,7 @@ export const MlOrderSchema = z.object({
 ```
 
 Uso en ml.ts:
+
 ```typescript
 // ANTES: return text ? (JSON.parse(text) as unknown) : null;
 // DESPUÉS:
@@ -167,7 +179,9 @@ return MlItemSchema.parse(parsed); // throws si inválido → catch → categori
 Eliminar as unknown as en ml-sync, ml-webhook, ml-metrics.
 
 #### 1.3 Rate Limiting en Edge Functions
+
 Archivo nuevo: supabase/functions/_shared/rate-limit.ts
+
 ```typescript
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -187,7 +201,10 @@ const WINDOWS = {
 
 type FnName = keyof typeof WINDOWS;
 
-export async function checkRateLimit(fnName: FnName, identifier: string): Promise<{
+export async function checkRateLimit(
+    fnName: FnName,
+    identifier: string,
+): Promise<{
     allowed: boolean;
     retryAfter?: number;
     remaining: number;
@@ -203,7 +220,7 @@ export async function checkRateLimit(fnName: FnName, identifier: string): Promis
         .eq('key', key)
         .gte('created_at', new Date(windowStart).toISOString());
 
-    const count = (logs?.length ?? 0);
+    const count = logs?.length ?? 0;
     if (count >= config.requests) {
         const oldest = logs?.[0]?.created_at ? new Date(logs[0].created_at).getTime() : now;
         const retryAfter = Math.ceil((oldest + config.windowMs - now) / 1000);
@@ -216,6 +233,7 @@ export async function checkRateLimit(fnName: FnName, identifier: string): Promis
 ```
 
 Aplicar en TODAS las edge functions ML (inicio de handler):
+
 ```typescript
 const clientIp = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown';
 const rl = await checkRateLimit('ml-sync', clientIp);
@@ -223,7 +241,9 @@ if (!rl.allowed) return respond(429, { error: 'Rate limited', retry_after: rl.re
 ```
 
 #### 1.4 Webhook Deduplication
+
 Migración: supabase/migrations/0038_ml_webhook_dedup.sql
+
 ```sql
 ALTER TABLE ml_webhook_events
 ADD CONSTRAINT uq_ml_webhook_event UNIQUE (resource, attempts, topic);
@@ -236,7 +256,9 @@ En ml-webhook/index.ts: Antes de procesar, verificar si ya existe evento con mis
 ### FASE 2 — ALTO (Calidad Producción) — ~5 días
 
 #### 2.1 Parallel Image Upload en ml-sync
+
 En supabase/functions/ml-sync/index.ts — prepareImagesForML:
+
 ```typescript
 async function prepareImagesForML(
     accessToken: string,
@@ -248,21 +270,30 @@ async function prepareImagesForML(
         return mainVariation?.url ?? null;
     };
 
-    const validImages = images.slice(0, 12).filter((i): i is { storage_path: string } => !!i.storage_path);
+    const validImages = images
+        .slice(0, 12)
+        .filter((i): i is { storage_path: string } => !!i.storage_path);
     const results = await Promise.allSettled(validImages.map(downloadUpload));
 
     const urls: string[] = [];
     results.forEach((r, i) => {
         if (r.status === 'fulfilled' && r.value) urls.push(r.value);
-        else console.warn(`[ml-sync] Image ${validImages[i].storage_path} failed:`, r.status === 'rejected' ? r.reason : 'no url');
+        else
+            console.warn(
+                `[ml-sync] Image ${validImages[i].storage_path} failed:`,
+                r.status === 'rejected' ? r.reason : 'no url',
+            );
     });
     return urls;
 }
 ```
+
 Impacto: 12 imágenes secuenciales (~20s) → paralelo (~3-5s).
 
 #### 2.2 Configurable Batch Size + Backpressure
+
 En ml-sync/index.ts:
+
 ```typescript
 const BATCH_SIZE = Number(Deno.env.get('ML_SYNC_BATCH_SIZE') ?? '10');
 const MAX_CONCURRENT_JOBS = Number(Deno.env.get('ML_SYNC_MAX_CONCURRENT') ?? '3');
@@ -272,7 +303,9 @@ async function processJobsConcurrently(jobs: QueueJob[], accessToken: string) {
     for (let i = 0; i < jobs.length; i += MAX_CONCURRENT_JOBS) {
         const batch = jobs.slice(i, i + MAX_CONCURRENT_JOBS);
         const batchResults = await Promise.allSettled(
-            batch.map(job => runJob(job.id, job.operation, job.property_id, job.ml_item_id, accessToken))
+            batch.map((job) =>
+                runJob(job.id, job.operation, job.property_id, job.ml_item_id, accessToken),
+            ),
         );
         results.push(...batchResults);
     }
@@ -281,7 +314,9 @@ async function processJobsConcurrently(jobs: QueueJob[], accessToken: string) {
 ```
 
 #### 2.3 Metrics Caching (5 min)
+
 En ml-metrics/index.ts:
+
 ```typescript
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const cacheKey = `ml_metrics:${connection.user_id}`;
@@ -309,7 +344,9 @@ async function setCachedMetrics(metrics: MetricsResponse): Promise<void> {
 ```
 
 #### 2.4 Structured Logging (JSON)
+
 Archivo nuevo: supabase/functions/_shared/logger.ts
+
 ```typescript
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -335,13 +372,14 @@ function log(level: LogLevel, entry: Omit<LogEntry, 'timestamp' | 'level'>): voi
 
 export const logger = {
     debug: (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('debug', e),
-    info:  (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('info', e),
-    warn:  (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('warn', e),
+    info: (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('info', e),
+    warn: (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('warn', e),
     error: (e: Omit<LogEntry, 'timestamp' | 'level'>) => log('error', e),
 };
 ```
 
 Uso en ml-sync:
+
 ```typescript
 const start = Date.now();
 const result = await runJob(...);
@@ -358,7 +396,9 @@ logger.info({
 ```
 
 #### 2.5 Unit Tests — Vitest (Cobertura 80%)
+
 Archivos nuevos:
+
 ```
 apps/admin/src/lib/__tests__/
 ├── ml.mappers.test.ts        # toMlQueueRow, toMlMetaRow, embedProperty
@@ -370,6 +410,7 @@ apps/admin/src/lib/__tests__/
 ```
 
 Ejemplo ml.mappers.test.ts:
+
 ```typescript
 import { describe, it, expect } from 'vitest';
 import { toMlQueueRow, toMlMetaRow, embedProperty } from '../ml';
@@ -377,10 +418,16 @@ import { toMlQueueRow, toMlMetaRow, embedProperty } from '../ml';
 describe('ml mappers', () => {
     it('toMlQueueRow maps nested property correctly', () => {
         const row = {
-            id: 1, property_id: 'abc', operation: 'publish' as const,
-            status: 'pending' as const, attempts: 0, max_attempts: 5,
-            next_attempt_at: '2024-01-01T00:00:00Z', ml_item_id: null,
-            last_error: null, created_at: '2024-01-01T00:00:00Z',
+            id: 1,
+            property_id: 'abc',
+            operation: 'publish' as const,
+            status: 'pending' as const,
+            attempts: 0,
+            max_attempts: 5,
+            next_attempt_at: '2024-01-01T00:00:00Z',
+            ml_item_id: null,
+            last_error: null,
+            created_at: '2024-01-01T00:00:00Z',
             property: { title: 'Casa', code: 123 },
         };
         const mapped = toMlQueueRow(row);
@@ -400,7 +447,9 @@ describe('ml mappers', () => {
 Config Vitest: apps/admin/vitest.config.ts — environment: 'jsdom', globals: true, setupFiles: ['./src/test/setup.ts'].
 
 #### 2.6 Integration Tests — OAuth + Sync + Webhook
+
 Archivo: apps/admin/src/test/ml.integration.test.ts
+
 ```typescript
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
@@ -433,15 +482,19 @@ describe('ML Integration (local supabase)', () => {
 ### FASE 3 — MEDIO (Nice to Have) — ~3 días
 
 #### 3.1 Paginación Real + Filtros Avanzados en UI
+
 En ml.api.ts: useMlQueue con page, pageSize reactivos + useInfiniteQuery.
 En MercadoLibrePage.tsx: Infinite scroll, filtros por fecha, propiedad, error text search.
 
 #### 3.2 Alertas (Sentry + Slack)
+
 En ml-sync y ml-webhook: captureException con tags function, job_id, property_id.
 Reglas Sentry: Alert si ml_sync_job_failed > 3 en 1h, ml_webhook_5xx > 5% en 5min.
 
 #### 3.3 Token Revocation on Disconnect
+
 En ml.ts:
+
 ```typescript
 export async function revokeMlTokens(accessToken: string): Promise<void> {
     await fetchWithTimeout(`${ML_API}/oauth/revoke`, {
@@ -451,9 +504,11 @@ export async function revokeMlTokens(accessToken: string): Promise<void> {
     });
 }
 ```
+
 En disconnectMl: Obtener token activo → revokeMlTokens → luego DELETE ml_connection.
 
 #### 3.4 Multi-Connection Support (Preparación)
+
 Migración: ml_connection agregar admin_user_id UUID REFERENCES admin_users(id) + unique constraint (provider, admin_user_id).
 Cambio breaking: Requiere migración de datos + UI para seleccionar conexión.
 
@@ -463,24 +518,24 @@ Cambio breaking: Requiere migración de datos + UI para seleccionar conexión.
 
 ### Unit Tests (Vitest) — Target: 80% coverage
 
-| Módulo | Funciones a Testear | Casos Críticos |
-|--------|---------------------|----------------|
-| ml.ts | exchangeCode, refreshToken, getAccessToken, mlCreateItem, mlUpdateItem, mlCloseItem, mlUploadPictures, runMlApiCallWithRetry, categorizeMlError, fetchMlCategories, fetchMlListingTypes | Token refresh 5min buffer, rate limit retry, error categorization (429, 401, 400, 404, 500, network), idempotency keys |
-| crypto.ts | encrypt, decrypt | Roundtrip encrypt→decrypt, IV único por llamada, key derivation determinística |
-| auto_reply.ts | getActiveTemplate, getMlAccessToken, sendQuestionAnswer, sendOrderMessage | Template active/inactive, token null handling, idempotency, ML API error propagation |
-| ml.api.ts | toMlQueueRow, toMlMetaRow, embedProperty, fetchMlSettings, buildAuthorizeUrl, upsertSetting | Null property, array property, settings parsing, URL encoding |
-| ml.schemas.ts | Todos los Zod schemas | Valid samples parse, invalid samples reject, optional fields |
+| Módulo        | Funciones a Testear                                                                                                                                                                     | Casos Críticos                                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| ml.ts         | exchangeCode, refreshToken, getAccessToken, mlCreateItem, mlUpdateItem, mlCloseItem, mlUploadPictures, runMlApiCallWithRetry, categorizeMlError, fetchMlCategories, fetchMlListingTypes | Token refresh 5min buffer, rate limit retry, error categorization (429, 401, 400, 404, 500, network), idempotency keys |
+| crypto.ts     | encrypt, decrypt                                                                                                                                                                        | Roundtrip encrypt→decrypt, IV único por llamada, key derivation determinística                                         |
+| auto_reply.ts | getActiveTemplate, getMlAccessToken, sendQuestionAnswer, sendOrderMessage                                                                                                               | Template active/inactive, token null handling, idempotency, ML API error propagation                                   |
+| ml.api.ts     | toMlQueueRow, toMlMetaRow, embedProperty, fetchMlSettings, buildAuthorizeUrl, upsertSetting                                                                                             | Null property, array property, settings parsing, URL encoding                                                          |
+| ml.schemas.ts | Todos los Zod schemas                                                                                                                                                                   | Valid samples parse, invalid samples reject, optional fields                                                           |
 
 ### Integration Tests — Target: 50% coverage
 
-| Flujo | Setup | Verificación |
-|-------|-------|--------------|
-| OAuth completo | Mock ML /oauth/token + /users/me | Tokens cifrados en DB, getAccessToken descifra, refresh automático |
-| Sync publish | Property en DB + images en Storage + ml_connection activa | ml-sync crea item en ML (mock), property_ml_meta upsert, queue=success |
-| Sync update | Property con ml_item_id en meta | ml-sync actualiza item, meta updated |
-| Sync delete | Property con ml_item_id | ml-sync cierra item, meta status=closed |
-| Webhook questions | ml-webhook recibe question payload | ml_questions upsert, auto-reply si template activa |
-| Webhook orders | ml-webhook recibe order payload | ml_orders upsert, status derivado correcto, auto-reply por trigger |
+| Flujo             | Setup                                                     | Verificación                                                           |
+| ----------------- | --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| OAuth completo    | Mock ML /oauth/token + /users/me                          | Tokens cifrados en DB, getAccessToken descifra, refresh automático     |
+| Sync publish      | Property en DB + images en Storage + ml_connection activa | ml-sync crea item en ML (mock), property_ml_meta upsert, queue=success |
+| Sync update       | Property con ml_item_id en meta                           | ml-sync actualiza item, meta updated                                   |
+| Sync delete       | Property con ml_item_id                                   | ml-sync cierra item, meta status=closed                                |
+| Webhook questions | ml-webhook recibe question payload                        | ml_questions upsert, auto-reply si template activa                     |
+| Webhook orders    | ml-webhook recibe order payload                           | ml_orders upsert, status derivado correcto, auto-reply por trigger     |
 
 ### E2E Tests (Playwright) — 3 Flujos Críticos
 
@@ -552,24 +607,26 @@ describe('ML API Contract Tests', () => {
 ## Archivos a Crear / Modificar (Checklist)
 
 ### Nuevos Archivos
+
 - [ ] supabase/migrations/0037_ml_dead_letter_queue.sql
 - [ ] supabase/migrations/0038_ml_webhook_dedup.sql
 - [ ] supabase/migrations/0039_ml_rate_limit_logs.sql (tabla para rate limiting)
 - [ ] supabase/functions/_shared/ml.schemas.ts
 - [ ] supabase/functions/_shared/rate-limit.ts
 - [ ] supabase/functions/_shared/logger.ts
-- [ ] apps/admin/src/lib/__tests__/ml.mappers.test.ts
-- [ ] apps/admin/src/lib/__tests__/ml.settings.test.ts
-- [ ] apps/admin/src/lib/__tests__/ml.queue.test.ts
-- [ ] apps/admin/src/lib/__tests__/crypto.test.ts
-- [ ] apps/admin/src/lib/__tests__/auto_reply.test.ts
-- [ ] apps/admin/src/lib/__tests__/ml.schemas.test.ts
+- [ ] apps/admin/src/lib/**tests**/ml.mappers.test.ts
+- [ ] apps/admin/src/lib/**tests**/ml.settings.test.ts
+- [ ] apps/admin/src/lib/**tests**/ml.queue.test.ts
+- [ ] apps/admin/src/lib/**tests**/crypto.test.ts
+- [ ] apps/admin/src/lib/**tests**/auto_reply.test.ts
+- [ ] apps/admin/src/lib/**tests**/ml.schemas.test.ts
 - [ ] apps/admin/src/test/ml.integration.test.ts
 - [ ] apps/admin/src/test/ml.contract.test.ts
 - [ ] apps/admin/e2e/ml-flows.spec.ts
 - [ ] apps/admin/src/test/fixtures/ml-responses/*.json (samples reales)
 
 ### Archivos a Modificar
+
 - [ ] supabase/functions/ml-oauth/index.ts — revocación tokens, validación adminUrl estricta
 - [ ] supabase/functions/ml-sync/index.ts — dead letter, parallel images, configurable batch, structured logging
 - [ ] supabase/functions/ml-webhook/index.ts — deduplicación, fallback secret missing, rate limit
@@ -615,49 +672,50 @@ pnpm lint -- --files "supabase/functions/**/ml-*/**/*.ts" "apps/admin/src/lib/ml
 
 ## Métricas de Éxito (KPIs)
 
-| KPI | Baseline Actual | Target 100% | Medición |
-|-----|-----------------|-------------|----------|
-| Sync job latency (p95) | ~5s | <1s | Structured logs duration_ms |
-| Webhook latency (p95) | ~500ms | <100ms | Structured logs duration_ms |
-| Metrics fetch time | ~8s | <2s | Browser DevTools / Sentry |
-| Queue processing rate | 10 jobs/cron | 30 jobs/cron (paralelo) | ml_sync_history count |
-| Dead letter recovery rate | N/A | >90% | Dead letter resolved / total |
-| TypeScript errors (ML files) | ~15 | 0 | pnpm typecheck |
-| Test coverage (ML modules) | 0% | ≥80% | Vitest coverage report |
-| E2E pass rate | N/A | 100% (3 flujos) | Playwright report |
-| Security findings (ML) | 3 medium | 0 | Sentry/Dependabot/Manual audit |
+| KPI                          | Baseline Actual | Target 100%             | Medición                       |
+| ---------------------------- | --------------- | ----------------------- | ------------------------------ |
+| Sync job latency (p95)       | ~5s             | <1s                     | Structured logs duration_ms    |
+| Webhook latency (p95)        | ~500ms          | <100ms                  | Structured logs duration_ms    |
+| Metrics fetch time           | ~8s             | <2s                     | Browser DevTools / Sentry      |
+| Queue processing rate        | 10 jobs/cron    | 30 jobs/cron (paralelo) | ml_sync_history count          |
+| Dead letter recovery rate    | N/A             | >90%                    | Dead letter resolved / total   |
+| TypeScript errors (ML files) | ~15             | 0                       | pnpm typecheck                 |
+| Test coverage (ML modules)   | 0%              | ≥80%                    | Vitest coverage report         |
+| E2E pass rate                | N/A             | 100% (3 flujos)         | Playwright report              |
+| Security findings (ML)       | 3 medium        | 0                       | Sentry/Dependabot/Manual audit |
 
 ---
 
 ## Cronograma Sugerido (2 semanas / 1 ingeniero)
 
-| Semana | Días | Entregables |
-|--------|------|-------------|
-| 1 | 1-2 | Dead Letter Queue (DB + Edge Function + UI básico) |
-| 1 | 3-4 | Zod Schemas + Type Safety cleanup (eliminar todos as unknown as) |
-| 1 | 5 | Rate Limiting en todas edge functions ML + Webhook deduplication |
-| 2 | 1-2 | Parallel image upload + Configurable batch + Metrics cache |
-| 2 | 3 | Structured logging + Unit tests (80% coverage) |
-| 2 | 4 | Integration tests + E2E 3 flujos críticos |
-| 2 | 5 | Paginación UI + Alertas + Token revocation + Documentación |
+| Semana | Días | Entregables                                                      |
+| ------ | ---- | ---------------------------------------------------------------- |
+| 1      | 1-2  | Dead Letter Queue (DB + Edge Function + UI básico)               |
+| 1      | 3-4  | Zod Schemas + Type Safety cleanup (eliminar todos as unknown as) |
+| 1      | 5    | Rate Limiting en todas edge functions ML + Webhook deduplication |
+| 2      | 1-2  | Parallel image upload + Configurable batch + Metrics cache       |
+| 2      | 3    | Structured logging + Unit tests (80% coverage)                   |
+| 2      | 4    | Integration tests + E2E 3 flujos críticos                        |
+| 2      | 5    | Paginación UI + Alertas + Token revocation + Documentación       |
 
 ---
 
 ## Riesgos y Mitigaciones
 
-| Riesgo | Probabilidad | Impacto | Mitigación |
-|--------|--------------|---------|------------|
-| ML API changes rompen schemas | Media | Alto | Contract tests con samples reales + CI semanal contra ML sandbox |
-| Rate limiting propio bloquea sync legítimo | Baja | Medio | Configurable via env, logs claros, alerta en 429 propio |
-| Dead letter queue crece sin control | Media | Medio | UI visible, alerta si >50 items, job cron limpieza >30 días |
-| Tests flaky por Supabase local | Alta | Medio | test.use({ retries: 2 }), seed determinístico, cleanup entre tests |
-| Parallel image upload excede ML rate limits | Media | Medio | p-limit concurrency 3, backoff exponencial en 429 |
+| Riesgo                                      | Probabilidad | Impacto | Mitigación                                                         |
+| ------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------ |
+| ML API changes rompen schemas               | Media        | Alto    | Contract tests con samples reales + CI semanal contra ML sandbox   |
+| Rate limiting propio bloquea sync legítimo  | Baja         | Medio   | Configurable via env, logs claros, alerta en 429 propio            |
+| Dead letter queue crece sin control         | Media        | Medio   | UI visible, alerta si >50 items, job cron limpieza >30 días        |
+| Tests flaky por Supabase local              | Alta         | Medio   | test.use({ retries: 2 }), seed determinístico, cleanup entre tests |
+| Parallel image upload excede ML rate limits | Media        | Medio   | p-limit concurrency 3, backoff exponencial en 429                  |
 
 ---
 
 ## Definition of Done (Por Fase)
 
 ### Fase 1 Done When:
+
 - [ ] Dead letter queue creada, migración aplicada, edge function mueve jobs fallidos
 - [ ] UI muestra pestaña Dead Letter con retry/delete
 - [ ] Cero as unknown as / any en ml.ts, ml-sync, ml-webhook, ml-metrics, auto_reply.ts
@@ -666,6 +724,7 @@ pnpm lint -- --files "supabase/functions/**/ml-*/**/*.ts" "apps/admin/src/lib/ml
 - [ ] Webhook deduplicación evita doble procesamiento
 
 ### Fase 2 Done When:
+
 - [ ] Imágenes suben en paralelo (Promise.allSettled)
 - [ ] Batch size y concurrencia configurables por env
 - [ ] Métricas cacheadas 5min, dashboard carga <2s
@@ -674,6 +733,7 @@ pnpm lint -- --files "supabase/functions/**/ml-*/**/*.ts" "apps/admin/src/lib/ml
 - [ ] Integration tests pasan contra Supabase local
 
 ### Fase 3 Done When:
+
 - [ ] E2E 3 flujos críticos pasan en CI
 - [ ] Paginación infinita + filtros en UI
 - [ ] Alertas configuradas en Sentry

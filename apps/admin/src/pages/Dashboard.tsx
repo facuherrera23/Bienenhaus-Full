@@ -17,7 +17,7 @@ import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
-import { useActionPlans , useOwners } from '../lib/owners/api';
+import { useActionPlans, useOwners } from '../lib/owners/api';
 
 import styles from '../styles/Dashboard.module.css';
 
@@ -84,7 +84,7 @@ function useScrollReveal<T extends HTMLElement = HTMLDivElement>(threshold: numb
                     observer.disconnect();
                 }
             },
-            { threshold }
+            { threshold },
         );
 
         observer.observe(element);
@@ -110,27 +110,40 @@ export function Dashboard() {
     // KPIs
     const totalLeads = leads?.length ?? 0;
     const newLeads = leads?.filter((l) => l.status === 'nuevo').length ?? 0;
-    const activeLeads = leads?.filter((l) => ['nuevo', 'contactado', 'calificado', 'en_proceso'].includes(l.status)).length ?? 0;
+    const activeLeads =
+        leads?.filter((l) => ['nuevo', 'contactado', 'calificado', 'en_proceso'].includes(l.status))
+            .length ?? 0;
     const wonLeads = leads?.filter((l) => l.status === 'cerrado_ganado').length ?? 0;
     const lostLeads = leads?.filter((l) => l.status === 'cerrado_perdido').length ?? 0;
     const closedLeads = wonLeads + lostLeads;
-    const conversionRate = closedLeads > 0 ? ((wonLeads / closedLeads) * 100) : 0;
+    const conversionRate = closedLeads > 0 ? (wonLeads / closedLeads) * 100 : 0;
 
     const totalProps = properties?.length ?? 0;
     const publishedProps = properties?.filter((p) => p.status === 'publicada').length ?? 0;
     const featuredProps = properties?.filter((p) => p.featured).length ?? 0;
-    const pipelineValue = properties?.filter((p) => p.listing_type === 'venta' && p.currency === 'USD')?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
+    const pipelineValue =
+        properties
+            ?.filter((p) => p.listing_type === 'venta' && p.currency === 'USD')
+            ?.reduce((sum, p) => sum + (p.price ?? 0), 0) ?? 0;
 
     const totalOwners = owners?.length ?? 0;
     const ownersWithProps = owners?.filter((o) => o.property_count > 0).length ?? 0;
 
     const now = new Date();
-    const overdueTasks = actionPlans?.reduce((count, plan) => {
-        const planTasks = plan.action_plan_tasks ?? [];
-        return count + planTasks.filter((t: { due_date: string | null; status: string }) => t.due_date && new Date(t.due_date) < now && t.status !== 'completed').length;
-    }, 0) ?? 0;
+    const overdueTasks =
+        actionPlans?.reduce((count, plan) => {
+            const planTasks = plan.action_plan_tasks ?? [];
+            return (
+                count +
+                planTasks.filter(
+                    (t: { due_date: string | null; status: string }) =>
+                        t.due_date && new Date(t.due_date) < now && t.status !== 'completed',
+                ).length
+            );
+        }, 0) ?? 0;
 
-    const pendingPlans = actionPlans?.filter((p) => ['pending', 'in_progress'].includes(p.status)).length ?? 0;
+    const pendingPlans =
+        actionPlans?.filter((p) => ['pending', 'in_progress'].includes(p.status)).length ?? 0;
 
     // Scroll reveal para el dashboard
     const { ref: sectionRef, isVisible: sectionVisible } = useScrollReveal(0.05);
@@ -205,7 +218,10 @@ export function Dashboard() {
                         Vista general de tu negocio inmobiliario en tiempo real.
                     </p>
                 </div>
-                <Link href="/propiedades" className="btn btn--secondary animate-fade-up animate-delay-200">
+                <Link
+                    href="/propiedades"
+                    className="btn btn--secondary animate-fade-up animate-delay-200"
+                >
                     Ver propiedades <ArrowUpRight size={16} />
                 </Link>
             </div>
@@ -213,8 +229,20 @@ export function Dashboard() {
             {loading && (
                 <div className={styles.dashboardLoading}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/>
-                        <path d="M12 2C17.5228 2 22 6.47715 22 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            opacity="0.3"
+                        />
+                        <path
+                            d="M12 2C17.5228 2 22 6.47715 22 12"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                        />
                     </svg>
                     Cargando métricas…
                 </div>
@@ -253,7 +281,10 @@ export function Dashboard() {
                         </div>
                     </section>
 
-                    <section className={`${styles.dashboardSection} charts-section`} aria-labelledby="charts-title">
+                    <section
+                        className={`${styles.dashboardSection} charts-section`}
+                        aria-labelledby="charts-title"
+                    >
                         <div className="section-header">
                             <h3 id="charts-title" className={styles.sectionTitle}>
                                 Análisis y Tendencias

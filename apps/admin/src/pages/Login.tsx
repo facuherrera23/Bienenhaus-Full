@@ -72,7 +72,7 @@ export function Login() {
             const remaining = getLockoutRemainingMs();
             setLockoutRemaining(remaining);
             setLockoutProgress((remaining / LOCKOUT_MS) * 100);
-            
+
             const interval = setInterval(() => {
                 const rem = getLockoutRemainingMs();
                 setLockoutRemaining(rem);
@@ -210,7 +210,9 @@ export function Login() {
                             value={password}
                             placeholder=" "
                             required
-                            onInput={(e) => setPassword((e.currentTarget as HTMLInputElement).value)}
+                            onInput={(e) =>
+                                setPassword((e.currentTarget as HTMLInputElement).value)
+                            }
                             disabled={loading || lockout}
                         />
                         <Lock size={18} className={styles.inputIcon} />
@@ -255,8 +257,20 @@ export function Login() {
                         <>
                             <span className="spin" style={{ display: 'inline-block' }}>
                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                    <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/>
-                                    <path d="M9 1C13.4183 1 17 4.58172 17 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <circle
+                                        cx="9"
+                                        cy="9"
+                                        r="8"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        opacity="0.3"
+                                    />
+                                    <path
+                                        d="M9 1C13.4183 1 17 4.58172 17 9"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                    />
                                 </svg>
                             </span>
                             Ingresando…

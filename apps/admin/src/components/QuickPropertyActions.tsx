@@ -12,7 +12,6 @@ import {
 import { pushToast } from '../store/app';
 import styles from './QuickPropertyActions.module.css';
 
-
 const STATUSES = Object.keys(STATUS_LABEL) as PropertyStatus[];
 
 interface QuickPropertyActionsProps {

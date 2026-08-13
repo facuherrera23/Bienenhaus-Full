@@ -138,7 +138,9 @@ export function CommandPalette({
                                         {item.label}
                                     </span>
                                     {item.description && (
-                                        <span className={styles['command-palette-item-description']}>
+                                        <span
+                                            className={styles['command-palette-item-description']}
+                                        >
                                             {item.description}
                                         </span>
                                     )}

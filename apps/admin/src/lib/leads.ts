@@ -1,9 +1,6 @@
-import { supabase } from './supabase';
+import { supabase } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
-import {
-    validateLeadForm,
-    validateLeadPatch,
-} from './_shared/leads-validation';
+import { validateLeadForm, validateLeadPatch } from './_shared/leads-validation';
 // NOTA: LeadStatus, LeadIntent, LeadSource, LeadFormValues, LeadPatch y CsvLeadRow
 // se declaran localmente más abajo (son la fuente de verdad de este módulo), por eso
 // NO se importan como tipo acá: importarlos generaba "Duplicate identifier".
@@ -16,9 +13,12 @@ import {
 // Types
 // ============================================================
 
-export type LeadStatus = 'nuevo' | 'contactado' | 'calificado' | 'en_proceso' | 'cerrado_ganado' | 'cerrado_perdido';
-export type LeadIntent = 'comprar' | 'vender' | 'alquilar' | 'invertir' | 'tasar' | 'desarrollador' | 'otro';
-export type LeadSource = 'landing_form' | 'whatsapp' | 'telefono' | 'email' | 'referido' | 'ml_contacto' | 'manual';
+export type LeadStatus =
+    'nuevo' | 'contactado' | 'calificado' | 'en_proceso' | 'cerrado_ganado' | 'cerrado_perdido';
+export type LeadIntent =
+    'comprar' | 'vender' | 'alquilar' | 'invertir' | 'tasar' | 'desarrollador' | 'otro';
+export type LeadSource =
+    'landing_form' | 'whatsapp' | 'telefono' | 'email' | 'referido' | 'ml_contacto' | 'manual';
 
 export const LEAD_STATUS_LABEL: Record<string, string> = {
     nuevo: 'Nuevo',
@@ -281,10 +281,7 @@ export async function fetchLeads(filters?: FetchLeadsFilters): Promise<FetchLead
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let query = supabase
-        .from('leads')
-        .select(LEADS_SELECT)
-        .is('deleted_at', null);
+    let query = supabase.from('leads').select(LEADS_SELECT).is('deleted_at', null);
 
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.intent) query = query.eq('intent', filters.intent);
@@ -309,11 +306,13 @@ export async function fetchLeads(filters?: FetchLeadsFilters): Promise<FetchLead
 export async function fetchLead(id: string): Promise<any> {
     const { data, error } = await supabase
         .from('leads')
-        .select(`
+        .select(
+            `
       id, name, last_name, email, phone, city, intent, message, source, status, 
       notes, assigned_to, created_at, updated_at, deleted_at,
       agent:agents(name), property:properties(title), tags, score
-    `)
+    `,
+        )
         .eq('id', id)
         .maybeSingle();
 
@@ -325,11 +324,13 @@ export async function fetchLead(id: string): Promise<any> {
 export async function fetchDeletedLeads(): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(`
+        .select(
+            `
       id, name, last_name, email, phone, city, intent, message, source, status, 
       notes, assigned_to, created_at, updated_at, deleted_at,
       agent:agents(name), property:properties(title), tags, score
-    `)
+    `,
+        )
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false })
         .returns<any[]>();
@@ -341,11 +342,13 @@ export async function fetchDeletedLeads(): Promise<any[]> {
 export async function fetchLeadsByStatus(status: LeadStatus): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(`
+        .select(
+            `
       id, name, last_name, email, phone, city, intent, message, source, status, 
       notes, assigned_to, created_at, updated_at, deleted_at,
       agent:agents(name), property:properties(title), tags, score
-    `)
+    `,
+        )
         .eq('status', status)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -358,11 +361,13 @@ export async function fetchLeadsByStatus(status: LeadStatus): Promise<any[]> {
 export async function fetchLeadsByAgent(agentId: string): Promise<any[]> {
     const { data, error } = await supabase
         .from('leads')
-        .select(`
+        .select(
+            `
       id, name, last_name, email, phone, city, intent, message, source, status, 
       notes, assigned_to, created_at, updated_at, deleted_at,
       agent:agents(name), property:properties(title), tags, score
-    `)
+    `,
+        )
         .eq('assigned_to', agentId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -387,20 +392,27 @@ export async function createLead(values: any): Promise<string> {
     const { data: existing } = await supabase
         .from('leads')
         .select('id, status, created_at, message')
-        .or(`email.eq.${values.email},phone.eq.${values.phone}`)
+        .or(`email=eq.${values.email},phone=eq.${values.phone}`)
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
     if (existing) {
-        logLeadWarn({ action: 'createLead', lead_id: existing.id, metadata: { deduplicated: true } });
+        logLeadWarn({
+            action: 'createLead',
+            lead_id: existing.id,
+            metadata: { deduplicated: true },
+        });
         // Update existing lead with new message
-        await supabase.from('leads').update({
-            message: (existing.message ?? '') + '\n\n---\n' + values.message,
-            source: values.source, // Keep original or upgrade
-            updated_at: new Date().toISOString(),
-        }).eq('id', existing.id);
+        await supabase
+            .from('leads')
+            .update({
+                message: (existing.message ?? '') + '\n\n---\n' + values.message,
+                source: values.source, // Keep original or upgrade
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
         return existing.id;
     }
 
@@ -490,7 +502,10 @@ export async function fetchAgents(): Promise<any[]> {
     return (data ?? []) as any[];
 }
 
-export async function getNextAgentForAssignment(lead?: { intent: string; city?: string }): Promise<any | null> {
+export async function getNextAgentForAssignment(lead?: {
+    intent: string;
+    city?: string;
+}): Promise<any | null> {
     let query = supabase
         .from('agents')
         .select('id, name, specialties, leads:leads(count)')
@@ -706,28 +721,55 @@ export async function parseLeadsCsv(csvText: string): Promise<{
 
         const intent = row.intent;
         const source = row.source;
-        const status = (row.status as any) || 'nuevo';
 
-        if (!['comprar', 'vender', 'alquilar', 'invertir', 'tasar', 'desarrollador', 'otro'].includes(intent)) {
+        if (
+            ![
+                'comprar',
+                'vender',
+                'alquilar',
+                'invertir',
+                'tasar',
+                'desarrollador',
+                'otro',
+            ].includes(intent)
+        ) {
             errors.push({ row: i, message: `Intent inválido: ${intent}` });
             continue;
         }
-        if (!['landing_form', 'whatsapp', 'telefono', 'email', 'referido', 'ml_contacto', 'manual'].includes(source)) {
+        if (
+            ![
+                'landing_form',
+                'whatsapp',
+                'telefono',
+                'email',
+                'referido',
+                'ml_contacto',
+                'manual',
+            ].includes(source)
+        ) {
             errors.push({ row: i, message: `Source inválido: ${source}` });
             continue;
         }
 
-        valid.push({
+valid.push({
             name: row.name,
             last_name: row.last_name,
             email: row.email,
             phone: row.phone ?? undefined,
-            city: row.city ?? undefined,
-            intent,
-            source,
-            status,
-            message: row.message ?? undefined,
+            intent: row.intent as LeadIntent,
+            source: row.source as LeadSource,
+            status: (row.status as any) || 'nuevo',
         });
+
+        // Deduplicación por email (case-insensitive)
+        const existingEmail = valid.findIndex(
+            (v) => (v.email ?? '').toLowerCase() === (row.email ?? '').toLowerCase(),
+        );
+        if (existingEmail >= 0 && existingEmail !== valid.length - 1) {
+            errors.push({ row: i, message: `Lead duplicado: el email ${row.email} ya fue ingresado` });
+            valid.pop();
+            continue;
+        }
     }
 
     return { valid, errors };

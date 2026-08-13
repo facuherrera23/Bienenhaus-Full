@@ -250,7 +250,9 @@ function Submenu({ item, collapsed, onNavigate }: SubmenuProps) {
                     <item.icon size={18} strokeWidth={1.8} />
                 </span>
                 <span className={styles['sidebar-link-label']}>{item.label}</span>
-                {item.badge != null && <span className={styles['sidebar-badge']}>{item.badge}</span>}
+                {item.badge != null && (
+                    <span className={styles['sidebar-badge']}>{item.badge}</span>
+                )}
                 <span
                     className={`${styles['sidebar-submenu-chevron']}${open ? ` ${styles['is-open']}` : ''}`}
                     data-testid="sidebar-submenu-chevron"
@@ -335,7 +337,10 @@ function WorkspaceItem({ workspace, active, collapsed, onSelect }: WorkspaceItem
             <span className={styles['sidebar-workspace-glyph']}>{workspace.glyph}</span>
             <span className={styles['sidebar-workspace-name']}>{workspace.name}</span>
             {active && (
-                <span className={styles['sidebar-workspace-check']} data-testid="sidebar-workspace-check">
+                <span
+                    className={styles['sidebar-workspace-check']}
+                    data-testid="sidebar-workspace-check"
+                >
                     <Check size={14} strokeWidth={2} />
                 </span>
             )}
@@ -357,8 +362,7 @@ export function Sidebar() {
     const mainNav = filterByRole(NAV, role);
     const ownersNav = filterByRole(OWNERS_NAV, role);
     const adminNav = filterByRole(ADMIN_ONLY_NAV, role);
-    const settingsVisible =
-        !SETTINGS_NAV.roles || SETTINGS_NAV.roles.includes(role ?? 'viewer');
+    const settingsVisible = !SETTINGS_NAV.roles || SETTINGS_NAV.roles.includes(role ?? 'viewer');
 
     return (
         <aside

@@ -43,6 +43,9 @@ export const ROLE_TONE: Record<AdminRole, string> = {
     viewer: 'neutral',
 };
 
+const ADMIN_USER_COLUMNS =
+    'id, email, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at';
+
 // ============================================================
 // API Functions - Fetch
 // ============================================================
@@ -50,9 +53,7 @@ export const ROLE_TONE: Record<AdminRole, string> = {
 export async function fetchAdminUsers(): Promise<AdminUserRow[]> {
     const { data, error } = await supabase
         .from('admin_users')
-        .select(
-            'id, email, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at',
-        )
+        .select(ADMIN_USER_COLUMNS)
         .order('role', { ascending: true })
         .order('created_at', { ascending: true });
 
@@ -63,9 +64,7 @@ export async function fetchAdminUsers(): Promise<AdminUserRow[]> {
 export async function fetchAdminUser(id: string): Promise<AdminUserRow> {
     const { data, error } = await supabase
         .from('admin_users')
-        .select(
-            'id, email, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at',
-        )
+        .select(ADMIN_USER_COLUMNS)
         .eq('id', id)
         .maybeSingle();
 
@@ -109,10 +108,7 @@ export async function updateAdminUserRole(id: string, role: AdminRole): Promise<
 }
 
 export async function toggleAdminUserActive(id: string, isActive: boolean): Promise<void> {
-    const { error } = await supabase
-        .from('admin_users')
-        .update({ is_active: isActive })
-        .eq('id', id);
+    const { error } = await supabase.from('admin_users').update({ is_active: isActive }).eq('id', id);
 
     if (error) throw new Error(error.message);
 }
@@ -175,11 +171,11 @@ export async function removeAdminUser(email: string): Promise<void> {
 // API Functions - Auth Helpers
 // ============================================================
 
-export async function updateAdminLastLogin(userId: string): Promise<void> {
+export async function updateAdminLastLogin(id: string, lastLogin: string): Promise<void> {
     const { error } = await supabase
         .from('admin_users')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', userId);
+        .update({ last_login_at: lastLogin })
+        .eq('id', id);
 
     if (error) throw new Error(error.message);
 }
@@ -224,13 +220,19 @@ export async function hasRole(userId: string, role: AdminRole): Promise<boolean>
 // API Functions - Sync with Auth
 // ============================================================
 
-export async function syncAdminUserWithAuth(userId: string): Promise<void> {
-    // Obtener datos del usuario de auth
-    const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
-    if (authError) throw new Error(authError.message);
+export async function syncAdminUserWithAuth(): Promise<void> {
+    const userId = await fetchMyUserId();
+    if (!userId) return;
 
-    const authUser = authData.user;
-    if (!authUser) throw new Error('Usuario no encontrado en Auth');
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const fullName =
+        (user.user_metadata?.full_name as string | undefined) ??
+        user.email?.split('@')[0] ??
+        'Usuario';
 
     // Verificar si existe en admin_users
     const { data: existing, error: checkError } = await supabase
@@ -247,41 +249,28 @@ export async function syncAdminUserWithAuth(userId: string): Promise<void> {
         // Crear en admin_users
         const { error: insertError } = await supabase.from('admin_users').insert({
             id: userId,
-            email: authUser.email!,
-            full_name:
-                authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? 'Usuario',
+            email: user.email ?? '',
+            full_name: fullName,
             role: 'viewer',
             is_active: true,
             must_change_password: false,
         });
 
         if (insertError) throw new Error(insertError.message);
-    } else {
-        // Actualizar email y nombre si cambiaron
-        const updates: Partial<AdminUserRow> = {};
-        if (authUser.email) updates.email = authUser.email;
-        if (authUser.user_metadata?.full_name) updates.full_name = authUser.user_metadata.full_name;
+        return;
+    }
 
-        if (Object.keys(updates).length > 0) {
-            const { error: updateError } = await supabase
-                .from('admin_users')
-                .update(updates)
-                .eq('id', userId);
+    // Actualizar email y nombre si cambiaron
+    const updates: Partial<Pick<AdminUserRow, 'email' | 'full_name'>> = {};
+    if (user.email) updates.email = user.email;
+    if (user.user_metadata?.full_name) updates.full_name = fullName;
 
-            if (updateError) throw new Error(updateError.message);
-        }
+    if (Object.keys(updates).length > 0) {
+        const { error: updateError } = await supabase
+            .from('admin_users')
+            .update(updates)
+            .eq('id', userId);
+
+        if (updateError) throw new Error(updateError.message);
     }
 }
-
-// ============================================================
-// Export Direct Functions (for compatibility)
-// ============================================================
-
-// Mantener exports para compatibilidad con código existente
-export { callAdminEdge as _callAdminEdge };
-
-// ============================================================
-// Re-export types (para compatibilidad)
-// ============================================================
-
-export type { AdminRole as AdminRoleType };

@@ -14,7 +14,12 @@ function getSecret(): string {
         (import.meta as any).env?.VITE_CRYPTO_SECRET ??
         (typeof process !== 'undefined' ? process.env?.CRYPTO_SECRET : '') ??
         '';
-    if (!secret && typeof process !== 'undefined' && process.env?.CRYPTO_SECRET === undefined && (import.meta as any).env?.VITE_CRYPTO_SECRET === undefined) {
+    if (
+        !secret &&
+        typeof process !== 'undefined' &&
+        process.env?.CRYPTO_SECRET === undefined &&
+        (import.meta as any).env?.VITE_CRYPTO_SECRET === undefined
+    ) {
         // For tests: allow Deno.env fallback if available (Deno runtime), else empty
         return '';
     }

@@ -49,9 +49,7 @@ export function ChangePassword() {
             }
 
             // Update the admin_users table to clear the flag
-            const { error: updateFlagError } = await supabase.rpc(
-                'complete_password_change'
-            );
+            const { error: updateFlagError } = await supabase.rpc('complete_password_change');
 
             if (updateFlagError) {
                 console.error('Error updating must_change_password flag:', updateFlagError);

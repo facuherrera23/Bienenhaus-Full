@@ -868,3 +868,18 @@
     background: var(--bh-bg-hover);
     color: var(--bh-text-primary);
 }
+
+/* AI assistant typing indicator */
+.ai-typing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    margin: 8px 0;
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-sm);
+}
+
+.ai-typing .spin {
+    color: var(--bh-accent, var(--accent));
+}

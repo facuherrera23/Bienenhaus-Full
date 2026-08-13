@@ -4,12 +4,10 @@
  */
 
 .modal-footer {
-  
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: var(--bh-space-3);
-      padding: var(--bh-space-4) var(--bh-space-5);
-      border-top: 1px solid var(--bh-border);
-
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-4) var(--bh-space-5);
+    border-top: 1px solid var(--bh-border);
 }

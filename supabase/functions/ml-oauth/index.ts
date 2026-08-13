@@ -1,6 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { encrypt } from '../_shared/crypto.ts';
-import { exchangeCode, getMe, runMlApiCallWithRetry, getMlAppCredentialsLegacy } from '../_shared/ml.ts';
+import {
+    exchangeCode,
+    getMe,
+    runMlApiCallWithRetry,
+    getMlAppCredentialsLegacy,
+} from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 
 const supabase = createClient(
@@ -9,7 +14,11 @@ const supabase = createClient(
     { auth: { persistSession: false } },
 );
 
-interface OauthState { nonce: string; admin: string; exp: number; }
+interface OauthState {
+    nonce: string;
+    admin: string;
+    exp: number;
+}
 
 function base64UrlEncode(bytes: Uint8Array): string {
     let binary = '';
@@ -18,7 +27,8 @@ function base64UrlEncode(bytes: Uint8Array): string {
 }
 
 function base64UrlDecode(value: string): Uint8Array {
-    const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
+    const padded =
+        value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
     const binary = atob(padded);
     return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
@@ -28,8 +38,16 @@ async function sha256(value: string): Promise<Uint8Array> {
 }
 
 async function hmac(value: string, clientSecret: string): Promise<string> {
-    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(clientSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-    return base64UrlEncode(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))));
+    const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(clientSecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+    );
+    return base64UrlEncode(
+        new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))),
+    );
 }
 
 async function authenticateAdmin(req: Request): Promise<{ id: string } | null> {
@@ -37,7 +55,11 @@ async function authenticateAdmin(req: Request): Promise<{ id: string } | null> {
     if (!auth.startsWith('Bearer ')) return null;
     const { data, error } = await supabase.auth.getUser(auth.slice(7));
     if (error || !data.user) return null;
-    const { data: admin } = await supabase.from('admin_users').select('id, is_active, role').eq('id', data.user.id).maybeSingle();
+    const { data: admin } = await supabase
+        .from('admin_users')
+        .select('id, is_active, role')
+        .eq('id', data.user.id)
+        .maybeSingle();
     if (!admin?.is_active || !['super_admin', 'admin', 'staff'].includes(admin.role)) return null;
     return { id: admin.id };
 }
@@ -61,21 +83,25 @@ function isInternalUrl(url: string): boolean {
 }
 
 // Obtiene client_id/client_secret desde site_settings (fallback a env vars legacy)
-async function getMlCredentials(supabaseClient: typeof supabase): Promise<{ clientId: string; clientSecret: string }> {
+async function getMlCredentials(
+    supabaseClient: typeof supabase,
+): Promise<{ clientId: string; clientSecret: string }> {
     const { data: settings } = await supabaseClient
         .from('site_settings')
         .select('key, value')
         .in('key', ['ml_app_id', 'ml_client_secret']);
 
-    const clientId = settings?.find(s => s.key === 'ml_app_id')?.value?.value as string ?? '';
-    const clientSecret = settings?.find(s => s.key === 'ml_client_secret')?.value?.value as string ?? '';
+    const clientId = (settings?.find((s) => s.key === 'ml_app_id')?.value?.value as string) ?? '';
+    const clientSecret =
+        (settings?.find((s) => s.key === 'ml_client_secret')?.value?.value as string) ?? '';
 
     if (clientId && clientSecret) return { clientId, clientSecret };
 
     // Fallback a env vars (legacy)
     const legacyClientId = Deno.env.get('ML_CLIENT_ID') ?? '';
     const legacyClientSecret = Deno.env.get('ML_CLIENT_SECRET') ?? '';
-    if (!legacyClientId || !legacyClientSecret) throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados');
+    if (!legacyClientId || !legacyClientSecret)
+        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados');
     return { clientId: legacyClientId, clientSecret: legacyClientSecret };
 }
 
@@ -86,11 +112,18 @@ Deno.serve(async (req) => {
 
     if (req.method === 'POST') {
         let body: { action?: unknown; admin?: unknown };
-        try { body = await req.json(); } catch { return respond(400, { error: 'JSON inválido' }); }
+        try {
+            body = await req.json();
+        } catch {
+            return respond(400, { error: 'JSON inválido' });
+        }
         if (body.action !== 'start') return respond(400, { error: 'Acción inválida' });
         const admin = await authenticateAdmin(req);
         if (!admin) return respond(401, { error: 'No autorizado' });
-        const adminUrl = typeof body.admin === 'string' && isInternalUrl(body.admin) ? body.admin : (Deno.env.get('ADMIN_BASE_URL') ?? '/admin');
+        const adminUrl =
+            typeof body.admin === 'string' && isInternalUrl(body.admin)
+                ? body.admin
+                : (Deno.env.get('ADMIN_BASE_URL') ?? '/admin');
         const nonce = crypto.randomUUID();
         const codeVerifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
         const challenge = base64UrlEncode(await sha256(codeVerifier));
@@ -99,8 +132,20 @@ Deno.serve(async (req) => {
         // Obtener client_secret de BD para HMAC
         const { clientSecret } = await getMlCredentials(supabase);
         const signature = await hmac(`${nonce}|${admin.id}|${exp}`, clientSecret);
-        const state = base64UrlEncode(new TextEncoder().encode(JSON.stringify({ nonce, admin: adminUrl, exp, sig: signature })));
-        const { error } = await supabase.from('ml_oauth_states').insert({ nonce, admin_user_id: admin.id, admin_url: adminUrl, code_verifier: codeVerifier, expires_at: new Date(exp).toISOString() });
+        const state = base64UrlEncode(
+            new TextEncoder().encode(
+                JSON.stringify({ nonce, admin: adminUrl, exp, sig: signature }),
+            ),
+        );
+        const { error } = await supabase
+            .from('ml_oauth_states')
+            .insert({
+                nonce,
+                admin_user_id: admin.id,
+                admin_url: adminUrl,
+                code_verifier: codeVerifier,
+                expires_at: new Date(exp).toISOString(),
+            });
         if (error) return respond(500, { error: 'No se pudo iniciar OAuth' });
         return respond(200, { state, code_challenge: challenge });
     }
@@ -115,35 +160,53 @@ Deno.serve(async (req) => {
 
     if (!code || !stateRaw) {
         return respond(200, {
-            message: 'Endpoint OAuth de BIENENHAUS. Usá /callback con ?code= y ?state= para completar la conexión con Mercado Libre.',
+            message:
+                'Endpoint OAuth de BIENENHAUS. Usá /callback con ?code= y ?state= para completar la conexión con Mercado Libre.',
         });
     }
 
     let state: OauthState & { sig: string };
     try {
-        state = JSON.parse(new TextDecoder().decode(base64UrlDecode(stateRaw))) as OauthState & { sig: string };
-        if (!state.nonce || !state.admin || !state.exp || !state.sig || state.exp < Date.now()) throw new Error('state expirado');
+        state = JSON.parse(new TextDecoder().decode(base64UrlDecode(stateRaw))) as OauthState & {
+            sig: string;
+        };
+        if (!state.nonce || !state.admin || !state.exp || !state.sig || state.exp < Date.now())
+            throw new Error('state expirado');
         const { clientSecret } = await getMlCredentials(supabase);
-        const expected = await hmac(`${state.nonce}|${(await supabase.from('ml_oauth_states').select('admin_user_id').eq('nonce', state.nonce).maybeSingle()).data?.admin_user_id ?? ''}|${state.exp}`, clientSecret);
+        const expected = await hmac(
+            `${state.nonce}|${(await supabase.from('ml_oauth_states').select('admin_user_id').eq('nonce', state.nonce).maybeSingle()).data?.admin_user_id ?? ''}|${state.exp}`,
+            clientSecret,
+        );
         if (!timingSafeEqual(expected, state.sig)) throw new Error('state inválido');
     } catch {
         return respond(400, { error: 'OAuth state inválido o expirado' });
     }
 
-    const { data: oauthState, error: oauthStateError } = await supabase.from('ml_oauth_states').select('admin_user_id, admin_url, code_verifier').eq('nonce', state.nonce).is('consumed_at', null).gt('expires_at', new Date().toISOString()).maybeSingle();
-    if (oauthStateError || !oauthState) return respond(400, { error: 'OAuth state inválido o ya utilizado' });
-    await supabase.from('ml_oauth_states').update({ consumed_at: new Date().toISOString() }).eq('nonce', state.nonce);
+    const { data: oauthState, error: oauthStateError } = await supabase
+        .from('ml_oauth_states')
+        .select('admin_user_id, admin_url, code_verifier')
+        .eq('nonce', state.nonce)
+        .is('consumed_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+    if (oauthStateError || !oauthState)
+        return respond(400, { error: 'OAuth state inválido o ya utilizado' });
+    await supabase
+        .from('ml_oauth_states')
+        .update({ consumed_at: new Date().toISOString() })
+        .eq('nonce', state.nonce);
 
     const adminUrl = oauthState.admin_url;
     const validatedAdminUrl = isInternalUrl(adminUrl)
         ? adminUrl
-        : (console.warn('[ml-oauth] blocked external redirect:', adminUrl), Deno.env.get('ADMIN_BASE_URL') ?? '/admin');
+        : (console.warn('[ml-oauth] blocked external redirect:', adminUrl),
+          Deno.env.get('ADMIN_BASE_URL') ?? '/admin');
     const redirectUri = `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-oauth`;
 
     try {
         // Obtener client_id/client_secret para exchangeCode
         const { clientId, clientSecret } = await getMlCredentials(supabase);
-        
+
         const tokenResult = await runMlApiCallWithRetry(
             '',
             () => exchangeCode(code, redirectUri, oauthState.code_verifier, clientId, clientSecret),
@@ -163,26 +226,31 @@ Deno.serve(async (req) => {
         const access = await encrypt(tokens.access_token);
         const refresh = await encrypt(tokens.refresh_token);
 
-        const { data: insertedConnection, error: insertError } = await supabase.from('ml_connection').insert({
-            provider: 'mercadolibre',
-            site_id: user.site_id ?? 'MLA',
-            user_id: user.id,
-            nickname: user.nickname,
-            email: user.email,
-            access_token_encrypted: access.data,
-            access_token_iv: access.iv,
-            refresh_token_encrypted: refresh.data,
-            refresh_token_iv: refresh.iv,
-            token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-            is_active: true,
-        }).select('id').single();
+        const { data: insertedConnection, error: insertError } = await supabase
+            .from('ml_connection')
+            .insert({
+                provider: 'mercadolibre',
+                site_id: user.site_id ?? 'MLA',
+                user_id: user.id,
+                nickname: user.nickname,
+                email: user.email,
+                access_token_encrypted: access.data,
+                access_token_iv: access.iv,
+                refresh_token_encrypted: refresh.data,
+                refresh_token_iv: refresh.iv,
+                token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+                is_active: true,
+            })
+            .select('id')
+            .single();
 
         if (insertError || !insertedConnection?.id) {
             console.error('ml-oauth insert error', insertError);
             return respond(500, { error: 'No se pudo guardar la conexión' });
         }
 
-        await supabase.from('ml_connection')
+        await supabase
+            .from('ml_connection')
             .update({ is_active: false })
             .eq('provider', 'mercadolibre')
             .neq('id', insertedConnection.id);
@@ -205,8 +273,16 @@ Deno.serve(async (req) => {
 
 // Helpers
 async function hmac(value: string, clientSecret: string): Promise<string> {
-    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(clientSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-    return base64UrlEncode(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))));
+    const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(clientSecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+    );
+    return base64UrlEncode(
+        new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))),
+    );
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {
@@ -216,7 +292,8 @@ function base64UrlEncode(bytes: Uint8Array): string {
 }
 
 function base64UrlDecode(value: string): Uint8Array {
-    const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
+    const padded =
+        value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
     const binary = atob(padded);
     return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
@@ -225,7 +302,11 @@ async function sha256(value: string): Promise<Uint8Array> {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
 }
 
-interface OauthState { nonce: string; admin: string; exp: number; }
+interface OauthState {
+    nonce: string;
+    admin: string;
+    exp: number;
+}
 
 function base64UrlEncode(bytes: Uint8Array): string {
     let binary = '';
@@ -234,7 +315,8 @@ function base64UrlEncode(bytes: Uint8Array): string {
 }
 
 function base64UrlDecode(value: string): Uint8Array {
-    const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
+    const padded =
+        value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
     const binary = atob(padded);
     return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
@@ -243,7 +325,11 @@ async function sha256(value: string): Promise<Uint8Array> {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
 }
 
-interface OauthState { nonce: string; admin: string; exp: number; }
+interface OauthState {
+    nonce: string;
+    admin: string;
+    exp: number;
+}
 
 function timingSafeEqual(a: string, b: string): boolean {
     const ba = new TextEncoder().encode(a);

@@ -23,94 +23,94 @@
  */
 
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  font-family: var(--bh-font-sans);
-  color: var(--bh-text-primary);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--bh-font-sans);
+    color: var(--bh-text-primary);
 }
 
 /* ============================================================
    CENTERED (default) — flex column, centered both axes
    ============================================================ */
 .empty-state--centered {
-  align-items: center;
-  justify-content: center;
-  gap: var(--bh-space-4);
-  padding: var(--bh-space-8) var(--bh-space-6);
-  text-align: center;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bh-space-4);
+    padding: var(--bh-space-8) var(--bh-space-6);
+    text-align: center;
 }
 
 /* ============================================================
    INLINE (centered={false}) — left-aligned, for panel empties
    ============================================================ */
 .empty-state--inline {
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: var(--bh-space-3);
-  padding: var(--bh-space-6) var(--bh-space-6);
-  text-align: left;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-6) var(--bh-space-6);
+    text-align: left;
 }
 
 /* ============================================================
    ICON — decorative circle, muted bg + accent-tinted icon
    ============================================================ */
 .empty-state__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: var(--bh-radius-full);
-  background-color: var(--bh-bg-secondary);
-  /* Icon tint: accent at 60% over the icon's currentColor via color-mix.
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--bh-radius-full);
+    background-color: var(--bh-bg-secondary);
+    /* Icon tint: accent at 60% over the icon's currentColor via color-mix.
      Derived from --bh-accent token — no raw hex. */
-  color: color-mix(in srgb, var(--bh-accent) 60%, var(--bh-text-tertiary));
-  line-height: 0;
+    color: color-mix(in srgb, var(--bh-accent) 60%, var(--bh-text-tertiary));
+    line-height: 0;
 }
 
 /* Scale inner SVG/icon to fill the circle nicely. */
 .empty-state__icon svg {
-  width: 50%;
-  height: 50%;
-  display: block;
+    width: 50%;
+    height: 50%;
+    display: block;
 }
 
 /* ============================================================
    TITLE — semibold primary (<p>, not a hardcoded heading)
    ============================================================ */
 .empty-state__title {
-  margin: 0;
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-lg);
-  font-weight: var(--bh-weight-semibold);
-  line-height: var(--bh-leading-snug);
-  color: var(--bh-text-primary);
-  letter-spacing: var(--bh-tracking-tight);
+    margin: 0;
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-lg);
+    font-weight: var(--bh-weight-semibold);
+    line-height: var(--bh-leading-snug);
+    color: var(--bh-text-primary);
+    letter-spacing: var(--bh-tracking-tight);
 }
 
 /* ============================================================
    DESCRIPTION — secondary, max ~320px
    ============================================================ */
 .empty-state__desc {
-  margin: 0;
-  max-width: 320px;
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-normal);
-  line-height: var(--bh-leading-relaxed);
-  color: var(--bh-text-secondary);
+    margin: 0;
+    max-width: 320px;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-normal);
+    line-height: var(--bh-leading-relaxed);
+    color: var(--bh-text-secondary);
 }
 
 /* ============================================================
    ACTION — slot below with 16px margin-top
    ============================================================ */
 .empty-state__action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: var(--bh-space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--bh-space-4);
 }
 
 .empty-state--inline .empty-state__action {
-  justify-content: flex-start;
+    justify-content: flex-start;
 }
 
 /* ============================================================
@@ -119,39 +119,39 @@
 
 /* sm — compact, for inline table/panel empties (40px icon, smaller title) */
 .empty-state--sm.empty-state--centered {
-  padding: var(--bh-space-4) var(--bh-space-3);
-  gap: var(--bh-space-2);
+    padding: var(--bh-space-4) var(--bh-space-3);
+    gap: var(--bh-space-2);
 }
 .empty-state--sm.empty-state--inline {
-  padding: var(--bh-space-3) var(--bh-space-3);
-  gap: var(--bh-space-2);
+    padding: var(--bh-space-3) var(--bh-space-3);
+    gap: var(--bh-space-2);
 }
 .empty-state--sm .empty-state__icon {
-  width: 40px;
-  height: 40px;
+    width: 40px;
+    height: 40px;
 }
 .empty-state--sm .empty-state__title {
-  font-size: var(--bh-text-sm);
+    font-size: var(--bh-text-sm);
 }
 .empty-state--sm .empty-state__desc {
-  font-size: var(--bh-text-xs);
-  max-width: 280px;
+    font-size: var(--bh-text-xs);
+    max-width: 280px;
 }
 .empty-state--sm .empty-state__action {
-  margin-top: var(--bh-space-2);
+    margin-top: var(--bh-space-2);
 }
 
 /* md — default, balanced (64px icon) */
 .empty-state--md .empty-state__icon {
-  width: 64px;
-  height: 64px;
+    width: 64px;
+    height: 64px;
 }
 
 /* ============================================================
    REDUCED MOTION — nothing animates here, but keep the contract
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .empty-state {
-    transition: none;
-  }
+    .empty-state {
+        transition: none;
+    }
 }

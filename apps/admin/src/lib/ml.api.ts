@@ -82,7 +82,9 @@ export function useMlQueue(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
@@ -100,11 +102,15 @@ export function useMlQueue(filters?: {
     });
 }
 
-export function useMlQueueInfinite(filters?: { status?: MlSyncStatus; operation?: MlOperation; pageSize?: number }) {
+export function useMlQueueInfinite(filters?: {
+    status?: MlSyncStatus;
+    operation?: MlOperation;
+    pageSize?: number;
+}) {
     return useInfiniteQuery({
         queryKey: ['ml-queue-infinite', filters],
         queryFn: ({ pageParam = 1 }) => fetchMlQueueInfinite(pageParam, filters?.pageSize ?? 50),
-        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
         initialPageParam: 1,
     });
 }
@@ -131,7 +137,7 @@ export function useMlMetaInfinite(filters?: { property_id?: string; pageSize?: n
     return useInfiniteQuery({
         queryKey: ['ml-meta-infinite', filters],
         queryFn: ({ pageParam = 1 }) => fetchMlMetaInfinite(pageParam, filters?.pageSize ?? 100),
-        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
         initialPageParam: 1,
     });
 }
@@ -160,8 +166,9 @@ export function useMlQuestions(filters?: { status?: string; page?: number; pageS
 export function useMlQuestionsInfinite(filters?: { status?: string; pageSize?: number }) {
     return useInfiniteQuery({
         queryKey: ['ml-questions-infinite', filters],
-        queryFn: ({ pageParam = 1 }) => fetchMlQuestionsInfinite(pageParam, filters?.pageSize ?? 50),
-        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        queryFn: ({ pageParam = 1 }) =>
+            fetchMlQuestionsInfinite(pageParam, filters?.pageSize ?? 50),
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
         initialPageParam: 1,
     });
 }
@@ -343,8 +350,9 @@ export function useMlDeadLetter(filters?: { status?: string; page?: number; page
 export function useMlDeadLetterInfinite(filters?: { status?: string; pageSize?: number }) {
     return useInfiniteQuery({
         queryKey: ['ml-dead-letter-infinite', filters],
-        queryFn: ({ pageParam = 1 }) => fetchMlDeadLetter({ page: pageParam, pageSize: filters?.pageSize ?? 50 }),
-        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        queryFn: ({ pageParam = 1 }) =>
+            fetchMlDeadLetter({ page: pageParam, pageSize: filters?.pageSize ?? 50 }),
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
         initialPageParam: 1,
     });
 }
@@ -399,7 +407,11 @@ export const ML_META_EXPORT_COLUMNS: ExportColumn<MlMetaRow>[] = [
     { key: 'ml_item_id', label: 'Item ML', format: (v) => String(v ?? '—') },
     { key: 'status', label: 'Estado' },
     { key: 'permalink', label: 'Link ML', format: (v) => String(v ?? '—') },
-    { key: 'price', label: 'Precio ML', format: (v) => (v ? (v as number).toLocaleString('es-AR') : '—') },
+    {
+        key: 'price',
+        label: 'Precio ML',
+        format: (v) => (v ? (v as number).toLocaleString('es-AR') : '—'),
+    },
     {
         key: 'last_sync_at',
         label: 'Última sync',

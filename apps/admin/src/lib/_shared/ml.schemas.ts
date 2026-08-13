@@ -53,13 +53,15 @@ export const MlItemPictureUploadResponseSchema = z.object({
     max_width: z.number(),
     max_height: z.number(),
     quality: z.number(),
-    variations: z.array(z.object({
-        id: z.string(),
-        url: z.string().url(),
-        width: z.number(),
-        height: z.number(),
-        size: z.number(),
-    })),
+    variations: z.array(
+        z.object({
+            id: z.string(),
+            url: z.string().url(),
+            width: z.number(),
+            height: z.number(),
+            size: z.number(),
+        }),
+    ),
 });
 
 export const MlItemSchema = z.object({
@@ -256,10 +258,14 @@ export const MlSyncHistoryRowSchema = z.object({
  * Valida y parsea respuesta de ML API con Zod.
  * Lanza error tipado si falla validación.
  */
-export function parseMlResponse<T>(schema: z.ZodSchema<T>, data: unknown, operationName: string): T {
+export function parseMlResponse<T>(
+    schema: z.ZodSchema<T>,
+    data: unknown,
+    operationName: string,
+): T {
     const result = schema.safeParse(data);
     if (!result.success) {
-        const errorMsg = `${operationName}: Respuesta ML inválida - ${result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')}`;
+        const errorMsg = `${operationName}: Respuesta ML inválida - ${result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`;
         throw new Error(errorMsg);
     }
     return result.data;

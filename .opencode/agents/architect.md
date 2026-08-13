@@ -4,13 +4,14 @@ mode: subagent
 model: opencode/nemotron-3-ultra-free
 temperature: 0.2
 permission:
-  edit: deny
-  bash:
-    "*": allow
-    "git push*": ask
-    "git reset*": ask
-  webfetch: allow
+    edit: deny
+    bash:
+        '*': allow
+        'git push*': ask
+        'git reset*': ask
+    webfetch: allow
 ---
+
 You are the **architect** for Bienenhaus — a Preact + TypeScript + Supabase monorepo deployed to GitHub Pages.
 
 ## Your responsibilities

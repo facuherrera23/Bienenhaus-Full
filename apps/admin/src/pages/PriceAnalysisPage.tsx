@@ -421,13 +421,13 @@ export function PriceAnalysisPage() {
                                             <span className="trend-badge">
                                                 {(() => {
                                                     const trend = priceAnalysis.market_trend;
-                                                    const Icon = trend ? MARKET_TREND_ICON[trend] : TrendingUp;
+                                                    const Icon = trend
+                                                        ? MARKET_TREND_ICON[trend]
+                                                        : TrendingUp;
                                                     return (
                                                         <>
                                                             <Icon size={14} />{' '}
-                                                            {
-                                                                trend ? MARKET_TREND_LABEL[trend] : ''
-                                                            }
+                                                            {trend ? MARKET_TREND_LABEL[trend] : ''}
                                                         </>
                                                     );
                                                 })()}

@@ -46,9 +46,11 @@ function startOfWeek(date: Date): Date {
 }
 
 function isSameDay(a: Date, b: Date): boolean {
-    return a.getFullYear() === b.getFullYear() &&
+    return (
+        a.getFullYear() === b.getFullYear() &&
         a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
+        a.getDate() === b.getDate()
+    );
 }
 
 function formatTime(iso: string): string {
@@ -103,17 +105,29 @@ export function VisitsPage() {
         queryFn: () => fetchVisitsByDateRange(formatDateKey(rangeStart), formatDateKey(rangeEnd)),
     });
 
-    const navigate = useCallback((dir: 'prev' | 'next') => {
-        setCurrentDate((prev) => {
-            const d = new Date(prev);
-            if (viewMode === 'month') {
-                d.setMonth(d.getMonth() + (dir === 'next' ? 1 : -1));
-            } else {
-                d.setDate(d.getDate() + (dir === 'next' ? (viewMode === 'week' ? 7 : 1) : (viewMode === 'week' ? -7 : -1)));
-            }
-            return d;
-        });
-    }, [viewMode]);
+    const navigate = useCallback(
+        (dir: 'prev' | 'next') => {
+            setCurrentDate((prev) => {
+                const d = new Date(prev);
+                if (viewMode === 'month') {
+                    d.setMonth(d.getMonth() + (dir === 'next' ? 1 : -1));
+                } else {
+                    d.setDate(
+                        d.getDate() +
+                            (dir === 'next'
+                                ? viewMode === 'week'
+                                    ? 7
+                                    : 1
+                                : viewMode === 'week'
+                                  ? -7
+                                  : -1),
+                    );
+                }
+                return d;
+            });
+        },
+        [viewMode],
+    );
 
     const navigateToday = useCallback(() => setCurrentDate(new Date()), []);
 
@@ -148,11 +162,12 @@ export function VisitsPage() {
         let list = rangeVisits ?? [];
         if (search) {
             const q = search.toLowerCase();
-            list = list.filter((v) =>
-                v.title.toLowerCase().includes(q) ||
-                v.property_title?.toLowerCase().includes(q) ||
-                v.lead_name?.toLowerCase().includes(q) ||
-                v.agent_name?.toLowerCase().includes(q),
+            list = list.filter(
+                (v) =>
+                    v.title.toLowerCase().includes(q) ||
+                    v.property_title?.toLowerCase().includes(q) ||
+                    v.lead_name?.toLowerCase().includes(q) ||
+                    v.agent_name?.toLowerCase().includes(q),
             );
         }
         if (statusFilter !== 'todos') {
@@ -164,23 +179,29 @@ export function VisitsPage() {
         return list;
     }, [rangeVisits, search, statusFilter, agentFilter]);
 
-    const handleGenerateQr = useCallback(async (visitId: string) => {
-        setGeneratingQr(visitId);
-        try {
-            const res = await fetch(`${supabaseUrl}/functions/v1/qr-checkin`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', authorization: 'Bearer ' + accessToken },
-                body: JSON.stringify({ visit_id: visitId }),
-            });
-            if (!res.ok) throw new Error('Error generando QR');
-            const data = await res.json();
-            setShowQrModal(data.code);
-        } catch {
-            pushToast({ type: 'error', title: 'No se pudo generar QR' });
-        } finally {
-            setGeneratingQr(null);
-        }
-    }, [accessToken]);
+    const handleGenerateQr = useCallback(
+        async (visitId: string) => {
+            setGeneratingQr(visitId);
+            try {
+                const res = await fetch(`${supabaseUrl}/functions/v1/qr-checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        authorization: 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({ visit_id: visitId }),
+                });
+                if (!res.ok) throw new Error('Error generando QR');
+                const data = await res.json();
+                setShowQrModal(data.code);
+            } catch {
+                pushToast({ type: 'error', title: 'No se pudo generar QR' });
+            } finally {
+                setGeneratingQr(null);
+            }
+        },
+        [accessToken],
+    );
 
     const renderMonthView = () => (
         <div className={styles['calendar-month']}>
@@ -198,28 +219,34 @@ export function VisitsPage() {
                             const dayVisits = filteredVisits.filter((v) =>
                                 isSameDay(new Date(v.starts_at), day),
                             );
-                            const isCurrentMonth =
-                                day.getMonth() === currentDate.getMonth();
+                            const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                             const isToday = isSameDay(day, new Date());
                             return (
                                 <div
                                     key={dIdx}
-                                    className={styles['calendar-day'] + (!isCurrentMonth ? ' ' + styles['other-month'] : '') + (isToday ? ' ' + styles['today'] : '')}
+                                    className={
+                                        styles['calendar-day'] +
+                                        (!isCurrentMonth ? ' ' + styles['other-month'] : '') +
+                                        (isToday ? ' ' + styles['today'] : '')
+                                    }
                                 >
-                                    <span className={styles['day-number']}>
-                                        {day.getDate()}
-                                    </span>
+                                    <span className={styles['day-number']}>{day.getDate()}</span>
                                     <div className={styles['day-visits']}>
                                         {dayVisits.slice(0, 3).map((v) => (
                                             <div
                                                 key={v.id}
-                                                className={styles['day-visit-chip'] + ' visit-status-' + v.status}
-                                                 
+                                                className={
+                                                    styles['day-visit-chip'] +
+                                                    ' visit-status-' +
+                                                    v.status
+                                                }
                                             >
                                                 <span className="day-visit-main">
                                                     {v.starts_at && (
                                                         <time>
-                                                            {new Date(v.starts_at).toLocaleTimeString('es-AR', {
+                                                            {new Date(
+                                                                v.starts_at,
+                                                            ).toLocaleTimeString('es-AR', {
                                                                 hour: '2-digit',
                                                                 minute: '2-digit',
                                                             })}
@@ -268,7 +295,10 @@ export function VisitsPage() {
                 {weekDays.map((day, i) => (
                     <div
                         key={i}
-                        className={styles['week-day-header'] + (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')}
+                        className={
+                            styles['week-day-header'] +
+                            (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')
+                        }
                     >
                         <span className={styles['week-day-name']}>
                             {day.toLocaleDateString('es-AR', { weekday: 'short' })}
@@ -285,13 +315,15 @@ export function VisitsPage() {
                     return (
                         <div
                             key={dIdx}
-                            className={styles['week-day-column'] + (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')}
+                            className={
+                                styles['week-day-column'] +
+                                (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')
+                            }
                         >
                             {dayVisits.map((v) => (
                                 <div
                                     key={v.id}
                                     className={styles['week-visit'] + ' visit-status-' + v.status}
-                                     
                                 >
                                     <time>{formatTime(v.starts_at)}</time>
                                     <strong>{v.title}</strong>
@@ -337,13 +369,15 @@ export function VisitsPage() {
                     return (
                         <div
                             key={dIdx}
-                            className={styles['day-column'] + (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')}
+                            className={
+                                styles['day-column'] +
+                                (isSameDay(day, new Date()) ? ' ' + styles['today'] : '')
+                            }
                         >
                             {dayVisits.map((v) => (
                                 <div
                                     key={v.id}
                                     className={styles['day-visit'] + ' visit-status-' + v.status}
-                                     
                                 >
                                     <time>{formatTime(v.starts_at)}</time>
                                     <strong>{v.title}</strong>
@@ -383,7 +417,9 @@ export function VisitsPage() {
                     {VIEW_MODES.map((mode) => (
                         <button
                             key={mode}
-                            className={'btn' + (viewMode === mode ? ' btn--primary' : ' btn--secondary')}
+                            className={
+                                'btn' + (viewMode === mode ? ' btn--primary' : ' btn--secondary')
+                            }
                             onClick={() => setViewMode(mode)}
                         >
                             {mode === 'month' && <Calendar size={16} />}
@@ -405,7 +441,16 @@ export function VisitsPage() {
                                 year: 'numeric',
                             })}
                         {viewMode === 'week' &&
-                            startOfWeek(currentDate).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) + ' - ' + addDays(startOfWeek(currentDate), 6).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            startOfWeek(currentDate).toLocaleDateString('es-AR', {
+                                day: 'numeric',
+                                month: 'short',
+                            }) +
+                                ' - ' +
+                                addDays(startOfWeek(currentDate), 6).toLocaleDateString('es-AR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                })}
                         {viewMode === 'day' &&
                             currentDate.toLocaleDateString('es-AR', {
                                 weekday: 'long',
@@ -435,7 +480,9 @@ export function VisitsPage() {
                     <select
                         className="select"
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.currentTarget.value as 'todos' | VisitStatus)}
+                        onChange={(e) =>
+                            setStatusFilter(e.currentTarget.value as 'todos' | VisitStatus)
+                        }
                     >
                         <option value="todos">Todos los estados</option>
                         {(Object.keys(VISIT_STATUS_LABEL) as VisitStatus[]).map((s) => (
@@ -482,11 +529,20 @@ export function VisitsPage() {
                         </div>
                         <div className="modal-body">
                             {generatingQr === showQrModal ? (
-                                <div className="ml-center"><Loader2 size={32} className="spin" /> Generando QR...</div>
+                                <div className="ml-center">
+                                    <Loader2 size={32} className="spin" /> Generando QR...
+                                </div>
                             ) : (
                                 <div className="qr-display">
-                                    <img src={supabaseUrl + '/functions/v1/qr-checkin/' + showQrModal} alt="QR Check-in" />
-                                    <p className="muted">Escaneá este código en la app del agente</p>
+                                    <img
+                                        src={
+                                            supabaseUrl + '/functions/v1/qr-checkin/' + showQrModal
+                                        }
+                                        alt="QR Check-in"
+                                    />
+                                    <p className="muted">
+                                        Escaneá este código en la app del agente
+                                    </p>
                                 </div>
                             )}
                         </div>

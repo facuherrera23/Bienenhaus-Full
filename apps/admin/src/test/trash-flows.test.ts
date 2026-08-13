@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { from } from './setup';
 import { supabase } from '../lib/supabase';
-import {
-    fetchDeletedLeads,
-    permanentDeleteLead,
-    restoreLead,
-    softDeleteLead,
-} from '../lib/leads';
+import { fetchDeletedLeads, permanentDeleteLead, restoreLead, softDeleteLead } from '../lib/leads';
 import {
     fetchDeletedAgents,
     permanentDeleteAgent,
@@ -24,11 +19,11 @@ import {
     fetchDeletedOwners,
     permanentDeleteActionPlan,
     permanentDeleteOwner,
-
     restoreActionPlan,
     restoreOwner,
     softDeleteActionPlan,
-    softDeleteOwner} from '../lib/owners/owners';
+    softDeleteOwner,
+} from '../lib/owners/owners';
 
 // ============================================================================
 // Helpers (mismo patrón que properties.test.ts: la cadena se construye por
@@ -124,7 +119,9 @@ describe('leads trash flows', () => {
     });
 
     it('fetchDeletedLeads throws on error', async () => {
-        mockFrom({ returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+        mockFrom({
+            returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }),
+        });
         await expect(fetchDeletedLeads()).rejects.toThrow('boom');
     });
 });
@@ -237,7 +234,9 @@ describe('newsletter trash flows', () => {
     });
 
     it('fetchDeletedSubscribers throws on error', async () => {
-        mockFrom({ returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+        mockFrom({
+            returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }),
+        });
         await expect(fetchDeletedSubscribers()).rejects.toThrow('boom');
     });
 });

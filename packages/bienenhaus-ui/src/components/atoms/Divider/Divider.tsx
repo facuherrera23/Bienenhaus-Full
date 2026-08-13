@@ -22,76 +22,76 @@ export type DividerThickness = 'thin' | 'medium' | 'thick';
 export type DividerVariant = 'solid' | 'dashed' | 'dotted';
 
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
-  /** Layout orientation. Default: 'horizontal'. */
-  orientation?: DividerOrientation;
-  /** Line thickness. Default: 'thin'. */
-  thickness?: DividerThickness;
-  /** Border style. Default: 'solid'. */
-  variant?: DividerVariant;
-  /** Optional centered text label that breaks the line in two. */
-  label?: string;
+    /** Layout orientation. Default: 'horizontal'. */
+    orientation?: DividerOrientation;
+    /** Line thickness. Default: 'thin'. */
+    thickness?: DividerThickness;
+    /** Border style. Default: 'solid'. */
+    variant?: DividerVariant;
+    /** Optional centered text label that breaks the line in two. */
+    label?: string;
 }
 
 const ORIENTATION_CLASS: Record<DividerOrientation, string> = {
-  horizontal: styles.horizontal,
-  vertical: styles.vertical,
+    horizontal: styles.horizontal,
+    vertical: styles.vertical,
 };
 
 const THICKNESS_CLASS: Record<DividerThickness, string> = {
-  thin: styles.thin,
-  medium: styles.medium,
-  thick: styles.thick,
+    thin: styles.thin,
+    medium: styles.medium,
+    thick: styles.thick,
 };
 
 const VARIANT_CLASS: Record<DividerVariant, string> = {
-  solid: styles.solid,
-  dashed: styles.dashed,
-  dotted: styles.dotted,
+    solid: styles.solid,
+    dashed: styles.dashed,
+    dotted: styles.dotted,
 };
 
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(
-  (
-    {
-      orientation = 'horizontal',
-      thickness = 'thin',
-      variant = 'solid',
-      label,
-      className,
-      ...props
+    (
+        {
+            orientation = 'horizontal',
+            thickness = 'thin',
+            variant = 'solid',
+            label,
+            className,
+            ...props
+        },
+        ref,
+    ) => {
+        const hasLabel = Boolean(label);
+
+        const classNames = [
+            styles.divider,
+            ORIENTATION_CLASS[orientation],
+            THICKNESS_CLASS[thickness],
+            VARIANT_CLASS[variant],
+            hasLabel && styles.withLabel,
+            className,
+        ]
+            .filter(Boolean)
+            .join(' ');
+
+        return (
+            <div
+                ref={ref}
+                className={classNames}
+                role="separator"
+                aria-orientation={orientation as 'horizontal' | 'vertical'}
+                {...props}
+            >
+                {hasLabel && (
+                    <>
+                        <span className={styles.line} aria-hidden="true" />
+                        <span className={styles.label}>{label}</span>
+                        <span className={styles.line} aria-hidden="true" />
+                    </>
+                )}
+            </div>
+        );
     },
-    ref
-  ) => {
-    const hasLabel = Boolean(label);
-
-    const classNames = [
-      styles.divider,
-      ORIENTATION_CLASS[orientation],
-      THICKNESS_CLASS[thickness],
-      VARIANT_CLASS[variant],
-      hasLabel && styles.withLabel,
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    return (
-      <div
-        ref={ref}
-        className={classNames}
-        role="separator"
-        aria-orientation={orientation as 'horizontal' | 'vertical'}
-        {...props}
-      >
-        {hasLabel && (
-          <>
-            <span className={styles.line} aria-hidden="true" />
-            <span className={styles.label}>{label}</span>
-            <span className={styles.line} aria-hidden="true" />
-          </>
-        )}
-      </div>
-    );
-  }
 );
 
 Divider.displayName = 'Divider';

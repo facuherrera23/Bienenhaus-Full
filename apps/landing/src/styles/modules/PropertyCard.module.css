@@ -14,7 +14,9 @@
 .propertyCard:hover {
     transform: translateY(-8px) scale(1.02);
     border-color: var(--bh-accent);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px var(--bh-accent-glow-soft);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 40px var(--bh-accent-glow-soft);
 }
 
 .cardImageWrapper {
@@ -61,8 +63,15 @@
 }
 
 @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 20px var(--bh-accent-glow-soft); }
-    50% { box-shadow: 0 0 40px var(--bh-accent-glow-soft), 0 0 80px rgba(31, 200, 195, 0.1); }
+    0%,
+    100% {
+        box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+    }
+    50% {
+        box-shadow:
+            0 0 40px var(--bh-accent-glow-soft),
+            0 0 80px rgba(31, 200, 195, 0.1);
+    }
 }
 
 .cardFavorite {
@@ -98,10 +107,19 @@
 }
 
 @keyframes heartBurst {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.6); box-shadow: 0 0 40px rgba(255, 71, 87, 0.4); }
-    60% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.6);
+        box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
+    }
+    60% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .cardBody {

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
         }
 
         const buffer = new Uint8Array(await file.arrayBuffer());
-        
+
         // Upload original
         const path = `chat-files/${channelId}/${Date.now()}-${file.name}`;
         await supabase.storage.from('chat-files').upload(path, buffer, { contentType: file.type });
@@ -45,23 +45,30 @@ Deno.serve(async (req) => {
                 .webp({ quality: 80 })
                 .toBuffer();
             const thumbPath = `chat-files/${channelId}/thumb-${Date.now()}.webp`;
-            await supabase.storage.from('chat-files').upload(thumbPath, thumbBuffer, { contentType: 'image/webp' });
-            thumbnailUrl = supabase.storage.from('chat-files').getPublicUrl(thumbPath).data.publicUrl;
+            await supabase.storage
+                .from('chat-files')
+                .upload(thumbPath, thumbBuffer, { contentType: 'image/webp' });
+            thumbnailUrl = supabase.storage.from('chat-files').getPublicUrl(thumbPath)
+                .data.publicUrl;
         }
 
         const publicUrl = supabase.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
 
         // Insert message
-        const { data: msg } = await supabase.from('chat_messages').insert({
-            channel_id: channelId,
-            sender_id: senderId,
-            content: file.name,
-            message_type: file.type.startsWith('image/') ? 'image' : 'file',
-            file_url: publicUrl,
-            file_name: file.name,
-            file_size: file.size,
-            thumbnail_url: thumbnailUrl,
-        }).select(MESSAGE_SELECT).single();
+        const { data: msg } = await supabase
+            .from('chat_messages')
+            .insert({
+                channel_id: channelId,
+                sender_id: senderId,
+                content: file.name,
+                message_type: file.type.startsWith('image/') ? 'image' : 'file',
+                file_url: publicUrl,
+                file_name: file.name,
+                file_size: file.size,
+                thumbnail_url: thumbnailUrl,
+            })
+            .select(MESSAGE_SELECT)
+            .single();
 
         return jsonResponse(200, msg, req);
     } catch (err) {

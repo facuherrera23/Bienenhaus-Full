@@ -34,29 +34,32 @@ export function usePropertyDraft(propertyId: string | null) {
         }
     }, [propertyId]);
 
-    const saveDraft = useCallback(async (values: Partial<PropertyFormValues>) => {
-        if (!propertyId) return;
-        
-        // Clear existing timeout
-        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    const saveDraft = useCallback(
+        async (values: Partial<PropertyFormValues>) => {
+            if (!propertyId) return;
 
-        // Debounce save
-        saveTimeoutRef.current = setTimeout(async () => {
-            setSaving(true);
-            try {
-                await supabase.from('property_drafts').upsert({
-                    property_id: propertyId,
-                    admin_user_id: (await supabase.auth.getUser()).data.user?.id,
-                    form_values: values,
-                });
-                setLastSaved(new Date());
-            } catch {
-                // Ignore errors
-            } finally {
-                setSaving(false);
-            }
-        }, 2000); // 2 second debounce
-    }, [propertyId]);
+            // Clear existing timeout
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
+            // Debounce save
+            saveTimeoutRef.current = setTimeout(async () => {
+                setSaving(true);
+                try {
+                    await supabase.from('property_drafts').upsert({
+                        property_id: propertyId,
+                        admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+                        form_values: values,
+                    });
+                    setLastSaved(new Date());
+                } catch {
+                    // Ignore errors
+                } finally {
+                    setSaving(false);
+                }
+            }, 2000); // 2 second debounce
+        },
+        [propertyId],
+    );
 
     const clearDraft = useCallback(async () => {
         if (!propertyId) return;

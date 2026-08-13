@@ -26,245 +26,245 @@
  */
 
 .bh-dropdown-root {
-  position: relative;
-  display: inline-block;
-  font-family: var(--bh-font-sans);
-  color: var(--bh-text-primary);
-  vertical-align: middle;
+    position: relative;
+    display: inline-block;
+    font-family: var(--bh-font-sans);
+    color: var(--bh-text-primary);
+    vertical-align: middle;
 }
 
 .inner {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 /* ============================================================
    TRIGGER — toggle button wrapping the trigger node
    ============================================================ */
 .trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--bh-space-2);
-  padding: var(--bh-space-2) var(--bh-space-3);
-  border: 1px solid var(--bh-border-strong);
-  border-radius: var(--bh-radius-md);
-  background-color: transparent;
-  color: var(--bh-text-primary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-medium);
-  line-height: 1;
-  cursor: pointer;
-  outline: none;
-  transition:
-    background-color var(--bh-dur-fast) var(--bh-ease-premium),
-    border-color var(--bh-dur-fast) var(--bh-ease-premium),
-    color var(--bh-dur-fast) var(--bh-ease-premium),
-    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border: 1px solid var(--bh-border-strong);
+    border-radius: var(--bh-radius-md);
+    background-color: transparent;
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    line-height: 1;
+    cursor: pointer;
+    outline: none;
+    transition:
+        background-color var(--bh-dur-fast) var(--bh-ease-premium),
+        border-color var(--bh-dur-fast) var(--bh-ease-premium),
+        color var(--bh-dur-fast) var(--bh-ease-premium),
+        box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .trigger:hover {
-  background-color: var(--bh-bg-hover);
-  border-color: var(--bh-accent);
+    background-color: var(--bh-bg-hover);
+    border-color: var(--bh-accent);
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--bh-accent);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    outline: 2px solid var(--bh-accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--bh-accent-soft);
 }
 
 .triggerLabel {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }
 
 /* Chevron — rotates 180deg when the menu is open */
 .chevron {
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--bh-text-tertiary);
-  transition: transform var(--bh-dur-med) var(--bh-ease-premium);
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--bh-text-tertiary);
+    transition: transform var(--bh-dur-med) var(--bh-ease-premium);
 }
 
 .open .chevron {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
 
 /* ============================================================
    MENU — floating panel, absolutely positioned below the trigger
    ============================================================ */
 .menu {
-  position: absolute;
-  top: calc(100% + var(--bh-space-1));
-  z-index: var(--bh-z-dropdown);
-  min-width: 12rem;
-  max-height: 16rem;
-  overflow-y: auto;
-  margin: 0;
-  padding: var(--bh-space-1);
-  list-style: none;
-  background-color: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-md);
-  box-shadow: var(--bh-shadow-lg);
-  /* Subtle entry animation: opacity + translateY(2px) -> 0 */
-  animation: dropdown-enter var(--bh-dur-fast) var(--bh-ease-premium);
+    position: absolute;
+    top: calc(100% + var(--bh-space-1));
+    z-index: var(--bh-z-dropdown);
+    min-width: 12rem;
+    max-height: 16rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: var(--bh-space-1);
+    list-style: none;
+    background-color: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    box-shadow: var(--bh-shadow-lg);
+    /* Subtle entry animation: opacity + translateY(2px) -> 0 */
+    animation: dropdown-enter var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 /* Align start (default) — left edge flush with the trigger's left edge. */
 .alignStart .menu {
-  left: 0;
+    left: 0;
 }
 
 /* Align end — right edge flush with the trigger's right edge. */
 .alignEnd .menu {
-  right: 0;
+    right: 0;
 }
 
 @keyframes dropdown-enter {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================================
    SEPARATOR — divider entry (role="separator")
    ============================================================ */
 .separator {
-  height: 1px;
-  margin: var(--bh-space-1) var(--bh-space-2);
-  background-color: var(--bh-border);
-  list-style: none;
+    height: 1px;
+    margin: var(--bh-space-1) var(--bh-space-2);
+    background-color: var(--bh-border);
+    list-style: none;
 }
 
 /* ============================================================
    ITEM — menu item (role="menuitem")
    ============================================================ */
 .item {
-  display: flex;
-  align-items: center;
-  gap: var(--bh-space-2);
-  padding: var(--bh-space-2) var(--bh-space-3);
-  border-radius: var(--bh-radius-sm);
-  color: var(--bh-text-primary);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-normal);
-  line-height: var(--bh-leading-snug);
-  cursor: pointer;
-  user-select: none;
-  outline: none;
-  transition:
-    background-color var(--bh-dur-fast) var(--bh-ease-premium),
-    color var(--bh-dur-fast) var(--bh-ease-premium);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-radius: var(--bh-radius-sm);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-normal);
+    line-height: var(--bh-leading-snug);
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition:
+        background-color var(--bh-dur-fast) var(--bh-ease-premium),
+        color var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .item:hover {
-  background-color: var(--bh-bg-hover);
-  color: var(--bh-text-primary);
+    background-color: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
 }
 
 /* Keyboard-active (roving tabindex focus) — accent-soft tint + accent text */
 .itemActive,
 .itemActive:hover {
-  background-color: var(--bh-accent-soft);
-  color: var(--bh-accent);
+    background-color: var(--bh-accent-soft);
+    color: var(--bh-accent);
 }
 
 .item:focus-visible {
-  outline: 2px solid var(--bh-accent);
-  outline-offset: -2px;
+    outline: 2px solid var(--bh-accent);
+    outline-offset: -2px;
 }
 
 /* ============================================================
    ITEM — DANGER variant
    ============================================================ */
 .itemDanger {
-  color: var(--bh-danger);
+    color: var(--bh-danger);
 }
 
 .itemDanger:hover {
-  background-color: var(--bh-danger-soft);
-  color: var(--bh-danger);
+    background-color: var(--bh-danger-soft);
+    color: var(--bh-danger);
 }
 
 .itemDanger.itemActive,
 .itemDanger.itemActive:hover {
-  background-color: var(--bh-danger-soft);
-  color: var(--bh-danger);
+    background-color: var(--bh-danger-soft);
+    color: var(--bh-danger);
 }
 
 /* ============================================================
    ITEM — DISABLED
    ============================================================ */
 .itemDisabled {
-  color: var(--bh-text-disabled);
-  cursor: not-allowed;
-  pointer-events: none;
+    color: var(--bh-text-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .itemDisabled:hover {
-  background-color: transparent;
-  color: var(--bh-text-disabled);
+    background-color: transparent;
+    color: var(--bh-text-disabled);
 }
 
 /* ============================================================
    ITEM ICON — leading slot (16px, muted)
    ============================================================ */
 .itemIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--bh-text-tertiary);
-  line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--bh-text-tertiary);
+    line-height: 1;
 }
 
 .itemIcon svg {
-  width: 16px;
-  height: 16px;
-  display: block;
+    width: 16px;
+    height: 16px;
+    display: block;
 }
 
 /* Danger items tint their icon danger too. */
 .itemDanger .itemIcon {
-  color: var(--bh-danger);
+    color: var(--bh-danger);
 }
 
 .itemLabel {
-  flex: 1 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ============================================================
    CUSTOM CONTENT — `children` escape hatch
    ============================================================ */
 .customContent {
-  list-style: none;
+    list-style: none;
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .trigger,
-  .item {
-    transition: none;
-  }
+    .trigger,
+    .item {
+        transition: none;
+    }
 
-  .chevron {
-    transition: none;
-  }
+    .chevron {
+        transition: none;
+    }
 
-  .menu {
-    animation: none;
-  }
+    .menu {
+        animation: none;
+    }
 }

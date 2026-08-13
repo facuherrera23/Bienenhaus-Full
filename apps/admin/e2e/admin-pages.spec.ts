@@ -51,7 +51,9 @@ test.describe('Agentes - listado con lead_count', () => {
         );
 
         // Esperar a que aparezcan las tarjetas de agentes
-        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, { timeout: 30000 });
+        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, {
+            timeout: 30000,
+        });
     });
 });
 

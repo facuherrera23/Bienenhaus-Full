@@ -62,6 +62,15 @@ tsc-current.txt
 build_output.txt
 src.zip
 *.src.zip
+*_output.txt
+*_out.txt
+*-output.txt
+*-out.txt
+admin-ts-errors.txt
+typecheck_out.txt
+tests_output.txt
+test-output.txt
+test_output.txt
 
 # Dev server diagnostic logs
 .admin-diag-*.err

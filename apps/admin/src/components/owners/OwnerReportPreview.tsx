@@ -1,7 +1,6 @@
 import { Download, FileText, Mail, MessageSquare, X } from 'lucide-preact';
-import { REPORT_TYPE_LABEL , type ReportRow } from '../../types/owners';
+import { REPORT_TYPE_LABEL, type ReportRow } from '../../types/owners';
 import styles from './OwnerReportPreview.module.css';
-
 
 interface OwnerReportPreviewProps {
     report: ReportRow;

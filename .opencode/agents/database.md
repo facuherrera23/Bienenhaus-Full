@@ -4,17 +4,18 @@ mode: subagent
 model: opencode/nemotron-3-ultra-free
 temperature: 0.1
 permission:
-  edit: deny
-  bash:
-    "*": allow
-    "git push*": ask
-    "git reset*": ask
-    "supabase db reset*": ask
-    "supabase db push*": ask
-    "supabase migration*": allow
-    "supabase db diff*": allow
-  webfetch: allow
+    edit: deny
+    bash:
+        '*': allow
+        'git push*': ask
+        'git reset*': ask
+        'supabase db reset*': ask
+        'supabase db push*': ask
+        'supabase migration*': allow
+        'supabase db diff*': allow
+    webfetch: allow
 ---
+
 You are the **database** agent for Bienenhaus. PostgreSQL 17 via Supabase is your domain.
 
 ## Your tools

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '@bienenhaus/supabase';
 import {
     type AgentAvailability,
     type AgentCommission,
@@ -6,11 +6,11 @@ import {
     type AgentPermissions,
     type AgentRow,
     type AgentSchedule,
-
     DAY_LABELS,
     DEFAULT_COMMISSION,
     DEFAULT_PERMISSIONS,
-    DEFAULT_SCHEDULE} from '../types/agents';
+    DEFAULT_SCHEDULE,
+} from '../types/agents';
 import type { Database } from '../types/database';
 
 // ============================================================
@@ -64,13 +64,9 @@ export function toRow(a: AgentApiRow): AgentRow {
         a.social && typeof a.social === 'object' ? (a.social as Record<string, unknown>) : {};
 
     const permissions =
-        a.permissions && typeof a.permissions === 'object'
-            ? a.permissions
-            : DEFAULT_PERMISSIONS;
+        a.permissions && typeof a.permissions === 'object' ? a.permissions : DEFAULT_PERMISSIONS;
     const commission =
-        a.commission && typeof a.commission === 'object'
-            ? a.commission
-            : DEFAULT_COMMISSION;
+        a.commission && typeof a.commission === 'object' ? a.commission : DEFAULT_COMMISSION;
     const schedule = Array.isArray(a.schedule) ? a.schedule : DEFAULT_SCHEDULE;
 
     return {

@@ -1,5 +1,5 @@
 import { queryKeys, useCreate, useDelete, useItem, useList, useMutation, useUpdate } from './api';
-import { type AdminRole, type AdminUserRow , ROLE_LABEL, ROLE_TONE } from '../types/admin';
+import { type AdminRole, type AdminUserRow, ROLE_LABEL, ROLE_TONE } from '../types/admin';
 import {
     deleteAdminUser,
     fetchAdminUser,
@@ -151,7 +151,7 @@ export function useRemoveAdminUser() {
 export function useUpdateAdminLastLogin() {
     return useMutation({
         mutationFn: async (userId: string) => {
-            return updateAdminLastLogin(userId);
+            return updateAdminLastLogin(userId, '2024-01-01T00:00:00Z');
         },
     });
 }
@@ -182,8 +182,8 @@ export function useHasRole() {
 
 export function useSyncAdminUserWithAuth() {
     return useMutation({
-        mutationFn: async (userId: string) => {
-            return syncAdminUserWithAuth(userId);
+        mutationFn: async () => {
+            return syncAdminUserWithAuth();
         },
     });
 }

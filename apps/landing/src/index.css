@@ -3,7 +3,7 @@
  * Imports unified design tokens and CSS Modules
  */
 @import '@bienenhaus/ui/tokens.css';
-@import './styles/modules/animations.module.css';  /* ✅ NUEVO: Animaciones globales */
+@import './styles/modules/animations.module.css'; /* ✅ NUEVO: Animaciones globales */
 @import './styles/modules/GlobalStyles.module.css';
 @import './styles/modules/Navbar.module.css';
 @import './styles/modules/Hero.module.css';
@@ -17,4 +17,4 @@
 @import './styles/modules/Contact.module.css';
 @import './styles/modules/Footer.module.css';
 @import './styles/modules/TransitionStrip.module.css';
-@import './styles/modules/VideoModal.module.css';  /* ✅ NUEVO: Video modal */
+@import './styles/modules/VideoModal.module.css'; /* ✅ NUEVO: Video modal */

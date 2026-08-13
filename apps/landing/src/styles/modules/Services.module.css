@@ -39,11 +39,7 @@
     left: -30%;
     width: 500px;
     height: 500px;
-    background: radial-gradient(
-        circle,
-        rgba(31, 200, 195, 0.03) 0%,
-        transparent 70%
-    );
+    background: radial-gradient(circle, rgba(31, 200, 195, 0.03) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -158,12 +154,24 @@
 }
 
 /* Stagger delays para cada card */
-.serviceCard:nth-child(1) { transition-delay: 0ms; }
-.serviceCard:nth-child(2) { transition-delay: 100ms; }
-.serviceCard:nth-child(3) { transition-delay: 200ms; }
-.serviceCard:nth-child(4) { transition-delay: 300ms; }
-.serviceCard:nth-child(5) { transition-delay: 400ms; }
-.serviceCard:nth-child(6) { transition-delay: 500ms; }
+.serviceCard:nth-child(1) {
+    transition-delay: 0ms;
+}
+.serviceCard:nth-child(2) {
+    transition-delay: 100ms;
+}
+.serviceCard:nth-child(3) {
+    transition-delay: 200ms;
+}
+.serviceCard:nth-child(4) {
+    transition-delay: 300ms;
+}
+.serviceCard:nth-child(5) {
+    transition-delay: 400ms;
+}
+.serviceCard:nth-child(6) {
+    transition-delay: 500ms;
+}
 
 .serviceCard.visible {
     opacity: 1;
@@ -173,7 +181,7 @@
 .serviceCard:hover {
     transform: translateY(-8px) scale(1.01);
     border-color: var(--bh-accent);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.3),
         0 0 40px var(--bh-accent-glow-soft);
 }
@@ -219,7 +227,7 @@
 
 .serviceCard:hover::after {
     border-color: var(--bh-accent);
-    box-shadow: 
+    box-shadow:
         0 0 30px var(--bh-accent-glow-soft),
         inset 0 0 30px rgba(31, 200, 195, 0.03);
 }

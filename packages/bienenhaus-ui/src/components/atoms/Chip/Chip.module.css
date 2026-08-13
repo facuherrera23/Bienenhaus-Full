@@ -8,20 +8,20 @@
  */
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--bh-space-1);
-  padding: var(--bh-space-1) var(--bh-space-2);
-  border: 1px solid transparent;
-  border-radius: var(--bh-radius-full);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-medium);
-  line-height: 1;
-  white-space: nowrap;
-  vertical-align: middle;
-  cursor: default;
-  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--bh-radius-full);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: default;
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 /* ============================================================
@@ -30,92 +30,92 @@
 
 /* Default — soft accent background, accent text */
 .default {
-  background-color: var(--bh-accent-soft);
-  color: var(--bh-accent);
+    background-color: var(--bh-accent-soft);
+    color: var(--bh-accent);
 }
 
 /* Outline — transparent background, subtle border, secondary text */
 .outline {
-  background-color: transparent;
-  border-color: var(--bh-border);
-  color: var(--bh-text-secondary);
+    background-color: transparent;
+    border-color: var(--bh-border);
+    color: var(--bh-text-secondary);
 }
 
 /* ============================================================
    REMOVABLE — tighter right padding, the close button fills the gap
    ============================================================ */
 .removable {
-  padding-right: var(--bh-space-1);
-  cursor: pointer;
+    padding-right: var(--bh-space-1);
+    cursor: pointer;
 }
 
 /* ============================================================
    ICON — leading node, fixed 14×14, never shrinks
    ============================================================ */
 .icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  line-height: 1;
-  pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 /* ============================================================
    LABEL — text node wrapper
    ============================================================ */
 .label {
-  display: inline-block;
+    display: inline-block;
 }
 
 /* ============================================================
    CLOSE BUTTON — 18×18 round, inherits color, hover bg
    ============================================================ */
 .close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: none;
-  border-radius: var(--bh-radius-full);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: var(--bh-radius-full);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .close:hover {
-  background-color: var(--bh-bg-hover);
+    background-color: var(--bh-bg-hover);
 }
 
 .close:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 2px);
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 2px);
 }
 
 .close svg {
-  width: 10px;
-  height: 10px;
-  display: block;
+    width: 10px;
+    height: 10px;
+    display: block;
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .chip,
-  .close {
-    transition: none;
-  }
+    .chip,
+    .close {
+        transition: none;
+    }
 }

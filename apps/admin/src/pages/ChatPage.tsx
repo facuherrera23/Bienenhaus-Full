@@ -37,6 +37,7 @@ import {
     sendMessage,
     subscribeToChannelMessages,
 } from '../lib/chat';
+import { useAskAiAssistant } from '../lib/chat.api';
 import { fetchAgents } from '../lib/agents';
 import { fetchProperties } from '../lib/properties';
 import { fetchLeads } from '../lib/leads';
@@ -62,6 +63,8 @@ export function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);
     const [sending, setSending] = useState(false);
+    const [aiThinking, setAiThinking] = useState(false);
+    const askAiAssistantMutation = useAskAiAssistant();
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -89,10 +92,21 @@ export function ChatPage() {
         [channels, selectedChannelId],
     );
 
+    const aiParticipant = useMemo(
+        () => activeChannel?.participants.find((p) => p.is_ai) ?? null,
+        [activeChannel],
+    );
+
+    useEffect(() => {
+        setAiThinking(false);
+    }, [selectedChannelId, aiParticipant?.agent_id]);
+
     const { data: messages, isPending: messagesPending } = useQuery({
         queryKey: ['chat-messages', selectedChannelId],
         queryFn: () =>
-            selectedChannelId ? fetchMessages(selectedChannelId, undefined, 100) : Promise.resolve([]),
+            selectedChannelId
+                ? fetchMessages(selectedChannelId, undefined, 100)
+                : Promise.resolve([]),
         enabled: !!selectedChannelId,
     });
 
@@ -114,6 +128,9 @@ export function ChatPage() {
                     if (old.some((m) => m.id === msg.id)) return old;
                     return [...old, msg];
                 });
+                if (aiParticipant && msg.sender_id === aiParticipant.agent_id) {
+                    setAiThinking(false);
+                }
                 scrollToBottom();
             },
             (msg) => {
@@ -130,7 +147,7 @@ export function ChatPage() {
             },
         );
         return unsubscribe;
-    }, [selectedChannelId]);
+    }, [selectedChannelId, aiParticipant]);
 
     const handleSend = async (e: Event) => {
         e.preventDefault();
@@ -138,9 +155,26 @@ export function ChatPage() {
 
         setSending(true);
         try {
-            await sendMessage(selectedChannelId, currentUserId!, messageText.trim());
+            const sent = await sendMessage(selectedChannelId, currentUserId!, messageText.trim());
             setMessageText('');
             scrollToBottom();
+
+            if (aiParticipant) {
+                setAiThinking(true);
+                askAiAssistantMutation.mutate(
+                    { channelId: selectedChannelId, messageId: sent.id },
+                    {
+                        onError: (err) => {
+                            setAiThinking(false);
+                            pushToast({
+                                type: 'error',
+                                title: 'No se pudo consultar al asistente',
+                                description: (err as Error).message,
+                            });
+                        },
+                    },
+                );
+            }
         } catch (err) {
             pushToast({
                 type: 'error',
@@ -538,9 +572,16 @@ export function ChatPage() {
                                             const isEditing = editingMessageId === msg.id;
                                             const showActions = isOwn && !isEditing;
                                             return (
-                                                <div key={msg.id} className={styles['message-group']}>
+                                                <div
+                                                    key={msg.id}
+                                                    className={styles['message-group']}
+                                                >
                                                     {showDate && (
-                                                        <div className={styles['message-date-divider']}>
+                                                        <div
+                                                            className={
+                                                                styles['message-date-divider']
+                                                            }
+                                                        >
                                                             {formatDate(msg.created_at)}
                                                         </div>
                                                     )}
@@ -548,7 +589,9 @@ export function ChatPage() {
                                                         className={`${styles.message}${isOwn ? ` ${styles.own}` : ''}`}
                                                     >
                                                         {!isOwn && (
-                                                            <div className={styles['message-avatar']}>
+                                                            <div
+                                                                className={styles['message-avatar']}
+                                                            >
                                                                 {msg.sender_photo_url ? (
                                                                     <img
                                                                         src={msg.sender_photo_url}
@@ -562,19 +605,39 @@ export function ChatPage() {
                                                             </div>
                                                         )}
                                                         <div className={styles['message-content']}>
-                                                            <div className={styles['message-header']}>
+                                                            <div
+                                                                className={styles['message-header']}
+                                                            >
                                                                 {!isOwn && (
-                                                                    <span className={styles['message-sender']}>
+                                                                    <span
+                                                                        className={
+                                                                            styles['message-sender']
+                                                                        }
+                                                                    >
                                                                         {msg.sender_name}
                                                                     </span>
                                                                 )}
-                                                                <span className={styles['message-time']}>
+                                                                <span
+                                                                    className={
+                                                                        styles['message-time']
+                                                                    }
+                                                                >
                                                                     {formatTime(msg.created_at)}
                                                                 </span>
                                                                 {showActions && (
-                                                                    <div className={styles['message-actions']}>
+                                                                    <div
+                                                                        className={
+                                                                            styles[
+                                                                                'message-actions'
+                                                                            ]
+                                                                        }
+                                                                    >
                                                                         <button
-                                                                            className={styles['icon-btn-sm']}
+                                                                            className={
+                                                                                styles[
+                                                                                    'icon-btn-sm'
+                                                                                ]
+                                                                            }
                                                                             title="Responder"
                                                                             onClick={() =>
                                                                                 startReply(msg)
@@ -583,7 +646,11 @@ export function ChatPage() {
                                                                             <Reply size={14} />
                                                                         </button>
                                                                         <button
-                                                                            className={styles['icon-btn-sm']}
+                                                                            className={
+                                                                                styles[
+                                                                                    'icon-btn-sm'
+                                                                                ]
+                                                                            }
                                                                             title="Editar"
                                                                             onClick={() =>
                                                                                 startEdit(msg)
@@ -594,14 +661,20 @@ export function ChatPage() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <div className={styles['message-bubble']}>
+                                                            <div
+                                                                className={styles['message-bubble']}
+                                                            >
                                                                 {msg.message_type === 'image' &&
                                                                     msg.file_url && (
                                                                         <a
                                                                             href={msg.file_url}
                                                                             target="_blank"
                                                                             rel="noopener"
-                                                                            className={styles['message-image']}
+                                                                            className={
+                                                                                styles[
+                                                                                    'message-image'
+                                                                                ]
+                                                                            }
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
                                                                                 openImageLightbox(
@@ -627,7 +700,11 @@ export function ChatPage() {
                                                                             href={msg.file_url}
                                                                             target="_blank"
                                                                             rel="noopener"
-                                                                            className={styles['message-file']}
+                                                                            className={
+                                                                                styles[
+                                                                                    'message-file'
+                                                                                ]
+                                                                            }
                                                                         >
                                                                             <Paperclip size={18} />{' '}
                                                                             {msg.file_name}
@@ -650,24 +727,50 @@ export function ChatPage() {
                                                                                 cancelEdit();
                                                                         }}
                                                                         autoFocus
-                                                                        className={styles['edit-input']}
+                                                                        className={
+                                                                            styles['edit-input']
+                                                                        }
                                                                     />
                                                                 ) : (
                                                                     <>
                                                                         {msg.content && (
-                                                                            <div className={styles['message-text']}>
+                                                                            <div
+                                                                                className={
+                                                                                    styles[
+                                                                                        'message-text'
+                                                                                    ]
+                                                                                }
+                                                                            >
                                                                                 {msg.content}
                                                                             </div>
                                                                         )}
                                                                         {msg.reply_to && (
-                                                                            <div className={styles['message-reply']}>
-                                                                                <span className={styles['reply-sender']}>
+                                                                            <div
+                                                                                className={
+                                                                                    styles[
+                                                                                        'message-reply'
+                                                                                    ]
+                                                                                }
+                                                                            >
+                                                                                <span
+                                                                                    className={
+                                                                                        styles[
+                                                                                            'reply-sender'
+                                                                                        ]
+                                                                                    }
+                                                                                >
                                                                                     {
                                                                                         msg.reply_to
                                                                                             .sender_name
                                                                                     }
                                                                                 </span>
-                                                                                <span className={styles['reply-text']}>
+                                                                                <span
+                                                                                    className={
+                                                                                        styles[
+                                                                                            'reply-text'
+                                                                                        ]
+                                                                                    }
+                                                                                >
                                                                                     {
                                                                                         msg.reply_to
                                                                                             .content
@@ -678,7 +781,9 @@ export function ChatPage() {
                                                                     </>
                                                                 )}
                                                             </div>
-                                                            <div className={styles['message-status']}>
+                                                            <div
+                                                                className={styles['message-status']}
+                                                            >
                                                                 {isOwn && (
                                                                     <>
                                                                         <Check
@@ -703,7 +808,9 @@ export function ChatPage() {
                                                                                 0 && (
                                                                                 <CheckCheck
                                                                                     size={14}
-                                                                                    className={styles.read}
+                                                                                    className={
+                                                                                        styles.read
+                                                                                    }
                                                                                     title="Leído"
                                                                                 />
                                                                             )}
@@ -712,7 +819,11 @@ export function ChatPage() {
                                                                 {!isOwn &&
                                                                     replyingToId === msg.id && (
                                                                         <button
-                                                                            className={styles['icon-btn-sm']}
+                                                                            className={
+                                                                                styles[
+                                                                                    'icon-btn-sm'
+                                                                                ]
+                                                                            }
                                                                             onClick={cancelReply}
                                                                             title="Cancelar respuesta"
                                                                         >
@@ -725,6 +836,16 @@ export function ChatPage() {
                                                 </div>
                                             );
                                         })}
+                                        {aiThinking && (
+                                            <div
+                                                className={styles['ai-typing']}
+                                                role="status"
+                                                aria-label="El asistente IA está escribiendo"
+                                            >
+                                                <Loader2 size={14} className="spin" />
+                                                <span>Asistente escribiendo…</span>
+                                            </div>
+                                        )}
                                         <div ref={messagesEndRef} />
                                     </>
                                 )}
@@ -905,7 +1026,9 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className={styles['agent-avatar-small']}>
+                                                        <span
+                                                            className={styles['agent-avatar-small']}
+                                                        >
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (
@@ -956,7 +1079,9 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className={styles['agent-avatar-small']}>
+                                                        <span
+                                                            className={styles['agent-avatar-small']}
+                                                        >
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (
@@ -1007,7 +1132,9 @@ export function ChatPage() {
                                                             )}
                                                             onChange={() => toggleAgent(agent.id)}
                                                         />
-                                                        <span className={styles['agent-avatar-small']}>
+                                                        <span
+                                                            className={styles['agent-avatar-small']}
+                                                        >
                                                             {agent.photo_url ? (
                                                                 <img src={agent.photo_url} alt="" />
                                                             ) : (

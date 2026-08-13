@@ -88,7 +88,7 @@ landing/
 ├── supabase/
 │   ├── config.toml           # Config local (ports, auth, realtime, storage, MFA)
 │   ├── seed.sql              # Seed PRODUCTION-READY (taxonomías + site settings, SIN datos demo)
-│   ├── migrations/           # 60 migraciones SQL (0001_foundation → 0061_combined_security_hardening)
+│   ├── migrations/           # 61 migraciones SQL (0001_foundation → 0062_chat_ai_assistant)
 │   │   ├── 0001_foundation.sql            # Schema base + enums + taxonomías
 │   │   ├── 0002_admin_auth.sql            # Tabla admin_users + roles
 │   │   ├── 0003_taxonomies.sql            # categories, property_types, locations, features
@@ -147,10 +147,12 @@ landing/
 │   │   ├── 0058_property_drafts.sql       # property_drafts (borradores de propiedades)
 │   │   ├── 0059_ml_production_hardening.sql
 │   │   ├── 0060_ml_connection_client_credentials.sql # client_id/secret cifrados en ml_connection
-│   │   └── 0061_combined_security_hardening.sql # RLS en tablas Tasar + retención + i18n
-│   ├── functions/            # 17 Edge Functions (Deno 2)
+│   │   ├── 0061_combined_security_hardening.sql # RLS en tablas Tasar + retención + i18n
+│   │   └── 0062_chat_ai_assistant.sql # Agente IA del chat (is_ai + seed Asistente BIENENHAUS)
+│   ├── functions/            # 18 Edge Functions (Deno 2)
 │   │   ├── admin-user-invite/          # Invitar/reset/remove admin users
 │   │   ├── audit-log/                  # Log de acciones de staff
+│   │   ├── chat-ai/                    # Asistente IA del chat interno (Gemini Flash)
 │   │   ├── chat-upload/                # Upload de adjuntos del chat interno
 │   │   ├── contact-submit/             # Formulario contacto landing (rate-limit + emails Resend)
 │   │   ├── convert-image/              # Conversión/optimización de imágenes (WebP)
@@ -188,34 +190,34 @@ landing/
 
 ### Frontend
 
-| Tecnología              | Versión          | Uso                                                       |
-| ----------------------- | ---------------- | --------------------------------------------------------- |
-| **Preact**              | 10.26+           | UI library (similar a React, 3kb)                         |
-| **Vite**                | 7.x              | Bundler + dev server                                      |
-| **TypeScript**          | 5.8+             | Tipado estático estricto                                  |
-| **Wouter (preact)**     | 3.10+            | Router minimalista (hash routing en admin)                |
-| **TanStack Query**      | 5.x              | Server state, caching, invalidation (admin)               |
-| **preact-signals**      | 2.x              | Reactive state global (store)                             |
-| **Lucide Preact**       | 1.28+            | Iconos SVG                                                |
-| **Recharts**            | 3.10+            | Gráficos dashboard                                        |
-| **Leaflet**             | 1.9+             | Mapas interactivos (módulo Tasar)                         |
-| **React Hook Form**     | 7.84+            | Formularios (Tasar, OwnerForm) + resolvers Zod            |
-| **Zod**                 | 3.24+            | Validación de esquemas (tipos derivados)                  |
-| **Sentry**              | 10.x (@sentry/browser) | Monitoreo de errores del admin (tracing + replay)    |
-| **browser-image-compression** | 2.x        | Compresión de imágenes en cliente (Tasar)                 |
-| **CSS Modules**         | -                | Estilos scoped + design tokens (`@bienenhaus/ui/tokens.css`) |
+| Tecnología                    | Versión                | Uso                                                          |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------ |
+| **Preact**                    | 10.26+                 | UI library (similar a React, 3kb)                            |
+| **Vite**                      | 7.x                    | Bundler + dev server                                         |
+| **TypeScript**                | 5.8+                   | Tipado estático estricto                                     |
+| **Wouter (preact)**           | 3.10+                  | Router minimalista (hash routing en admin)                   |
+| **TanStack Query**            | 5.x                    | Server state, caching, invalidation (admin)                  |
+| **preact-signals**            | 2.x                    | Reactive state global (store)                                |
+| **Lucide Preact**             | 1.28+                  | Iconos SVG                                                   |
+| **Recharts**                  | 3.10+                  | Gráficos dashboard                                           |
+| **Leaflet**                   | 1.9+                   | Mapas interactivos (módulo Tasar)                            |
+| **React Hook Form**           | 7.84+                  | Formularios (Tasar, OwnerForm) + resolvers Zod               |
+| **Zod**                       | 3.24+                  | Validación de esquemas (tipos derivados)                     |
+| **Sentry**                    | 10.x (@sentry/browser) | Monitoreo de errores del admin (tracing + replay)            |
+| **browser-image-compression** | 2.x                    | Compresión de imágenes en cliente (Tasar)                    |
+| **CSS Modules**               | -                      | Estilos scoped + design tokens (`@bienenhaus/ui/tokens.css`) |
 
 ### Backend / Infraestructura
 
-| Tecnología         | Versión | Uso                                                       |
-| ------------------ | ------- | --------------------------------------------------------- |
-| **Supabase**       | 2.x     | Postgres + Auth + Realtime + Storage + Edge Functions     |
-| **PostgreSQL**     | 17      | Base de datos principal                                   |
-| **PostgREST**      | -       | API REST auto-generada                                    |
-| **Realtime**       | -       | WebSockets para chat/visitas/agentes                      |
-| **Storage**        | -       | Buckets: property-images, agent-photos, site-images, chat-files |
-| **Edge Functions** | Deno 2  | 17 funciones (webhooks ML, OAuth, sync, visitas, contact, chat, retention) |
-| **Deno**           | 2       | Runtime edge functions                                    |
+| Tecnología         | Versión | Uso                                                                        |
+| ------------------ | ------- | -------------------------------------------------------------------------- |
+| **Supabase**       | 2.x     | Postgres + Auth + Realtime + Storage + Edge Functions                      |
+| **PostgreSQL**     | 17      | Base de datos principal                                                    |
+| **PostgREST**      | -       | API REST auto-generada                                                     |
+| **Realtime**       | -       | WebSockets para chat/visitas/agentes                                       |
+| **Storage**        | -       | Buckets: property-images, agent-photos, site-images, chat-files            |
+| **Edge Functions** | Deno 2  | 18 funciones (webhooks ML, OAuth, sync, visitas, contact, chat, retention, asistente IA) |
+| **Deno**           | 2       | Runtime edge functions                                                     |
 
 ### Base de Datos (PostgreSQL 17)
 
@@ -282,7 +284,7 @@ corepack pnpm dlx supabase db reset
 npx supabase db reset
 ```
 
-Ejecuta las **60 migraciones** + `seed.sql`.
+Ejecuta las **61 migraciones** + `seed.sql`.
 
 > **Seed production-ready**: el seed NO incluye datos demo. Solo crea taxonomías
 > (categorías, tipos de propiedad, ubicaciones, features, tags) y el contenido
@@ -340,17 +342,21 @@ Copiar el `.env.example` correspondiente y completar:
 
 Copiar `supabase/functions/.env.example` → `supabase/functions/.env` y completar:
 
-| Variable           | Descripción                                               | Requerida |
-| ------------------ | --------------------------------------------------------- | --------- |
-| `CRYPTO_SECRET`    | Clave AES-256-GCM para cifrar tokens ML                   | ✅        |
-| `ML_CLIENT_ID`     | Client ID app Mercado Libre                               | ✅        |
-| `ML_CLIENT_SECRET` | Client Secret app Mercado Libre                           | ✅        |
-| `ML_SYNC_SECRET`   | Secret compartido para invocar ml-sync                    | No        |
-| `ADMIN_BASE_URL`   | Base URL admin para redirect OAuth                        | No        |
-| `RESEND_API_KEY`   | API key de Resend para `contact-submit` (emails de consultas) | No*    |
+| Variable           | Descripción                                                   | Requerida |
+| ------------------ | ------------------------------------------------------------- | --------- |
+| `CRYPTO_SECRET`    | Clave AES-256-GCM para cifrar tokens ML                       | ✅        |
+| `ML_CLIENT_ID`     | Client ID app Mercado Libre                                   | ✅        |
+| `ML_CLIENT_SECRET` | Client Secret app Mercado Libre                               | ✅        |
+| `ML_SYNC_SECRET`   | Secret compartido para invocar ml-sync                        | No        |
+| `ADMIN_BASE_URL`   | Base URL admin para redirect OAuth                            | No        |
+| `RESEND_API_KEY`   | API key de Resend para `contact-submit` (emails de consultas) | No*       |
+| `GEMINI_API_KEY`   | API key de Google AI Studio para `chat-ai` (asistente IA del chat) | No*   |
 
 > *Sin `RESEND_API_KEY` la función `contact-submit` guarda el lead pero los
 > emails de consulta fallan en silencio.
+>
+> *Sin `GEMINI_API_KEY` el endpoint `chat-ai` responde 503 ("Asistente IA no
+> configurado") y el chat funciona normalmente sin el asistente.
 
 ### Demo Server (scripts/serve.mjs)
 
@@ -405,32 +411,32 @@ pnpm dev:admin
 
 ### Root (`package.json`)
 
-| Script           | Descripción                                                |
-| ---------------- | ---------------------------------------------------------- |
-| `pnpm dev`       | Levanta landing en dev (puerto 5173)                       |
-| `pnpm dev:admin` | Levanta admin en dev (puerto 5174)                         |
-| `pnpm build`     | Build todas las apps (`pnpm -r build`)                     |
-| `pnpm demo`      | Inicia demo server single-port (`node scripts/serve.mjs`)  |
-| `pnpm typecheck` | Typecheck todas las apps (`pnpm -r typecheck`)             |
-| `pnpm test`      | Tests unitarios (`pnpm -r test`)                           |
-| `pnpm test:coverage` | Tests unitarios con cobertura (admin)                  |
-| `pnpm test:e2e`  | Tests E2E Playwright (admin)                               |
-| `pnpm format`    | Prettier en todo el repo                                   |
+| Script               | Descripción                                               |
+| -------------------- | --------------------------------------------------------- |
+| `pnpm dev`           | Levanta landing en dev (puerto 5173)                      |
+| `pnpm dev:admin`     | Levanta admin en dev (puerto 5174)                        |
+| `pnpm build`         | Build todas las apps (`pnpm -r build`)                    |
+| `pnpm demo`          | Inicia demo server single-port (`node scripts/serve.mjs`) |
+| `pnpm typecheck`     | Typecheck todas las apps (`pnpm -r typecheck`)            |
+| `pnpm test`          | Tests unitarios (`pnpm -r test`)                          |
+| `pnpm test:coverage` | Tests unitarios con cobertura (admin)                     |
+| `pnpm test:e2e`      | Tests E2E Playwright (admin)                              |
+| `pnpm format`        | Prettier en todo el repo                                  |
 
 ### Apps (`apps/landing/package.json`, `apps/admin/package.json`)
 
-| Script              | Descripción                       |
-| ------------------- | --------------------------------- |
-| `pnpm dev`          | `vite` (dev server + HMR)         |
-| `pnpm build`        | `tsc --noEmit && vite build`      |
-| `pnpm preview`      | `vite preview`                    |
-| `pnpm typecheck`    | `tsc --noEmit`                    |
-| `pnpm test`         | `vitest run` (admin)              |
-| `pnpm test:watch`   | `vitest` (admin)                  |
-| `pnpm test:ui`      | `vitest --ui` (admin)             |
-| `pnpm test:coverage`| `vitest run --coverage` (admin)   |
+| Script                  | Descripción                                                |
+| ----------------------- | ---------------------------------------------------------- |
+| `pnpm dev`              | `vite` (dev server + HMR)                                  |
+| `pnpm build`            | `tsc --noEmit && vite build`                               |
+| `pnpm preview`          | `vite preview`                                             |
+| `pnpm typecheck`        | `tsc --noEmit`                                             |
+| `pnpm test`             | `vitest run` (admin)                                       |
+| `pnpm test:watch`       | `vitest` (admin)                                           |
+| `pnpm test:ui`          | `vitest --ui` (admin)                                      |
+| `pnpm test:coverage`    | `vitest run --coverage` (admin)                            |
 | `pnpm test:integration` | `vitest run --config vitest.integration.config.ts` (admin) |
-| `pnpm test:e2e`     | `playwright test` (admin)         |
+| `pnpm test:e2e`         | `playwright test` (admin)                                  |
 
 ### Supabase CLI
 
@@ -461,40 +467,40 @@ pnpm dev:admin
 
 ### Migraciones
 
-- Ubicación: `supabase/migrations/*.sql` (**60 archivos**, numerados 0001–0061)
+- Ubicación: `supabase/migrations/*.sql` (**61 archivos**, numerados 0001–0062)
 - Naming: `NNNN_descripcion_corta.sql`
 - Aplicar: `supabase db push` / `supabase db reset`
 - Crear nueva: `supabase migration new nombre_corto`
 
 ### Tablas clave
 
-| Tabla                       | Descripción                                                                     |
-| --------------------------- | ------------------------------------------------------------------------------- |
-| `properties`                | Propiedades (status, listing_type, price, location, images, video, soft delete) |
-| `leads`                     | Contactos (status, intent, source, assigned_to agent, tags, score, soft delete) |
-| `agents`                    | Asesores (foto, especialidades, redes, activo, soft delete)                      |
-| `admin_users`               | Usuarios panel (roles, must_change_password)                                    |
-| `newsletter_subscribers`    | Suscripciones (source, status, soft delete)                                     |
-| `visits`                    | Agenda (agent, property, lead, datetime, status, type)                          |
-| `chat_channels` / `chat_messages` | Canales y mensajes (direct, group, property, lead; reply, soft delete)    |
-| `owners`                    | Propietarios (persona física/jurídica, preferencia de contacto)                 |
-| `property_price_analyses`   | Análisis de precio por propiedad (status vs. mercado, tendencia)                |
-| `property_action_plans` / `action_plan_tasks` | Planes de acción y tareas por propiedad                          |
-| `owner_communications`      | Timeline de comunicaciones con propietarios (email, WhatsApp, call, meeting)    |
-| `owner_reports`             | Reportes generados para propietarios (price_analysis, visit_summary, etc.)      |
-| `property_valuations`       | Tasaciones (120+ campos, port exacto de TAI.html, drafts/finalizadas)           |
-| `valuation_comparables`     | Comparables de mercado (datos, fotos, coeficientes)                             |
-| `valuation_history`         | Historial de cambios de tasaciones (auditoría automática)                       |
-| `geocode_cache`             | Cache de geocoding (Nominatim)                                                  |
-| `ml_connection`             | Conexión ML (tokens cifrados AES-256-GCM)                                       |
-| `ml_sync_queue`             | Cola sync (publish/update/delete, retries)                                      |
-| `ml_sync_dead_letter`       | Cola de mensajes muertos de sync ML (0056)                                      |
-| `property_ml_meta`          | Estado publicación ML por propiedad                                             |
-| `agents_realtime`           | Tabla shadow para realtime de agentes                                           |
-| `property_drafts`           | Borradores de propiedades (0058)                                                |
-| `site_settings_versions`    | Versionado de contenido CMS (0054)                                              |
-| `trash_retention_policies`  | Políticas de retención de papelera (0053)                                       |
-| `rate_limit_logs`           | Logs de rate limiting (0056)                                                    |
+| Tabla                                         | Descripción                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `properties`                                  | Propiedades (status, listing_type, price, location, images, video, soft delete) |
+| `leads`                                       | Contactos (status, intent, source, assigned_to agent, tags, score, soft delete) |
+| `agents`                                      | Asesores (foto, especialidades, redes, activo, soft delete)                     |
+| `admin_users`                                 | Usuarios panel (roles, must_change_password)                                    |
+| `newsletter_subscribers`                      | Suscripciones (source, status, soft delete)                                     |
+| `visits`                                      | Agenda (agent, property, lead, datetime, status, type)                          |
+| `chat_channels` / `chat_messages`             | Canales y mensajes (direct, group, property, lead; reply, soft delete)          |
+| `owners`                                      | Propietarios (persona física/jurídica, preferencia de contacto)                 |
+| `property_price_analyses`                     | Análisis de precio por propiedad (status vs. mercado, tendencia)                |
+| `property_action_plans` / `action_plan_tasks` | Planes de acción y tareas por propiedad                                         |
+| `owner_communications`                        | Timeline de comunicaciones con propietarios (email, WhatsApp, call, meeting)    |
+| `owner_reports`                               | Reportes generados para propietarios (price_analysis, visit_summary, etc.)      |
+| `property_valuations`                         | Tasaciones (120+ campos, port exacto de TAI.html, drafts/finalizadas)           |
+| `valuation_comparables`                       | Comparables de mercado (datos, fotos, coeficientes)                             |
+| `valuation_history`                           | Historial de cambios de tasaciones (auditoría automática)                       |
+| `geocode_cache`                               | Cache de geocoding (Nominatim)                                                  |
+| `ml_connection`                               | Conexión ML (tokens cifrados AES-256-GCM)                                       |
+| `ml_sync_queue`                               | Cola sync (publish/update/delete, retries)                                      |
+| `ml_sync_dead_letter`                         | Cola de mensajes muertos de sync ML (0056)                                      |
+| `property_ml_meta`                            | Estado publicación ML por propiedad                                             |
+| `agents_realtime`                             | Tabla shadow para realtime de agentes                                           |
+| `property_drafts`                             | Borradores de propiedades (0058)                                                |
+| `site_settings_versions`                      | Versionado de contenido CMS (0054)                                              |
+| `trash_retention_policies`                    | Políticas de retención de papelera (0053)                                       |
+| `rate_limit_logs`                             | Logs de rate limiting (0056)                                                    |
 
 ---
 
@@ -522,25 +528,26 @@ Base: `http://localhost:54321/rest/v1/`
 
 Base: `http://localhost:54321/functions/v1/`
 
-| Función                    | Método                                  | Descripción                                            |
-| -------------------------- | --------------------------------------- | ------------------------------------------------------ |
-| `admin-user-invite`        | POST `{action, email, full_name, role}` | Invite/reset/remove admin users                        |
-| `audit-log`                | POST                                    | Registra acciones de staff en `activity_log`           |
-| `chat-upload`              | POST                                    | Upload de adjuntos del chat interno                    |
-| `contact-submit`           | POST                                    | Formulario de contacto landing (honeypot + rate limit + email Resend) |
-| `convert-image`            | POST                                    | Conversión/optimización de imágenes (WebP)             |
-| `ml-answer-question`       | POST                                    | Auto-respuesta a preguntas de publicaciones ML         |
-| `ml-bulk-enqueue`          | POST                                    | Encola propiedades para sync masivo                    |
-| `ml-categories`            | GET                                     | Sincroniza categorías ML                               |
-| `ml-listing-types`         | GET                                     | Sincroniza listing types ML                            |
-| `ml-metrics`               | GET                                     | Métricas de publicación ML                             |
-| `ml-oauth`                 | GET `/callback?code=&state=`            | OAuth callback ML, guarda tokens cifrados              |
-| `ml-revoke-tokens`         | POST                                    | Revoca tokens de conexión ML                           |
-| `ml-sync`                  | POST                                    | Procesa cola `ml_sync_queue` (publish/update/delete)   |
-| `ml-webhook`               | POST                                    | Webhook ML (preguntas, órdenes de compra)              |
-| `process-retention-policies` | POST (scheduled)                     | Procesa políticas de retención de papelera             |
-| `qr-checkin`               | POST                                    | Check-in de visita por QR                              |
-| `visits-process-reminders` | POST (scheduled)                        | Genera recordatorios de visitas                        |
+| Función                      | Método                                  | Descripción                                                           |
+| ---------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
+| `admin-user-invite`          | POST `{action, email, full_name, role}` | Invite/reset/remove admin users                                       |
+| `audit-log`                  | POST                                    | Registra acciones de staff en `activity_log`                          |
+| `chat-upload`                | POST                                    | Upload de adjuntos del chat interno                                   |
+| `chat-ai`                    | POST `{channel_id, message_id}`         | Asistente IA del chat (Gemini Flash, responde como agente virtual)    |
+| `contact-submit`             | POST                                    | Formulario de contacto landing (honeypot + rate limit + email Resend) |
+| `convert-image`              | POST                                    | Conversión/optimización de imágenes (WebP)                            |
+| `ml-answer-question`         | POST                                    | Auto-respuesta a preguntas de publicaciones ML                        |
+| `ml-bulk-enqueue`            | POST                                    | Encola propiedades para sync masivo                                   |
+| `ml-categories`              | GET                                     | Sincroniza categorías ML                                              |
+| `ml-listing-types`           | GET                                     | Sincroniza listing types ML                                           |
+| `ml-metrics`                 | GET                                     | Métricas de publicación ML                                            |
+| `ml-oauth`                   | GET `/callback?code=&state=`            | OAuth callback ML, guarda tokens cifrados                             |
+| `ml-revoke-tokens`           | POST                                    | Revoca tokens de conexión ML                                          |
+| `ml-sync`                    | POST                                    | Procesa cola `ml_sync_queue` (publish/update/delete)                  |
+| `ml-webhook`                 | POST                                    | Webhook ML (preguntas, órdenes de compra)                             |
+| `process-retention-policies` | POST (scheduled)                        | Procesa políticas de retención de papelera                            |
+| `qr-checkin`                 | POST                                    | Check-in de visita por QR                                             |
+| `visits-process-reminders`   | POST (scheduled)                        | Genera recordatorios de visitas                                       |
 
 #### Autenticación Edge Functions
 
@@ -552,37 +559,37 @@ Base: `http://localhost:54321/functions/v1/`
 
 ## 🔗 Integraciones
 
-| Integración                 | Propósito                                        | Configuración                                       |
-| --------------------------- | ------------------------------------------------ | --------------------------------------------------- |
-| **Mercado Libre**           | Publicar/actualizar/eliminar propiedades, OAuth, auto-delete, cron sync | `ML_CLIENT_ID`, `ML_CLIENT_SECRET`, `CRYPTO_SECRET` |
-| **Supabase Auth**           | Email/password, magic link, rate limits, MFA (TOTP) | `auth` config.toml                              |
-| **Supabase Storage**        | Imágenes propiedades/agentes/sitio/chat   | Buckets: `property-images`, `agent-photos`, `site-images`, `chat-files` (fotos de tasaciones: base64 en DB) |
-| **Supabase Realtime**       | Chat, visitas, agentes, notificaciones           | Habilitado en config.toml + migración 0038          |
-| **Supabase Edge Functions** | Webhooks ML, OAuth, sync, visitas, contacto      | Deno 2, secrets via env                             |
-| **Leaflet + Nominatim**     | Mapas y geocoding del módulo Tasar               | CDN, sin API key                                    |
-| **Resend**                  | Emails transaccionales (contact-submit)          | `RESEND_API_KEY` (dominio bienenhaus.com.ar verificado) |
-| **Sentry**                  | Monitoreo de errores (admin, release por commit) | `VITE_SENTRY_DSN`, `VITE_APP_VERSION`               |
-| **WhatsApp Click-to-Chat**  | Leads detalle                                    | `wa.me/<phone>?text=...`                            |
-| **MercadoPago/Stripe**      | (Preparado) Reservas online                      | -                                                   |
+| Integración                 | Propósito                                                               | Configuración                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Mercado Libre**           | Publicar/actualizar/eliminar propiedades, OAuth, auto-delete, cron sync | `ML_CLIENT_ID`, `ML_CLIENT_SECRET`, `CRYPTO_SECRET`                                                         |
+| **Supabase Auth**           | Email/password, magic link, rate limits, MFA (TOTP)                     | `auth` config.toml                                                                                          |
+| **Supabase Storage**        | Imágenes propiedades/agentes/sitio/chat                                 | Buckets: `property-images`, `agent-photos`, `site-images`, `chat-files` (fotos de tasaciones: base64 en DB) |
+| **Supabase Realtime**       | Chat, visitas, agentes, notificaciones                                  | Habilitado en config.toml + migración 0038                                                                  |
+| **Supabase Edge Functions** | Webhooks ML, OAuth, sync, visitas, contacto                             | Deno 2, secrets via env                                                                                     |
+| **Leaflet + Nominatim**     | Mapas y geocoding del módulo Tasar                                      | CDN, sin API key                                                                                            |
+| **Resend**                  | Emails transaccionales (contact-submit)                                 | `RESEND_API_KEY` (dominio bienenhaus.com.ar verificado)                                                     |
+| **Sentry**                  | Monitoreo de errores (admin, release por commit)                        | `VITE_SENTRY_DSN`, `VITE_APP_VERSION`                                                                       |
+| **WhatsApp Click-to-Chat**  | Leads detalle                                                           | `wa.me/<phone>?text=...`                                                                                    |
+| **MercadoPago/Stripe**      | (Preparado) Reservas online                                             | -                                                                                                           |
 
 ---
 
 ## 🔒 Seguridad
 
-| Mecanismo             | Implementación                                                                      |
-| --------------------- | ----------------------------------------------------------------------------------- |
-| **Autenticación**     | Supabase Auth (email/password, JWT, refresh rotation, MFA TOTP)                     |
-| **Autorización**      | RLS policies por tabla (`is_staff()`, `is_admin()`, ownership) + guards por ruta    |
-| **Roles Admin**       | `super_admin`, `admin`, `staff`, `viewer` (tabla `admin_users`)                     |
-| **Cifrado Tokens ML** | AES-256-GCM (`CRYPTO_SECRET` → `lib/crypto.ts`)                                     |
-| **Soft Delete**       | Columna `deleted_at` + RLS (`deleted_at IS NULL` para public)                       |
-| **RPCs endurecidos**  | Migraciones 0037/0042/0043: `ml_enqueue`, `ml_get_connection` y helpers solo accesibles por staff |
-| **Defensa en profundidad** | Módulo Tasar: RLS `is_staff()` + owner read, sin acceso anon                      |
-| **CORS**              | Configurado en Edge Functions + demo server (`*`)                                   |
-| **Rate Limiting**     | Auth (email/sms/signin), Edge Functions, RPCs landing (honeypot + ventana por hora) |
-| **Validación**        | Zod schemas en formularios admin (Tasar, owners, auth)                              |
-| **CSP / Headers**     | Demo server + Vite dev server                                                       |
-| **Secrets**           | Variables de entorno, `.env.example`, nunca en git                                  |
+| Mecanismo                  | Implementación                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Autenticación**          | Supabase Auth (email/password, JWT, refresh rotation, MFA TOTP)                                   |
+| **Autorización**           | RLS policies por tabla (`is_staff()`, `is_admin()`, ownership) + guards por ruta                  |
+| **Roles Admin**            | `super_admin`, `admin`, `staff`, `viewer` (tabla `admin_users`)                                   |
+| **Cifrado Tokens ML**      | AES-256-GCM (`CRYPTO_SECRET` → `lib/crypto.ts`)                                                   |
+| **Soft Delete**            | Columna `deleted_at` + RLS (`deleted_at IS NULL` para public)                                     |
+| **RPCs endurecidos**       | Migraciones 0037/0042/0043: `ml_enqueue`, `ml_get_connection` y helpers solo accesibles por staff |
+| **Defensa en profundidad** | Módulo Tasar: RLS `is_staff()` + owner read, sin acceso anon                                      |
+| **CORS**                   | Configurado en Edge Functions + demo server (`*`)                                                 |
+| **Rate Limiting**          | Auth (email/sms/signin), Edge Functions, RPCs landing (honeypot + ventana por hora)               |
+| **Validación**             | Zod schemas en formularios admin (Tasar, owners, auth)                                            |
+| **CSP / Headers**          | Demo server + Vite dev server                                                                     |
+| **Secrets**                | Variables de entorno, `.env.example`, nunca en git                                                |
 
 ---
 
@@ -808,8 +815,8 @@ Mejoras coherentes con la arquitectura actual:
 
 | Aspecto                    | Estado | Comentario                                                                                            |
 | -------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| **README**                 | ✅     | Actualizado a estado 2026-08-12 (60 migraciones, 17 edge functions, puertos dev reales, E2E verde)   |
-| **Tests automatizados**    | ✅     | Vitest (admin + @bienenhaus/ui) + Playwright E2E (7 suites)                                          |
+| **README**                 | ✅     | Actualizado a estado 2026-08-13 (61 migraciones, 18 edge functions, puertos dev reales, E2E verde)    |
+| **Tests automatizados**    | ✅     | Vitest (admin + @bienenhaus/ui) + Playwright E2E (7 suites)                                           |
 | **CI/CD**                  | ✅     | GitHub Actions: CI (typecheck/test/E2E/build) + Deploy Pages + Backup diario + Lighthouse CI          |
 | **Docker Compose prod**    | ❌     | Solo Supabase local CLI                                                                               |
 | **Variables producción**   | ⚠️     | Documentadas; faltan algunos vars/secrets en el repo (ej. `VITE_SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`) |
@@ -827,10 +834,10 @@ Mejoras coherentes con la arquitectura actual:
 
 ### Deuda técnica conocida (2026-08)
 
-| Deuda | Detalle |
-| ----- | ------- |
-| **Clientes Supabase duplicados** | 3 instancias: admin (`supabase.ts` tipado), landing (`supabase-data.ts` via `@bienenhaus/supabase`), landing fetch directo (`supabase.ts`). Migrar admin al paquete compartido. |
-| **Invalidación de query keys** | Fix completo (2026-08): prefijos puros en `valuationApi.ts`, `properties.api.ts`, `agents.api.ts`, `visits.api.ts`; `ml.api.ts` verificado OK (invalidaciones de página con claves literales puras, sin `queryKeys.x()` con `undefined`). |
-| **Lint debt** | ~258 errores pre-existentes en 91 archivos (`no-explicit-any`, `no-duplicate-imports`); CI lint es diff-scoped. |
-| **Coverage unit** | Pocos tests unitarios para módulos críticos (sync ML, chat, visits). |
-| **Docs operativas** | Sin ADRs nuevos post-004, runbooks parciales. |
+| Deuda                            | Detalle                                                                                                                                                                                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clientes Supabase duplicados** | 3 instancias: admin (`supabase.ts` tipado), landing (`supabase-data.ts` via `@bienenhaus/supabase`), landing fetch directo (`supabase.ts`). Migrar admin al paquete compartido.                                                           |
+| **Invalidación de query keys**   | Fix completo (2026-08): prefijos puros en `valuationApi.ts`, `properties.api.ts`, `agents.api.ts`, `visits.api.ts`; `ml.api.ts` verificado OK (invalidaciones de página con claves literales puras, sin `queryKeys.x()` con `undefined`). |
+| **Lint debt**                    | ~258 errores pre-existentes en 91 archivos (`no-explicit-any`, `no-duplicate-imports`); CI lint es diff-scoped.                                                                                                                           |
+| **Coverage unit**                | Pocos tests unitarios para módulos críticos (sync ML, chat, visits).                                                                                                                                                                      |
+| **Docs operativas**              | Sin ADRs nuevos post-004, runbooks parciales.                                                                                                                                                                                             |

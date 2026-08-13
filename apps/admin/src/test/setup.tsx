@@ -18,18 +18,72 @@ vi.mock('wouter', () => ({
 
 vi.mock('lucide-preact', () => ({
     // Export all lucide icons as simple components
-    ...Object.fromEntries([
-        'Search', 'Plus', 'X', 'Trash2', 'Edit', 'Eye', 'Download', 'Upload',
-        'ChevronLeft', 'ChevronRight', 'ChevronDown', 'Calendar', 'Users',
-        'MessageSquare', 'Building2', 'LayoutDashboard', 'Mail', 'ShoppingBag',
-        'Globe', 'Settings', 'Shield', 'UserRound', 'UserCheck', 'ClipboardList',
-        'FileText', 'Calculator', 'Home', 'MapPin', 'Star', 'Loader2', 'CheckCircle',
-        'Clock', 'DollarSign', 'File', 'FileText', 'Image', 'Key', 'TrendingUp',
-        'Minus', 'TrendingDown',
-        'MoreHorizontal', 'ArrowRight', 'Filter', 'Download', 'Kanban', 'List',
-        'AlertTriangle', 'UserPlus', 'Copy', 'Move', 'QrCode', 'WhatsAppIcon',
-        'FacebookIcon', 'InstagramIcon', 'LinkedinIcon',
-    ].map(name => [name, ({ children, ...props }: any) => <svg {...props} data-testid={name.toLowerCase()}>{children}</svg>])),
+    ...Object.fromEntries(
+        [
+            'Search',
+            'Plus',
+            'X',
+            'Trash2',
+            'Edit',
+            'Eye',
+            'Download',
+            'Upload',
+            'ChevronLeft',
+            'ChevronRight',
+            'ChevronDown',
+            'Calendar',
+            'Users',
+            'MessageSquare',
+            'Building2',
+            'LayoutDashboard',
+            'Mail',
+            'ShoppingBag',
+            'Globe',
+            'Settings',
+            'Shield',
+            'UserRound',
+            'UserCheck',
+            'ClipboardList',
+            'FileText',
+            'Calculator',
+            'Home',
+            'MapPin',
+            'Star',
+            'Loader2',
+            'CheckCircle',
+            'Clock',
+            'DollarSign',
+            'File',
+            'FileText',
+            'Image',
+            'Key',
+            'TrendingUp',
+            'Minus',
+            'TrendingDown',
+            'MoreHorizontal',
+            'ArrowRight',
+            'Filter',
+            'Download',
+            'Kanban',
+            'List',
+            'AlertTriangle',
+            'UserPlus',
+            'Copy',
+            'Move',
+            'QrCode',
+            'WhatsAppIcon',
+            'FacebookIcon',
+            'InstagramIcon',
+            'LinkedinIcon',
+        ].map((name) => [
+            name,
+            ({ children, ...props }: any) => (
+                <svg {...props} data-testid={name.toLowerCase()}>
+                    {children}
+                </svg>
+            ),
+        ]),
+    ),
 }));
 
 // Re-exported so tests can do `(from as Mock).mockReturnValue(chain)` to
@@ -67,7 +121,12 @@ vi.mock('@supabase/supabase-js', () => ({
             getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
             getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
             admin: {
-                generateLink: vi.fn().mockResolvedValue({ data: { properties: { action_link: 'https://test.com' } }, error: null }),
+                generateLink: vi
+                    .fn()
+                    .mockResolvedValue({
+                        data: { properties: { action_link: 'https://test.com' } },
+                        error: null,
+                    }),
             },
         },
         storage: {
@@ -76,7 +135,9 @@ vi.mock('@supabase/supabase-js', () => ({
                 download: vi.fn().mockResolvedValue({ data: new Blob(), error: null }),
                 remove: vi.fn().mockResolvedValue({ error: null }),
                 getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://test.com/img.jpg' } })),
-                createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'https://test.com/signed' } }),
+                createSignedUrl: vi
+                    .fn()
+                    .mockResolvedValue({ data: { signedUrl: 'https://test.com/signed' } }),
             })),
         },
     })),

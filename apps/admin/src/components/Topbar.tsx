@@ -74,12 +74,7 @@ const QUICK_ACTIONS: readonly QuickAction[] = [
 /* -------------------------------------------------------------------------- */
 
 type NotificationType =
-    | 'sistema'
-    | 'mercadolibre'
-    | 'crm'
-    | 'usuarios'
-    | 'errores'
-    | 'sincronizacion';
+    'sistema' | 'mercadolibre' | 'crm' | 'usuarios' | 'errores' | 'sincronizacion';
 
 interface NotificationItem {
     id: string;
@@ -192,7 +187,11 @@ function getCurrentTheme(): 'dark' | 'light' {
 function toggleTheme(): void {
     const next = getCurrentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
-    pushToast({ type: 'info', title: 'Tema actualizado', description: next === 'dark' ? 'Modo oscuro' : 'Modo claro' });
+    pushToast({
+        type: 'info',
+        title: 'Tema actualizado',
+        description: next === 'dark' ? 'Modo oscuro' : 'Modo claro',
+    });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -208,8 +207,7 @@ export function Topbar() {
     const session = authSession.value;
     const signingOut = authSigningOut.value;
     const userEmail = session?.user?.email ?? null;
-    const userName =
-        (session?.user?.user_metadata as { name?: string } | undefined)?.name ?? null;
+    const userName = (session?.user?.user_metadata as { name?: string } | undefined)?.name ?? null;
     const initials = deriveInitials(userEmail, userName);
     const displayName = deriveDisplayName(userEmail, userName);
 
@@ -287,10 +285,7 @@ export function Topbar() {
                     onOpenChange={setQuickOpen}
                     onNavigate={navigateTo}
                 />
-                <NotificationCenter
-                    open={notifOpen}
-                    onOpenChange={setNotifOpen}
-                />
+                <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
                 <AvatarMenu
                     open={avatarOpen}
                     onOpenChange={setAvatarOpen}
@@ -346,8 +341,12 @@ function QuickActions({ open, onOpenChange, onNavigate }: QuickActionsProps) {
                             <action.icon size={16} />
                         </span>
                         <span className={styles['topbar-quick-item-body']}>
-                            <span className={styles['topbar-quick-item-label']}>{action.label}</span>
-                            <span className={styles['topbar-quick-item-desc']}>{action.description}</span>
+                            <span className={styles['topbar-quick-item-label']}>
+                                {action.label}
+                            </span>
+                            <span className={styles['topbar-quick-item-desc']}>
+                                {action.description}
+                            </span>
                         </span>
                     </button>
                 ))}
@@ -366,15 +365,12 @@ interface NotificationCenterProps {
 }
 
 function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
-    const [notifications, setNotifications] = useState<NotificationItem[]>(
-        () => [...DEMO_NOTIFICATIONS],
-    );
+    const [notifications, setNotifications] = useState<NotificationItem[]>(() => [
+        ...DEMO_NOTIFICATIONS,
+    ]);
     const [activeFilter, setActiveFilter] = useState<NotificationType | 'all'>('all');
 
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => !n.read).length,
-        [notifications],
-    );
+    const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
     const filtered = useMemo(() => {
         if (activeFilter === 'all') return notifications;
@@ -434,7 +430,11 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                     </button>
                 </div>
 
-                <div className={styles['topbar-notif-filters']} role="group" aria-label="Filtrar por tipo">
+                <div
+                    className={styles['topbar-notif-filters']}
+                    role="group"
+                    aria-label="Filtrar por tipo"
+                >
                     <button
                         type="button"
                         className={`${styles['topbar-notif-chip']}${activeFilter === 'all' ? ` ${styles['topbar-notif-chip--active']}` : ''}`}
@@ -470,13 +470,17 @@ function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
                                     aria-hidden="true"
                                 />
                                 <div className={styles['topbar-notif-item-body']}>
-                                    <span className={styles['topbar-notif-item-title']}>{item.title}</span>
+                                    <span className={styles['topbar-notif-item-title']}>
+                                        {item.title}
+                                    </span>
                                     {item.description && (
                                         <span className={styles['topbar-notif-item-desc']}>
                                             {item.description}
                                         </span>
                                     )}
-                                    <span className={styles['topbar-notif-item-time']}>{item.time}</span>
+                                    <span className={styles['topbar-notif-item-time']}>
+                                        {item.time}
+                                    </span>
                                 </div>
                                 <button
                                     type="button"

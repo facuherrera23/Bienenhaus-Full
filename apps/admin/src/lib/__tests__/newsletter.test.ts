@@ -1,4 +1,4 @@
-import { beforeEach , describe, expect, it, type Mock, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { supabase } from '../supabase';
 import { from } from '../../test/setup';
 import {
@@ -22,7 +22,8 @@ import {
 import {
     NEWSLETTER_SOURCE_LABEL,
     NEWSLETTER_STATUS_LABEL,
-type  NewsletterSubscriber } from '../../types/newsletter';
+    type NewsletterSubscriber,
+} from '../../types/newsletter';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
@@ -122,7 +123,13 @@ describe('fetchSubscribers', () => {
             returns: vi.fn().mockResolvedValue({ data: [], error: null }),
         });
 
-        await fetchSubscribers({ status: 'active', source: 'manual', search: 'a%b_c', page: 3, pageSize: 20 });
+        await fetchSubscribers({
+            status: 'active',
+            source: 'manual',
+            search: 'a%b_c',
+            page: 3,
+            pageSize: 20,
+        });
 
         expect(chain.eq).toHaveBeenCalledWith('status', 'active');
         expect(chain.eq).toHaveBeenCalledWith('source', 'manual');
@@ -132,7 +139,9 @@ describe('fetchSubscribers', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        mockFrom({ returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'list err' } }) });
+        mockFrom({
+            returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'list err' } }),
+        });
 
         await expect(fetchSubscribers()).rejects.toThrow('list err');
     });
@@ -140,7 +149,9 @@ describe('fetchSubscribers', () => {
 
 describe('fetchSubscriber', () => {
     it('devuelve el suscriptor por id', async () => {
-        const chain = mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: apiRow(), error: null }) });
+        const chain = mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: apiRow(), error: null }),
+        });
 
         const row = await fetchSubscriber('s1');
 
@@ -155,7 +166,9 @@ describe('fetchSubscriber', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+        mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }),
+        });
 
         await expect(fetchSubscriber('s1')).rejects.toThrow('boom');
     });
@@ -176,7 +189,9 @@ describe('fetchDeletedSubscribers', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        mockFrom({ returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'deleted err' } }) });
+        mockFrom({
+            returns: vi.fn().mockResolvedValue({ data: null, error: { message: 'deleted err' } }),
+        });
 
         await expect(fetchDeletedSubscribers()).rejects.toThrow('deleted err');
     });
@@ -207,7 +222,10 @@ describe('countSubscribers', () => {
     it('aplica filtros de estado y fuente', async () => {
         let chain: Record<string, unknown>;
         chain = mockFrom({
-            eq: vi.fn().mockImplementationOnce(() => chain).mockResolvedValue({ count: 5, error: null }),
+            eq: vi
+                .fn()
+                .mockImplementationOnce(() => chain)
+                .mockResolvedValue({ count: 5, error: null }),
         });
 
         await expect(countSubscribers({ status: 'active', source: 'manual' })).resolves.toBe(5);
@@ -223,7 +241,9 @@ describe('countSubscribers', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        mockFrom({ is: vi.fn().mockResolvedValue({ count: null, error: { message: 'count err' } }) });
+        mockFrom({
+            is: vi.fn().mockResolvedValue({ count: null, error: { message: 'count err' } }),
+        });
 
         await expect(countSubscribers()).rejects.toThrow('count err');
     });
@@ -288,7 +308,9 @@ describe('createSubscriber', () => {
     });
 
     it('lanza error si el chequeo de existencia falla', async () => {
-        mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'check err' } }) });
+        mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'check err' } }),
+        });
 
         await expect(createSubscriber({ email: 'ana@example.com' })).rejects.toThrow('check err');
     });
@@ -442,8 +464,17 @@ describe('exportSubscribersToCSV', () => {
         mockFrom({
             returns: vi.fn().mockResolvedValue({
                 data: [
-                    apiRow({ email: 'ana@example.com', source: 'landing_footer', status: 'active' }),
-                    apiRow({ id: 's2', email: 'juan@example.com', source: 'manual', status: 'bounced' }),
+                    apiRow({
+                        email: 'ana@example.com',
+                        source: 'landing_footer',
+                        status: 'active',
+                    }),
+                    apiRow({
+                        id: 's2',
+                        email: 'juan@example.com',
+                        source: 'manual',
+                        status: 'bounced',
+                    }),
                 ],
                 error: null,
             }),
@@ -504,7 +535,9 @@ describe('subscribeFromLanding', () => {
     });
 
     it('devuelve el error sin lanzar cuando falla', async () => {
-        mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+        mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }),
+        });
 
         await expect(subscribeFromLanding({ email: 'ana@example.com' })).resolves.toEqual({
             success: false,
@@ -538,7 +571,9 @@ describe('unsubscribeSubscriber', () => {
     });
 
     it('devuelve el error cuando la búsqueda falla', async () => {
-        mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'q err' } }) });
+        mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'q err' } }),
+        });
 
         await expect(unsubscribeSubscriber('ana@example.com')).resolves.toEqual({
             success: false,

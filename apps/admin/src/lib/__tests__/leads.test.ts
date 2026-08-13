@@ -18,7 +18,7 @@ import {
     LEAD_STATUS_LABEL,
     LEAD_STATUS_ORDER,
     LEAD_STATUS_TONE,
-    type  LeadApiRow,
+    type LeadApiRow,
     parseLeadsCsv,
     permanentDeleteLead,
     recalculateLeadScore,
@@ -29,7 +29,8 @@ import {
     toLeadDetail,
     toLeadRow,
     updateLead,
-updateLeadStatus } from '../leads';
+    updateLeadStatus,
+} from '../leads';
 import { LeadIntentSchema, LeadSourceSchema, LeadStatusSchema } from '../_shared/leads-validation';
 
 // ============================================================================
@@ -246,17 +247,23 @@ describe('calculateLeadScore', () => {
 
     it('adds +10 for long messages (>50 chars)', () => {
         const longMessage = 'x'.repeat(51);
-        expect(calculateLeadScore({ intent: 'comprar', source: 'manual', message: longMessage })).toBe(50);
+        expect(
+            calculateLeadScore({ intent: 'comprar', source: 'manual', message: longMessage }),
+        ).toBe(50);
     });
 
     it('adds +5 for medium messages (21-50 chars)', () => {
         const mediumMessage = 'x'.repeat(25);
-        expect(calculateLeadScore({ intent: 'comprar', source: 'manual', message: mediumMessage })).toBe(45);
+        expect(
+            calculateLeadScore({ intent: 'comprar', source: 'manual', message: mediumMessage }),
+        ).toBe(45);
     });
 
     it('adds nothing for short messages (<=20 chars)', () => {
         const shortMessage = 'x'.repeat(20);
-        expect(calculateLeadScore({ intent: 'comprar', source: 'manual', message: shortMessage })).toBe(40);
+        expect(
+            calculateLeadScore({ intent: 'comprar', source: 'manual', message: shortMessage }),
+        ).toBe(40);
     });
 
     it('adds +10 for valid phone (>=10 digits) and +5 for city', () => {
@@ -347,10 +354,7 @@ describe('parseLeadsCsv', () => {
     });
 
     it('rejects rows with wrong column count', async () => {
-        const csv = [
-            'name,last_name,email,intent,source',
-            'Ana,Perez,ana@test.com',
-        ].join('\n');
+        const csv = ['name,last_name,email,intent,source', 'Ana,Perez,ana@test.com'].join('\n');
         const { valid, errors } = await parseLeadsCsv(csv);
         expect(valid).toHaveLength(0);
         expect(errors[0].message).toContain('N');

@@ -26,6 +26,7 @@ export interface ChatParticipant {
     agent_name: string | null;
     agent_email: string | null;
     agent_photo_url: string | null;
+    is_ai: boolean;
 }
 
 export interface ChatMessage {

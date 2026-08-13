@@ -53,9 +53,7 @@ export function createMockChain(overrides: Record<string, unknown> = {}): Record
  * Creates a mock Supabase client with `from` returning a mock chain.
  * Table-specific chains can be provided via `tableChains`.
  */
-export function createMockSupabase(
-    tableChains: Record<string, Record<string, unknown>> = {}
-) {
+export function createMockSupabase(tableChains: Record<string, Record<string, unknown>> = {}) {
     const defaultChain = createMockChain();
 
     return {

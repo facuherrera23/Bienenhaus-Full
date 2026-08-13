@@ -136,7 +136,7 @@ export function useLeadsInfinite(filters?: FetchLeadsFilters) {
 export function useLead(id: string | null) {
     return useQuery({
         queryKey: ['lead', id],
-        queryFn: () => id ? fetchLead(id) : Promise.resolve(null),
+        queryFn: () => (id ? fetchLead(id) : Promise.resolve(null)),
         enabled: !!id,
     });
 }
@@ -424,5 +424,11 @@ export type {
     CsvLeadRow,
     AgentOption,
 };
-export { LEAD_STATUS_LABEL, LEAD_STATUS_TONE, LEAD_INTENT_LABEL, LEAD_SOURCE_LABEL, LEAD_STATUS_ORDER };
+export {
+    LEAD_STATUS_LABEL,
+    LEAD_STATUS_TONE,
+    LEAD_INTENT_LABEL,
+    LEAD_SOURCE_LABEL,
+    LEAD_STATUS_ORDER,
+};
 export { STATUS_ORDER } from '../types/leads';

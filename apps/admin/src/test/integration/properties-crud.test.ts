@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
-const TEST_SUPABASE_URL = 'http://localhost:54321';
-const TEST_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGRxaXd3emhqbnVya2d1aWh1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDk0MDgzMywiZXhwIjoyMTAwNTE2ODMzfQ.QWqdmDRPZrwZW41WvL3VFDzKhgMRtZzSIIR17fV1uRE';
+const TEST_SUPABASE_URL = process.env.TEST_SUPABASE_URL ?? 'http://localhost:54321';
+const TEST_SERVICE_ROLE_KEY =
+    process.env.TEST_SERVICE_ROLE_KEY ??
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
 
 describe('Properties Integration (local supabase)', () => {
     let supabase: ReturnType<typeof createClient>;
@@ -11,7 +13,7 @@ describe('Properties Integration (local supabase)', () => {
 
     beforeAll(async () => {
         supabase = createClient(TEST_SUPABASE_URL, TEST_SERVICE_ROLE_KEY);
-        
+
         // Create test location
         const { data: location } = await supabase
             .from('locations')
@@ -97,7 +99,10 @@ describe('Properties Integration (local supabase)', () => {
         expect(testId).toBeDefined();
 
         // Soft delete
-        await supabase.from('properties').update({ deleted_at: new Date().toISOString() }).eq('id', testId);
+        await supabase
+            .from('properties')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', testId);
 
         // Verify deleted_at set
         const { data: deleted } = await supabase
@@ -112,14 +117,14 @@ describe('Properties Integration (local supabase)', () => {
             .from('properties')
             .select('id')
             .is('deleted_at', null);
-        expect(activeList?.some(p => p.id === testId)).toBe(false);
+        expect(activeList?.some((p) => p.id === testId)).toBe(false);
 
         // Verify in trash
         const { data: trashList } = await supabase
             .from('properties')
             .select('id')
             .not('deleted_at', 'is', null);
-        expect(trashList?.some(p => p.id === testId)).toBe(true);
+        expect(trashList?.some((p) => p.id === testId)).toBe(true);
 
         // Restore
         await supabase.from('properties').update({ deleted_at: null }).eq('id', testId);
@@ -168,17 +173,27 @@ describe('Properties Integration (local supabase)', () => {
             .single();
 
         // Soft delete first
-        await supabase.from('properties').update({ deleted_at: new Date().toISOString() }).eq('id', testId);
+        await supabase
+            .from('properties')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', testId);
 
         // Permanent delete (this would also clean storage in real implementation)
         await supabase.from('properties').delete().eq('id', testId);
 
         // Verify property gone
-        const { data: gone } = await supabase.from('properties').select('id').eq('id', testId).maybeSingle();
+        const { data: gone } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('id', testId)
+            .maybeSingle();
         expect(gone).toBeNull();
 
         // Verify images cascade deleted (FK)
-        const { data: images } = await supabase.from('property_images').select('id').eq('property_id', testId);
+        const { data: images } = await supabase
+            .from('property_images')
+            .select('id')
+            .eq('property_id', testId);
         expect(images).toEqual([]);
     });
 

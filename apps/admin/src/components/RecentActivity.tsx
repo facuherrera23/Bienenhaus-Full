@@ -20,7 +20,6 @@ import type { PropertyStatus } from '../types/properties';
 import { useQuery } from '../lib/query/hooks';
 import styles from './RecentActivity.module.css';
 
-
 const ICON_BY_ACTION: Record<ActivityAction, typeof Plus> = {
     create: Plus,
     update: Pencil,
@@ -127,7 +126,9 @@ export function RecentActivity() {
                 <div className={styles['activity-empty']}>
                     <Activity size={28} strokeWidth={1.6} aria-hidden="true" />
                     <p className={styles['activity-empty-title']}>Sin actividad aún</p>
-                    <p className={styles['activity-empty-hint']}>Las acciones del panel aparecerán aquí.</p>
+                    <p className={styles['activity-empty-hint']}>
+                        Las acciones del panel aparecerán aquí.
+                    </p>
                 </div>
             )}
 

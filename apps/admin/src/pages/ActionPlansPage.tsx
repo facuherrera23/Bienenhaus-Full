@@ -222,8 +222,8 @@ export function ActionPlansPage() {
                         value={statusFilter}
                         onChange={(e) =>
                             setStatusFilter(
-                                (e.currentTarget as HTMLSelectElement)
-                                    .value as 'todos' | ActionPlanStatus,
+                                (e.currentTarget as HTMLSelectElement).value as
+                                    'todos' | ActionPlanStatus,
                             )
                         }
                     >
@@ -238,8 +238,8 @@ export function ActionPlansPage() {
                         value={categoryFilter}
                         onChange={(e) =>
                             setCategoryFilter(
-                                (e.currentTarget as HTMLSelectElement)
-                                    .value as 'todos' | ActionPlanCategory,
+                                (e.currentTarget as HTMLSelectElement).value as
+                                    'todos' | ActionPlanCategory,
                             )
                         }
                     >
@@ -255,8 +255,8 @@ export function ActionPlansPage() {
                         value={priorityFilter}
                         onChange={(e) =>
                             setPriorityFilter(
-                                (e.currentTarget as HTMLSelectElement)
-                                    .value as 'todos' | ActionPlanPriority,
+                                (e.currentTarget as HTMLSelectElement).value as
+                                    'todos' | ActionPlanPriority,
                             )
                         }
                     >

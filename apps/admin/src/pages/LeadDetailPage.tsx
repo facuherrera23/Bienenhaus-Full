@@ -18,7 +18,6 @@ import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import styles from './LeadDetailPage.module.css';
 
-
 export function LeadDetailPage() {
     const [, params] = useRoute('/leads/:id');
     const id = params?.id ?? '';

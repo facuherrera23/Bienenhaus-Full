@@ -12,100 +12,100 @@
  */
 
 .spinner {
-  /* Dimensions — overridden per size via --spinner-size */
-  --spinner-size: 24px; /* default (md) */
+    /* Dimensions — overridden per size via --spinner-size */
+    --spinner-size: 24px; /* default (md) */
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--spinner-size);
-  height: var(--spinner-size);
-  flex-shrink: 0;
-  line-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--spinner-size);
+    height: var(--spinner-size);
+    flex-shrink: 0;
+    line-height: 0;
 }
 
 /* ============================================================
    DISPLAY — inline variant
    ============================================================ */
 .inline {
-  display: inline-flex;
-  vertical-align: middle;
+    display: inline-flex;
+    vertical-align: middle;
 }
 
 /* ============================================================
    SIZES — diameter
    ============================================================ */
 .sm {
-  --spinner-size: 16px;
+    --spinner-size: 16px;
 }
 
 .md {
-  --spinner-size: 24px;
+    --spinner-size: 24px;
 }
 
 .lg {
-  --spinner-size: 32px;
+    --spinner-size: 32px;
 }
 
 .xl {
-  --spinner-size: 48px;
+    --spinner-size: 48px;
 }
 
 /* ============================================================
    SVG — fills the host box
    ============================================================ */
 .svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  /* Rotate so the arc starts at top (12 o'clock). */
-  transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* Rotate so the arc starts at top (12 o'clock). */
+    transform: rotate(-90deg);
 }
 
 /* ============================================================
    TRACK — static background ring
    ============================================================ */
 .track {
-  stroke: var(--bh-border);
+    stroke: var(--bh-border);
 }
 
 /* ============================================================
    ARC — rotating colored segment
    ============================================================ */
 .arc {
-  animation: bh-spin 0.8s linear infinite;
-  transform-origin: center;
+    animation: bh-spin 0.8s linear infinite;
+    transform-origin: center;
 }
 
 /* ============================================================
    COLOR — stroke source for the arc
    ============================================================ */
 .primary .arc {
-  stroke: var(--bh-accent);
+    stroke: var(--bh-accent);
 }
 
 .white .arc {
-  stroke: var(--bh-text-primary);
+    stroke: var(--bh-text-primary);
 }
 
 .inherit .arc {
-  stroke: currentColor;
+    stroke: currentColor;
 }
 
 /* ============================================================
    ANIMATION
    ============================================================ */
 @keyframes bh-spin {
-  to {
-    transform: rotate(360deg);
-  }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .arc {
-    animation: none;
-  }
+    .arc {
+        animation: none;
+    }
 }

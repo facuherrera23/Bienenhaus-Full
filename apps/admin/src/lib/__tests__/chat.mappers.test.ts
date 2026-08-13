@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { embedAgentEmail, embedAgentName, embedAgentPhoto, toChannelRow, toMessageRow } from '../chat';
+import {
+    embedAgentEmail,
+    embedAgentName,
+    embedAgentPhoto,
+    toChannelRow,
+    toMessageRow,
+} from '../chat';
 
 describe('chat mappers', () => {
     const baseChannelApiRow = {
@@ -20,7 +26,11 @@ describe('chat mappers', () => {
                 joined_at: '2024-01-01T00:00:00Z',
                 last_read_at: '2024-01-01T00:00:00Z',
                 notifications_enabled: true,
-                agent: { name: 'Agente 1', email: 'agente1@test.com', photo_url: 'https://img.com/agent1.jpg' },
+                agent: {
+                    name: 'Agente 1',
+                    email: 'agente1@test.com',
+                    photo_url: 'https://img.com/agent1.jpg',
+                },
             },
         ],
         last_message: [
@@ -40,7 +50,15 @@ describe('chat mappers', () => {
                 deleted_at: null,
                 sender: { name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' },
                 reply_to: null,
-                reads: [{ id: 'read-1', message_id: 'msg-1', agent_id: 'agent-2', read_at: '2024-01-01T10:05:00Z', agent: { name: 'Agente 2' } }],
+                reads: [
+                    {
+                        id: 'read-1',
+                        message_id: 'msg-1',
+                        agent_id: 'agent-2',
+                        read_at: '2024-01-01T10:05:00Z',
+                        agent: { name: 'Agente 2' },
+                    },
+                ],
             },
         ],
     } as any;
@@ -61,7 +79,15 @@ describe('chat mappers', () => {
         deleted_at: null,
         sender: { name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' },
         reply_to: null,
-        reads: [{ id: 'read-1', message_id: 'msg-1', agent_id: 'agent-2', read_at: '2024-01-01T10:05:00Z', agent: { name: 'Agente 2' } }],
+        reads: [
+            {
+                id: 'read-1',
+                message_id: 'msg-1',
+                agent_id: 'agent-2',
+                read_at: '2024-01-01T10:05:00Z',
+                agent: { name: 'Agente 2' },
+            },
+        ],
     } as any;
 
     describe('toChannelRow', () => {
@@ -196,11 +222,15 @@ describe('chat mappers', () => {
         });
 
         it('handles single object', () => {
-            expect(embedAgentPhoto({ photo_url: 'https://img.com/agent.jpg' })).toBe('https://img.com/agent.jpg');
+            expect(embedAgentPhoto({ photo_url: 'https://img.com/agent.jpg' })).toBe(
+                'https://img.com/agent.jpg',
+            );
         });
 
         it('handles array', () => {
-            expect(embedAgentPhoto([{ photo_url: 'https://img.com/agent.jpg' }])).toBe('https://img.com/agent.jpg');
+            expect(embedAgentPhoto([{ photo_url: 'https://img.com/agent.jpg' }])).toBe(
+                'https://img.com/agent.jpg',
+            );
         });
     });
 });

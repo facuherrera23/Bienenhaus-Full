@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
-const TEST_SUPABASE_URL = 'http://localhost:54321';
-const TEST_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGRxaXd3emhqbnVya2d1aWh1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDk0MDgzMywiZXhwIjoyMTAwNTE2ODMzfQ.QWqdmDRPZrwZW41WvL3VFDzKhgMRtZzSIIR17fV1uRE';
+const TEST_SUPABASE_URL = process.env.TEST_SUPABASE_URL ?? 'http://localhost:54321';
+const TEST_SERVICE_ROLE_KEY =
+    process.env.TEST_SERVICE_ROLE_KEY ??
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
 
 describe('Leads Integration (local supabase)', () => {
     let supabase: ReturnType<typeof createClient>;
@@ -168,7 +170,7 @@ describe('Leads Integration (local supabase)', () => {
             .eq('is_active', true);
 
         if (agentsAfter && agentsAfter.length > 1) {
-            const counts = agentsAfter.map(a => a.leads?.count ?? 0);
+            const counts = agentsAfter.map((a) => a.leads?.count ?? 0);
             const min = Math.min(...counts);
             const max = Math.max(...counts);
             expect(max - min).toBeLessThanOrEqual(1);

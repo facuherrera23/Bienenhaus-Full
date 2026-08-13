@@ -87,12 +87,6 @@ select {
     width: var(--bh-sidebar-w-collapsed);
 }
 
-
-
-
-
-
-
 .sidebar.is-collapsed .sidebar-link {
     justify-content: center;
     padding: 9px 0;
@@ -144,16 +138,12 @@ select {
     border-bottom: 1px solid var(--bh-border);
 }
 
-
 .topbar-title {
     font-size: 16px;
     font-weight: 700;
     white-space: nowrap;
     color: var(--bh-text-primary);
 }
-
-
-
 
 .mobile-only {
     display: none;
@@ -239,8 +229,6 @@ select {
     background: var(--bh-bg-hover);
     color: var(--bh-text-primary);
 }
-
-
 
 .field {
     display: flex;
@@ -548,7 +536,6 @@ select {
     color: var(--bh-danger);
 }
 
-
 .toast {
     display: flex;
     gap: 10px;
@@ -560,9 +547,6 @@ select {
     border-radius: var(--bh-radius-sm);
     box-shadow: var(--bh-shadow-md);
 }
-
-
-
 
 .toast--success .toast-icon {
     background: var(--bh-success);
@@ -596,16 +580,10 @@ select {
     border-left-color: var(--bh-warning);
 }
 
-
-
-
-
-
 .form-tab.active {
     color: var(--bh-text-primary);
     font-weight: var(--bh-weight-semibold);
 }
-
 
 @media (prefers-reduced-motion: reduce) {
     .form-tabs::before {
@@ -733,34 +711,15 @@ select {
     transition: background var(--bh-dur-fast) var(--bh-ease);
 }
 
-
-
-
-
-
-
-
 @media (max-width: 860px) {
     .lead-grid {
         grid-template-columns: 1fr;
     }
 }
 
-
-
 .agent-card.is-inactive {
     opacity: 0.62;
 }
-
-
-
-
-
-
-
-
-
-
 
 .chip {
     padding: 2px 9px;
@@ -772,14 +731,7 @@ select {
     border: 1px solid var(--bh-border-strong);
 }
 
-
-
 /* Photo picker */
-
-
-
-
-
 
 /* --------------------------------------------------------------------------
    Editor de sitio
@@ -791,7 +743,6 @@ select {
     gap: 20px;
     max-width: 880px;
 }
-
 
 .site-section-head {
     display: flex;
@@ -814,9 +765,6 @@ select {
     font-size: 12.5px;
     color: var(--bh-text-tertiary);
 }
-
-
-
 
 /* Switch */
 
@@ -957,8 +905,6 @@ select {
 
 /* Filas del editor */
 
-
-
 .site-row.is-inactive {
     opacity: 0.6;
 }
@@ -971,15 +917,7 @@ select {
 
 /* Editor de listas */
 
-
-
-
-
-
 /* Campo de imagen */
-
-
-
 
 /* --------------------------------------------------------------------------
    Mercado Libre + Configuraci�n + Modales
@@ -1001,31 +939,11 @@ select {
     gap: 6px;
 }
 
-
 @media (max-width: 1100px) {
     .ml-grid {
         grid-template-columns: 1fr;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* Modal */
 
@@ -1132,7 +1050,6 @@ select {
     overflow: hidden;
 }
 
-
 .modal--large {
     max-width: 960px;
 }
@@ -1191,7 +1108,6 @@ select {
     color: var(--bh-text-primary);
 }
 
-
 /* Toast improvements */
 .toast {
     animation: toastIn var(--bh-dur-med) var(--bh-ease-out);
@@ -1207,7 +1123,6 @@ select {
         transform: translateX(0) translateY(-50%);
     }
 }
-
 
 .toast--success .toast-icon {
     background: var(--bh-success);
@@ -1268,19 +1183,6 @@ select {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* --------------------------------------------------------------------------
    Actividad reciente (dashboard)
    -------------------------------------------------------------------------- */
@@ -1297,10 +1199,6 @@ select {
     font-size: 15px;
     color: var(--bh-text-primary);
 }
-
-
-
-
 
 .activity-icon.is-create {
     color: var(--bh-success);
@@ -1338,22 +1236,11 @@ select {
     background: var(--bh-neutral-soft);
 }
 
-
 .activity-title {
     font-size: 13.5px;
     color: var(--bh-text-primary);
     line-height: 1.4;
 }
-
-
-
-
-
-
-
-
-
-
 
 .quick-title {
     font-size: 13.5px;
@@ -1362,8 +1249,6 @@ select {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
-
 
 /* --------------------------------------------------------------------------
    Bulk actions bar (properties page)
@@ -1408,7 +1293,6 @@ select {
     gap: 10px;
 }
 
-
 .bulk-confirm .btn {
     padding: 8px 16px;
     font-size: 13px;
@@ -1446,11 +1330,6 @@ select {
     background: rgba(31, 200, 195, 0.08);
 }
 
-
-
-
-
-
 .gallery-loading,
 .gallery-empty {
     display: flex;
@@ -1463,22 +1342,9 @@ select {
     color: var(--bh-text-tertiary);
 }
 
-
-
 .gallery-empty .btn {
     margin-top: var(--bh-space-2);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 .image-action-btn.danger:hover {
     background: var(--bh-danger);
@@ -1491,8 +1357,6 @@ select {
     color: var(--bh-bg);
 }
 
-
-
 @keyframes coverBadgeIn {
     from {
         opacity: 0;
@@ -1503,7 +1367,6 @@ select {
         transform: scale(1) translateY(0);
     }
 }
-
 
 .gallery-count {
     font-weight: var(--bh-weight-medium);
@@ -1517,13 +1380,6 @@ select {
 .charts-section {
     margin-top: 24px;
 }
-
-
-
-
-
-
-
 
 /* Recharts tooltip customization */
 .recharts-tooltip-wrapper {
@@ -1594,9 +1450,6 @@ select {
     }
 }
 
-
-
-
 .section-header {
     display: flex;
     align-items: center;
@@ -1605,9 +1458,6 @@ select {
     padding-bottom: 16px;
     border-bottom: 1px solid var(--bh-border);
 }
-
-
-
 
 /* KPI Grid */
 .kpi-grid {
@@ -1718,7 +1568,6 @@ select {
     color: var(--bh-text-tertiary);
 }
 
-
 .kpi-label {
     font-size: 12.5px;
     font-weight: 500;
@@ -1743,7 +1592,6 @@ select {
     margin: 0;
     font-weight: 400;
 }
-
 
 .charts-section .charts-grid {
     display: grid;
@@ -1811,14 +1659,10 @@ select {
     }
 }
 
-
-
-
 .trash-tab.active {
     background: var(--bh-accent);
     color: var(--bh-bg);
 }
-
 
 .tab-count {
     display: inline-flex;
@@ -1845,11 +1689,6 @@ select {
     opacity: 0.5;
 }
 
-
-
-
-
-
 .toolbar-filters {
     display: flex;
     flex-wrap: wrap;
@@ -1866,14 +1705,6 @@ select {
     min-width: 160px;
 }
 
-
-
-
-
-
-
-
-
 .calendar-day.today {
     background: rgba(31, 200, 195, 0.08);
 }
@@ -1883,11 +1714,6 @@ select {
     color: var(--bh-bg);
 }
 
-
-
-
-
-
 .visit-status-programada {
     border-left: 3px solid var(--bh-info);
 }
@@ -1909,24 +1735,13 @@ select {
     opacity: 0.6;
 }
 
-
-
-
-
-
-
 .week-day-header.today {
     background: rgba(31, 200, 195, 0.08);
 }
 
-
-
 .week-day-header.today .week-day-number {
     color: var(--bh-accent);
 }
-
-
-
 
 .week-day-column.today {
     background: rgba(31, 200, 195, 0.04);
@@ -1936,8 +1751,6 @@ select {
     background: rgba(31, 200, 195, 0.08);
 }
 
-
-
 .visit-status-programada {
     border-left: 3px solid var(--bh-info);
 }
@@ -1959,35 +1772,19 @@ select {
     opacity: 0.6;
 }
 
-
-
-
-
-
 /* Modal adjustments for visit form */
 .modal--medium {
     max-width: 720px;
 }
-
-
-
-
-
-
-
-
-
 
 .typeahead-dropdown li.muted {
     color: var(--bh-text-tertiary);
     cursor: default;
 }
 
-
 .select-with-desc .select {
     margin-bottom: 0;
 }
-
 
 /* --------------------------------------------------------------------------
    Command Palette (Cmd+K) — migrated to CommandPalette.module.css
@@ -2002,15 +1799,6 @@ select {
     }
 }
 
-
-
-
-
-
-
-
-
-
 .kanban-card .tag {
     display: inline-flex;
     align-items: center;
@@ -2018,8 +1806,6 @@ select {
     margin-right: 4px;
     margin-bottom: 4px;
 }
-
-
 
 .import-summary .stat {
     display: flex;
@@ -2059,57 +1845,19 @@ select {
     animation: bh-spin 0.9s linear infinite;
 }
 
-
-
-
-
-
-
 /* --- Banner de estado (locked / autosave / error) --- */
-
-
-
-
-
-
 
 /* --- Stepper --- */
 
-
-
-
-
-
-
-
-
-
 /* --- Contenido del paso --- */
-
-
-
-
-
 
 /* --- Cuerpo del paso --- */
 
-
 /* --- Editor de comparables --- */
-
-
-
-
-
-
-
-
 
 /* --- Total de ambientes --- */
 
-
-
 /* --- Navegaci�n --- */
-
 
 .spin {
     animation: bh-spin 0.9s linear infinite;

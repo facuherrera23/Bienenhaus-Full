@@ -3,156 +3,125 @@
  * Clases: agent-card, agent-card-actions, agent-card-contact, agent-card-foot, agent-card-head, agent-card-title, agent-grid, agent-matricula, agent-photo, agent-specs, chip
  */
 
-/* -------------------------------------------------------------------------- Agentes -------------------------------------------------------------------------- */ .agent-grid {
-
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-
+/* -------------------------------------------------------------------------- Agentes -------------------------------------------------------------------------- */
+.agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
 }
 
 .agent-card {
-
-      background: var(--bh-bg-card);
-      border: 1px solid var(--bh-border);
-      border-radius: var(--bh-radius-lg);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 .agent-card:global(.is-inactive) {
-
-      opacity: 0.62;
-
+    opacity: 0.62;
 }
 
 .agent-card-head {
-
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .agent-photo {
-
-      width: 46px;
-      height: 46px;
-      flex: none;
-      border-radius: 50%;
-      background: var(--bh-accent-soft);
-      color: var(--bh-accent);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 17px;
-      overflow: hidden;
-
+    width: 46px;
+    height: 46px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 17px;
+    overflow: hidden;
 }
 
 .agent-photo img {
-
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .agent-card-title {
-
-      flex: 1;
-      min-width: 0;
-
+    flex: 1;
+    min-width: 0;
 }
 
 .agent-card-title h3 {
-
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--bh-text-primary);
-
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--bh-text-primary);
 }
 
 .agent-card-title p {
-
-      margin: 2px 0 0;
-      font-size: 12.5px;
-      color: var(--bh-text-tertiary);
-
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--bh-text-tertiary);
 }
 
 .agent-matricula {
-
-      display: block;
-      font-size: 11.5px;
-      color: var(--bh-accent);
-      font-weight: 600;
-      margin-top: 3px;
-
+    display: block;
+    font-size: 11.5px;
+    color: var(--bh-accent);
+    font-weight: 600;
+    margin-top: 3px;
 }
 
 .agent-card-contact {
-
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12.5px;
-      color: var(--bh-text-secondary);
-
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--bh-text-secondary);
 }
 
 .agent-card-contact span {
-
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .agent-specs {
-
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .chip {
-
-      padding: 2px 9px;
-      border-radius: var(--bh-radius-full);
-      font-size: 11.5px;
-      font-weight: 600;
-      background: var(--bh-bg-hover);
-      color: var(--bh-text-secondary);
-      border: 1px solid var(--bh-border-strong);
-
+    padding: 2px 9px;
+    border-radius: var(--bh-radius-full);
+    font-size: 11.5px;
+    font-weight: 600;
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-secondary);
+    border: 1px solid var(--bh-border-strong);
 }
 
 .agent-card-foot {
-
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      border-top: 1px solid var(--bh-border);
-      padding-top: 14px;
-
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid var(--bh-border);
+    padding-top: 14px;
 }
 
 .agent-card-actions {
-
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

@@ -1,4 +1,6 @@
-import { supabase, supabaseUrl } from '../supabase';
+import { supabase, supabaseUrl } from '@bienenhaus/supabase';
+
+// supabaseUrl obtained from import.meta.env.VITE_SUPABASE_URL in usage
 
 export interface ApiError {
     code: string;

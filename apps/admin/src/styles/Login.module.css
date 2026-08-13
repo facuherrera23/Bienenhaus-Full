@@ -5,17 +5,17 @@
    ============================================================ */
 
 .loginPage {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--bh-space-6);
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(31, 200, 195, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 50%, rgba(31, 200, 195, 0.05) 0%, transparent 60%),
-    var(--bh-bg-app);
-  position: relative;
-  overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--bh-space-6);
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(31, 200, 195, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(31, 200, 195, 0.05) 0%, transparent 60%),
+        var(--bh-bg-app);
+    position: relative;
+    overflow: hidden;
 }
 
 /* ============================================================
@@ -23,61 +23,181 @@
    ============================================================ */
 
 .particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
 }
 
 .particle {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--bh-accent);
-  opacity: 0;
-  pointer-events: none;
-  animation: particleFloat 15s ease-in-out infinite;
-  will-change: transform, opacity;
+    position: absolute;
+    border-radius: 50%;
+    background: var(--bh-accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: particleFloat 15s ease-in-out infinite;
+    will-change: transform, opacity;
 }
 
 /* 20 partículas con posiciones y delays aleatorios */
-.particle:nth-child(1) { width: 3px; height: 3px; animation-delay: 0s; left: 10%; top: 20%; }
-.particle:nth-child(2) { width: 4px; height: 4px; animation-delay: 1.2s; left: 25%; top: 60%; }
-.particle:nth-child(3) { width: 2px; height: 2px; animation-delay: 2.5s; left: 40%; top: 15%; }
-.particle:nth-child(4) { width: 5px; height: 5px; animation-delay: 0.8s; left: 55%; top: 70%; }
-.particle:nth-child(5) { width: 3px; height: 3px; animation-delay: 3.2s; left: 70%; top: 25%; }
-.particle:nth-child(6) { width: 4px; height: 4px; animation-delay: 1.8s; left: 85%; top: 55%; }
-.particle:nth-child(7) { width: 2px; height: 2px; animation-delay: 4.0s; left: 15%; top: 80%; }
-.particle:nth-child(8) { width: 3px; height: 3px; animation-delay: 0.5s; left: 50%; top: 10%; }
-.particle:nth-child(9) { width: 4px; height: 4px; animation-delay: 2.0s; left: 90%; top: 35%; }
-.particle:nth-child(10) { width: 2px; height: 2px; animation-delay: 3.5s; left: 5%; top: 45%; }
-.particle:nth-child(11) { width: 3px; height: 3px; animation-delay: 1.0s; left: 35%; top: 90%; }
-.particle:nth-child(12) { width: 4px; height: 4px; animation-delay: 2.8s; left: 75%; top: 85%; }
-.particle:nth-child(13) { width: 2px; height: 2px; animation-delay: 0.3s; left: 60%; top: 40%; }
-.particle:nth-child(14) { width: 3px; height: 3px; animation-delay: 3.8s; left: 20%; top: 50%; }
-.particle:nth-child(15) { width: 4px; height: 4px; animation-delay: 1.5s; left: 45%; top: 65%; }
-.particle:nth-child(16) { width: 2px; height: 2px; animation-delay: 2.2s; left: 80%; top: 15%; }
-.particle:nth-child(17) { width: 3px; height: 3px; animation-delay: 0.6s; left: 30%; top: 30%; }
-.particle:nth-child(18) { width: 4px; height: 4px; animation-delay: 3.0s; left: 65%; top: 5%; }
-.particle:nth-child(19) { width: 2px; height: 2px; animation-delay: 4.2s; left: 95%; top: 60%; }
-.particle:nth-child(20) { width: 3px; height: 3px; animation-delay: 0.9s; left: 48%; top: 45%; }
+.particle:nth-child(1) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 0s;
+    left: 10%;
+    top: 20%;
+}
+.particle:nth-child(2) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 1.2s;
+    left: 25%;
+    top: 60%;
+}
+.particle:nth-child(3) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 2.5s;
+    left: 40%;
+    top: 15%;
+}
+.particle:nth-child(4) {
+    width: 5px;
+    height: 5px;
+    animation-delay: 0.8s;
+    left: 55%;
+    top: 70%;
+}
+.particle:nth-child(5) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 3.2s;
+    left: 70%;
+    top: 25%;
+}
+.particle:nth-child(6) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 1.8s;
+    left: 85%;
+    top: 55%;
+}
+.particle:nth-child(7) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 4s;
+    left: 15%;
+    top: 80%;
+}
+.particle:nth-child(8) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 0.5s;
+    left: 50%;
+    top: 10%;
+}
+.particle:nth-child(9) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 2s;
+    left: 90%;
+    top: 35%;
+}
+.particle:nth-child(10) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 3.5s;
+    left: 5%;
+    top: 45%;
+}
+.particle:nth-child(11) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 1s;
+    left: 35%;
+    top: 90%;
+}
+.particle:nth-child(12) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 2.8s;
+    left: 75%;
+    top: 85%;
+}
+.particle:nth-child(13) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 0.3s;
+    left: 60%;
+    top: 40%;
+}
+.particle:nth-child(14) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 3.8s;
+    left: 20%;
+    top: 50%;
+}
+.particle:nth-child(15) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 1.5s;
+    left: 45%;
+    top: 65%;
+}
+.particle:nth-child(16) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 2.2s;
+    left: 80%;
+    top: 15%;
+}
+.particle:nth-child(17) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 0.6s;
+    left: 30%;
+    top: 30%;
+}
+.particle:nth-child(18) {
+    width: 4px;
+    height: 4px;
+    animation-delay: 3s;
+    left: 65%;
+    top: 5%;
+}
+.particle:nth-child(19) {
+    width: 2px;
+    height: 2px;
+    animation-delay: 4.2s;
+    left: 95%;
+    top: 60%;
+}
+.particle:nth-child(20) {
+    width: 3px;
+    height: 3px;
+    animation-delay: 0.9s;
+    left: 48%;
+    top: 45%;
+}
 
 /* ============================================================
    GLOW DE FONDO — Efecto de luz detrás del formulario
    ============================================================ */
 
 .loginGlow {
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(31, 200, 195, 0.06) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 0;
-  animation: pulseGlow 4s ease-in-out infinite;
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(31, 200, 195, 0.06) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+    animation: pulseGlow 4s ease-in-out infinite;
 }
 
 /* ============================================================
@@ -85,36 +205,43 @@
    ============================================================ */
 
 .loginCard {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--bh-space-5);
-  padding: var(--bh-space-8) var(--bh-space-7);
-  background: rgba(26, 30, 35, 0.75);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--bh-radius-2xl);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  animation: slideUp 0.7s var(--bh-ease-premium) forwards;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-5);
+    padding: var(--bh-space-8) var(--bh-space-7);
+    background: rgba(26, 30, 35, 0.75);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--bh-radius-2xl);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    animation: slideUp 0.7s var(--bh-ease-premium) forwards;
 }
 
 /* Borde glow sutil en el borde de la card */
 .loginCard::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: var(--bh-radius-2xl);
-  background: linear-gradient(135deg, rgba(31, 200, 195, 0.15), transparent, rgba(31, 200, 195, 0.05));
-  padding: 1px;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--bh-radius-2xl);
+    background: linear-gradient(
+        135deg,
+        rgba(31, 200, 195, 0.15),
+        transparent,
+        rgba(31, 200, 195, 0.05)
+    );
+    padding: 1px;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
 }
 
 /* ============================================================
@@ -122,56 +249,56 @@
    ============================================================ */
 
 .loginBrand {
-  display: flex;
-  align-items: center;
-  gap: var(--bh-space-3);
-  margin-bottom: var(--bh-space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    margin-bottom: var(--bh-space-2);
 }
 
 .loginBrand .logoIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 42px;
-  height: 42px;
-  border-radius: var(--bh-radius-md);
-  background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-deep));
-  color: var(--bh-white);
-  font-weight: var(--bh-weight-extrabold);
-  font-size: var(--bh-text-lg);
-  box-shadow: 0 0 30px var(--bh-accent-glow-soft);
-  animation: pulseGlow 2.5s ease-in-out infinite;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--bh-radius-md);
+    background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-deep));
+    color: var(--bh-white);
+    font-weight: var(--bh-weight-extrabold);
+    font-size: var(--bh-text-lg);
+    box-shadow: 0 0 30px var(--bh-accent-glow-soft);
+    animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
 .loginBrand div {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
 }
 
 .loginBrand strong {
-  font-size: var(--bh-text-lg);
-  letter-spacing: 0.05em;
-  color: var(--bh-text-primary);
+    font-size: var(--bh-text-lg);
+    letter-spacing: 0.05em;
+    color: var(--bh-text-primary);
 }
 
 .loginBrand span {
-  font-size: var(--bh-text-xs);
-  color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
 }
 
 .loginCard h1 {
-  font-size: var(--bh-text-2xl);
-  font-weight: var(--bh-weight-extrabold);
-  color: var(--bh-text-primary);
-  margin: 0;
+    font-size: var(--bh-text-2xl);
+    font-weight: var(--bh-weight-extrabold);
+    color: var(--bh-text-primary);
+    margin: 0;
 }
 
 .loginHint {
-  margin: -4px 0 0;
-  font-size: var(--bh-text-sm);
-  color: var(--bh-text-tertiary);
+    margin: -4px 0 0;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
 }
 
 /* ============================================================
@@ -179,83 +306,85 @@
    ============================================================ */
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--bh-space-1);
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
 }
 
 .field > span {
-  font-size: var(--bh-text-xs);
-  font-weight: var(--bh-weight-semibold);
-  color: var(--bh-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .field .inputWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .field .inputWrapper .inputIcon {
-  position: absolute;
-  left: var(--bh-space-3);
-  color: var(--bh-text-tertiary);
-  font-size: var(--bh-text-md);
-  transition: color var(--bh-dur-fast) var(--bh-ease-premium);
-  pointer-events: none;
+    position: absolute;
+    left: var(--bh-space-3);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-md);
+    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+    pointer-events: none;
 }
 
 .field .inputWrapper input {
-  width: 100%;
-  padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-3) var(--bh-space-8);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--bh-border-input);
-  border-radius: var(--bh-radius-md);
-  color: var(--bh-text-primary);
-  font-size: var(--bh-text-md);
-  font-family: var(--bh-font-sans);
-  transition: all var(--bh-dur-fast) var(--bh-ease-premium);
-  outline: none;
+    width: 100%;
+    padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-3) var(--bh-space-8);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-md);
+    font-family: var(--bh-font-sans);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    outline: none;
 }
 
 .field .inputWrapper input::placeholder {
-  color: transparent;
+    color: transparent;
 }
 
 .field .inputWrapper input:hover {
-  border-color: var(--bh-accent);
+    border-color: var(--bh-accent);
 }
 
 .field .inputWrapper input:focus {
-  border-color: var(--bh-accent);
-  box-shadow: 0 0 30px var(--bh-accent-glow-soft), inset 0 0 30px rgba(32, 184, 171, 0.02);
+    border-color: var(--bh-accent);
+    box-shadow:
+        0 0 30px var(--bh-accent-glow-soft),
+        inset 0 0 30px rgba(32, 184, 171, 0.02);
 }
 
 .field .inputWrapper input:focus + .inputIcon {
-  color: var(--bh-accent);
+    color: var(--bh-accent);
 }
 
 /* Floating label */
 .field .inputWrapper label {
-  position: absolute;
-  left: var(--bh-space-8);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: var(--bh-text-md);
-  color: var(--bh-text-tertiary);
-  transition: all 0.2s ease;
-  pointer-events: none;
-  font-weight: var(--bh-weight-normal);
+    position: absolute;
+    left: var(--bh-space-8);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-tertiary);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    font-weight: var(--bh-weight-normal);
 }
 
 .field .inputWrapper input:focus ~ label,
 .field .inputWrapper input:not(:placeholder-shown) ~ label {
-  top: 6px;
-  font-size: 10px;
-  color: var(--bh-accent);
-  transform: translateY(0);
+    top: 6px;
+    font-size: 10px;
+    color: var(--bh-accent);
+    transform: translateY(0);
 }
 
 /* ============================================================
@@ -263,23 +392,23 @@
    ============================================================ */
 
 .loginError {
-  margin: 0;
-  padding: var(--bh-space-2) var(--bh-space-3);
-  border-radius: var(--bh-radius-sm);
-  background: var(--bh-danger-soft);
-  color: var(--bh-danger);
-  font-size: var(--bh-text-sm);
-  animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
+    margin: 0;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-danger-soft);
+    color: var(--bh-danger);
+    font-size: var(--bh-text-sm);
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
 }
 
 .loginSuccess {
-  margin: 0;
-  padding: var(--bh-space-2) var(--bh-space-3);
-  border-radius: var(--bh-radius-sm);
-  background: var(--bh-success-soft);
-  color: var(--bh-success);
-  font-size: var(--bh-text-sm);
-  animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
+    margin: 0;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    border-radius: var(--bh-radius-sm);
+    background: var(--bh-success-soft);
+    color: var(--bh-success);
+    font-size: var(--bh-text-sm);
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
 }
 
 /* ============================================================
@@ -287,69 +416,69 @@
    ============================================================ */
 
 .loginLockout {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--bh-space-3);
-  padding: var(--bh-space-4);
-  background: var(--bh-warning-soft);
-  border: 1px solid var(--bh-warning);
-  border-radius: var(--bh-radius-md);
-  color: var(--bh-warning);
-  animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-4);
+    background: var(--bh-warning-soft);
+    border: 1px solid var(--bh-warning);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-warning);
+    animation: fadeUp var(--bh-dur-fast) var(--bh-ease-premium) forwards;
 }
 
 .loginLockout__icon {
-  flex-shrink: 0;
-  margin-top: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .loginLockout__body {
-  flex: 1;
-  min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .loginLockout__title {
-  display: block;
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-bold);
-  color: var(--bh-warning);
-  margin-bottom: var(--bh-space-1);
+    display: block;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-warning);
+    margin-bottom: var(--bh-space-1);
 }
 
 .loginLockout__text {
-  font-size: var(--bh-text-sm);
-  color: var(--bh-text-secondary);
-  line-height: 1.5;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-secondary);
+    line-height: 1.5;
 }
 
 .loginLockout__timer {
-  font-family: var(--bh-font-mono);
-  font-size: var(--bh-text-lg);
-  font-weight: var(--bh-weight-bold);
-  color: var(--bh-warning);
-  background: rgba(250, 204, 21, 0.15);
-  padding: var(--bh-space-1) var(--bh-space-2);
-  border-radius: var(--bh-radius-sm);
-  display: inline-block;
-  min-width: 5ch;
-  text-align: center;
+    font-family: var(--bh-font-mono);
+    font-size: var(--bh-text-lg);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-warning);
+    background: rgba(250, 204, 21, 0.15);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+    display: inline-block;
+    min-width: 5ch;
+    text-align: center;
 }
 
 /* Barra de progreso del lockout */
 .lockoutProgress {
-  width: 100%;
-  height: 3px;
-  background: rgba(250, 204, 21, 0.15);
-  border-radius: var(--bh-radius-full);
-  margin-top: var(--bh-space-2);
-  overflow: hidden;
+    width: 100%;
+    height: 3px;
+    background: rgba(250, 204, 21, 0.15);
+    border-radius: var(--bh-radius-full);
+    margin-top: var(--bh-space-2);
+    overflow: hidden;
 }
 
 .lockoutProgressBar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--bh-warning), var(--bh-accent));
-  border-radius: var(--bh-radius-full);
-  transition: width 1s linear;
+    height: 100%;
+    background: linear-gradient(90deg, var(--bh-warning), var(--bh-accent));
+    border-radius: var(--bh-radius-full);
+    transition: width 1s linear;
 }
 
 /* ============================================================
@@ -357,51 +486,51 @@
    ============================================================ */
 
 .loginLegal {
-  margin: var(--bh-space-1) 0 0;
-  font-size: var(--bh-text-xs);
-  color: var(--bh-text-tertiary);
-  text-align: center;
+    margin: var(--bh-space-1) 0 0;
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    text-align: center;
 }
 
 /* ============================================================
    REDUCED MOTION — Respetar preferencias del usuario
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .loginCard {
-    animation: none;
-  }
-  .particle {
-    display: none;
-  }
-  .loginGlow {
-    display: none;
-  }
+    .loginCard {
+        animation: none;
+    }
+    .particle {
+        display: none;
+    }
+    .loginGlow {
+        display: none;
+    }
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 480px) {
-  .loginCard {
-    padding: var(--bh-space-6) var(--bh-space-5);
-    border-radius: var(--bh-radius-xl);
-  }
-  .loginCard h1 {
-    font-size: var(--bh-text-xl);
-  }
-  .field .inputWrapper input {
-    padding: var(--bh-space-2) var(--bh-space-2) var(--bh-space-2) var(--bh-space-7);
-    font-size: var(--bh-text-sm);
-  }
-  .field .inputWrapper label {
-    left: var(--bh-space-7);
-    font-size: var(--bh-text-sm);
-  }
-  .field .inputWrapper .inputIcon {
-    left: var(--bh-space-2);
-  }
-  .field .inputWrapper input:focus ~ label,
-  .field .inputWrapper input:not(:placeholder-shown) ~ label {
-    font-size: 9px;
-  }
+    .loginCard {
+        padding: var(--bh-space-6) var(--bh-space-5);
+        border-radius: var(--bh-radius-xl);
+    }
+    .loginCard h1 {
+        font-size: var(--bh-text-xl);
+    }
+    .field .inputWrapper input {
+        padding: var(--bh-space-2) var(--bh-space-2) var(--bh-space-2) var(--bh-space-7);
+        font-size: var(--bh-text-sm);
+    }
+    .field .inputWrapper label {
+        left: var(--bh-space-7);
+        font-size: var(--bh-text-sm);
+    }
+    .field .inputWrapper .inputIcon {
+        left: var(--bh-space-2);
+    }
+    .field .inputWrapper input:focus ~ label,
+    .field .inputWrapper input:not(:placeholder-shown) ~ label {
+        font-size: 9px;
+    }
 }

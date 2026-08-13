@@ -18,17 +18,19 @@ export const ChatChannelSchema = z.object({
     created_at: z.string().datetime(),
     updated_at: z.string().datetime(),
     deleted_at: z.string().datetime().nullable(),
-    participants: z.array(z.object({
-        id: z.string().uuid(),
-        channel_id: z.string().uuid(),
-        agent_id: z.string().uuid(),
-        joined_at: z.string().datetime(),
-        last_read_at: z.string().datetime().nullable(),
-        notifications_enabled: z.boolean().default(false),
-        agent_name: z.string().nullable(),
-        agent_email: z.string().nullable(),
-        agent_photo_url: z.string().url().nullable(),
-    })),
+    participants: z.array(
+        z.object({
+            id: z.string().uuid(),
+            channel_id: z.string().uuid(),
+            agent_id: z.string().uuid(),
+            joined_at: z.string().datetime(),
+            last_read_at: z.string().datetime().nullable(),
+            notifications_enabled: z.boolean().default(false),
+            agent_name: z.string().nullable(),
+            agent_email: z.string().nullable(),
+            agent_photo_url: z.string().url().nullable(),
+        }),
+    ),
     last_message: z.object({
         id: z.string().uuid(),
         channel_id: z.string().uuid(),
@@ -45,23 +47,25 @@ export const ChatChannelSchema = z.object({
         deleted_at: z.string().datetime().nullable(),
         sender_name: z.string().nullable(),
         sender_photo_url: z.string().url().nullable(),
-        reply_to: z.object({
-            id: z.string().uuid(),
-            channel_id: z.string().uuid(),
-            sender_id: z.string().uuid(),
-            content: z.string(),
-            message_type: z.enum(['text', 'file', 'image']),
-            file_url: z.string().url().nullable(),
-            file_name: z.string().nullable(),
-            file_size: z.number().nullable(),
-            reply_to_id: z.string().uuid().nullable(),
-            edited_at: z.string().datetime().nullable(),
-            created_at: z.string().datetime(),
-            updated_at: z.string().datetime(),
-            deleted_at: z.string().datetime().nullable(),
-            sender_name: z.string().nullable(),
-            sender_photo_url: z.string().url().nullable(),
-        }).nullable(),
+        reply_to: z
+            .object({
+                id: z.string().uuid(),
+                channel_id: z.string().uuid(),
+                sender_id: z.string().uuid(),
+                content: z.string(),
+                message_type: z.enum(['text', 'file', 'image']),
+                file_url: z.string().url().nullable(),
+                file_name: z.string().nullable(),
+                file_size: z.number().nullable(),
+                reply_to_id: z.string().uuid().nullable(),
+                edited_at: z.string().datetime().nullable(),
+                created_at: z.string().datetime(),
+                updated_at: z.string().datetime(),
+                deleted_at: z.string().datetime().nullable(),
+                sender_name: z.string().nullable(),
+                sender_photo_url: z.string().url().nullable(),
+            })
+            .nullable(),
         unread_count: z.number().int().nonnegative().default(0),
     }),
 });
@@ -82,30 +86,34 @@ export const ChatMessageSchema = z.object({
     deleted_at: z.string().datetime().nullable(),
     sender_name: z.string().nullable(),
     sender_photo_url: z.string().url().nullable(),
-    reply_to: z.object({
-        id: z.string().uuid(),
-        channel_id: z.string().uuid(),
-        sender_id: z.string().uuid(),
-        content: z.string(),
-        message_type: z.enum(['text', 'file', 'image']),
-        file_url: z.string().url().nullable(),
-        file_name: z.string().nullable(),
-        file_size: z.number().nullable(),
-        reply_to_id: z.string().uuid().nullable(),
-        edited_at: z.string().datetime().nullable(),
-        created_at: z.string().datetime(),
-        updated_at: z.string().datetime(),
-        deleted_at: z.string().datetime().nullable(),
-        sender_name: z.string().nullable(),
-        sender_photo_url: z.string().url().nullable(),
-    }).nullable(),
-    read_by: z.array(z.object({
-        id: z.string().uuid(),
-        message_id: z.string().uuid(),
-        agent_id: z.string().uuid(),
-        read_at: z.string().datetime(),
-        agent_name: z.string().nullable(),
-    })),
+    reply_to: z
+        .object({
+            id: z.string().uuid(),
+            channel_id: z.string().uuid(),
+            sender_id: z.string().uuid(),
+            content: z.string(),
+            message_type: z.enum(['text', 'file', 'image']),
+            file_url: z.string().url().nullable(),
+            file_name: z.string().nullable(),
+            file_size: z.number().nullable(),
+            reply_to_id: z.string().uuid().nullable(),
+            edited_at: z.string().datetime().nullable(),
+            created_at: z.string().datetime(),
+            updated_at: z.string().datetime(),
+            deleted_at: z.string().datetime().nullable(),
+            sender_name: z.string().nullable(),
+            sender_photo_url: z.string().url().nullable(),
+        })
+        .nullable(),
+    read_by: z.array(
+        z.object({
+            id: z.string().uuid(),
+            message_id: z.string().uuid(),
+            agent_id: z.string().uuid(),
+            read_at: z.string().datetime(),
+            agent_name: z.string().nullable(),
+        }),
+    ),
 });
 
 export const ChatMessageRealtimeSchema = z.discriminatedUnion('eventType', [
@@ -126,7 +134,11 @@ export const ChatMessageRealtimeSchema = z.discriminatedUnion('eventType', [
     }),
     z.object({
         eventType: z.literal('UPDATE'),
-        new: z.object({ id: z.string().uuid(), content: z.string(), edited_at: z.string().datetime() }),
+        new: z.object({
+            id: z.string().uuid(),
+            content: z.string(),
+            edited_at: z.string().datetime(),
+        }),
         old: z.object({ id: z.string().uuid(), content: z.string() }),
     }),
     z.object({
@@ -173,17 +185,21 @@ export const EditMessageSchema = z.object({
     content: z.string().min(1).max(4000),
 });
 
-export const UploadFileSchema = z.object({
-    channel_id: z.string().uuid(),
-    file: z.instanceof(File),
-    message_type: z.enum(['file', 'image']).optional(),
-}).refine(
-    (data) => data.file.size <= 10 * 1024 * 1024,
-    { message: 'Archivo supera 10 MB', path: ['file'] }
-).refine(
-    (data) => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(data.file.type),
-    { message: 'Solo imágenes y PDFs permitidos', path: ['file'] }
-);
+export const UploadFileSchema = z
+    .object({
+        channel_id: z.string().uuid(),
+        file: z.instanceof(File),
+        message_type: z.enum(['file', 'image']).optional(),
+    })
+    .refine((data) => data.file.size <= 10 * 1024 * 1024, {
+        message: 'Archivo supera 10 MB',
+        path: ['file'],
+    })
+    .refine(
+        (data) =>
+            ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(data.file.type),
+        { message: 'Solo imágenes y PDFs permitidos', path: ['file'] },
+    );
 
 // Type exports
 export type ChatChannelType = z.infer<typeof ChatChannelTypeSchema>;
@@ -201,7 +217,7 @@ export type UploadFile = z.infer<typeof UploadFileSchema>;
 
 // Validation helpers with discriminated union return types
 export function validateChatMessageRealtime(
-    data: unknown
+    data: unknown,
 ): { valid: true; data: ChatMessageRealtime } | { valid: false; error: string } {
     const result = ChatMessageRealtimeSchema.safeParse(data);
     if (!result.success) {
@@ -212,7 +228,7 @@ export function validateChatMessageRealtime(
 }
 
 export function validateSendMessage(
-    data: unknown
+    data: unknown,
 ): { valid: true; data: SendMessage } | { valid: false; error: string } {
     const result = SendMessageSchema.safeParse(data);
     if (!result.success) {

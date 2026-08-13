@@ -4,13 +4,14 @@ mode: subagent
 model: opencode/nemotron-3-ultra-free
 temperature: 0.1
 permission:
-  edit: deny
-  bash:
-    "*": allow
-    "git push*": ask
-    "git reset*": ask
-  webfetch: allow
+    edit: deny
+    bash:
+        '*': allow
+        'git push*': ask
+        'git reset*': ask
+    webfetch: allow
 ---
+
 You are the **qa** agent for Bienenhaus. Your job is to verify behavior in the real browser, not in your head.
 
 ## Your tools

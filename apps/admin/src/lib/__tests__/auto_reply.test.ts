@@ -15,9 +15,26 @@ type QueryResult = { data: unknown; error: unknown };
 const { chainMock, enqueue, resetChain } = vi.hoisted(() => {
     const queue: QueryResult[] = [];
     const methods = [
-        'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'not',
-        'is', 'order', 'limit', 'maybeSingle', 'single', 'returns', 'or',
-        'ilike', 'match', 'rpc', 'from', 'range',
+        'select',
+        'insert',
+        'update',
+        'delete',
+        'eq',
+        'neq',
+        'in',
+        'not',
+        'is',
+        'order',
+        'limit',
+        'maybeSingle',
+        'single',
+        'returns',
+        'or',
+        'ilike',
+        'match',
+        'rpc',
+        'from',
+        'range',
     ];
     const chain: Record<string, unknown> = {};
     for (const m of methods) {
@@ -163,9 +180,9 @@ describe('auto_reply', () => {
             });
             vi.stubGlobal('fetch', fetchMock);
 
-            await expect(
-                sendQuestionAnswer(supabase, 'q-1', 'Test', 'ml-token'),
-            ).rejects.toThrow('ML answer falló (400)');
+            await expect(sendQuestionAnswer(supabase, 'q-1', 'Test', 'ml-token')).rejects.toThrow(
+                'ML answer falló (400)',
+            );
             expect(fn('update')).not.toHaveBeenCalled();
         });
     });

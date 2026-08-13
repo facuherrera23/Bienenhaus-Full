@@ -8,13 +8,13 @@
 
 ## 1. Identidad Visual
 
-| Atributo         | Valor                                                        |
-| ---------------- | ------------------------------------------------------------ |
-| **Marca**        | BIENENHAUS Propiedades — inmobiliaria premium                |
-| **Logo**         | Wordmark: "BIENENHAUS" (Playfair Display 700, 22px, tracking 1.5px) + sub "PROPIEDADES" (Inter 300, 11px, uppercase, tracking 2px) |
-| **Propuesta**    | Lujo oscuro (dark luxury): fondo casi negro + acento turquesa |
-| **Sensación**    | Seria, confiable, exclusiva — sin ruido, mucho aire          |
-| **Idioma UI**    | Español (AR)                                                 |
+| Atributo      | Valor                                                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Marca**     | BIENENHAUS Propiedades — inmobiliaria premium                                                                                      |
+| **Logo**      | Wordmark: "BIENENHAUS" (Playfair Display 700, 22px, tracking 1.5px) + sub "PROPIEDADES" (Inter 300, 11px, uppercase, tracking 2px) |
+| **Propuesta** | Lujo oscuro (dark luxury): fondo casi negro + acento turquesa                                                                      |
+| **Sensación** | Seria, confiable, exclusiva — sin ruido, mucho aire                                                                                |
+| **Idioma UI** | Español (AR)                                                                                                                       |
 
 **Concepto:** la landing usa un único acento (turquesa `#1FC8C3`) sobre superficies casi negras. El acento nunca compite con el contenido: se reserva para CTAs, highlights y estados. El lujo se transmite con tipografía serif (Playfair) en titulares y mucho espaciado vertical.
 
@@ -24,20 +24,20 @@
 
 Tokens definidos en `:root` de `landing.css`:
 
-| Token              | Hex / Valor               | Uso                                        |
-| ------------------ | ------------------------- | ------------------------------------------ |
-| `--bg-primary`     | `#050607`                 | Fondo base (casi negro, frío)              |
-| `--bg-secondary`   | `#0a0d10`                 | Fondo alterno de secciones                 |
-| `--card-bg`        | `#1a1e23`                 | Tarjetas (propiedades, agentes, stats)     |
-| `--border-color`   | `rgba(255,255,255,0.06)`  | Bordes sutiles                             |
-| `--border-input`   | `rgba(255,255,255,0.08)`  | Bordes de inputs                           |
-| `--accent`         | `#1fc8c3`                 | CTA primario, highlights, scrollbar        |
-| `--accent-hover`   | `#2dddd5`                 | Hover del acento                           |
-| `--glow`           | `#56e7de`                 | Glow / brillos decorativos                |
-| `--glow-soft`      | `rgba(31,200,195,0.15)`   | Halos suaves detrás de tarjetas            |
-| `--text`           | `#f4f4f4`                 | Texto principal                            |
-| `--text-secondary` | `#bfc6cc`                 | Texto secundario (descripciones)           |
-| `--text-tertiary`  | `#8a949c`                 | Texto terciario (labels, metadatos)        |
+| Token              | Hex / Valor              | Uso                                    |
+| ------------------ | ------------------------ | -------------------------------------- |
+| `--bg-primary`     | `#050607`                | Fondo base (casi negro, frío)          |
+| `--bg-secondary`   | `#0a0d10`                | Fondo alterno de secciones             |
+| `--card-bg`        | `#1a1e23`                | Tarjetas (propiedades, agentes, stats) |
+| `--border-color`   | `rgba(255,255,255,0.06)` | Bordes sutiles                         |
+| `--border-input`   | `rgba(255,255,255,0.08)` | Bordes de inputs                       |
+| `--accent`         | `#1fc8c3`                | CTA primario, highlights, scrollbar    |
+| `--accent-hover`   | `#2dddd5`                | Hover del acento                       |
+| `--glow`           | `#56e7de`                | Glow / brillos decorativos             |
+| `--glow-soft`      | `rgba(31,200,195,0.15)`  | Halos suaves detrás de tarjetas        |
+| `--text`           | `#f4f4f4`                | Texto principal                        |
+| `--text-secondary` | `#bfc6cc`                | Texto secundario (descripciones)       |
+| `--text-tertiary`  | `#8a949c`                | Texto terciario (labels, metadatos)    |
 
 ### Reglas de uso
 
@@ -59,22 +59,22 @@ Bordes:   rgba(255,255,255,0.06)  rgba(255,255,255,0.08)
 
 ## 3. Tipografía
 
-| Token            | Familia                                            | Uso                  |
-| ---------------- | -------------------------------------------------- | -------------------- |
-| `--font-heading` | `'Playfair Display', Georgia, serif`               | Titulares (700)      |
-| `--font-body`    | `'Inter', system-ui, sans-serif`                   | Cuerpo (400/500/600) |
+| Token            | Familia                              | Uso                  |
+| ---------------- | ------------------------------------ | -------------------- |
+| `--font-heading` | `'Playfair Display', Georgia, serif` | Titulares (700)      |
+| `--font-body`    | `'Inter', system-ui, sans-serif`     | Cuerpo (400/500/600) |
 
 ### Jerarquía de tamaños (valores reales en el CSS)
 
-| Rol                     | Fuente   | Tamaño (desktop) | Peso | Tracking |
-| ----------------------- | -------- | ---------------- | ---- | -------- |
-| Hero title (línea 1-2)  | Playfair | ~64px (`clamp`)  | 700  | normal   |
-| Título de sección       | Playfair | 44px (`clamp`)   | 700  | normal   |
-| Descripción de sección  | Inter    | 17-18px          | 400  | normal   |
-| Label de sección (`*-label`) | Inter | 11-12px        | 600  | 3-4px uppercase |
-| Nombre de propiedad     | Playfair | 22-24px          | 600  | normal   |
-| Metadatos / prices      | Inter    | 14-16px          | 500-600 | normal |
-| Texto base              | Inter    | 15-16px          | 400  | normal   |
+| Rol                          | Fuente   | Tamaño (desktop) | Peso    | Tracking        |
+| ---------------------------- | -------- | ---------------- | ------- | --------------- |
+| Hero title (línea 1-2)       | Playfair | ~64px (`clamp`)  | 700     | normal          |
+| Título de sección            | Playfair | 44px (`clamp`)   | 700     | normal          |
+| Descripción de sección       | Inter    | 17-18px          | 400     | normal          |
+| Label de sección (`*-label`) | Inter    | 11-12px          | 600     | 3-4px uppercase |
+| Nombre de propiedad          | Playfair | 22-24px          | 600     | normal          |
+| Metadatos / prices           | Inter    | 14-16px          | 500-600 | normal          |
+| Texto base                   | Inter    | 15-16px          | 400     | normal          |
 
 ### Detalles de implementación
 
@@ -99,24 +99,24 @@ Bordes:   rgba(255,255,255,0.06)  rgba(255,255,255,0.08)
 
 ### Escala de ritmo vertical (secciones)
 
-| Sección                | Padding (desktop)          |
-| ---------------------- | -------------------------- |
-| Catalog                | `100px 0 120px`            |
-| Services               | `100px 0 120px`            |
-| Team                   | `100px 0 120px`            |
-| Stats                  | `160px 0 140px`            |
-| Process                | `140px 0 160px`            |
-| Contact                | `160px 0 180px`            |
+| Sección  | Padding (desktop) |
+| -------- | ----------------- |
+| Catalog  | `100px 0 120px`   |
+| Services | `100px 0 120px`   |
+| Team     | `100px 0 120px`   |
+| Stats    | `160px 0 140px`   |
+| Process  | `140px 0 160px`   |
+| Contact  | `160px 0 180px`   |
 
 Patrón: las secciones grandes respiran con 100-180px verticales; las que tienen fondo alterno (`--bg-secondary`) se marcan con `::before`/`::after` decorativos (gradientes radiales suaves del `--glow-soft`).
 
 ### Radios
 
-| Token          | Valor  | Uso                        |
-| -------------- | ------ | -------------------------- |
-| `--radius-card`  | 26px | Tarjetas (property, team)  |
-| `--radius-input` | 22px | Inputs del catálogo/form   |
-| `--radius-btn`   | 60px | Botones pill               |
+| Token            | Valor | Uso                       |
+| ---------------- | ----- | ------------------------- |
+| `--radius-card`  | 26px  | Tarjetas (property, team) |
+| `--radius-input` | 22px  | Inputs del catálogo/form  |
+| `--radius-btn`   | 60px  | Botones pill              |
 
 ### Grids
 
@@ -138,16 +138,16 @@ Patrón: las secciones grandes respiran con 100-180px verticales; las que tienen
 
 ### 5.2 Botones (sistema)
 
-| Clase            | Contexto             | Forma              | Comportamiento hover                              |
-| ---------------- | -------------------- | ------------------ | ------------------------------------------------- |
-| `.btn-primary`   | Hero CTA             | Pill `--radius-btn` | Fondo `--accent-hover`, icono desliza + glow      |
-| `.btn-outline`   | Catálogo / headers   | Pill, borde 1px     | Borde/acento, relleno sutil                       |
-| `.btn-video`     | Hero video           | Texto + play circle | Círculo se llena de acento, pulse                 |
-| `.btn-search`    | Filtros catálogo     | Pill, gradiente     | Glow y translación                                |
-| `.btn-load-more` | Paginación catálogo  | Pill outline        | Borde acento, icono gira al hover                 |
-| `.btn-card`      | PropertyCard         | Texto con underline | Subrayado animado, icono flecha                    |
-| `.btn-team` / `.btn-stats` / `.btn-process` | CTA sección | Pill variantes | Acento / outline según contexto |
-| `.btn-submit`    | Form contacto        | Pill, gradiente     | Glow + elevación                                  |
+| Clase                                       | Contexto            | Forma               | Comportamiento hover                         |
+| ------------------------------------------- | ------------------- | ------------------- | -------------------------------------------- |
+| `.btn-primary`                              | Hero CTA            | Pill `--radius-btn` | Fondo `--accent-hover`, icono desliza + glow |
+| `.btn-outline`                              | Catálogo / headers  | Pill, borde 1px     | Borde/acento, relleno sutil                  |
+| `.btn-video`                                | Hero video          | Texto + play circle | Círculo se llena de acento, pulse            |
+| `.btn-search`                               | Filtros catálogo    | Pill, gradiente     | Glow y translación                           |
+| `.btn-load-more`                            | Paginación catálogo | Pill outline        | Borde acento, icono gira al hover            |
+| `.btn-card`                                 | PropertyCard        | Texto con underline | Subrayado animado, icono flecha              |
+| `.btn-team` / `.btn-stats` / `.btn-process` | CTA sección         | Pill variantes      | Acento / outline según contexto              |
+| `.btn-submit`                               | Form contacto       | Pill, gradiente     | Glow + elevación                             |
 
 **Patrón común**: todos los botones pill usan `border-radius: var(--radius-btn)`, transición `--dur-fast` (200ms) con `--ease-premium`, e iconos Lucide que se desplazan o rotan en hover.
 
@@ -183,7 +183,7 @@ Patrón: las secciones grandes respiran con 100-180px verticales; las que tienen
 ### Tokens
 
 ```css
---ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1);   /* "ease out expo" - suave y premium */
+--ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1); /* "ease out expo" - suave y premium */
 --dur-fast: 200ms;
 --dur-med: 350ms;
 --dur-slow: 600ms;
@@ -244,16 +244,16 @@ Cada sección tiene su `*-label` uppercase + título Playfair con `.highlight` a
 
 Las capturas de referencia de cada sección viven en `docs/design/capturas/`:
 
-| Sección       | Archivo                        |
-| ------------- | ------------------------------ |
-| Hero          | `capturas/01-hero.png`         |
-| Catálogo      | `capturas/02-catalog.png`      |
-| Servicios     | `capturas/03-services.png`     |
-| Equipo        | `capturas/04-team.png`         |
-| Stats         | `capturas/05-stats.png`        |
-| Proceso       | `capturas/06-process.png`      |
-| Contacto      | `capturas/07-contact.png`      |
-| Transición    | `capturas/08-transition.png`   |
-| Footer        | `capturas/09-footer.png`       |
+| Sección    | Archivo                      |
+| ---------- | ---------------------------- |
+| Hero       | `capturas/01-hero.png`       |
+| Catálogo   | `capturas/02-catalog.png`    |
+| Servicios  | `capturas/03-services.png`   |
+| Equipo     | `capturas/04-team.png`       |
+| Stats      | `capturas/05-stats.png`      |
+| Proceso    | `capturas/06-process.png`    |
+| Contacto   | `capturas/07-contact.png`    |
+| Transición | `capturas/08-transition.png` |
+| Footer     | `capturas/09-footer.png`     |
 
 > Regenerar con: `node scripts/capturas-landing.mjs` (requiere servidor de la landing corriendo).

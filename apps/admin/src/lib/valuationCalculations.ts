@@ -5,21 +5,21 @@
 // ============================================================================
 
 import type {
-  Ambientes,
-  Comparable,
-  Servicios,
-  TipoInmueble,
-  ValuacionCalculadaFormValues,
-  ValuacionFormValues
+    Ambientes,
+    Comparable,
+    Servicios,
+    TipoInmueble,
+    ValuacionCalculadaFormValues,
+    ValuacionFormValues,
 } from '../types/valuationTypes';
 
 import {
-  AMBIENTE_IDS,
-  NIVELES,
-  PESOS,
-  RUBROS,
-  SERVICIOS_MAP,
-  SLOT_ORDER
+    AMBIENTE_IDS,
+    NIVELES,
+    PESOS,
+    RUBROS,
+    SERVICIOS_MAP,
+    SLOT_ORDER,
 } from '../schemas/valuationSchemas';
 
 // ============================================================================
@@ -27,17 +27,17 @@ import {
 // ============================================================================
 
 function baseSuperficie(comparable: Comparable): number {
-  const supCub = comparable.supCubierta || 0;
-  const supTer = comparable.supTerreno || 0;
-  return supCub > 0 ? supCub : supTer;
+    const supCub = comparable.supCubierta || 0;
+    const supTer = comparable.supTerreno || 0;
+    return supCub > 0 ? supCub : supTer;
 }
 
 function esComparableValido(comparable: Comparable): boolean {
-  return (
-    comparable.included !== false &&
-    (comparable.precio || 0) > 0 &&
-    baseSuperficie(comparable) > 0
-  );
+    return (
+        comparable.included !== false &&
+        (comparable.precio || 0) > 0 &&
+        baseSuperficie(comparable) > 0
+    );
 }
 
 // ============================================================================
@@ -74,21 +74,18 @@ function esComparableValido(comparable: Comparable): boolean {
  * coefCondicionesFor(comp, 'CASA'); // → 0.87091 (CASA, SLOT_ORDER)
  * ```
  */
-export function coefCondicionesFor(
-  comparable: Comparable,
-  tipoInmueble: TipoInmueble
-): number {
-  const vars = PESOS[tipoInmueble]?.vars;
-  if (!vars) return 1;
-  let product = 1;
-  for (let i = 0; i < SLOT_ORDER.length; i++) {
-    const idx = SLOT_ORDER[i];
-    const peso = vars[idx][1];
-    const nivel = comparable.chars[i];
-    const ajuste = nivel ? NIVELES[nivel] : 0;
-    product *= 1 + peso * ajuste;
-  }
-  return product;
+export function coefCondicionesFor(comparable: Comparable, tipoInmueble: TipoInmueble): number {
+    const vars = PESOS[tipoInmueble]?.vars;
+    if (!vars) return 1;
+    let product = 1;
+    for (let i = 0; i < SLOT_ORDER.length; i++) {
+        const idx = SLOT_ORDER[i];
+        const peso = vars[idx][1];
+        const nivel = comparable.chars[i];
+        const ajuste = nivel ? NIVELES[nivel] : 0;
+        product *= 1 + peso * ajuste;
+    }
+    return product;
 }
 
 // ============================================================================
@@ -119,16 +116,16 @@ export function coefCondicionesFor(
  * ```
  */
 export function coefDepreciacionPropia(servicios: Servicios): number {
-  let sum = 0;
-  let n = 0;
-  for (const servicio of SERVICIOS_MAP) {
-    const nivel = servicios[servicio.key];
-    const rubro = RUBROS[servicio.rubro];
-    const pct = nivel && rubro[nivel] !== undefined ? rubro[nivel] : 0;
-    sum += pct;
-    n++;
-  }
-  return n > 0 ? 1 - sum / n : 1;
+    let sum = 0;
+    let n = 0;
+    for (const servicio of SERVICIOS_MAP) {
+        const nivel = servicios[servicio.key];
+        const rubro = RUBROS[servicio.rubro];
+        const pct = nivel && rubro[nivel] !== undefined ? rubro[nivel] : 0;
+        sum += pct;
+        n++;
+    }
+    return n > 0 ? 1 - sum / n : 1;
 }
 
 // ============================================================================
@@ -154,11 +151,11 @@ export function coefDepreciacionPropia(servicios: Servicios): number {
  * ```
  */
 export function recalcAmbientes(ambientes: Ambientes): number {
-  let total = 0;
-  for (const id of AMBIENTE_IDS) {
-    total += ambientes[id] ?? 0;
-  }
-  return total;
+    let total = 0;
+    for (const id of AMBIENTE_IDS) {
+        total += ambientes[id] ?? 0;
+    }
+    return total;
 }
 
 // ============================================================================
@@ -186,14 +183,14 @@ export function recalcAmbientes(ambientes: Ambientes): number {
  * ```
  */
 export function recalcUsoTerreno(uso: {
-  residencial: number;
-  comercial: number;
-  industrial: number;
+    residencial: number;
+    comercial: number;
+    industrial: number;
 }): number {
-  const r = uso.residencial || 0;
-  const c = uso.comercial || 0;
-  const i = uso.industrial || 0;
-  return Math.max(0, 100 - r - c - i);
+    const r = uso.residencial || 0;
+    const c = uso.comercial || 0;
+    const i = uso.industrial || 0;
+    return Math.max(0, 100 - r - c - i);
 }
 
 // ============================================================================
@@ -223,11 +220,11 @@ export function recalcUsoTerreno(uso: {
  * ```
  */
 export function precioM2Comparable(comparable: Comparable): number {
-  const precio = comparable.precio || 0;
-  const supCub = comparable.supCubierta || 0;
-  const supTer = comparable.supTerreno || 0;
-  const base = supCub > 0 ? supCub : supTer;
-  return precio > 0 && base > 0 ? precio / base : 0;
+    const precio = comparable.precio || 0;
+    const supCub = comparable.supCubierta || 0;
+    const supTer = comparable.supTerreno || 0;
+    const base = supCub > 0 ? supCub : supTer;
+    return precio > 0 && base > 0 ? precio / base : 0;
 }
 
 // ============================================================================
@@ -260,43 +257,43 @@ export function precioM2Comparable(comparable: Comparable): number {
  * @returns Objeto con todos los valores calculados para UI
  */
 export function recalcAll(form: ValuacionFormValues): ValuacionCalculadaFormValues {
-  const precioPromedio = precioPromedioComparables(form.comparables);
-  const coefPromedio = coefPromedioComparables(form.comparables, form.f_tipo);
-  const precioAjustado = precioPromedio * coefPromedio;
+    const precioPromedio = precioPromedioComparables(form.comparables);
+    const coefPromedio = coefPromedioComparables(form.comparables, form.f_tipo);
+    const precioAjustado = precioPromedio * coefPromedio;
 
-  const terrM2 = form.f_supTerreno || 0;
-  const terrPrecio = form.v_terrenoPrecio || 0;
-  const terrTotal = terrM2 * terrPrecio;
+    const terrM2 = form.f_supTerreno || 0;
+    const terrPrecio = form.v_terrenoPrecio || 0;
+    const terrTotal = terrM2 * terrPrecio;
 
-  const depreciacion = coefDepreciacionPropia({
-    electricidad: form.electricidad,
-    gas: form.gas,
-    internet: form.internet,
-    agua: form.agua,
-    cloaca: form.cloaca,
-    techos: form.techos
-  });
+    const depreciacion = coefDepreciacionPropia({
+        electricidad: form.electricidad,
+        gas: form.gas,
+        internet: form.internet,
+        agua: form.agua,
+        cloaca: form.cloaca,
+        techos: form.techos,
+    });
 
-  const cubM2 = form.f_supConstruida || 0;
-  const precioCubiertaM2 = precioAjustado * depreciacion;
-  const cubTotal = cubM2 * precioCubiertaM2;
-  const valorFinal = terrTotal + cubTotal;
+    const cubM2 = form.f_supConstruida || 0;
+    const precioCubiertaM2 = precioAjustado * depreciacion;
+    const cubTotal = cubM2 * precioCubiertaM2;
+    const valorFinal = terrTotal + cubTotal;
 
-  return {
-    v_precioPromedio: `U$S ${precioPromedio.toFixed(2)}`,
-    v_coefPromedio: coefPromedio.toFixed(3),
-    v_depreciacionServicios: depreciacion.toFixed(3),
-    v_valorFinal: `U$S ${valorFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`,
-    v_terrenoM2: terrM2 ? terrM2.toLocaleString('es-AR') : '—',
-    v_terrenoTotal: terrTotal
-      ? `U$S ${terrTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
-      : '—',
-    v_cubiertaM2: cubM2 ? cubM2.toLocaleString('es-AR') : '—',
-    v_cubiertaPrecio: precioCubiertaM2 ? `U$S ${precioCubiertaM2.toFixed(2)}` : '—',
-    v_cubiertaTotal: cubTotal
-      ? `U$S ${cubTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
-      : '—'
-  };
+    return {
+        v_precioPromedio: `U$S ${precioPromedio.toFixed(2)}`,
+        v_coefPromedio: coefPromedio.toFixed(3),
+        v_depreciacionServicios: depreciacion.toFixed(3),
+        v_valorFinal: `U$S ${valorFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`,
+        v_terrenoM2: terrM2 ? terrM2.toLocaleString('es-AR') : '—',
+        v_terrenoTotal: terrTotal
+            ? `U$S ${terrTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+            : '—',
+        v_cubiertaM2: cubM2 ? cubM2.toLocaleString('es-AR') : '—',
+        v_cubiertaPrecio: precioCubiertaM2 ? `U$S ${precioCubiertaM2.toFixed(2)}` : '—',
+        v_cubiertaTotal: cubTotal
+            ? `U$S ${cubTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+            : '—',
+    };
 }
 
 // ============================================================================
@@ -311,10 +308,10 @@ export function recalcAll(form: ValuacionFormValues): ValuacionCalculadaFormValu
  * @returns Array de coeficientes (mismo orden que comparables)
  */
 export function coefCondicionesForComparables(
-  comparables: Comparable[],
-  tipoInmueble: TipoInmueble
+    comparables: Comparable[],
+    tipoInmueble: TipoInmueble,
 ): number[] {
-  return comparables.map((comparable) => coefCondicionesFor(comparable, tipoInmueble));
+    return comparables.map((comparable) => coefCondicionesFor(comparable, tipoInmueble));
 }
 
 // ============================================================================
@@ -328,8 +325,8 @@ export function coefCondicionesForComparables(
  * @returns Precio promedio (0 si no hay válidos)
  */
 export function precioPromedioComparables(comparables: Comparable[]): number {
-  const precios = comparables.filter(esComparableValido).map(precioM2Comparable);
-  return precios.length ? precios.reduce((a, b) => a + b, 0) / precios.length : 0;
+    const precios = comparables.filter(esComparableValido).map(precioM2Comparable);
+    return precios.length ? precios.reduce((a, b) => a + b, 0) / precios.length : 0;
 }
 
 // ============================================================================
@@ -344,13 +341,13 @@ export function precioPromedioComparables(comparables: Comparable[]): number {
  * @returns Coeficiente promedio (1 si no hay válidos)
  */
 export function coefPromedioComparables(
-  comparables: Comparable[],
-  tipoInmueble: TipoInmueble
+    comparables: Comparable[],
+    tipoInmueble: TipoInmueble,
 ): number {
-  const coefs = comparables
-    .filter(esComparableValido)
-    .map((comparable) => coefCondicionesFor(comparable, tipoInmueble));
-  return coefs.length ? coefs.reduce((a, b) => a + b, 0) / coefs.length : 1;
+    const coefs = comparables
+        .filter(esComparableValido)
+        .map((comparable) => coefCondicionesFor(comparable, tipoInmueble));
+    return coefs.length ? coefs.reduce((a, b) => a + b, 0) / coefs.length : 1;
 }
 
 // ============================================================================
@@ -365,7 +362,7 @@ export function coefPromedioComparables(
  * @returns Precio ajustado
  */
 export function precioAjustado(precioPromedio: number, coefPromedio: number): number {
-  return precioPromedio * coefPromedio;
+    return precioPromedio * coefPromedio;
 }
 
 // ============================================================================
@@ -380,7 +377,7 @@ export function precioAjustado(precioPromedio: number, coefPromedio: number): nu
  * @returns Total terreno en U$S (0 si faltan datos)
  */
 export function valorTerreno(supTerreno: number, precioTerreno: number): number {
-  return supTerreno > 0 && precioTerreno > 0 ? supTerreno * precioTerreno : 0;
+    return supTerreno > 0 && precioTerreno > 0 ? supTerreno * precioTerreno : 0;
 }
 
 // ============================================================================
@@ -396,13 +393,13 @@ export function valorTerreno(supTerreno: number, precioTerreno: number): number 
  * @returns Total cubierta en U$S (0 si faltan datos)
  */
 export function valorCubierta(
-  supCubierta: number,
-  precioAjustado: number,
-  depreciacion: number
+    supCubierta: number,
+    precioAjustado: number,
+    depreciacion: number,
 ): number {
-  return supCubierta > 0 && precioAjustado > 0 && depreciacion > 0
-    ? supCubierta * precioAjustado * depreciacion
-    : 0;
+    return supCubierta > 0 && precioAjustado > 0 && depreciacion > 0
+        ? supCubierta * precioAjustado * depreciacion
+        : 0;
 }
 
 // ============================================================================
@@ -417,7 +414,7 @@ export function valorCubierta(
  * @returns Valor Final Estimado
  */
 export function valorFinal(valorTerreno: number, valorCubierta: number): number {
-  return valorTerreno + valorCubierta;
+    return valorTerreno + valorCubierta;
 }
 
 // ============================================================================
@@ -438,55 +435,56 @@ export function valorFinal(valorTerreno: number, valorCubierta: number): number 
  * @returns Objeto con tabla rows, summary boxes, chart config
  */
 export function recalcAnalisisComparativo(form: ValuacionFormValues): {
-  rows: Array<{
-    label: string;
-    precioM2: number;
-    low: number;
-    high: number;
-    included: boolean;
-  }>;
-  summary: { valMin: number; valProm: number; valMax: number };
-  chart: {
-    labels: string[];
-    dataRanges: [number, number][];
-    colors: string[];
-  };
-} {
-  const dispersion = form.ac_dispersion ?? 10;
-
-  const rows = form.comparables.map((comparable, i) => {
-    const precioM2 = precioM2Comparable(comparable);
-    return {
-      label: `Comparable ${i + 1}`,
-      precioM2,
-      low: precioM2 * (1 - dispersion / 100),
-      high: precioM2 * (1 + dispersion / 100),
-      included: comparable.included !== false
+    rows: Array<{
+        label: string;
+        precioM2: number;
+        low: number;
+        high: number;
+        included: boolean;
+    }>;
+    summary: { valMin: number; valProm: number; valMax: number };
+    chart: {
+        labels: string[];
+        dataRanges: [number, number][];
+        colors: string[];
     };
-  });
+} {
+    const dispersion = form.ac_dispersion ?? 10;
 
-  const incluidos = rows.filter((row) => row.included && row.precioM2 > 0);
-  let valMin = 0;
-  let valProm = 0;
-  let valMax = 0;
-  if (incluidos.length > 0) {
-    const vals = incluidos.map((row) => row.precioM2);
-    valProm = vals.reduce((a, b) => a + b, 0) / vals.length;
-    valMin = Math.min(...vals) * (1 - dispersion / 100);
-    valMax = Math.max(...vals) * (1 + dispersion / 100);
-  }
+    const rows = form.comparables.map((comparable, i) => {
+        const precioM2 = precioM2Comparable(comparable);
+        return {
+            label: `Comparable ${i + 1}`,
+            precioM2,
+            low: precioM2 * (1 - dispersion / 100),
+            high: precioM2 * (1 + dispersion / 100),
+            included: comparable.included !== false,
+        };
+    });
 
-  const labels = rows.map((row) => row.label).concat(incluidos.length ? ['Promedio'] : []);
-  const dataRanges: [number, number][] = rows.map(
-    (row): [number, number] => [row.precioM2 ? row.low : 0, row.precioM2 ? row.high : 0]
-  );
-  if (incluidos.length > 0) dataRanges.push([valMin, valMax]);
-  const colors: string[] = rows.map((row) => (row.included ? '#14b8a6' : '#555'));
-  if (incluidos.length > 0) colors.push('#f59e0b');
+    const incluidos = rows.filter((row) => row.included && row.precioM2 > 0);
+    let valMin = 0;
+    let valProm = 0;
+    let valMax = 0;
+    if (incluidos.length > 0) {
+        const vals = incluidos.map((row) => row.precioM2);
+        valProm = vals.reduce((a, b) => a + b, 0) / vals.length;
+        valMin = Math.min(...vals) * (1 - dispersion / 100);
+        valMax = Math.max(...vals) * (1 + dispersion / 100);
+    }
 
-  return {
-    rows,
-    summary: { valMin, valProm, valMax },
-    chart: { labels, dataRanges, colors }
-  };
+    const labels = rows.map((row) => row.label).concat(incluidos.length ? ['Promedio'] : []);
+    const dataRanges: [number, number][] = rows.map((row): [number, number] => [
+        row.precioM2 ? row.low : 0,
+        row.precioM2 ? row.high : 0,
+    ]);
+    if (incluidos.length > 0) dataRanges.push([valMin, valMax]);
+    const colors: string[] = rows.map((row) => (row.included ? '#14b8a6' : '#555'));
+    if (incluidos.length > 0) colors.push('#f59e0b');
+
+    return {
+        rows,
+        summary: { valMin, valProm, valMax },
+        chart: { labels, dataRanges, colors },
+    };
 }

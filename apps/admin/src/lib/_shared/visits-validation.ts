@@ -5,45 +5,77 @@
 
 import { z } from 'zod';
 
-export const VisitStatusSchema = z.enum(['programada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_show']);
+export const VisitStatusSchema = z.enum([
+    'programada',
+    'confirmada',
+    'en_curso',
+    'completada',
+    'cancelada',
+    'no_show',
+]);
 export const VisitTypeSchema = z.enum(['presencial', 'virtual', 'telefonica']);
 
 export const RecurrenceRuleSchema = z.discriminatedUnion('frequency', [
     z.object({ frequency: z.literal('daily'), interval: z.number().int().min(1).max(30) }),
-    z.object({ frequency: z.literal('weekly'), interval: z.number().int().min(1).max(12), days_of_week: z.array(z.number().int().min(0).max(6)).min(1), exceptions: z.array(z.string().date()).optional() }),
-    z.object({ frequency: z.literal('monthly'), interval: z.number().int().min(1).max(12), day_of_month: z.number().int().min(1).max(31).optional(), exceptions: z.array(z.string().date()).optional() }),
-    z.object({ frequency: z.literal('yearly'), interval: z.number().int().min(1).max(10), exceptions: z.array(z.string().date()).optional() }),
+    z.object({
+        frequency: z.literal('weekly'),
+        interval: z.number().int().min(1).max(12),
+        days_of_week: z.array(z.number().int().min(0).max(6)).min(1),
+        exceptions: z.array(z.string().date()).optional(),
+    }),
+    z.object({
+        frequency: z.literal('monthly'),
+        interval: z.number().int().min(1).max(12),
+        day_of_month: z.number().int().min(1).max(31).optional(),
+        exceptions: z.array(z.string().date()).optional(),
+    }),
+    z.object({
+        frequency: z.literal('yearly'),
+        interval: z.number().int().min(1).max(10),
+        exceptions: z.array(z.string().date()).optional(),
+    }),
 ]);
 
-export const VisitFormSchema = z.object({
-    lead_id: z.string().uuid().nullable(),
-    property_id: z.string().uuid().nullable(),
-    agent_id: z.string().uuid(),
-    title: z.string().min(3).max(120),
-    description: z.string().max(1000).optional(),
-    starts_at: z.string().datetime(),
-    ends_at: z.string().datetime(),
-    status: VisitStatusSchema.default('programada'),
-    location: z.string().max(200).nullable(),
-    meeting_type: VisitTypeSchema.optional(),
-    meeting_link: z.string().url().nullable(),
-    notes: z.string().max(2000).optional(),
-}).refine(data => new Date(data.ends_at) > new Date(data.starts_at), { message: 'Fin debe ser después de inicio', path: ['ends_at'] });
+export const VisitFormSchema = z
+    .object({
+        lead_id: z.string().uuid().nullable(),
+        property_id: z.string().uuid().nullable(),
+        agent_id: z.string().uuid(),
+        title: z.string().min(3).max(120),
+        description: z.string().max(1000).optional(),
+        starts_at: z.string().datetime(),
+        ends_at: z.string().datetime(),
+        status: VisitStatusSchema.default('programada'),
+        location: z.string().max(200).nullable(),
+        meeting_type: VisitTypeSchema.optional(),
+        meeting_link: z.string().url().nullable(),
+        notes: z.string().max(2000).optional(),
+    })
+    .refine((data) => new Date(data.ends_at) > new Date(data.starts_at), {
+        message: 'Fin debe ser después de inicio',
+        path: ['ends_at'],
+    });
 
-export const VisitPatchSchema = z.object({
-    title: z.string().min(3).max(120).optional(),
-    description: z.string().max(1000).optional(),
-    starts_at: z.string().datetime().optional(),
-    ends_at: z.string().datetime().optional(),
-    status: VisitStatusSchema.optional(),
-    location: z.string().max(200).nullable().optional(),
-    meeting_type: VisitTypeSchema.optional().nullable(),
-    meeting_link: z.string().url().nullable().optional(),
-    notes: z.string().max(2000).optional(),
-    lead_id: z.string().uuid().nullable().optional(),
-    property_id: z.string().uuid().nullable().optional(),
-    agent_id: z.string().uuid().optional(),
-}).refine(data => !data.starts_at || !data.ends_at || new Date(data.ends_at) > new Date(data.starts_at), { message: 'Fin debe ser después de inicio', path: ['ends_at'] });
+export const VisitPatchSchema = z
+    .object({
+        title: z.string().min(3).max(120).optional(),
+        description: z.string().max(1000).optional(),
+        starts_at: z.string().datetime().optional(),
+        ends_at: z.string().datetime().optional(),
+        status: VisitStatusSchema.optional(),
+        location: z.string().max(200).nullable().optional(),
+        meeting_type: VisitTypeSchema.optional().nullable(),
+        meeting_link: z.string().url().nullable().optional(),
+        notes: z.string().max(2000).optional(),
+        lead_id: z.string().uuid().nullable().optional(),
+        property_id: z.string().uuid().nullable().optional(),
+        agent_id: z.string().uuid().optional(),
+    })
+    .refine(
+        (data) =>
+            !data.starts_at || !data.ends_at || new Date(data.ends_at) > new Date(data.starts_at),
+        { message: 'Fin debe ser después de inicio', path: ['ends_at'] },
+    );
 
 export const QrCheckinPayloadSchema = z.object({
     visitId: z.string().uuid(),
@@ -65,11 +97,15 @@ export const AgentAvailabilitySchema = z.object({
     end_time: z.string().regex(/^\d{2}:\d{2}$/),
     is_active: z.boolean().default(true),
     timezone: z.string().default('America/Argentina/Buenos_Aires'),
-    exceptions: z.array(z.object({
-        date: z.string().date(),
-        reason: z.string().optional(),
-        available: z.boolean().default(false),
-    })).optional(),
+    exceptions: z
+        .array(
+            z.object({
+                date: z.string().date(),
+                reason: z.string().optional(),
+                available: z.boolean().default(false),
+            }),
+        )
+        .optional(),
 });
 
 // Type exports

@@ -3,8 +3,7 @@
  * Clases: modal--small
  */
 
-/* Sizes (modal--medium lives near the Typeahead section) */ .modal--small {
-  
-      max-width: 400px;
-
+/* Sizes (modal--medium lives near the Typeahead section) */
+.modal--small {
+    max-width: 400px;
 }

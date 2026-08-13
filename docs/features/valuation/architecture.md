@@ -12,11 +12,11 @@
 graph TD
     TasacionesPage[TasacionesPage] --> TasacionesList[TasacionesList]
     TasacionesPage --> TasacionFormPage[TasacionFormPage]
-    
+
     TasacionesList --> useTasaciones[useTasaciones hook]
     TasacionesList --> TasacionRow[TasacionRow]
     TasacionesList --> ActionBar[ActionBar: Nueva, Filtros, Exportar]
-    
+
     TasacionFormPage --> ActionBarForm[ActionBar: Guardar, Editar, Finalizar, PDF]
     TasacionFormPage --> DatosClienteSection[DatosClienteSection]
     TasacionFormPage --> FotoFachadaSection[FotoFachadaSection]
@@ -30,50 +30,50 @@ graph TD
     TasacionFormPage --> ValuacionSection[ValuacionSection]
     TasacionFormPage --> ObservacionesSection[ObservacionesSection]
     TasacionFormPage --> PdfSection[PdfSection]
-    
+
     ComparablesSection --> ComparableBlock[ComparableBlock] x N
     ComparableBlock --> PhotoUploader[PhotoUploader]
     ComparableBlock --> ExtractFromUrl[ExtractFromUrl btn]
     ComparableBlock --> CharacteristicsGrid[CharacteristicsGrid: 6 selects dinamicos]
-    
+
     DescripcionPropiedadSection --> AmbienteGrid[AmbienteGrid: 18 inputs + Total]
     DescripcionPropiedadSection --> ComodidadesGrid[ComodidadesGrid: 3 selects]
     DescripcionPropiedadSection --> ServiciosBasicosGrid[ServiciosBasicosGrid: 3 selects]
-    
+
     AnalisisComparativoSection --> ValuationChart[ValuationChart: Chart.js floating bars]
     AnalisisComparativoSection --> ComparablesTable[ComparablesTable: checkbox + rangos]
-    
+
     MapaSection --> MapWrapper[MapWrapper: Leaflet + Nominatim]
     MapWrapper --> GeocodingService[GeocodingService: Nominatim + cache]
-    
+
     ServiciosSection --> ServiciosGrid[ServiciosGrid: 6 selects RUBRO_NIVELES]
-    
+
     BarrioSection --> CaracteristicasBarrioGrid[CaracteristicasBarrioGrid: 9 selects]
     BarrioSection --> DescripcionBarrioGrid[DescripcionBarrioGrid: 9 selects + % uso suelo]
-    
+
     ValuacionSection --> ValorBoxes[ValorBoxes: 4 summary boxes]
-    
+
     FotoFachadaSection --> PhotoUploader
     MapaSection --> MapWrapper
-    
+
     PhotoUploader --> FileReader[FileReader API]
     ExtractFromUrl --> AllOriginsProxy[AllOrigins Proxy]
     MapWrapper --> Leaflet[Leaflet 1.9.4]
     MapWrapper --> Nominatim[Nominatim Geocoding]
     ValuationChart --> ChartJS[Chart.js 4.4.0]
-    
+
     TasacionFormPage --> useTasacion[useTasacion hook]
     TasacionFormPage --> useTasacionCalculations[useTasacionCalculations hook]
     TasacionFormPage --> useComparables[useComparables hook]
     TasacionFormPage --> useGeocoding[useGeocoding hook]
     TasacionFormPage --> usePhotoUpload[usePhotoUpload hook]
     TasacionFormPage --> useDraftPersistence[useDraftPersistence hook]
-    
+
     useTasacionCalculations --> ValuationCalculations[valuationCalculations.ts: 12 formulas puras]
     useGeocoding --> GeocodingService[geocodingService.ts: Nominatim + rate limit + cache]
     usePhotoUpload --> SupabaseStorage[Supabase Storage]
     useDraftPersistence --> ValuationService[valuationService.ts: Supabase CRUD]
-    
+
     useTasacion --> ValuationSchemas[valuationSchemas.ts: Zod]
     ValuationCalculations --> ValuationSchemas
     ValuationService --> ValuationSchemas
@@ -98,7 +98,7 @@ sequenceDiagram
     participant SupabaseStorage
     participant ValuationService
     participant SupabaseDB
-    
+
     User->>TasacionFormPage: Abre tasacion (nueva o existente)
     TasacionFormPage->>useTasacion: load(id?)
     alt Nueva tasacion
@@ -112,7 +112,7 @@ sequenceDiagram
         ValuationService-->>useTasacion: TasacionData completa
         useTasacion-->>TasacionFormPage: estado hidratado
     end
-    
+
     loop Edicion (cada input/change)
         User->>TasacionFormPage: input/select/textarea change
         TasacionFormPage->>useTasacion: setField(key, value)
@@ -121,16 +121,16 @@ sequenceDiagram
         ValuationCalculations-->>useTasacionCalculations: resultados
         useTasacionCalculations-->>useTasacion: estado calculado actualizado
         useTasacion-->>TasacionFormPage: UI reactiva (signals)
-        
+
         opt Auto-save draft (debounced 2s)
             useTasacion->>useDraftPersistence: saveDraft(state)
         end
     end
-    
+
     User->>ComparablesSection: "+ Agregar comparable"
     ComparablesSection->>useComparables: add()
     useComparables-->>TasacionFormPage: nuevo bloque en estado
-    
+
     User->>ComparableBlock: "Extaer datos" (URL)
     ComparableBlock->>useGeocoding: extractFromUrl(url)
     useGeocoding->>AllOriginsProxy: fetch proxy
@@ -138,7 +138,7 @@ sequenceDiagram
     useGeocoding->>useGeocoding: parse og:title, precio, superficie
     useGeocoding-->>ComparableBlock: autollenado parcial
     ComparableBlock->>useTasacionCalculations: recalcAll
-    
+
     User->>MapaSection: "Actualizar mapa"
     MapaSection->>useGeocoding: geocodeAll(propiedad + comparables)
     loop Por cada direccion (rate limit 1req/s)
@@ -146,13 +146,13 @@ sequenceDiagram
         Nominatim-->>useGeocoding: {lat, lon}
     end
     useGeocoding-->>MapaSection: markers + bounds + leyenda
-    
+
     User->>FotoFachadaSection / ComparableBlock: subir foto
     FotoFachadaSection->>usePhotoUpload: upload(file)
     usePhotoUpload->>SupabaseStorage: upload bucket valuation-images
     SupabaseStorage-->>usePhotoUpload: publicUrl
     usePhotoUpload-->>TasacionFormPage: url -> estado
-    
+
     User->>ActionBar: "Guardar"
     TasacionFormPage->>useDraftPersistence: saveDraft(state)
     useDraftPersistence->>ValuationService: upsertDraft(data)
@@ -160,7 +160,7 @@ sequenceDiagram
     SupabaseDB-->>ValuationService: ok
     ValuationService-->>useDraftPersistence: ok
     useDraftPersistence-->>TasacionFormPage: toast "Guardado"
-    
+
     User->>ActionBar: "Finalizar"
     TasacionFormPage->>useTasacion: finalize()
     useTasacion->>ValuationService: finalize(id)
@@ -168,7 +168,7 @@ sequenceDiagram
     SupabaseDB-->>ValuationService: ok
     ValuationService-->>useTasacion: locked=true
     useTasacion-->>TasacionFormPage: UI locked (fieldset disabled)
-    
+
     User->>ActionBar: "Exportar PDF"
     TasacionFormPage->>window: print()
     Note right of TasacionFormPage: @media print CSS genera PDF identico a TAI.html
@@ -178,19 +178,19 @@ sequenceDiagram
 
 ## 3. DECISIONES ARQUITECTURALES
 
-| # | Decision | Justificacion |
-|---|---|---|
-| 1 | Zod como source of truth | Un solo lugar para validaciones, formularios, DB types, API contracts |
-| 2 | Calculos puros en valuationCalculations.ts | Testables unitariamente, sin side effects, port 1:1 de TAI.html |
-| 3 | TanStack Query + Signals | Server state (Query) + UI state (Signals) - patron Bienenhaus estandar |
-| 4 | Supabase Storage para fotos | Base64 en localStorage no escala; CDN + signed URLs |
-| 5 | GeocodingService con cache + rate limit | Nominatim 1req/s -> cache en Supabase (tabla geocode_cache) |
-| 5 | Drafts en DB (no localStorage) | Persistencia cross-device, recuperacion, auditoria |
-| 6 | Locked row en DB | finalized_at timestamp + locked boolean + RLS bloquea UPDATE |
-| 7 | PDF via window.print() + @media print | Identico a TAI.html, zero dependencias extra |
-| 8 | Componentes atomicos + composicion | Reutilizables, testables, sin archivo gigante |
-| 9 | ExtractFromUrl como best-effort | Proxy CORS publico (allorigins) - puede fallar, UI lo maneja |
-| 10 | Tipos derivados de Zod | z.infer<typeof schema> -> cero drift schema <-> tipo |
+| #   | Decision                                   | Justificacion                                                          |
+| --- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| 1   | Zod como source of truth                   | Un solo lugar para validaciones, formularios, DB types, API contracts  |
+| 2   | Calculos puros en valuationCalculations.ts | Testables unitariamente, sin side effects, port 1:1 de TAI.html        |
+| 3   | TanStack Query + Signals                   | Server state (Query) + UI state (Signals) - patron Bienenhaus estandar |
+| 4   | Supabase Storage para fotos                | Base64 en localStorage no escala; CDN + signed URLs                    |
+| 5   | GeocodingService con cache + rate limit    | Nominatim 1req/s -> cache en Supabase (tabla geocode_cache)            |
+| 5   | Drafts en DB (no localStorage)             | Persistencia cross-device, recuperacion, auditoria                     |
+| 6   | Locked row en DB                           | finalized_at timestamp + locked boolean + RLS bloquea UPDATE           |
+| 7   | PDF via window.print() + @media print      | Identico a TAI.html, zero dependencias extra                           |
+| 8   | Componentes atomicos + composicion         | Reutilizables, testables, sin archivo gigante                          |
+| 9   | ExtractFromUrl como best-effort            | Proxy CORS publico (allorigins) - puede fallar, UI lo maneja           |
+| 10  | Tipos derivados de Zod                     | z.infer<typeof schema> -> cero drift schema <-> tipo                   |
 
 ---
 
@@ -424,49 +424,157 @@ create policy valuation_owner_read on public.property_valuations for select usin
 // valuationSchemas.ts — SOLO ESTRUCTURA, implementacion completa en Fase 3
 
 // Enums (match DB + TAI.html exacto)
-export const TipoInmuebleEnum = z.enum(['CASA','DEPTO','LOTE','GALPON','OFICINA','LOCAL','OTRO']);
-export const DestinoEnum = z.enum(['Venta','Alquiler']);
-export const NivelCalidadEnum = z.enum(['','Excelente','Buena','Media','Regular','Mala','N/A']);
-export const NivelLuminosidadEnum = z.enum(['','Malo','Regular','Promedio','Buena','Excelente','N/A']);
-export const OrientacionEnum = z.enum(['','Norte','Sur','Este','Oeste','Noreste','Sudeste','Noroeste','Sudoeste','N/A']);
-export const TipoConstruccionEnum = z.enum(['','Ladrillo','Metalica','Madera','Bloques de hormigon','N/A']);
-export const TipoTechoEnum = z.enum(['','N/A','Losa H°A°','Losa ceramica','Tejas s/ estr. Madera','Pizarra s/ estr. Madera','Chapa s/ estr. Madera','Chapa s/ estr. Metalica']);
-export const EstacionamientoEnum = z.enum(['','Garaje cubierto','Garaje semicubierto','Garaje descubierto','N/A']);
-export const SiNoNAEnum = z.enum(['','Si','No','N/A']);
-export const ServicioNivelEnum = z.enum(['Central','Individual','Inexistente','N/A']);
-export const RubroNivelEnum = z.enum([
-  'Optimo / Impecable (Listo para Habitar)',
-  'Sencilla (Cosmetica / Menor)',
-  'Moderada (Parcial / Funcional)',
-  'Grave (Deterioro Estructural)',
-  'A Nuevo (Redisenio Total)'
+export const TipoInmuebleEnum = z.enum([
+    'CASA',
+    'DEPTO',
+    'LOTE',
+    'GALPON',
+    'OFICINA',
+    'LOCAL',
+    'OTRO',
 ]);
-export const TipologiaEdiliciaEnum = z.enum(['','Construccion en altura','Construccion de media altura','Viviendas unifamiliares y PH de hasta tres plantas','Viviendas unifamiliares y PH de una planta','Casas quinta','Industrias de gran envergadura','Industrias de pequena y mediana envergadura']);
-export const CalidadPredomEnum = z.enum(['','Excelente','Muy Buena','Buena','Media','Economica','Precaria']);
-export const PrevalenciaEnum = z.enum(['','En todo el entorno','Sobre arterias principales','Ocasional','No relevante o inexistente']);
-export const NivelSocioEnum = z.enum(['','Alto','Medio alto','Medio','Medio Bajo','Bajo']);
-export const BarrioTipoEnum = z.enum(['','Urbano','Suburbano','Rural']);
-export const ConstruidoPctEnum = z.enum(['','Mas del 75%','Entre el 75% y el 25%','Menos del 25%']);
-export const IndiceCrecimientoEnum = z.enum(['','Estable','Creciente','Decreciente']);
-export const VigilanciaEnum = z.enum(['','Si','No']);
-export const TendenciaValoresEnum = z.enum(['','Creciente','Estable','Decreciente']);
-export const DemandaOfertaEnum = z.enum(['','Exceso de Oferta','Falta de Oferta','Relacion Oferta/Demanda Equilibrada']);
-export const TiempoComercializacionEnum = z.enum(['','Menos de 3 meses','Entre 3 y 6 meses','Mas de 6 meses']);
-export const CambiosUsoEnum = z.enum(['','Probable','Improbable','En Proceso']);
-export const FacilidadesEstacionamientoEnum = z.enum(['','Garage Propio','Garajes privados','En la via publica']);
-export const NivelesComparacionEnum = z.enum(['Mucho Mejor','Mejor','Igual','Peor','Mucho Peor']);
+export const DestinoEnum = z.enum(['Venta', 'Alquiler']);
+export const NivelCalidadEnum = z.enum([
+    '',
+    'Excelente',
+    'Buena',
+    'Media',
+    'Regular',
+    'Mala',
+    'N/A',
+]);
+export const NivelLuminosidadEnum = z.enum([
+    '',
+    'Malo',
+    'Regular',
+    'Promedio',
+    'Buena',
+    'Excelente',
+    'N/A',
+]);
+export const OrientacionEnum = z.enum([
+    '',
+    'Norte',
+    'Sur',
+    'Este',
+    'Oeste',
+    'Noreste',
+    'Sudeste',
+    'Noroeste',
+    'Sudoeste',
+    'N/A',
+]);
+export const TipoConstruccionEnum = z.enum([
+    '',
+    'Ladrillo',
+    'Metalica',
+    'Madera',
+    'Bloques de hormigon',
+    'N/A',
+]);
+export const TipoTechoEnum = z.enum([
+    '',
+    'N/A',
+    'Losa H°A°',
+    'Losa ceramica',
+    'Tejas s/ estr. Madera',
+    'Pizarra s/ estr. Madera',
+    'Chapa s/ estr. Madera',
+    'Chapa s/ estr. Metalica',
+]);
+export const EstacionamientoEnum = z.enum([
+    '',
+    'Garaje cubierto',
+    'Garaje semicubierto',
+    'Garaje descubierto',
+    'N/A',
+]);
+export const SiNoNAEnum = z.enum(['', 'Si', 'No', 'N/A']);
+export const ServicioNivelEnum = z.enum(['Central', 'Individual', 'Inexistente', 'N/A']);
+export const RubroNivelEnum = z.enum([
+    'Optimo / Impecable (Listo para Habitar)',
+    'Sencilla (Cosmetica / Menor)',
+    'Moderada (Parcial / Funcional)',
+    'Grave (Deterioro Estructural)',
+    'A Nuevo (Redisenio Total)',
+]);
+export const TipologiaEdiliciaEnum = z.enum([
+    '',
+    'Construccion en altura',
+    'Construccion de media altura',
+    'Viviendas unifamiliares y PH de hasta tres plantas',
+    'Viviendas unifamiliares y PH de una planta',
+    'Casas quinta',
+    'Industrias de gran envergadura',
+    'Industrias de pequena y mediana envergadura',
+]);
+export const CalidadPredomEnum = z.enum([
+    '',
+    'Excelente',
+    'Muy Buena',
+    'Buena',
+    'Media',
+    'Economica',
+    'Precaria',
+]);
+export const PrevalenciaEnum = z.enum([
+    '',
+    'En todo el entorno',
+    'Sobre arterias principales',
+    'Ocasional',
+    'No relevante o inexistente',
+]);
+export const NivelSocioEnum = z.enum(['', 'Alto', 'Medio alto', 'Medio', 'Medio Bajo', 'Bajo']);
+export const BarrioTipoEnum = z.enum(['', 'Urbano', 'Suburbano', 'Rural']);
+export const ConstruidoPctEnum = z.enum([
+    '',
+    'Mas del 75%',
+    'Entre el 75% y el 25%',
+    'Menos del 25%',
+]);
+export const IndiceCrecimientoEnum = z.enum(['', 'Estable', 'Creciente', 'Decreciente']);
+export const VigilanciaEnum = z.enum(['', 'Si', 'No']);
+export const TendenciaValoresEnum = z.enum(['', 'Creciente', 'Estable', 'Decreciente']);
+export const DemandaOfertaEnum = z.enum([
+    '',
+    'Exceso de Oferta',
+    'Falta de Oferta',
+    'Relacion Oferta/Demanda Equilibrada',
+]);
+export const TiempoComercializacionEnum = z.enum([
+    '',
+    'Menos de 3 meses',
+    'Entre 3 y 6 meses',
+    'Mas de 6 meses',
+]);
+export const CambiosUsoEnum = z.enum(['', 'Probable', 'Improbable', 'En Proceso']);
+export const FacilidadesEstacionamientoEnum = z.enum([
+    '',
+    'Garage Propio',
+    'Garajes privados',
+    'En la via publica',
+]);
+export const NivelesComparacionEnum = z.enum([
+    'Mucho Mejor',
+    'Mejor',
+    'Igual',
+    'Peor',
+    'Mucho Peor',
+]);
 
 // Constantes PESOS + SLOT_ORDER (port exacto de TAI.html)
-export const PESOS = { /* ... */ } as const;
-export const SLOT_ORDER = [3,2,5,0,4,1] as const;
-export const NIVELES = { /* ... */ } as const;
-export const RUBROS = { /* ... */ } as const;
+export const PESOS = {/* ... */} as const;
+export const SLOT_ORDER = [3, 2, 5, 0, 4, 1] as const;
+export const NIVELES = {/* ... */} as const;
+export const RUBROS = {/* ... */} as const;
 
 // Schemas principales
-export const ComparableSchema = z.object({ /* 15 campos + chars[6] */ });
-export const ValuacionInputSchema = z.object({ /* 120+ campos */ });
-export const ValuacionDraftSchema = ValuacionInputSchema.extend({ /* metadata */ });
-export const ValuacionDBValuacionSchema = ValuacionInputSchema.extend({ /* id, timestamps, locked, etc */ });
+export const ComparableSchema = z.object({/* 15 campos + chars[6] */});
+export const ValuacionInputSchema = z.object({/* 120+ campos */});
+export const ValuacionDraftSchema = ValuacionInputSchema.extend({/* metadata */});
+export const ValuacionDBValuacionSchema = ValuacionInputSchema.extend({
+    /* id, timestamps, locked, etc */
+});
 ```
 
 ---

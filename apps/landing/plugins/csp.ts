@@ -49,7 +49,7 @@ const LANDING_CSP = [
     "font-src 'self' https://cdnjs.cloudflare.com data:",
     "img-src 'self' data: https://images.unsplash.com https://*.supabase.co https://http2.mlstatic.com",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.us.sentry.io https://static.cloudflareinsights.com",
-    "frame-src https://www.youtube.com",
+    'frame-src https://www.youtube.com',
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -61,8 +61,7 @@ export function csp(): Plugin {
         name: 'bienenhaus-landing-csp',
         apply: 'build',
         transformIndexHtml(html) {
-            const metaTag =
-                `<meta http-equiv="Content-Security-Policy" content="${LANDING_CSP}">`;
+            const metaTag = `<meta http-equiv="Content-Security-Policy" content="${LANDING_CSP}">`;
             const result = html.replace(/<head>/i, `<head>\n    ${metaTag}`);
             this.info(`[csp] CSP inyectado en index.html (landing)`);
             return result;

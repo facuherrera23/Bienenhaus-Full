@@ -9,18 +9,18 @@
    ============================================================ */
 
 .card {
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-lg);
-  box-shadow: var(--bh-shadow-sm);
-  transition: all var(--bh-dur-med) var(--bh-ease-premium);
-  overflow: hidden;
-  position: relative;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    box-shadow: var(--bh-shadow-sm);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    overflow: hidden;
+    position: relative;
 }
 
 .card:hover {
-  border-color: var(--bh-border-strong);
-  box-shadow: var(--bh-shadow-md);
+    border-color: var(--bh-border-strong);
+    box-shadow: var(--bh-shadow-md);
 }
 
 /* ============================================================
@@ -28,35 +28,36 @@
    ============================================================ */
 
 .card--tilt {
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  transition: transform var(--bh-dur-slow) var(--bh-ease-premium);
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    transition: transform var(--bh-dur-slow) var(--bh-ease-premium);
 }
 
 .card--tilt:hover {
-  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(-4px);
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+        translateY(-4px);
 }
 
 /* Glow que sigue al mouse */
 .card--tilt::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: var(--bh-radius-lg);
-  background: radial-gradient(
-    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(31, 200, 195, 0.08) 0%,
-    rgba(31, 200, 195, 0.02) 40%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
-  pointer-events: none;
-  z-index: 0;
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--bh-radius-lg);
+    background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(31, 200, 195, 0.08) 0%,
+        rgba(31, 200, 195, 0.02) 40%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .card--tilt:hover::before {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* ============================================================
@@ -64,33 +65,33 @@
    ============================================================ */
 
 .cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--bh-space-3);
-  padding: var(--bh-space-4) var(--bh-space-5);
-  border-bottom: 1px solid var(--bh-border);
-  background: var(--bh-bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-4) var(--bh-space-5);
+    border-bottom: 1px solid var(--bh-border);
+    background: var(--bh-bg-input);
 }
 
 .cardHeader h3 {
-  margin: 0;
-  font-size: var(--bh-text-md);
-  font-weight: var(--bh-weight-bold);
-  color: var(--bh-text-primary);
+    margin: 0;
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
 }
 
 .cardHeader .cardSubtitle {
-  font-size: var(--bh-text-xs);
-  color: var(--bh-text-tertiary);
-  font-weight: var(--bh-weight-normal);
-  margin-left: var(--bh-space-2);
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    font-weight: var(--bh-weight-normal);
+    margin-left: var(--bh-space-2);
 }
 
 .cardHeader .cardActions {
-  display: flex;
-  align-items: center;
-  gap: var(--bh-space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
 }
 
 /* ============================================================
@@ -98,15 +99,15 @@
    ============================================================ */
 
 .cardBody {
-  padding: var(--bh-space-5);
+    padding: var(--bh-space-5);
 }
 
 .cardBody--compact {
-  padding: var(--bh-space-3);
+    padding: var(--bh-space-3);
 }
 
 .cardBody--spacious {
-  padding: var(--bh-space-7);
+    padding: var(--bh-space-7);
 }
 
 /* ============================================================
@@ -114,13 +115,13 @@
    ============================================================ */
 
 .cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--bh-space-3);
-  padding: var(--bh-space-3) var(--bh-space-5);
-  border-top: 1px solid var(--bh-border);
-  background: var(--bh-bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-3) var(--bh-space-5);
+    border-top: 1px solid var(--bh-border);
+    background: var(--bh-bg-input);
 }
 
 /* ============================================================
@@ -128,128 +129,128 @@
    ============================================================ */
 
 .statCard {
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-lg);
-  padding: var(--bh-space-5);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--bh-space-4);
-  transition: all var(--bh-dur-med) var(--bh-ease-premium);
-  position: relative;
-  overflow: hidden;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    padding: var(--bh-space-5);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bh-space-4);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    position: relative;
+    overflow: hidden;
 }
 
 .statCard:hover {
-  transform: translateY(-3px);
-  border-color: var(--bh-accent);
-  box-shadow: var(--bh-shadow-glow-lg);
+    transform: translateY(-3px);
+    border-color: var(--bh-accent);
+    box-shadow: var(--bh-shadow-glow-lg);
 }
 
 /* Accent bar en la parte superior */
 .statCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--bh-border);
-  border-radius: 0 0 2px 2px;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--bh-border);
+    border-radius: 0 0 2px 2px;
 }
 
 .statCard--info::before {
-  background: linear-gradient(90deg, var(--bh-info), var(--bh-accent));
+    background: linear-gradient(90deg, var(--bh-info), var(--bh-accent));
 }
 .statCard--success::before {
-  background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft));
+    background: linear-gradient(90deg, var(--bh-success), var(--bh-success-soft));
 }
 .statCard--warning::before {
-  background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft));
+    background: linear-gradient(90deg, var(--bh-warning), var(--bh-warning-soft));
 }
 .statCard--danger::before {
-  background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft));
+    background: linear-gradient(90deg, var(--bh-danger), var(--bh-danger-soft));
 }
 .statCard--neutral::before {
-  background: linear-gradient(90deg, var(--bh-text-tertiary), var(--bh-border));
+    background: linear-gradient(90deg, var(--bh-text-tertiary), var(--bh-border));
 }
 
 .statCardIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--bh-radius-md);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--bh-text-tertiary);
-  flex-shrink: 0;
-  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--bh-radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--bh-text-tertiary);
+    flex-shrink: 0;
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
 }
 
 .statCard--info .statCardIcon {
-  background: var(--bh-accent-soft);
-  color: var(--bh-accent);
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
 }
 .statCard--success .statCardIcon {
-  background: var(--bh-success-soft);
-  color: var(--bh-success);
+    background: var(--bh-success-soft);
+    color: var(--bh-success);
 }
 .statCard--warning .statCardIcon {
-  background: var(--bh-warning-soft);
-  color: var(--bh-warning);
+    background: var(--bh-warning-soft);
+    color: var(--bh-warning);
 }
 .statCard--danger .statCardIcon {
-  background: var(--bh-danger-soft);
-  color: var(--bh-danger);
+    background: var(--bh-danger-soft);
+    color: var(--bh-danger);
 }
 
 .statCard:hover .statCardIcon {
-  transform: scale(1.05) rotate(-3deg);
+    transform: scale(1.05) rotate(-3deg);
 }
 
 .statCardContent {
-  flex: 1;
-  min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .statCardLabel {
-  font-size: var(--bh-text-xs);
-  font-weight: var(--bh-weight-medium);
-  color: var(--bh-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 var(--bh-space-1);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 var(--bh-space-1);
 }
 
 .statCardValue {
-  font-size: var(--bh-text-2xl);
-  font-weight: var(--bh-weight-bold);
-  color: var(--bh-text-primary);
-  line-height: 1.1;
-  margin: 0 0 var(--bh-space-1);
-  letter-spacing: -0.02em;
+    font-size: var(--bh-text-2xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+    line-height: 1.1;
+    margin: 0 0 var(--bh-space-1);
+    letter-spacing: -0.02em;
 }
 
 .statCardDelta {
-  font-size: var(--bh-text-xs);
-  color: var(--bh-text-tertiary);
-  margin: 0;
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    margin: 0;
 }
 
 .statCardAccent {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--bh-border);
-  opacity: 0;
-  transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bh-border);
+    opacity: 0;
+    transition: opacity var(--bh-dur-med) var(--bh-ease-premium);
 }
 
 .statCard:hover .statCardAccent {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* ============================================================
@@ -257,21 +258,21 @@
    ============================================================ */
 
 .cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--bh-space-4);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--bh-space-4);
 }
 
 .cardGrid--2cols {
-  grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 }
 
 .cardGrid--3cols {
-  grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .cardGrid--4cols {
-  grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr);
 }
 
 /* ============================================================
@@ -279,37 +280,37 @@
    ============================================================ */
 
 .placeholderCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--bh-space-3);
-  padding: var(--bh-space-8) var(--bh-space-6);
-  color: var(--bh-text-tertiary);
-  text-align: center;
-  min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-8) var(--bh-space-6);
+    color: var(--bh-text-tertiary);
+    text-align: center;
+    min-height: 200px;
 }
 
 .placeholderCard svg {
-  opacity: 0.5;
-  color: var(--bh-text-tertiary);
+    opacity: 0.5;
+    color: var(--bh-text-tertiary);
 }
 
 .placeholderCard h3 {
-  color: var(--bh-text-secondary);
-  font-weight: var(--bh-weight-semibold);
-  margin: 0;
-  font-size: var(--bh-text-md);
+    color: var(--bh-text-secondary);
+    font-weight: var(--bh-weight-semibold);
+    margin: 0;
+    font-size: var(--bh-text-md);
 }
 
 .placeholderCard p {
-  margin: 0;
-  font-size: var(--bh-text-sm);
-  color: var(--bh-text-tertiary);
+    margin: 0;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
 }
 
 .placeholderCard .btn {
-  margin-top: var(--bh-space-2);
+    margin-top: var(--bh-space-2);
 }
 
 /* ============================================================
@@ -317,49 +318,49 @@
    ============================================================ */
 
 .infoCard {
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-lg);
-  padding: var(--bh-space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--bh-space-3);
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    padding: var(--bh-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-3);
 }
 
 .infoCard h4 {
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-bold);
-  color: var(--bh-text-primary);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--bh-space-2);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-2);
 }
 
 .infoCard h4 svg {
-  color: var(--bh-accent);
+    color: var(--bh-accent);
 }
 
 .infoCard dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--bh-space-1) var(--bh-space-3);
-  margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--bh-space-1) var(--bh-space-3);
+    margin: 0;
 }
 
 .infoCard dt {
-  font-size: var(--bh-text-xs);
-  font-weight: var(--bh-weight-medium);
-  color: var(--bh-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .infoCard dd {
-  margin: 0;
-  font-size: var(--bh-text-sm);
-  color: var(--bh-text-primary);
-  text-align: right;
+    margin: 0;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+    text-align: right;
 }
 
 /* ============================================================
@@ -367,116 +368,116 @@
    ============================================================ */
 
 .actionCard {
-  background: var(--bh-bg-card);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-lg);
-  padding: var(--bh-space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--bh-space-2);
-  transition: all var(--bh-dur-med) var(--bh-ease-premium);
-  cursor: pointer;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    padding: var(--bh-space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-2);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    cursor: pointer;
 }
 
 .actionCard:hover {
-  border-color: var(--bh-accent);
-  transform: translateY(-2px);
-  box-shadow: var(--bh-shadow-glow-lg);
+    border-color: var(--bh-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--bh-shadow-glow-lg);
 }
 
 .actionCard .actionIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--bh-radius-md);
-  background: var(--bh-accent-soft);
-  color: var(--bh-accent);
-  transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--bh-radius-md);
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
 }
 
 .actionCard:hover .actionIcon {
-  transform: scale(1.05) rotate(-4deg);
+    transform: scale(1.05) rotate(-4deg);
 }
 
 .actionCard h4 {
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-semibold);
-  color: var(--bh-text-primary);
-  margin: 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin: 0;
 }
 
 .actionCard p {
-  font-size: var(--bh-text-xs);
-  color: var(--bh-text-tertiary);
-  margin: 0;
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    margin: 0;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1024px) {
-  .cardGrid--3cols,
-  .cardGrid--4cols {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    .cardGrid--3cols,
+    .cardGrid--4cols {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
-  .cardGrid {
-    grid-template-columns: 1fr;
-  }
-  .cardGrid--2cols,
-  .cardGrid--3cols,
-  .cardGrid--4cols {
-    grid-template-columns: 1fr;
-  }
-  .cardHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--bh-space-2);
-  }
-  .cardHeader .cardActions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  .cardBody {
-    padding: var(--bh-space-4);
-  }
-  .statCard {
-    padding: var(--bh-space-4);
-  }
-  .statCardValue {
-    font-size: var(--bh-text-xl);
-  }
+    .cardGrid {
+        grid-template-columns: 1fr;
+    }
+    .cardGrid--2cols,
+    .cardGrid--3cols,
+    .cardGrid--4cols {
+        grid-template-columns: 1fr;
+    }
+    .cardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--bh-space-2);
+    }
+    .cardHeader .cardActions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .cardBody {
+        padding: var(--bh-space-4);
+    }
+    .statCard {
+        padding: var(--bh-space-4);
+    }
+    .statCardValue {
+        font-size: var(--bh-text-xl);
+    }
 }
 
 @media (max-width: 480px) {
-  .statCard {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .infoCard dl {
-    grid-template-columns: 1fr;
-    gap: var(--bh-space-1);
-  }
-  .infoCard dd {
-    text-align: left;
-  }
+    .statCard {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .infoCard dl {
+        grid-template-columns: 1fr;
+        gap: var(--bh-space-1);
+    }
+    .infoCard dd {
+        text-align: left;
+    }
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .card,
-  .statCard,
-  .actionCard,
-  .card--tilt {
-    transition: none;
-  }
-  .card--tilt::before {
-    display: none;
-  }
+    .card,
+    .statCard,
+    .actionCard,
+    .card--tilt {
+        transition: none;
+    }
+    .card--tilt::before {
+        display: none;
+    }
 }

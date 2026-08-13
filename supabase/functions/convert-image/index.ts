@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         }
 
         const buffer = new Uint8Array(await file.arrayBuffer());
-        
+
         // Convert to WebP with Sharp
         const output = await sharp(buffer)
             .resize({ width: maxWidth, withoutEnlargement: true })

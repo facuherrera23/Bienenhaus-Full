@@ -52,7 +52,16 @@ describe('ml.schemas Zod validation', () => {
             sold_quantity: 0,
             available_quantity: 1,
             currency_id: 'ARS',
-            pictures: [{ id: '1', url: 'https://img.com/1.jpg', secure_url: 'https://img.com/1.jpg', size: '500x500', max_size: 1000000, quality: 90 }],
+            pictures: [
+                {
+                    id: '1',
+                    url: 'https://img.com/1.jpg',
+                    secure_url: 'https://img.com/1.jpg',
+                    size: '500x500',
+                    max_size: 1000000,
+                    quality: 90,
+                },
+            ],
             attributes: [{ id: 'ROOMS', value_name: '3' }],
         };
 
@@ -62,7 +71,14 @@ describe('ml.schemas Zod validation', () => {
         });
 
         it('accepts minimal item (optional fields)', () => {
-            const minimal = { id: 'MLA1', title: 'Test', price: 100, status: 'active', permalink: 'https://ml.com/1', listing_type_id: 'free' };
+            const minimal = {
+                id: 'MLA1',
+                title: 'Test',
+                price: 100,
+                status: 'active',
+                permalink: 'https://ml.com/1',
+                listing_type_id: 'free',
+            };
             const result = MlItemSchema.safeParse(minimal);
             expect(result.success).toBe(true);
         });
@@ -112,7 +128,10 @@ describe('ml.schemas Zod validation', () => {
         });
 
         it('validates listing type', () => {
-            const result = MlListingTypeSchema.safeParse({ id: 'gold_pro', name: 'Oro Profesional' });
+            const result = MlListingTypeSchema.safeParse({
+                id: 'gold_pro',
+                name: 'Oro Profesional',
+            });
             expect(result.success).toBe(true);
         });
     });
@@ -139,7 +158,14 @@ describe('ml.schemas Zod validation', () => {
         });
 
         it('accepts optional answer', () => {
-            const q = { ...validQuestion, answer: { text: 'Respuesta', status: 'ACTIVE', date_created: '2024-01-01T11:00:00Z' } };
+            const q = {
+                ...validQuestion,
+                answer: {
+                    text: 'Respuesta',
+                    status: 'ACTIVE',
+                    date_created: '2024-01-01T11:00:00Z',
+                },
+            };
             const result = MlQuestionSchema.safeParse(q);
             expect(result.success).toBe(true);
         });
@@ -196,15 +222,23 @@ describe('ml.schemas Zod validation', () => {
 
     describe('parseMlResponse', () => {
         it('returns parsed data on success', () => {
-            const data = { id: 'MLA1', title: 'Test', price: 100, status: 'active', permalink: 'https://ml.com/1', listing_type_id: 'free' };
+            const data = {
+                id: 'MLA1',
+                title: 'Test',
+                price: 100,
+                status: 'active',
+                permalink: 'https://ml.com/1',
+                listing_type_id: 'free',
+            };
             const result = parseMlResponse(MlItemSchema, data, 'test');
             expect(result.id).toBe('MLA1');
         });
 
         it('throws with detailed error on failure', () => {
             const data = { title: 'Test' }; // missing required fields
-            expect(() => parseMlResponse(MlItemSchema, data, 'testOperation'))
-                .toThrow('testOperation: Respuesta ML inválida');
+            expect(() => parseMlResponse(MlItemSchema, data, 'testOperation')).toThrow(
+                'testOperation: Respuesta ML inválida',
+            );
         });
     });
 

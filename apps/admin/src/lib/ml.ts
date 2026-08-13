@@ -1,5 +1,5 @@
-import { supabase, supabaseUrl } from './supabase';
-import { type  Database ,type Json } from '../types/database';
+import { supabase, supabaseUrl } from '@bienenhaus/supabase';
+import { type Database, type Json } from '../types/database';
 import {
     ML_OPERATION_LABEL,
     ML_SYNC_STATUS_LABEL,
@@ -15,7 +15,10 @@ import {
     type MlOrder,
     type MlOverview,
     type MlQuestion,
- type MlQueueRow, type MlSettings, type MlSyncStatus } from '../types/ml';
+    type MlQueueRow,
+    type MlSettings,
+    type MlSyncStatus,
+} from '../types/ml';
 
 // ============================================================
 // Re-export types and constants
@@ -305,7 +308,9 @@ export async function fetchMlQueue(filters?: {
     page?: number;
     pageSize?: number;
 }): Promise<MlQueueRow[]> {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
@@ -324,7 +329,10 @@ export async function fetchMlQueue(filters?: {
     return (data ?? []).map(toMlQueueRow);
 }
 
-export async function fetchMlQueueInfinite(pageParam = 1, pageSize = 50): Promise<{
+export async function fetchMlQueueInfinite(
+    pageParam = 1,
+    pageSize = 50,
+): Promise<{
     data: MlQueueRow[];
     page: number;
     hasNextPage: boolean;
@@ -350,8 +358,14 @@ export async function fetchMlQueueInfinite(pageParam = 1, pageSize = 50): Promis
 // API Functions - Meta
 // ============================================================
 
-export async function fetchMlMeta(filters?: { property_id?: string; page?: number; pageSize?: number }): Promise<MlMetaRow[]> {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+export async function fetchMlMeta(filters?: {
+    property_id?: string;
+    page?: number;
+    pageSize?: number;
+}): Promise<MlMetaRow[]> {
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
 
@@ -369,7 +383,10 @@ export async function fetchMlMeta(filters?: { property_id?: string; page?: numbe
     return (data ?? []).map(toMlMetaRow);
 }
 
-export async function fetchMlMetaInfinite(pageParam = 1, pageSize = 100): Promise<{
+export async function fetchMlMetaInfinite(
+    pageParam = 1,
+    pageSize = 100,
+): Promise<{
     data: MlMetaRow[];
     page: number;
     hasNextPage: boolean;
@@ -427,7 +444,11 @@ export async function fetchMlListingTypes(): Promise<MlListingType[]> {
 // API Functions - Questions & Orders
 // ============================================================
 
-export async function fetchMlQuestions(filters?: { status?: string; page?: number; pageSize?: number }): Promise<MlQuestion[]> {
+export async function fetchMlQuestions(filters?: {
+    status?: string;
+    page?: number;
+    pageSize?: number;
+}): Promise<MlQuestion[]> {
     const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
@@ -446,7 +467,10 @@ export async function fetchMlQuestions(filters?: { status?: string; page?: numbe
     return (data ?? []) as MlQuestion[];
 }
 
-export async function fetchMlQuestionsInfinite(pageParam = 1, pageSize = 50): Promise<{
+export async function fetchMlQuestionsInfinite(
+    pageParam = 1,
+    pageSize = 50,
+): Promise<{
     data: MlQuestion[];
     page: number;
     hasNextPage: boolean;
@@ -467,7 +491,11 @@ export async function fetchMlQuestionsInfinite(pageParam = 1, pageSize = 50): Pr
     };
 }
 
-export async function fetchMlOrders(filters?: { status?: string; page?: number; pageSize?: number }): Promise<MlOrder[]> {
+export async function fetchMlOrders(filters?: {
+    status?: string;
+    page?: number;
+    pageSize?: number;
+}): Promise<MlOrder[]> {
     const apiFilters: Record<string, string | number | boolean | undefined> = {};
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
@@ -657,7 +685,10 @@ export async function retryDeadLetter(id: number): Promise<void> {
     // Mark as resolved
     await supabase
         .from('ml_sync_dead_letter')
-        .update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id ?? null })
+        .update({
+            resolved_at: new Date().toISOString(),
+            resolved_by: (await supabase.auth.getUser()).data.user?.id ?? null,
+        })
         .eq('id', id);
 }
 

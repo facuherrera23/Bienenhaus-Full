@@ -111,7 +111,12 @@ function Modal({
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
                     <h3>{title}</h3>
-                    <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">
+                    <button
+                        type="button"
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label="Cerrar"
+                    >
                         <X size={16} strokeWidth={2} />
                     </button>
                 </div>
@@ -1227,11 +1232,15 @@ function MLTab() {
             await setMlAppId(appIdDraft.trim());
             await setMlDefaults(defaultsDraft);
             if (clientSecretDraft.trim()) {
-                await upsertSiteSettingWithVersion('ml_client_secret', { value: clientSecretDraft.trim() }, {
-                    value_type: 'json',
-                    is_public: false,
-                    locale: 'es-AR',
-                });
+                await upsertSiteSettingWithVersion(
+                    'ml_client_secret',
+                    { value: clientSecretDraft.trim() },
+                    {
+                        value_type: 'json',
+                        is_public: false,
+                        locale: 'es-AR',
+                    },
+                );
             }
             pushToast({ type: 'success', title: 'Configuración de ML guardada' });
             invalidateMlSettings();
@@ -1255,8 +1264,8 @@ function MLTab() {
                 <div>
                     <h3>Integración Mercado Libre</h3>
                     <p className="muted">
-                        Identificación de la app y valores por defecto para publicar. La conexión
-                        y la cola se administran en la sección «Mercado Libre».
+                        Identificación de la app y valores por defecto para publicar. La conexión y
+                        la cola se administran en la sección «Mercado Libre».
                     </p>
                 </div>
                 <button
@@ -1287,7 +1296,9 @@ function MLTab() {
                             type={showClientSecret ? 'text' : 'password'}
                             placeholder="Ingresá el client_secret"
                             value={clientSecretDraft}
-                            onInput={(e) => setClientSecretDraft((e.currentTarget as HTMLInputElement).value)}
+                            onInput={(e) =>
+                                setClientSecretDraft((e.currentTarget as HTMLInputElement).value)
+                            }
                             style={{ flex: 1 }}
                         />
                         <button
@@ -1408,8 +1419,8 @@ function VersionsTab({ onRestored }: { onRestored: () => void }) {
                 <div>
                     <h3>Historial de versiones</h3>
                     <p className="muted">
-                        Cada guardado de ajustes crea una versión con su snapshot. Podés comparar
-                        o restaurar.
+                        Cada guardado de ajustes crea una versión con su snapshot. Podés comparar o
+                        restaurar.
                     </p>
                 </div>
             </div>
@@ -1437,7 +1448,9 @@ function VersionsTab({ onRestored }: { onRestored: () => void }) {
                                         {v.changed_keys.map((k) => `«${k}»`).join(', ')}
                                     </span>
                                 </td>
-                                <td className="muted">{v.changed_by ? formatId(v.changed_by) : '—'}</td>
+                                <td className="muted">
+                                    {v.changed_by ? formatId(v.changed_by) : '—'}
+                                </td>
                                 <td>
                                     <div className="row-actions">
                                         <button
@@ -1622,11 +1635,7 @@ function I18nTab({ onSaved }: { onSaved: () => void }) {
                         onClick={() => void copyFromEs()}
                         disabled={copying}
                     >
-                        {copying ? (
-                            <Loader2 size={15} className="spin" />
-                        ) : (
-                            <RefreshCw size={15} />
-                        )}
+                        {copying ? <Loader2 size={15} className="spin" /> : <RefreshCw size={15} />}
                         Copiar desde es-AR
                     </button>
                 </div>
@@ -1636,7 +1645,9 @@ function I18nTab({ onSaved }: { onSaved: () => void }) {
                         <select
                             className="select"
                             value={locale}
-                            onChange={(e) => setLocale((e.currentTarget as HTMLSelectElement).value)}
+                            onChange={(e) =>
+                                setLocale((e.currentTarget as HTMLSelectElement).value)
+                            }
                         >
                             {LOCALES.filter((l) => l.code !== 'es-AR').map((l) => (
                                 <option key={l.code} value={l.code}>

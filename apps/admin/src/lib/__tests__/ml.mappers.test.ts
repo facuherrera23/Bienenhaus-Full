@@ -77,12 +77,19 @@ describe('ml mappers', () => {
         });
 
         it('handles single object', () => {
-            expect(embedProperty({ title: 'Casa', code: 123 })).toEqual({ title: 'Casa', code: 123 });
+            expect(embedProperty({ title: 'Casa', code: 123 })).toEqual({
+                title: 'Casa',
+                code: 123,
+            });
         });
 
         it('handles array (takes first)', () => {
-            expect(embedProperty([{ title: 'First', code: 1 }, { title: 'Second', code: 2 }]))
-                .toEqual({ title: 'First', code: 1 });
+            expect(
+                embedProperty([
+                    { title: 'First', code: 1 },
+                    { title: 'Second', code: 2 },
+                ]),
+            ).toEqual({ title: 'First', code: 1 });
         });
 
         it('handles empty array', () => {

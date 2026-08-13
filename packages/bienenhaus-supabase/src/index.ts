@@ -5,7 +5,7 @@
  * Eliminates 3 separate client instances + 3 WebSocket connections.
  *
  * Usage:
- *   import { supabase, createServerClient } from '@bienenhaus/supabase';
+ *   import { supabase, createServerClient, onAuthStateChange } from '@bienenhaus/supabase';
  *   const { data } = await supabase.from('properties').select('*');
  */
 
@@ -20,6 +20,8 @@ import {
 const SUPABASE_URL =
     import.meta.env.VITE_SUPABASE_URL || 'https://rnldqiwwzhjnurkguihu.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabaseUrl = SUPABASE_URL;
 
 let _supabase: SupabaseClient | null = null;
 
@@ -45,6 +47,47 @@ export const supabase = getClient();
 
 export type { SupabaseClient, User, AuthChangeEvent, Session };
 
+/**
+ * Crea un cliente Supabase configurado para el panel de admin con
+ * opciones adicionales (db schema, headers personalizados).
+ * @param options Configuración opcional
+ */
+export function createAdminClient(
+    options?: {
+        url?: string;
+        anonKey?: string;
+        serviceRoleKey?: string;
+    },
+): SupabaseClient {
+    const url = options?.url || SUPABASE_URL;
+    const key = options?.anonKey || SUPABASE_ANON_KEY;
+
+    return createClient(url, key, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+        },
+        realtime: {
+            params: {
+                eventsPerSecond: 10,
+            },
+        },
+        db: {
+            schema: 'public',
+        },
+        global: {
+            headers: {
+                'x-application-name': 'bienenhaus-admin',
+            },
+        },
+    });
+}
+
+/**
+ * Crea un cliente Supabase para server-side rendering o edge functions
+ * con token de acceso y opcionalmente modo service_role.
+ */
 export function createServerClient(
     accessToken: string,
     options?: { serviceRole?: boolean },
@@ -85,6 +128,7 @@ export function onAuthStateChange(
     return supabase.auth.onAuthStateChange(callback);
 }
 
-export { createClient };
-
-
+export async function getCurrentUser(): Promise<User | null> {
+    const { data } = await supabase.auth.getUser();
+    return data.user ?? null;
+}

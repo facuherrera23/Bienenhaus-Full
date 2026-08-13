@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { embedLocationName, slugify, toFormValues, toNumeric, toPropertyDetail, toPropertyRow } from '../properties';
+import {
+    embedLocationName,
+    slugify,
+    toFormValues,
+    toNumeric,
+    toPropertyDetail,
+    toPropertyRow,
+} from '../properties';
 import type { PropertyApiRow, PropertyDetail, PropertyDetailApiRow } from '../types/properties';
 
 describe.skip('properties mappers', () => {

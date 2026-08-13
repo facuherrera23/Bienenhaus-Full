@@ -18,7 +18,6 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { authUserRole, pushToast } from '../store/app';
 import styles from './AdminUsersPage.module.css';
 
-
 function formatDate(iso: string | null): string {
     if (!iso) return '—';
     return new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });

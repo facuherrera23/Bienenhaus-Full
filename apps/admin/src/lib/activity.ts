@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '@bienenhaus/supabase';
 import type { Json } from '../types/database';
 
 // ============================================================

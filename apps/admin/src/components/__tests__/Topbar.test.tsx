@@ -63,9 +63,7 @@ describe('Topbar', () => {
 
             expect(screen.getByRole('banner')).toBeInTheDocument();
             // Two hamburger buttons (desktop + mobile) — both have aria-labels
-            expect(
-                screen.getByLabelText('Contraer menú lateral'),
-            ).toBeInTheDocument();
+            expect(screen.getByLabelText('Contraer menú lateral')).toBeInTheDocument();
             expect(screen.getByLabelText('Abrir menú lateral')).toBeInTheDocument();
             // Search input (center)
             expect(screen.getByPlaceholderText('Buscar… (Ctrl+K)')).toBeInTheDocument();

@@ -53,7 +53,6 @@ import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import styles from './MercadoLibrePage.module.css';
 
-
 const LISTING_TYPE_DESCRIPTIONS: Record<string, string> = {
     free: 'Gratuita: sin costo, menor visibilidad, ideal para probar',
     gold_special: 'Clasica: comision por venta, buena visibilidad',
@@ -885,7 +884,10 @@ export function MercadoLibrePage() {
                             {connection ? (
                                 <div className={styles['ml-connection']}>
                                     <div className={styles['ml-connection-identity']}>
-                                        <span className={`cell-thumb ${styles['ml-avatar']}`} aria-hidden="true">
+                                        <span
+                                            className={`cell-thumb ${styles['ml-avatar']}`}
+                                            aria-hidden="true"
+                                        >
                                             {connection.nickname?.slice(0, 2).toUpperCase() ?? 'ML'}
                                         </span>
                                         <div>
@@ -927,7 +929,10 @@ export function MercadoLibrePage() {
                                                         setShowCategoryDropdown(false)
                                                     }
                                                 >
-                                                    <Search size={16} className={styles['typeahead-icon']} />
+                                                    <Search
+                                                        size={16}
+                                                        className={styles['typeahead-icon']}
+                                                    />
                                                     <input
                                                         type="text"
                                                         placeholder="Buscar categoria... (ej: MLA1459)"
@@ -960,7 +965,11 @@ export function MercadoLibrePage() {
                                                     {showCategoryDropdown &&
                                                         categorySearch &&
                                                         categoriesQ.data && (
-                                                            <ul className={styles['typeahead-dropdown']}>
+                                                            <ul
+                                                                className={
+                                                                    styles['typeahead-dropdown']
+                                                                }
+                                                            >
                                                                 {categoriesQ.data
                                                                     .filter(
                                                                         (c: MlCategory) =>
@@ -1020,7 +1029,9 @@ export function MercadoLibrePage() {
                                                         defaultsDraft.category_id && (
                                                             <button
                                                                 type="button"
-                                                                className={styles['typeahead-clear']}
+                                                                className={
+                                                                    styles['typeahead-clear']
+                                                                }
                                                                 onClick={() => {
                                                                     setDefaultsDraft({
                                                                         ...defaultsDraft,

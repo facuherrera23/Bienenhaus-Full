@@ -43,7 +43,6 @@ import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
 import styles from './PropertyFormPage.module.css';
 
-
 const STORAGE_KEY = 'property-form-draft';
 const AUTOSAVE_DELAY = 2000;
 
@@ -127,7 +126,7 @@ export function PropertyFormPage() {
     const [loaded, setLoaded] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [saving, setSaving] = useState(false);
-const [confirmDelete, setConfirmDelete] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const [autosaveTimer, setAutosaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
     const [showMLPreview, setShowMLPreview] = useState(false);
     const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);

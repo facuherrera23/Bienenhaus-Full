@@ -6,7 +6,6 @@ import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import styles from './AgentsPage.module.css';
 
-
 function getListData<T>(data: unknown): T[] {
     if (!data) return [];
     if (Array.isArray(data)) return data as T[];
@@ -85,7 +84,9 @@ export function AgentsPage() {
                                     <h3>{a.name}</h3>
                                     <p>{a.role ?? 'Asesor'}</p>
                                     {a.matricula && (
-                                        <span className={styles['agent-matricula']}>Mat. {a.matricula}</span>
+                                        <span className={styles['agent-matricula']}>
+                                            Mat. {a.matricula}
+                                        </span>
                                     )}
                                 </div>
                                 <span

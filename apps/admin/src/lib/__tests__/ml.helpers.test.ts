@@ -105,7 +105,13 @@ describe('ml helpers', () => {
         });
 
         it('handles null values gracefully', () => {
-            const propertyWithNulls = { ...mockProperty, description: null, expenses: null, address: null, video_url: null };
+            const propertyWithNulls = {
+                ...mockProperty,
+                description: null,
+                expenses: null,
+                address: null,
+                video_url: null,
+            };
             const form = toFormValues(propertyWithNulls);
             expect(form.description).toBe('');
             expect(form.expenses).toBeNull();

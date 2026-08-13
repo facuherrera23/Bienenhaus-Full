@@ -104,7 +104,9 @@ describe('OwnerForm', () => {
     it('keeps user edits when initialData reference changes but values do not', () => {
         const { rerender } = render(<OwnerForm onSubmit={mockSubmit} initialData={validData} />);
 
-        fireEvent.input(screen.getByLabelText(/email/i), { target: { value: 'editado@email.com' } });
+        fireEvent.input(screen.getByLabelText(/email/i), {
+            target: { value: 'editado@email.com' },
+        });
         expect(screen.getByLabelText(/email/i)).toHaveValue('editado@email.com');
 
         // Los callers pasan un objeto literal nuevo en cada render del padre
@@ -116,12 +118,18 @@ describe('OwnerForm', () => {
 
     it('re-hydrates the form when initialData values actually change', () => {
         const { rerender } = render(
-            <OwnerForm onSubmit={mockSubmit} initialData={{ ...validData, email: 'viejo@email.com' }} />,
+            <OwnerForm
+                onSubmit={mockSubmit}
+                initialData={{ ...validData, email: 'viejo@email.com' }}
+            />,
         );
         expect(screen.getByLabelText(/email/i)).toHaveValue('viejo@email.com');
 
         rerender(
-            <OwnerForm onSubmit={mockSubmit} initialData={{ ...validData, email: 'nuevo@email.com' }} />,
+            <OwnerForm
+                onSubmit={mockSubmit}
+                initialData={{ ...validData, email: 'nuevo@email.com' }}
+            />,
         );
         expect(screen.getByLabelText(/email/i)).toHaveValue('nuevo@email.com');
     });

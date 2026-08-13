@@ -174,9 +174,7 @@ describe('coefDepreciacionPropia', () => {
 
 describe('recalcAmbientes', () => {
     it('sums the ambiente fields', () => {
-        expect(
-            recalcAmbientes({ f_ambCocina: 1, f_ambDormitorios: 3, f_ambBano: 2 }),
-        ).toBe(6);
+        expect(recalcAmbientes({ f_ambCocina: 1, f_ambDormitorios: 3, f_ambBano: 2 })).toBe(6);
     });
 
     it('returns 0 when no ambientes are set', () => {
@@ -233,9 +231,7 @@ describe('recalcUsoTerreno', () => {
 describe('precioM2Comparable', () => {
     it('divides price by supCubierta', () => {
         expect(
-            precioM2Comparable(
-                comparable({ precio: 150000, supCubierta: 120, supTerreno: 200 }),
-            ),
+            precioM2Comparable(comparable({ precio: 150000, supCubierta: 120, supTerreno: 200 })),
         ).toBe(1250);
     });
 

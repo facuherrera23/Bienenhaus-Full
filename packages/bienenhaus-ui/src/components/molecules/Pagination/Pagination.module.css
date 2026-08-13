@@ -11,197 +11,197 @@
  */
 
 .nav {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--bh-space-2);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-md);
-  line-height: var(--bh-leading-normal);
-  color: var(--bh-text-primary);
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--bh-space-2);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-md);
+    line-height: var(--bh-leading-normal);
+    color: var(--bh-text-primary);
 }
 
 .nav:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 2px);
-  border-radius: var(--bh-radius-sm);
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 2px);
+    border-radius: var(--bh-radius-sm);
 }
 
 /* ============================================================
    LIST — flat row of page slots
    ============================================================ */
 .list {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: var(--bh-space-1);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: var(--bh-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 /* ============================================================
    ITEM — each page slot
    ============================================================ */
 .item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ============================================================
    PAGE BUTTON — square numeric button
    ============================================================ */
 .pageBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--bh-space-10);
-  height: var(--bh-space-10);
-  padding: 0;
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-md);
-  background-color: transparent;
-  color: var(--bh-text-secondary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-md);
-  font-weight: var(--bh-weight-medium);
-  line-height: 1;
-  cursor: pointer;
-  outline: none;
-  transition:
-    background-color var(--bh-dur-fast) var(--bh-ease-premium),
-    border-color var(--bh-dur-fast) var(--bh-ease-premium),
-    color var(--bh-dur-fast) var(--bh-ease-premium),
-    box-shadow var(--bh-dur-fast) var(--bh-ease-premium),
-    transform var(--bh-dur-fast) var(--bh-ease-premium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--bh-space-10);
+    height: var(--bh-space-10);
+    padding: 0;
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    background-color: transparent;
+    color: var(--bh-text-secondary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-medium);
+    line-height: 1;
+    cursor: pointer;
+    outline: none;
+    transition:
+        background-color var(--bh-dur-fast) var(--bh-ease-premium),
+        border-color var(--bh-dur-fast) var(--bh-ease-premium),
+        color var(--bh-dur-fast) var(--bh-ease-premium),
+        box-shadow var(--bh-dur-fast) var(--bh-ease-premium),
+        transform var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .pageBtn:hover:not(:disabled) {
-  background-color: var(--bh-bg-hover);
-  color: var(--bh-text-primary);
-  border-color: var(--bh-border-strong);
+    background-color: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+    border-color: var(--bh-border-strong);
 }
 
 .pageBtn:active:not(:disabled) {
-  transform: scale(0.96);
+    transform: scale(0.96);
 }
 
 .pageBtn:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 2px);
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 2px);
 }
 
 /* ============================================================
    ACTIVE PAGE — accent fill, primary-surface text
    ============================================================ */
 .pageBtnActive {
-  background-color: var(--bh-accent);
-  color: var(--bh-bg-primary);
-  border-color: var(--bh-accent);
-  font-weight: var(--bh-weight-semibold);
+    background-color: var(--bh-accent);
+    color: var(--bh-bg-primary);
+    border-color: var(--bh-accent);
+    font-weight: var(--bh-weight-semibold);
 }
 
 .pageBtnActive:hover:not(:disabled) {
-  background-color: var(--bh-accent-hover);
-  color: var(--bh-bg-primary);
-  border-color: var(--bh-accent-hover);
-  box-shadow: var(--bh-shadow-glow);
+    background-color: var(--bh-accent-hover);
+    color: var(--bh-bg-primary);
+    border-color: var(--bh-accent-hover);
+    box-shadow: var(--bh-shadow-glow);
 }
 
 .pageBtnActive:focus-visible {
-  outline-color: var(--bh-accent);
-  box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    outline-color: var(--bh-accent);
+    box-shadow: 0 0 0 3px var(--bh-accent-soft);
 }
 
 /* ============================================================
    ELLIPSIS — non-interactive gap placeholder
    ============================================================ */
 .ellipsis {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--bh-space-10);
-  height: var(--bh-space-10);
-  padding: 0 var(--bh-space-2);
-  color: var(--bh-text-tertiary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-md);
-  font-weight: var(--bh-weight-semibold);
-  line-height: 1;
-  user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--bh-space-10);
+    height: var(--bh-space-10);
+    padding: 0 var(--bh-space-2);
+    color: var(--bh-text-tertiary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-semibold);
+    line-height: 1;
+    user-select: none;
 }
 
 /* ============================================================
    PAGE SIZE SELECTOR — native <select> + label
    ============================================================ */
 .pageSize {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--bh-space-2);
-  margin-left: var(--bh-space-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bh-space-2);
+    margin-left: var(--bh-space-2);
 }
 
 .pageSizeLabel {
-  color: var(--bh-text-secondary);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-normal);
-  white-space: nowrap;
+    color: var(--bh-text-secondary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-normal);
+    white-space: nowrap;
 }
 
 .pageSizeSelect {
-  display: inline-block;
-  height: var(--bh-space-10);
-  padding: 0 var(--bh-space-3);
-  border: 1px solid var(--bh-border-input);
-  border-radius: var(--bh-radius-md);
-  background-color: var(--bh-bg-input);
-  color: var(--bh-text-primary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-md);
-  line-height: 1;
-  cursor: pointer;
-  outline: none;
-  transition:
-    border-color var(--bh-dur-fast) var(--bh-ease-premium),
-    box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+    display: inline-block;
+    height: var(--bh-space-10);
+    padding: 0 var(--bh-space-3);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    background-color: var(--bh-bg-input);
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-md);
+    line-height: 1;
+    cursor: pointer;
+    outline: none;
+    transition:
+        border-color var(--bh-dur-fast) var(--bh-ease-premium),
+        box-shadow var(--bh-dur-fast) var(--bh-ease-premium);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 .pageSizeSelect:hover {
-  border-color: var(--bh-border-strong);
+    border-color: var(--bh-border-strong);
 }
 
 .pageSizeSelect:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--bh-accent));
-  outline-offset: var(--focus-offset, 2px);
-  border-color: var(--bh-border-focus);
-  box-shadow: 0 0 0 3px var(--bh-accent-soft);
+    outline: var(--focus-outline, 2px solid var(--bh-accent));
+    outline-offset: var(--focus-offset, 2px);
+    border-color: var(--bh-border-focus);
+    box-shadow: 0 0 0 3px var(--bh-accent-soft);
 }
 
 /* ============================================================
    TOTAL ITEMS — muted count text
    ============================================================ */
 .totalItems {
-  margin-left: var(--bh-space-2);
-  color: var(--bh-text-tertiary);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-normal);
-  white-space: nowrap;
+    margin-left: var(--bh-space-2);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-normal);
+    white-space: nowrap;
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .pageBtn,
-  .pageSizeSelect {
-    transition: none;
-  }
+    .pageBtn,
+    .pageSizeSelect {
+        transition: none;
+    }
 
-  .pageBtn:active:not(:disabled) {
-    transform: none;
-  }
+    .pageBtn:active:not(:disabled) {
+        transform: none;
+    }
 }

@@ -126,7 +126,13 @@ describe.skip('properties helpers', () => {
         });
 
         it('handles null values gracefully', () => {
-            const propertyWithNulls = { ...mockPropertyDetail(), description: null, expenses: null, address: null, video_url: null };
+            const propertyWithNulls = {
+                ...mockPropertyDetail(),
+                description: null,
+                expenses: null,
+                address: null,
+                video_url: null,
+            };
             const form = toFormValues(propertyWithNulls);
             expect(form.description).toBe('');
             expect(form.expenses).toBeNull();

@@ -26,7 +26,6 @@ import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import styles from './SitePage.module.css';
 
-
 interface DraftEntry {
     id: string | null;
     value: Record<string, unknown>;
@@ -216,7 +215,9 @@ function ListEditor({
 
     return (
         <div className={styles['site-list']}>
-            {list.length === 0 && <p className={styles['site-list-empty']}>No hay items todavía.</p>}
+            {list.length === 0 && (
+                <p className={styles['site-list-empty']}>No hay items todavía.</p>
+            )}
             {list.map((item, i) => (
                 <div className={styles['site-list-item']} key={i}>
                     <div className={styles['site-list-item-head']}>

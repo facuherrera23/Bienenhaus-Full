@@ -1,4 +1,4 @@
-import { afterEach , beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
     downloadCsv,
     downloadCsvFile,
@@ -241,11 +241,11 @@ describe('downloadCsv', () => {
             configurable: true,
             writable: true,
         });
-        clickSpy = vi
-            .spyOn(HTMLAnchorElement.prototype, 'click')
-            .mockImplementation(function (this: HTMLAnchorElement) {
-                capturedAnchor = this;
-            });
+        clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+            this: HTMLAnchorElement,
+        ) {
+            capturedAnchor = this;
+        });
     });
 
     afterEach(() => {

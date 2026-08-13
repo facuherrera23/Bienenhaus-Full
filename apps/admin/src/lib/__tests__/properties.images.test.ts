@@ -13,55 +13,84 @@ import {
 // reemplaza por completo (también `supabaseUrl`, usado por convertToWebP).
 type QueryResult = { data: unknown; error: unknown };
 
-const { chainMock, enqueue, enqueueLimit, enqueueSingle, resetChain, storageBucket, storageFrom } = vi.hoisted(() => {
-    const queue: QueryResult[] = [];
-    const limitQueue: QueryResult[] = [];
-    const singleQueue: QueryResult[] = [];
-    const methods = [
-        'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'not',
-        'is', 'order', 'maybeSingle', 'returns', 'or',
-        'ilike', 'match', 'rpc', 'from', 'range',
-    ];
-    const chain: Record<string, unknown> = {};
-    for (const m of methods) {
-        chain[m] = vi.fn(() => chain);
-    }
-    // Colas por terminal (`.limit`/`.single`): los N uploads paralelos de
-    // uploadPropertyImages comparten cadena; un único FIFO produciría un race.
-    const makeThenable = (terminalQueue: QueryResult[]) => ({
-        then: (onFulfilled: (v: QueryResult) => unknown, _onRejected?: (e: unknown) => unknown) => {
-            const next = terminalQueue.shift() ?? { data: null, error: null };
+const { chainMock, enqueue, enqueueLimit, enqueueSingle, resetChain, storageBucket, storageFrom } =
+    vi.hoisted(() => {
+        const queue: QueryResult[] = [];
+        const limitQueue: QueryResult[] = [];
+        const singleQueue: QueryResult[] = [];
+        const methods = [
+            'select',
+            'insert',
+            'update',
+            'delete',
+            'eq',
+            'neq',
+            'in',
+            'not',
+            'is',
+            'order',
+            'maybeSingle',
+            'returns',
+            'or',
+            'ilike',
+            'match',
+            'rpc',
+            'from',
+            'range',
+        ];
+        const chain: Record<string, unknown> = {};
+        for (const m of methods) {
+            chain[m] = vi.fn(() => chain);
+        }
+        // Colas por terminal (`.limit`/`.single`): los N uploads paralelos de
+        // uploadPropertyImages comparten cadena; un único FIFO produciría un race.
+        const makeThenable = (terminalQueue: QueryResult[]) => ({
+            then: (
+                onFulfilled: (v: QueryResult) => unknown,
+                _onRejected?: (e: unknown) => unknown,
+            ) => {
+                const next = terminalQueue.shift() ?? { data: null, error: null };
+                return Promise.resolve(next).then(onFulfilled);
+            },
+        });
+        chain.limit = vi.fn(() => makeThenable(limitQueue));
+        chain.single = vi.fn(() => makeThenable(singleQueue));
+        const storageBucket = {
+            upload: vi.fn().mockResolvedValue({ data: { path: 'x' }, error: null }),
+            getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://cdn.test/img.webp' } })),
+            remove: vi.fn().mockResolvedValue({ data: null, error: null }),
+        };
+        const storageFrom = vi.fn(() => storageBucket);
+        chain.storage = {
+            from: storageFrom,
+        };
+        (chain as { then?: unknown }).then = (
+            onFulfilled: (v: QueryResult) => unknown,
+            _onRejected?: (e: unknown) => unknown,
+        ) => {
+            const next = queue.shift() ?? { data: null, error: null };
             return Promise.resolve(next).then(onFulfilled);
-        },
+        };
+        const enqueue = (data: unknown, error: unknown = null) => queue.push({ data, error });
+        const enqueueLimit = (data: unknown, error: unknown = null) =>
+            limitQueue.push({ data, error });
+        const enqueueSingle = (data: unknown, error: unknown = null) =>
+            singleQueue.push({ data, error });
+        const resetChain = () => {
+            queue.length = 0;
+            limitQueue.length = 0;
+            singleQueue.length = 0;
+        };
+        return {
+            chainMock: chain,
+            enqueue,
+            enqueueLimit,
+            enqueueSingle,
+            resetChain,
+            storageBucket,
+            storageFrom,
+        };
     });
-    chain.limit = vi.fn(() => makeThenable(limitQueue));
-    chain.single = vi.fn(() => makeThenable(singleQueue));
-    const storageBucket = {
-        upload: vi.fn().mockResolvedValue({ data: { path: 'x' }, error: null }),
-        getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://cdn.test/img.webp' } })),
-        remove: vi.fn().mockResolvedValue({ data: null, error: null }),
-    };
-    const storageFrom = vi.fn(() => storageBucket);
-    chain.storage = {
-        from: storageFrom,
-    };
-    (chain as { then?: unknown }).then = (
-        onFulfilled: (v: QueryResult) => unknown,
-        _onRejected?: (e: unknown) => unknown,
-    ) => {
-        const next = queue.shift() ?? { data: null, error: null };
-        return Promise.resolve(next).then(onFulfilled);
-    };
-    const enqueue = (data: unknown, error: unknown = null) => queue.push({ data, error });
-    const enqueueLimit = (data: unknown, error: unknown = null) => limitQueue.push({ data, error });
-    const enqueueSingle = (data: unknown, error: unknown = null) => singleQueue.push({ data, error });
-    const resetChain = () => {
-        queue.length = 0;
-        limitQueue.length = 0;
-        singleQueue.length = 0;
-    };
-    return { chainMock: chain, enqueue, enqueueLimit, enqueueSingle, resetChain, storageBucket, storageFrom };
-});
 
 vi.mock('../supabase', () => ({
     supabase: chainMock,
@@ -172,7 +201,9 @@ describe.skip('properties images', () => {
 
         it('rejects files over 10 MB', async () => {
             const big = new File(['x'.repeat(11 * 1024 * 1024)], 'big.jpg', { type: 'image/webp' });
-            await expect(uploadPropertyImage(PROPERTY_ID, big)).rejects.toThrow('file: Máximo 10 MB');
+            await expect(uploadPropertyImage(PROPERTY_ID, big)).rejects.toThrow(
+                'file: Máximo 10 MB',
+            );
         });
 
         it('rejects unsupported mime types', async () => {
@@ -223,7 +254,9 @@ describe.skip('properties images', () => {
     describe('deletePropertyImage', () => {
         it('deletes the row and the storage file when url contains property-images', async () => {
             enqueue(
-                { url: 'https://supabase.co/storage/v1/object/public/property-images/prop-1/img1.webp' },
+                {
+                    url: 'https://supabase.co/storage/v1/object/public/property-images/prop-1/img1.webp',
+                },
                 null,
             );
             enqueue(null, null); // delete row
@@ -301,7 +334,9 @@ describe.skip('properties images', () => {
         it('throws on rpc error', async () => {
             enqueue(null, { message: 'RPC error' });
 
-            await expect(reorderPropertyImages(PROPERTY_ID, ['img-1'])).rejects.toThrow('RPC error');
+            await expect(reorderPropertyImages(PROPERTY_ID, ['img-1'])).rejects.toThrow(
+                'RPC error',
+            );
         });
     });
 });

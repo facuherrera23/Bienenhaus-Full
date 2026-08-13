@@ -126,7 +126,11 @@ export function Shell({ children }: { children: ComponentChildren }) {
                 <div className={styles['breadcrumb-row']} data-testid="breadcrumb-row">
                     <BreadcrumbNav />
                 </div>
-                <main id="main-content" className={styles['shell-content']} data-testid="shell-content">
+                <main
+                    id="main-content"
+                    className={styles['shell-content']}
+                    data-testid="shell-content"
+                >
                     {children}
                 </main>
             </div>

@@ -14,14 +14,21 @@ const supabase = createClient(
 
 // Configuración por función (requests por windowMs)
 export const RATE_LIMIT_CONFIG = {
-    'ml-sync': { requests: 30, windowMs: 60_000 },           // 30/min
-    'ml-webhook': { requests: 100, windowMs: 60_000 },        // 100/min
-    'ml-metrics': { requests: 10, windowMs: 60_000 },         // 10/min
+    'ml-sync': { requests: 30, windowMs: 60_000 }, // 30/min
+    'ml-webhook': { requests: 100, windowMs: 60_000 }, // 100/min
+    'ml-metrics': { requests: 10, windowMs: 60_000 }, // 10/min
     'ml-answer-question': { requests: 20, windowMs: 60_000 }, // 20/min
-    'ml-bulk-enqueue': { requests: 5, windowMs: 60_000 },     // 5/min
-    'ml-categories': { requests: 20, windowMs: 60_000 },      // 20/min
-    'ml-listing-types': { requests: 20, windowMs: 60_000 },   // 20/min
-    'ml-oauth': { requests: 10, windowMs: 60_000 },           // 10/min
+    'ml-bulk-enqueue': { requests: 5, windowMs: 60_000 }, // 5/min
+    'ml-categories': { requests: 20, windowMs: 60_000 }, // 20/min
+    'ml-listing-types': { requests: 20, windowMs: 60_000 }, // 20/min
+    'ml-oauth': { requests: 10, windowMs: 60_000 }, // 10/min
+    'audit-log': { requests: 20, windowMs: 60_000 }, // 20/min - staff actions
+    'ml-revoke-tokens': { requests: 10, windowMs: 60_000 }, // 10/min - ML tokens
+    'admin-user-invite': { requests: 5, windowMs: 60_000 }, // 5/min - admin invites
+    'ml-connection-status': { requests: 20, windowMs: 60_000 }, // 20/min - connection status
+    'qr-checkin': { requests: 30, windowMs: 60_000 }, // 30/min - QR check-ins
+    'visits-process-reminders': { requests: 10, windowMs: 60_000 }, // 10/min - cron job
+    'chat-ai': { requests: 10, windowMs: 60_000 }, // 10/min - AI chat assistant
 } as const;
 
 export type RateLimitFnName = keyof typeof RATE_LIMIT_CONFIG;
@@ -39,7 +46,7 @@ export interface RateLimitResult {
  */
 export async function checkRateLimit(
     fnName: RateLimitFnName,
-    identifier: string // IP, user_id, o API key
+    identifier: string, // IP, user_id, o API key
 ): Promise<RateLimitResult> {
     const config = RATE_LIMIT_CONFIG[fnName];
     const key = `ratelimit:${fnName}:${identifier}`;
@@ -103,29 +110,38 @@ export async function checkRateLimit(
  */
 export async function rateLimitMiddleware(
     fnName: RateLimitFnName,
-    req: Request
+    req: Request,
 ): Promise<Response | null> {
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        ?? req.headers.get('x-real-ip')
-        ?? 'unknown';
+    const clientIp =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+        req.headers.get('x-real-ip') ??
+        'unknown';
 
     const result = await checkRateLimit(fnName, clientIp);
 
     if (!result.allowed) {
-        return new Response(JSON.stringify({
-            error: 'Rate limited',
-            message: `Demasiadas peticiones. Intente en ${result.retryAfter} segundos.`,
-            retry_after: result.retryAfter,
-        }), {
-            status: 429,
-            headers: {
-                'Content-Type': 'application/json',
-                'Retry-After': String(result.retryAfter ?? 60),
-                'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG[fnName].requests),
-                'X-RateLimit-Remaining': '0',
-                'X-RateLimit-Reset': String(Math.ceil((result.resetAt ?? Date.now() + RATE_LIMIT_CONFIG[fnName].windowMs) / 1000)),
+        return new Response(
+            JSON.stringify({
+                error: 'Rate limited',
+                message: `Demasiadas peticiones. Intente en ${result.retryAfter} segundos.`,
+                retry_after: result.retryAfter,
+            }),
+            {
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Retry-After': String(result.retryAfter ?? 60),
+                    'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG[fnName].requests),
+                    'X-RateLimit-Remaining': '0',
+                    'X-RateLimit-Reset': String(
+                        Math.ceil(
+                            (result.resetAt ?? Date.now() + RATE_LIMIT_CONFIG[fnName].windowMs) /
+                                1000,
+                        ),
+                    ),
+                },
             },
-        });
+        );
     }
 
     // Headers informativos para cliente
@@ -138,7 +154,7 @@ export async function rateLimitMiddleware(
  */
 export function withRateLimit<Fn extends (req: Request) => Promise<Response>>(
     fnName: RateLimitFnName,
-    handler: Fn
+    handler: Fn,
 ): Fn {
     return (async (req: Request) => {
         const rateLimitResponse = await rateLimitMiddleware(fnName, req);

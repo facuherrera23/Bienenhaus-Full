@@ -6,60 +6,79 @@
 import { z } from 'zod';
 
 export const PropertyStatusSchema = z.enum([
-    'borrador', 'en_revision', 'publicada', 'pausada', 'vendida', 'alquilada', 'archivada',
+    'borrador',
+    'en_revision',
+    'publicada',
+    'pausada',
+    'vendida',
+    'alquilada',
+    'archivada',
 ]);
 
-export const ListingTypeSchema = z.enum([
-    'venta', 'alquiler', 'venta_alquiler', 'emprendimiento',
-]);
+export const ListingTypeSchema = z.enum(['venta', 'alquiler', 'venta_alquiler', 'emprendimiento']);
 
 export const CurrencySchema = z.enum(['USD', 'ARS']);
 
 export const PropertyConditionSchema = z.enum(['nuevo', 'usado', 'a_refaccionar']);
 
-export const PropertyFormSchema = z.object({
-    title: z.string().min(3, 'Mínimo 3 caracteres').max(120),
-    status: PropertyStatusSchema.default('borrador'),
-    listing_type: ListingTypeSchema,
-    price: z.number().positive('Precio debe ser mayor a 0').nullable(),
-    currency: CurrencySchema.default('USD'),
-    expenses: z.number().min(0).nullable(),
-    description: z.string().max(5000).optional(),
-    address: z.string().max(300).optional().nullable(),
-    location_id: z.string().uuid().nullable(),
-    area_total: z.number().positive().nullable(),
-    area_covered: z.number().positive().nullable(),
-    bedrooms: z.number().int().min(0).max(20).nullable(),
-    bathrooms: z.number().int().min(0).max(20).nullable(),
-    garages: z.number().int().min(0).max(10).nullable(),
-    floors: z.number().int().min(0).max(50).nullable(),
-    year_built: z.number().int().min(1800).max(new Date().getFullYear() + 1).nullable(),
-    featured: z.boolean().default(false),
-    video_url: z.string().url().optional().or(z.literal('')),
-    latitude: z.number().min(-90).max(90).nullable(),
-    longitude: z.number().min(-180).max(180).nullable(),
-}).refine(
-    (data) => data.status !== 'publicada' || (data.price !== null && data.price > 0),
-    { message: 'Precio obligatorio para publicar', path: ['price'] }
-).refine(
-    (data) => data.status !== 'publicada' || data.location_id !== null,
-    { message: 'Zona obligatoria para publicar', path: ['location_id'] }
-).refine(
-    (data) => data.area_covered === null || data.area_total === null || data.area_covered <= data.area_total,
-    { message: 'Superficie cubierta no puede exceder total', path: ['area_covered'] }
-);
+export const PropertyFormSchema = z
+    .object({
+        title: z.string().min(3, 'Mínimo 3 caracteres').max(120),
+        status: PropertyStatusSchema.default('borrador'),
+        listing_type: ListingTypeSchema,
+        price: z.number().positive('Precio debe ser mayor a 0').nullable(),
+        currency: CurrencySchema.default('USD'),
+        expenses: z.number().min(0).nullable(),
+        description: z.string().max(5000).optional(),
+        address: z.string().max(300).optional().nullable(),
+        location_id: z.string().uuid().nullable(),
+        area_total: z.number().positive().nullable(),
+        area_covered: z.number().positive().nullable(),
+        bedrooms: z.number().int().min(0).max(20).nullable(),
+        bathrooms: z.number().int().min(0).max(20).nullable(),
+        garages: z.number().int().min(0).max(10).nullable(),
+        floors: z.number().int().min(0).max(50).nullable(),
+        year_built: z
+            .number()
+            .int()
+            .min(1800)
+            .max(new Date().getFullYear() + 1)
+            .nullable(),
+        featured: z.boolean().default(false),
+        video_url: z.string().url().optional().or(z.literal('')),
+        latitude: z.number().min(-90).max(90).nullable(),
+        longitude: z.number().min(-180).max(180).nullable(),
+    })
+    .refine((data) => data.status !== 'publicada' || (data.price !== null && data.price > 0), {
+        message: 'Precio obligatorio para publicar',
+        path: ['price'],
+    })
+    .refine((data) => data.status !== 'publicada' || data.location_id !== null, {
+        message: 'Zona obligatoria para publicar',
+        path: ['location_id'],
+    })
+    .refine(
+        (data) =>
+            data.area_covered === null ||
+            data.area_total === null ||
+            data.area_covered <= data.area_total,
+        { message: 'Superficie cubierta no puede exceder total', path: ['area_covered'] },
+    );
 
-export const PropertyImageSchema = z.object({
-    property_id: z.string().uuid(),
-    file: z.instanceof(File),
-    alt: z.string().max(200).optional(),
-}).refine(
-    (data) => data.file.size <= 10 * 1024 * 1024,
-    { message: 'Máximo 10 MB', path: ['file'] }
-).refine(
-    (data) => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(data.file.type),
-    { message: 'Solo JPG, PNG, WebP, GIF', path: ['file'] }
-);
+export const PropertyImageSchema = z
+    .object({
+        property_id: z.string().uuid(),
+        file: z.instanceof(File),
+        alt: z.string().max(200).optional(),
+    })
+    .refine((data) => data.file.size <= 10 * 1024 * 1024, {
+        message: 'Máximo 10 MB',
+        path: ['file'],
+    })
+    .refine(
+        (data) => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(data.file.type),
+        { message: 'Solo JPG, PNG, WebP, GIF', path: ['file'] },
+    );
 
 export const PropertyLocationSchema = z.object({
     id: z.string().uuid(),
@@ -113,19 +132,26 @@ export const PropertyDetailSchema = z.object({
     updated_at: z.string(),
     video_url: z.string().url().nullable(),
     cover_url: z.string().url().nullable(),
-    images: z.array(z.object({
-        id: z.string().uuid(),
-        url: z.string().url(),
-        is_cover: z.boolean(),
-        sort_order: z.number().int(),
-    })).optional(),
-    ml_meta: z.object({
-        ml_item_id: z.number().nullable(),
-        status: z.string().nullable(),
-        permalink: z.string().url().nullable(),
-        price: z.number().nullable(),
-        last_sync_at: z.string().nullable(),
-    }).nullable().optional(),
+    images: z
+        .array(
+            z.object({
+                id: z.string().uuid(),
+                url: z.string().url(),
+                is_cover: z.boolean(),
+                sort_order: z.number().int(),
+            }),
+        )
+        .optional(),
+    ml_meta: z
+        .object({
+            ml_item_id: z.number().nullable(),
+            status: z.string().nullable(),
+            permalink: z.string().url().nullable(),
+            price: z.number().nullable(),
+            last_sync_at: z.string().nullable(),
+        })
+        .nullable()
+        .optional(),
 });
 
 export const PropertyImageRowSchema = z.object({
@@ -151,7 +177,11 @@ export type PropertyDetail = z.infer<typeof PropertyDetailSchema>;
 export type PropertyImageRow = z.infer<typeof PropertyImageRowSchema>;
 
 // Validation helper
-export function validatePropertyForm(data: unknown): { valid: boolean; error?: string; data?: PropertyFormValues } {
+export function validatePropertyForm(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: PropertyFormValues;
+} {
     const result = PropertyFormSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];

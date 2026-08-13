@@ -40,7 +40,6 @@ import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
 import styles from './LeadsPage.module.css';
 
-
 export function LeadsPage() {
     const [, setLocation] = useLocation();
     const [view, setView] = useState<'table' | 'kanban'>('table');

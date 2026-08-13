@@ -130,7 +130,10 @@ function mapListingType(
         country: 'country',
         ph: 'depto',
     };
-    return (map[type?.toLowerCase()] as 'casa' | 'depto' | 'oficina' | 'local' | 'terreno' | 'country') || 'casa';
+    return (
+        (map[type?.toLowerCase()] as
+            'casa' | 'depto' | 'oficina' | 'local' | 'terreno' | 'country') || 'casa'
+    );
 }
 
 function mapAgent(a: Agent): AgentCardData {
@@ -216,9 +219,13 @@ export function useProperties() {
                             const newProp = mapProperty(payload.new as Property);
                             if (
                                 (payload.new as Record<string, unknown>).location_id &&
-                                locationsMapRef.current.has((payload.new as Record<string, unknown>).location_id as string)
+                                locationsMapRef.current.has(
+                                    (payload.new as Record<string, unknown>).location_id as string,
+                                )
                             ) {
-                                newProp.location = locationsMapRef.current.get((payload.new as Record<string, unknown>).location_id as string)!;
+                                newProp.location = locationsMapRef.current.get(
+                                    (payload.new as Record<string, unknown>).location_id as string,
+                                )!;
                             }
                             return [newProp, ...prev];
                         } else if (payload.eventType === 'UPDATE') {
@@ -227,17 +234,26 @@ export function useProperties() {
                                     ? (() => {
                                           const updated = mapProperty(payload.new as Property);
                                           if (
-                                              (payload.new as Record<string, unknown>).location_id &&
-                                              locationsMapRef.current.has((payload.new as Record<string, unknown>).location_id as string)
+                                              (payload.new as Record<string, unknown>)
+                                                  .location_id &&
+                                              locationsMapRef.current.has(
+                                                  (payload.new as Record<string, unknown>)
+                                                      .location_id as string,
+                                              )
                                           ) {
-                                              updated.location = locationsMapRef.current.get((payload.new as Record<string, unknown>).location_id as string)!;
+                                              updated.location = locationsMapRef.current.get(
+                                                  (payload.new as Record<string, unknown>)
+                                                      .location_id as string,
+                                              )!;
                                           }
                                           return updated;
                                       })()
                                     : p,
                             );
                         } else if (payload.eventType === 'DELETE') {
-                            return prev.filter((p) => p.id !== (payload.old as Record<string, unknown>).id);
+                            return prev.filter(
+                                (p) => p.id !== (payload.old as Record<string, unknown>).id,
+                            );
                         }
                         return prev;
                     });
@@ -250,7 +266,8 @@ export function useProperties() {
                     if (!mounted.current) return;
                     // Update cover_url for affected property
                     const propertyId = ((payload.new as Record<string, unknown>)?.property_id ??
-                        (payload.old as Record<string, unknown>)?.property_id) as string | undefined;
+                        (payload.old as Record<string, unknown>)?.property_id) as
+                        string | undefined;
                     if (!propertyId) return;
 
                     setData((prev) =>
@@ -270,15 +287,23 @@ export function useProperties() {
                     if (!mounted.current) return;
                     // Update locations map incrementally
                     if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                        locationsMapRef.current.set((payload.new as Record<string, unknown>).id as string, (payload.new as Record<string, unknown>).name as string);
+                        locationsMapRef.current.set(
+                            (payload.new as Record<string, unknown>).id as string,
+                            (payload.new as Record<string, unknown>).name as string,
+                        );
                     } else if (payload.eventType === 'DELETE') {
-                        locationsMapRef.current.delete((payload.old as Record<string, unknown>).id as string);
+                        locationsMapRef.current.delete(
+                            (payload.old as Record<string, unknown>).id as string,
+                        );
                     }
                     // Update location names in existing properties
                     setData((prev) =>
                         prev.map((p) => {
                             if (p.location_id && locationsMapRef.current.has(p.location_id)) {
-                                return { ...p, location: locationsMapRef.current.get(p.location_id)! };
+                                return {
+                                    ...p,
+                                    location: locationsMapRef.current.get(p.location_id)!,
+                                };
                             }
                             return p;
                         }),
@@ -363,7 +388,10 @@ export function useLocations() {
             if (error) throw error;
             if (mounted.current) setData(locations || []);
         } catch (err) {
-            console.error('Locations fetch error:', err instanceof Error ? err.message : 'Error desconocido');
+            console.error(
+                'Locations fetch error:',
+                err instanceof Error ? err.message : 'Error desconocido',
+            );
         } finally {
             if (mounted.current) setLoading(false);
         }

@@ -116,10 +116,13 @@ export async function sendOrderMessage(
         headers['x-idempotency-key'] = idempotencyKey;
     }
 
-    const res = await fetchWithTimeout(`${ML_API}/orders/${orderId}/messages?${params.toString()}`, {
-        method: 'POST',
-        headers,
-    });
+    const res = await fetchWithTimeout(
+        `${ML_API}/orders/${orderId}/messages?${params.toString()}`,
+        {
+            method: 'POST',
+            headers,
+        },
+    );
 
     const body = await res.text();
     if (!res.ok) {

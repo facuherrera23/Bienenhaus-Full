@@ -361,8 +361,8 @@ export function CommunicationsPage() {
                                 value={typeFilter}
                                 onChange={(e) =>
                                     setTypeFilter(
-                                        (e.currentTarget as HTMLSelectElement)
-                                            .value as 'todos' | CommunicationType,
+                                        (e.currentTarget as HTMLSelectElement).value as
+                                            'todos' | CommunicationType,
                                     )
                                 }
                             >
@@ -382,8 +382,8 @@ export function CommunicationsPage() {
                                 value={statusFilter}
                                 onChange={(e) =>
                                     setStatusFilter(
-                                        (e.currentTarget as HTMLSelectElement)
-                                            .value as 'todos' | CommunicationStatus,
+                                        (e.currentTarget as HTMLSelectElement).value as
+                                            'todos' | CommunicationStatus,
                                     )
                                 }
                             >

@@ -132,27 +132,42 @@ describe('properties-validation Zod schemas', () => {
     describe('PropertyImageSchema', () => {
         it('validates correct image', () => {
             const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-            const result = PropertyImageSchema.safeParse({ property_id: '123e4567-e89b-12d3-a456-426614174000', file, alt: 'test' });
+            const result = PropertyImageSchema.safeParse({
+                property_id: '123e4567-e89b-12d3-a456-426614174000',
+                file,
+                alt: 'test',
+            });
             expect(result.success).toBe(true);
         });
 
         it('rejects non-image files', () => {
             const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
-            const result = PropertyImageSchema.safeParse({ property_id: '123e4567-e89b-12d3-a456-426614174000', file });
+            const result = PropertyImageSchema.safeParse({
+                property_id: '123e4567-e89b-12d3-a456-426614174000',
+                file,
+            });
             expect(result.success).toBe(false);
         });
 
         it('rejects files over 10MB', () => {
-            const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.jpg', { type: 'image/jpeg' });
-            const result = PropertyImageSchema.safeParse({ property_id: '123e4567-e89b-12d3-a456-426614174000', file: largeFile });
+            const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.jpg', {
+                type: 'image/jpeg',
+            });
+            const result = PropertyImageSchema.safeParse({
+                property_id: '123e4567-e89b-12d3-a456-426614174000',
+                file: largeFile,
+            });
             expect(result.success).toBe(false);
         });
 
         it('accepts valid image types', () => {
             const types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            types.forEach(type => {
+            types.forEach((type) => {
                 const file = new File(['test'], `test.${type.split('/')[1]}`, { type });
-                const result = PropertyImageSchema.safeParse({ property_id: '123e4567-e89b-12d3-a456-426614174000', file });
+                const result = PropertyImageSchema.safeParse({
+                    property_id: '123e4567-e89b-12d3-a456-426614174000',
+                    file,
+                });
                 expect(result.success).toBe(true);
             });
         });
@@ -261,13 +276,20 @@ describe('properties-validation Zod schemas', () => {
     describe('validatePropertyImage', () => {
         it('returns valid for correct image', () => {
             const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-            const result = validatePropertyImage({ property_id: '123e4567-e89b-12d3-a456-426614174000', file, alt: 'test' });
+            const result = validatePropertyImage({
+                property_id: '123e4567-e89b-12d3-a456-426614174000',
+                file,
+                alt: 'test',
+            });
             expect(result.valid).toBe(true);
         });
 
         it('returns error for invalid', () => {
             const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
-            const result = validatePropertyImage({ property_id: '123e4567-e89b-12d3-a456-426614174000', file });
+            const result = validatePropertyImage({
+                property_id: '123e4567-e89b-12d3-a456-426614174000',
+                file,
+            });
             expect(result.valid).toBe(false);
             expect(result.error).toContain('no es una imagen');
         });

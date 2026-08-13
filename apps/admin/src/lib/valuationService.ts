@@ -18,19 +18,19 @@
 //     regenera por completo en cada save (idempotente).
 // ============================================================================
 
-import { getCurrentUser, supabase } from './supabase';
+import { getCurrentUser, supabase } from '@bienenhaus/supabase';
 import type { Database, Json } from '../types/database';
-import { type 
-    ComparableData ,type ComparableDB,type 
-    NivelesComparacion,type 
-    TipoConstruccion,type 
-    ValuacionDBRow,type 
-    ValuacionDraftData,type 
-    ValuacionFilters,type 
-    ValuacionFormData,type 
-    ValuacionServiceInterface,
+import {
+    type ComparableData,
+    type ComparableDB,
+    type NivelesComparacion,
+    type TipoConstruccion,
+    type ValuacionDBRow,
+    type ValuacionDraftData,
+    type ValuacionFilters,
+    type ValuacionFormData,
+    type ValuacionServiceInterface,
 } from '../types/valuationTypes';
-
 
 // ============================================================================
 // Tipos de la DB (derivados de los generados en types/database.ts)

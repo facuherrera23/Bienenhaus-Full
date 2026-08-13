@@ -46,7 +46,9 @@ export function useSubscribers(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.source) apiFilters.source = `eq.${filters.source}`;

@@ -1,4 +1,4 @@
-import { supabase, supabaseUrl } from './supabase';
+import { supabase, supabaseUrl } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
 import {
     CONDITION_LABEL,
@@ -10,15 +10,12 @@ import {
     type PropertyDetail,
     type PropertyFormValues,
     type PropertyImage,
-
     type PropertyRow,
     type PropertyStatus,
     STATUS_LABEL,
-    STATUS_TONE} from '../types/properties';
-import {
-    validatePropertyForm,
-    validatePropertyImage,
-} from './_shared/properties-validation';
+    STATUS_TONE,
+} from '../types/properties';
+import { validatePropertyForm, validatePropertyImage } from './_shared/properties-validation';
 
 // ============================================================
 // Re-export types and constants
@@ -517,7 +514,11 @@ export async function uploadPropertyImages(
     const images: PropertyImage[] = [];
     results.forEach((r, i) => {
         if (r.status === 'fulfilled' && r.value) images.push(r.value);
-        else console.error(`Upload failed for ${files[i].name}:`, r.status === 'rejected' ? r.reason : 'no result');
+        else
+            console.error(
+                `Upload failed for ${files[i].name}:`,
+                r.status === 'rejected' ? r.reason : 'no result',
+            );
     });
     return images;
 }
@@ -578,12 +579,12 @@ async function convertToWebP(file: File, quality = 0.85): Promise<File> {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('quality', String(quality * 100));
-        
+
         const res = await fetch(`${supabaseUrl}/functions/v1/convert-image`, {
             method: 'POST',
             body: formData,
         });
-        
+
         if (res.ok) {
             const blob = await res.blob();
             return new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' });
@@ -591,7 +592,7 @@ async function convertToWebP(file: File, quality = 0.85): Promise<File> {
     } catch {
         // Fall through to client-side
     }
-    
+
     // Client-side fallback
     return new Promise((resolve) => {
         if (file.type === 'image/webp') {

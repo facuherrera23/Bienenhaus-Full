@@ -1,4 +1,4 @@
-import { supabase, supabaseUrl } from './supabase';
+import { supabase, supabaseUrl } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
 import {
     type AgentAvailability,
@@ -11,12 +11,12 @@ import {
     type ReminderConfig,
     VISIT_STATUS_LABEL,
     VISIT_STATUS_TONE,
-
     type VisitDbRow,
     type VisitFormValues,
     type VisitRow,
     type VisitStatus,
-    type VisitType} from '../types/visits';
+    type VisitType,
+} from '../types/visits';
 import { validateVisitForm, validateVisitPatch } from './_shared/visits-validation';
 
 // ============================================================
@@ -177,7 +177,10 @@ export function toVisitRow(v: VisitApiRow): VisitRow {
 // Conflict Detection
 // ============================================================
 
-export async function checkConflicts(values: Partial<VisitFormValues>, excludeId?: string): Promise<string[]> {
+export async function checkConflicts(
+    values: Partial<VisitFormValues>,
+    excludeId?: string,
+): Promise<string[]> {
     const errors: string[] = [];
 
     // Sin agent_id/starts_at/ends_at no hay nada que chequear (ej: un update
@@ -192,18 +195,16 @@ export async function checkConflicts(values: Partial<VisitFormValues>, excludeId
         .select('*')
         .eq('agent_id', values.agent_id)
         .eq('is_active', true);
-    
+
     const visitDay = new Date(values.starts_at).getDay();
-    const visitStart = values.starts_at.split('T')[1].slice(0,5);
-    const visitEnd = values.ends_at.split('T')[1].slice(0,5);
-    
-    const hasSlot = avail?.some(a => 
-        a.day_of_week === visitDay && 
-        a.start_time <= visitStart && 
-        a.end_time >= visitEnd
+    const visitStart = values.starts_at.split('T')[1].slice(0, 5);
+    const visitEnd = values.ends_at.split('T')[1].slice(0, 5);
+
+    const hasSlot = avail?.some(
+        (a) => a.day_of_week === visitDay && a.start_time <= visitStart && a.end_time >= visitEnd,
     );
     if (!hasSlot) errors.push('Agente no disponible en ese horario');
-    
+
     // 2. Double booking
     const { data: conflicts } = await supabase
         .from('visits')
@@ -213,9 +214,10 @@ export async function checkConflicts(values: Partial<VisitFormValues>, excludeId
         .neq('id', excludeId ?? '')
         .lt('starts_at', values.ends_at)
         .gt('ends_at', values.starts_at);
-    
-    if (conflicts?.length) errors.push(`Conflicto con: ${conflicts.map(c => c.title).join(', ')}`);
-    
+
+    if (conflicts?.length)
+        errors.push(`Conflicto con: ${conflicts.map((c) => c.title).join(', ')}`);
+
     // 3. Lead double booking
     if (values.lead_id) {
         const { data: leadConflicts } = await supabase
@@ -228,7 +230,7 @@ export async function checkConflicts(values: Partial<VisitFormValues>, excludeId
             .gt('ends_at', values.starts_at);
         if (leadConflicts?.length) errors.push('Lead ya tiene visita en ese horario');
     }
-    
+
     // 4. Property double booking
     if (values.property_id) {
         const { data: propConflicts } = await supabase
@@ -241,7 +243,7 @@ export async function checkConflicts(values: Partial<VisitFormValues>, excludeId
             .gt('ends_at', values.starts_at);
         if (propConflicts?.length) errors.push('Propiedad ya tiene visita en ese horario');
     }
-    
+
     return errors;
 }
 

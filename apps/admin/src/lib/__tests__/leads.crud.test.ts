@@ -1,5 +1,17 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { bulkRecalculateScores, calculateLeadScore, createLead, fetchLead, fetchLeads, permanentDeleteLead, recalculateLeadScore, restoreLead, softDeleteLead, updateLead, updateLeadStatus } from '../leads';
+import {
+    bulkRecalculateScores,
+    calculateLeadScore,
+    createLead,
+    fetchLead,
+    fetchLeads,
+    permanentDeleteLead,
+    recalculateLeadScore,
+    restoreLead,
+    softDeleteLead,
+    updateLead,
+    updateLeadStatus,
+} from '../leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {
@@ -96,9 +108,11 @@ describe('leads CRUD', () => {
 
             const result = await createLead(validFormValues);
             expect(result).toBe('existing-lead');
-            expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
-                message: expect.stringContaining('---'),
-            }));
+            expect(mockSupabase.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: expect.stringContaining('---'),
+                }),
+            );
         });
 
         it('rejects invalid form data', async () => {
@@ -176,39 +190,41 @@ describe('leads CRUD', () => {
 
     describe('fetchLeads', () => {
         it('returns mapped leads', async () => {
-        const mockRows = [{
-            id: 'lead-1',
-            name: 'Juan',
-            last_name: 'PÃ©rez',
-            email: 'juan@test.com',
-            phone: '+54 9 11 1234-5678',
-            city: 'CÃ³rdoba',
-            intent: 'comprar',
-            message: 'Quiero comprar',
-            source: 'landing_form',
-            status: 'nuevo',
-            agent: { name: 'Agente 1' },
-            property: { title: 'Casa' },
-            tags: ['vip'],
-            score: 75,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z',
-            deleted_at: null,
-        }];
+            const mockRows = [
+                {
+                    id: 'lead-1',
+                    name: 'Juan',
+                    last_name: 'PÃ©rez',
+                    email: 'juan@test.com',
+                    phone: '+54 9 11 1234-5678',
+                    city: 'CÃ³rdoba',
+                    intent: 'comprar',
+                    message: 'Quiero comprar',
+                    source: 'landing_form',
+                    status: 'nuevo',
+                    agent: { name: 'Agente 1' },
+                    property: { title: 'Casa' },
+                    tags: ['vip'],
+                    score: 75,
+                    created_at: '2024-01-01T00:00:00Z',
+                    updated_at: '2024-01-01T00:00:00Z',
+                    deleted_at: null,
+                },
+            ];
 
-        mockSupabase.range.mockReturnValue(mockSupabase);
-        mockSupabase.returns.mockResolvedValueOnce({ data: [mockRows[0]], error: null });
+            mockSupabase.range.mockReturnValue(mockSupabase);
+            mockSupabase.returns.mockResolvedValueOnce({ data: [mockRows[0]], error: null });
 
-        const leads = await fetchLeads();
-        expect(leads.data).toHaveLength(1);
-        expect(leads.data[0].name).toBe('Juan');
-        expect(leads.data[0].score).toBe(75);
-        expect(leads.page).toBe(1);
-        expect(leads.pageSize).toBe(20);
-        expect(leads.hasMore).toBe(false);
-        expect(mockSupabase.range).toHaveBeenCalledWith(0, 19);
-        expect(mockSupabase.returns).toHaveBeenCalled();
-    });
+            const leads = await fetchLeads();
+            expect(leads.data).toHaveLength(1);
+            expect(leads.data[0].name).toBe('Juan');
+            expect(leads.data[0].score).toBe(75);
+            expect(leads.page).toBe(1);
+            expect(leads.pageSize).toBe(20);
+            expect(leads.hasMore).toBe(false);
+            expect(mockSupabase.range).toHaveBeenCalledWith(0, 19);
+            expect(mockSupabase.returns).toHaveBeenCalled();
+        });
     });
 });
 
@@ -274,12 +290,12 @@ describe('recalculateLeadScore', () => {
             },
             error: null,
         });
-            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
-            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+        const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+        mockSupabase.update.mockReturnValue({ eq: updateEqMock });
 
-            const score = await recalculateLeadScore('lead-1');
-            expect(score).toBeGreaterThan(0);
-            expect(mockSupabase.update).toHaveBeenCalledWith({ score: expect.any(Number) });
+        const score = await recalculateLeadScore('lead-1');
+        expect(score).toBeGreaterThan(0);
+        expect(mockSupabase.update).toHaveBeenCalledWith({ score: expect.any(Number) });
     });
 
     it('returns 0 for non-existent lead', async () => {
@@ -288,39 +304,39 @@ describe('recalculateLeadScore', () => {
     });
 });
 
-    describe('bulkRecalculateScores', () => {
-        it('updates multiple leads', async () => {
-            // Mock lead data that will produce specific scores
-            const leadDataScore65 = {
-                intent: 'comprar',
-                source: 'landing_form',
-                message: 'Hola, quiero comprar una casa grande con jardÃ­n!!!', // 51 chars -> message>50: +10
-                phone: '+54 9 11 1234-5678', // length 18 >= 10 -> +10
-                city: 'CÃ³rdoba', // present -> +5
-                // Score: comprar(30) + landing_form(10) + message>50(10) + phone(10) + city(5) = 65
-            };
-            
-            const leadDataScore70 = {
-                intent: 'vender',
-                source: 'whatsapp',
-                message: 'Another long message over fifty characters!!!', // let's count: this should be >50
-                phone: '+54 9 11 1234-5678', // length 18 >= 10 -> +10
-                city: 'Buenos Aires', // present -> +5
-                // Score: vender(25) + whatsapp(20) + message>50(10) + phone(10) + city(5) = 70
-            };
+describe('bulkRecalculateScores', () => {
+    it('updates multiple leads', async () => {
+        // Mock lead data that will produce specific scores
+        const leadDataScore65 = {
+            intent: 'comprar',
+            source: 'landing_form',
+            message: 'Hola, quiero comprar una casa grande con jardÃ­n!!!', // 51 chars -> message>50: +10
+            phone: '+54 9 11 1234-5678', // length 18 >= 10 -> +10
+            city: 'CÃ³rdoba', // present -> +5
+            // Score: comprar(30) + landing_form(10) + message>50(10) + phone(10) + city(5) = 65
+        };
 
-            // Mock the supabase chain for recalculateLeadScore
-            // Each call to single() returns different lead data
-            mockSupabase.single
-                .mockResolvedValueOnce({ data: leadDataScore65, error: null })
-                .mockResolvedValueOnce({ data: leadDataScore70, error: null })
-                .mockResolvedValueOnce({ data: null, error: null }); // returns null -> score 0
-            
-            // Mock the update chain that recalculateLeadScore uses to persist the score
-            const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
-            mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+        const leadDataScore70 = {
+            intent: 'vender',
+            source: 'whatsapp',
+            message: 'Another long message over fifty characters!!!', // let's count: this should be >50
+            phone: '+54 9 11 1234-5678', // length 18 >= 10 -> +10
+            city: 'Buenos Aires', // present -> +5
+            // Score: vender(25) + whatsapp(20) + message>50(10) + phone(10) + city(5) = 70
+        };
 
-            const updated = await bulkRecalculateScores(['lead-1', 'lead-2', 'lead-3']);
-            expect(updated).toBe(2); // lead-1 and lead-2 should be updated (score > 0), lead-3 should not (score = 0)
-        });
+        // Mock the supabase chain for recalculateLeadScore
+        // Each call to single() returns different lead data
+        mockSupabase.single
+            .mockResolvedValueOnce({ data: leadDataScore65, error: null })
+            .mockResolvedValueOnce({ data: leadDataScore70, error: null })
+            .mockResolvedValueOnce({ data: null, error: null }); // returns null -> score 0
+
+        // Mock the update chain that recalculateLeadScore uses to persist the score
+        const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
+        mockSupabase.update.mockReturnValue({ eq: updateEqMock });
+
+        const updated = await bulkRecalculateScores(['lead-1', 'lead-2', 'lead-3']);
+        expect(updated).toBe(2); // lead-1 and lead-2 should be updated (score > 0), lead-3 should not (score = 0)
     });
+});

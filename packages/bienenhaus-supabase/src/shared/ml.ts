@@ -188,7 +188,9 @@ async function api(
         if (Array.isArray(extraHeaders)) {
             for (const [k, v] of extraHeaders) headers[k] = v;
         } else if (extraHeaders instanceof Headers) {
-            extraHeaders.forEach((v, k) => { headers[k] = v; });
+            extraHeaders.forEach((v, k) => {
+                headers[k] = v;
+            });
         } else {
             Object.assign(headers, extraHeaders);
         }

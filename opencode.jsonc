@@ -23,7 +23,7 @@
         "atlas": { "model": "opencode/nemotron-3-ultra-free" },
         "prometheus": { "model": "opencode/nemotron-3-ultra-free" },
         "hephaestus": { "model": "opencode/nemotron-3-ultra-free" },
-        "OpenCode-Builder": { "model": "opencode/nemotron-3-ultra-free" }
+        "OpenCode-Builder": { "model": "opencode/nemotron-3-ultra-free" },
     },
 
     // ============================================================

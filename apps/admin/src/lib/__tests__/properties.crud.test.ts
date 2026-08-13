@@ -1,5 +1,13 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createProperty, duplicateProperty, fetchProperty, permanentDeleteProperty, restoreProperty, softDeleteProperty, updateProperty } from '../properties';
+import {
+    createProperty,
+    duplicateProperty,
+    fetchProperty,
+    permanentDeleteProperty,
+    restoreProperty,
+    softDeleteProperty,
+    updateProperty,
+} from '../properties';
 import type { PropertyDetail, PropertyFormValues } from '../../types/properties';
 
 const { mockSupabase } = vi.hoisted(() => {
@@ -98,7 +106,10 @@ describe.skip('properties CRUD', () => {
 
         it('creates property successfully', async () => {
             mockSupabase.single.mockResolvedValueOnce({ data: { id: 'new-prop' }, error: null });
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockPropertyDetail, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: mockPropertyDetail,
+                error: null,
+            });
 
             const result = await createProperty(validFormValues);
             expect(result.id).toBe('prop-1');
@@ -107,27 +118,44 @@ describe.skip('properties CRUD', () => {
 
         it('validates required fields', async () => {
             const invalidValues = { ...validFormValues, title: '' };
-            await expect(createProperty(invalidValues)).rejects.toThrow('Datos de propiedad invÃ¡lidos');
+            await expect(createProperty(invalidValues)).rejects.toThrow(
+                'Datos de propiedad invÃ¡lidos',
+            );
         });
 
         it('validates price for publicada status', async () => {
             const invalidValues = { ...validFormValues, status: 'publicada' as const, price: 0 };
-            await expect(createProperty(invalidValues)).rejects.toThrow('Precio obligatorio para publicar');
+            await expect(createProperty(invalidValues)).rejects.toThrow(
+                'Precio obligatorio para publicar',
+            );
         });
 
         it('validates location_id for publicada status', async () => {
-            const invalidValues = { ...validFormValues, status: 'publicada' as const, location_id: null };
-            await expect(createProperty(invalidValues)).rejects.toThrow('Zona obligatoria para publicar');
+            const invalidValues = {
+                ...validFormValues,
+                status: 'publicada' as const,
+                location_id: null,
+            };
+            await expect(createProperty(invalidValues)).rejects.toThrow(
+                'Zona obligatoria para publicar',
+            );
         });
 
         it('validates area_covered <= area_total', async () => {
             const invalidValues = { ...validFormValues, area_total: 100, area_covered: 150 };
-            await expect(createProperty(invalidValues)).rejects.toThrow('Superficie cubierta no puede exceder total');
+            await expect(createProperty(invalidValues)).rejects.toThrow(
+                'Superficie cubierta no puede exceder total',
+            );
         });
 
         it('handles duplicate slug error', async () => {
-            mockSupabase.single.mockRejectedValueOnce({ message: 'duplicate key value violates unique constraint', code: '23505' });
-            await expect(createProperty(validFormValues)).rejects.toThrow('Ya existe una propiedad con ese tÃ­tulo.');
+            mockSupabase.single.mockRejectedValueOnce({
+                message: 'duplicate key value violates unique constraint',
+                code: '23505',
+            });
+            await expect(createProperty(validFormValues)).rejects.toThrow(
+                'Ya existe una propiedad con ese tÃ­tulo.',
+            );
         });
     });
 
@@ -137,7 +165,10 @@ describe.skip('properties CRUD', () => {
         });
 
         it('updates property successfully', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockPropertyDetail, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: mockPropertyDetail,
+                error: null,
+            });
             mockSupabase.update.mockResolvedValueOnce({ error: null });
 
             await updateProperty('prop-1', validFormValues);
@@ -145,29 +176,42 @@ describe.skip('properties CRUD', () => {
         });
 
         it('sets published_at when status changes to publicada', async () => {
-            const draftProperty = { ...mockPropertyDetail, status: 'borrador' as const, published_at: null };
+            const draftProperty = {
+                ...mockPropertyDetail,
+                status: 'borrador' as const,
+                published_at: null,
+            };
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: draftProperty, error: null });
             mockSupabase.update.mockResolvedValueOnce({ error: null });
 
             await updateProperty('prop-1', { ...validFormValues, status: 'publicada' });
-            expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
-                published_at: expect.any(String),
-            }));
+            expect(mockSupabase.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    published_at: expect.any(String),
+                }),
+            );
         });
 
         it('updates slug when title changes', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { ...mockPropertyDetail, title: 'Old Title' }, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: { ...mockPropertyDetail, title: 'Old Title' },
+                error: null,
+            });
             mockSupabase.update.mockResolvedValueOnce({ error: null });
 
             await updateProperty('prop-1', { ...validFormValues, title: 'New Title' });
-            expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
-                slug: 'new-title',
-            }));
+            expect(mockSupabase.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    slug: 'new-title',
+                }),
+            );
         });
 
         it('rejects invalid data', async () => {
             const invalidValues = { ...validFormValues, title: '' };
-            await expect(updateProperty('prop-1', invalidValues)).rejects.toThrow('Datos de propiedad invÃ¡lidos');
+            await expect(updateProperty('prop-1', invalidValues)).rejects.toThrow(
+                'Datos de propiedad invÃ¡lidos',
+            );
         });
     });
 
@@ -189,8 +233,17 @@ describe.skip('properties CRUD', () => {
 
     describe('permanentDeleteProperty', () => {
         it('deletes images from storage and then property', async () => {
-            mockSupabase.select.mockResolvedValueOnce({ data: [{ url: 'https://supabase.co/storage/v1/object/public/property-images/prop-1/img1.jpg' }], error: null });
-            mockSupabase.storage.from.mockReturnValue({ remove: vi.fn().mockResolvedValue({ error: null }) });
+            mockSupabase.select.mockResolvedValueOnce({
+                data: [
+                    {
+                        url: 'https://supabase.co/storage/v1/object/public/property-images/prop-1/img1.jpg',
+                    },
+                ],
+                error: null,
+            });
+            mockSupabase.storage.from.mockReturnValue({
+                remove: vi.fn().mockResolvedValue({ error: null }),
+            });
             mockSupabase.delete.mockResolvedValueOnce({ error: null });
 
             await permanentDeleteProperty('prop-1');
@@ -201,9 +254,20 @@ describe.skip('properties CRUD', () => {
 
     describe('duplicateProperty', () => {
         it('creates copy with modified title and borrador status', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockPropertyDetail, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: mockPropertyDetail,
+                error: null,
+            });
             mockSupabase.single.mockResolvedValueOnce({ data: { id: 'dup-prop' }, error: null });
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { ...mockPropertyDetail, id: 'dup-prop', title: 'Casa Test (Copia)', status: 'borrador' }, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: {
+                    ...mockPropertyDetail,
+                    id: 'dup-prop',
+                    title: 'Casa Test (Copia)',
+                    status: 'borrador',
+                },
+                error: null,
+            });
 
             const result = await duplicateProperty('prop-1');
             expect(result.title).toBe('Casa Test (Copia)');
@@ -214,7 +278,10 @@ describe.skip('properties CRUD', () => {
 
     describe('fetchProperty', () => {
         it('returns property detail', async () => {
-            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockPropertyDetail, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({
+                data: mockPropertyDetail,
+                error: null,
+            });
             const result = await fetchProperty('prop-1');
             expect(result.title).toBe('Casa Test');
         });

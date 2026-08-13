@@ -113,7 +113,9 @@ export function useList<T, TRaw = T>(options: ListOptions<T, TRaw>) {
             });
             if (error) throw new Error(error.message);
             const raw = data ?? [];
-            const rows = transform ? raw.map(transform) : (raw as unknown as T[]);
+            const rows = transform
+                ? raw.map(transform)
+                : (raw as unknown as T[]);
             const total = count ?? rows.length;
             return {
                 data: rows,
@@ -245,7 +247,10 @@ export function useRpc<T, TParams>(
 ) {
     return useMutation<T, ApiError, TParams>({
         mutationFn: async (params: TParams) => {
-            const { data, error } = await rpcCall<T>(functionName, params as Record<string, unknown>);
+            const { data, error } = await rpcCall<T>(
+                functionName,
+                params as Record<string, unknown>,
+            );
             if (error) throw error;
             return data as T;
         },

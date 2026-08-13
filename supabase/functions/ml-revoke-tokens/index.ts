@@ -21,7 +21,9 @@ Deno.serve(async (req) => {
     // Fetch the active ML connection
     const { data: connRaw, error: connErr } = await supabase
         .from('ml_connection')
-        .select('id, access_token_encrypted, access_token_iv, refresh_token_encrypted, refresh_token_iv, token_expires_at')
+        .select(
+            'id, access_token_encrypted, access_token_iv, refresh_token_encrypted, refresh_token_iv, token_expires_at',
+        )
         .eq('is_active', true)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -72,7 +74,10 @@ Deno.serve(async (req) => {
         .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (delErr) {
-        return respond(500, { error: 'Tokens revocados pero falló el borrado de la conexión', details: delErr.message });
+        return respond(500, {
+            error: 'Tokens revocados pero falló el borrado de la conexión',
+            details: delErr.message,
+        });
     }
 
     if (revokeErrors.length > 0) {

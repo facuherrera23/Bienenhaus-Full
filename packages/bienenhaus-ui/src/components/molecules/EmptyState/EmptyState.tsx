@@ -34,25 +34,25 @@ import { forwardRef } from 'preact/compat';
 export type EmptyStateSize = 'sm' | 'md';
 
 export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
-  /** Primary heading. Required — every empty state needs a clear label. */
-  title: string;
-  /** Optional supporting copy rendered under the title (max ~320px, centered). */
-  description?: string;
-  /** Optional decorative icon node rendered inside a muted circle. */
-  icon?: ComponentChild;
-  /** Optional action slot (Button atom, link, etc.) rendered below the description. */
-  action?: ComponentChild;
-  /** Density / scale. Default: `md`. */
-  size?: EmptyStateSize;
-  /** Center the block both axes. Default: `true`. Set `false` for left-aligned layouts. */
-  centered?: boolean;
-  /** Extra class name applied to the root wrapper. */
-  className?: string;
+    /** Primary heading. Required — every empty state needs a clear label. */
+    title: string;
+    /** Optional supporting copy rendered under the title (max ~320px, centered). */
+    description?: string;
+    /** Optional decorative icon node rendered inside a muted circle. */
+    icon?: ComponentChild;
+    /** Optional action slot (Button atom, link, etc.) rendered below the description. */
+    action?: ComponentChild;
+    /** Density / scale. Default: `md`. */
+    size?: EmptyStateSize;
+    /** Center the block both axes. Default: `true`. Set `false` for left-aligned layouts. */
+    centered?: boolean;
+    /** Extra class name applied to the root wrapper. */
+    className?: string;
 }
 
 const SIZE_CLASS: Record<EmptyStateSize, string> = {
-  sm: 'empty-state--sm',
-  md: 'empty-state--md',
+    sm: 'empty-state--sm',
+    md: 'empty-state--md',
 };
 
 /**
@@ -67,48 +67,44 @@ const SIZE_CLASS: Record<EmptyStateSize, string> = {
  * - `role="status"` on the root so AT announces it when it appears.
  */
 export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
-  (
-    {
-      title,
-      description,
-      icon,
-      action,
-      size = 'md',
-      centered = true,
-      className = '',
-      ...props
+    (
+        {
+            title,
+            description,
+            icon,
+            action,
+            size = 'md',
+            centered = true,
+            className = '',
+            ...props
+        },
+        ref,
+    ) => {
+        const wrapperClass = [
+            'empty-state',
+            SIZE_CLASS[size],
+            centered ? 'empty-state--centered' : 'empty-state--inline',
+            className,
+        ]
+            .filter(Boolean)
+            .join(' ');
+
+        return (
+            <div ref={ref} className={wrapperClass} role="status" {...props}>
+                {icon !== undefined && (
+                    <span className="empty-state__icon" aria-hidden="true">
+                        {icon}
+                    </span>
+                )}
+
+                <p className="empty-state__title">{title}</p>
+
+                {description !== undefined && <p className="empty-state__desc">{description}</p>}
+
+                {action !== undefined && <div className="empty-state__action">{action}</div>}
+            </div>
+        );
     },
-    ref,
-  ) => {
-    const wrapperClass = [
-      'empty-state',
-      SIZE_CLASS[size],
-      centered ? 'empty-state--centered' : 'empty-state--inline',
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    return (
-      <div ref={ref} className={wrapperClass} role="status" {...props}>
-        {icon !== undefined && (
-          <span className="empty-state__icon" aria-hidden="true">
-            {icon}
-          </span>
-        )}
-
-        <p className="empty-state__title">{title}</p>
-
-        {description !== undefined && (
-          <p className="empty-state__desc">{description}</p>
-        )}
-
-        {action !== undefined && (
-          <div className="empty-state__action">{action}</div>
-        )}
-      </div>
-    );
-  },
 );
 
 EmptyState.displayName = 'EmptyState';

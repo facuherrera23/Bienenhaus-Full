@@ -9,22 +9,22 @@
    ============================================================ */
 
 .gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform;
 }
 
 .gpu--opacity {
-  will-change: opacity;
+    will-change: opacity;
 }
 
 .gpu--transform {
-  will-change: transform;
+    will-change: transform;
 }
 
 .gpu--both {
-  will-change: transform, opacity;
+    will-change: transform, opacity;
 }
 
 /* ============================================================
@@ -32,16 +32,16 @@
    ============================================================ */
 
 .content-visibility {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
 }
 
 .content-visibility--small {
-  contain-intrinsic-size: 0 200px;
+    contain-intrinsic-size: 0 200px;
 }
 
 .content-visibility--large {
-  contain-intrinsic-size: 0 800px;
+    contain-intrinsic-size: 0 800px;
 }
 
 /* ============================================================
@@ -49,19 +49,19 @@
    ============================================================ */
 
 .reduce-paint {
-  contain: layout style paint;
+    contain: layout style paint;
 }
 
 .reduce-paint--layout {
-  contain: layout;
+    contain: layout;
 }
 
 .reduce-paint--style {
-  contain: style;
+    contain: style;
 }
 
 .reduce-paint--paint {
-  contain: paint;
+    contain: paint;
 }
 
 /* ============================================================
@@ -69,20 +69,20 @@
    ============================================================ */
 
 .image-optimized {
-  width: 100%;
-  height: auto;
-  aspect-ratio: attr(width) / attr(height);
-  object-fit: cover;
-  background: var(--bh-bg-secondary);
+    width: 100%;
+    height: auto;
+    aspect-ratio: attr(width) / attr(height);
+    object-fit: cover;
+    background: var(--bh-bg-secondary);
 }
 
 .image-optimized--lazy {
-  opacity: 0;
-  transition: opacity var(--bh-dur-slow) var(--bh-ease-premium);
+    opacity: 0;
+    transition: opacity var(--bh-dur-slow) var(--bh-ease-premium);
 }
 
 .image-optimized--lazy.loaded {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* ============================================================
@@ -90,49 +90,49 @@
    ============================================================ */
 
 .scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--bh-accent) transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bh-accent) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+    width: 6px;
+    height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--bh-accent);
-  border-radius: 3px;
+    background: var(--bh-accent);
+    border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--bh-accent-hover);
+    background: var(--bh-accent-hover);
 }
 
 .scrollbar-hidden {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 /* ============================================================
    REDUCED MOTION — Respetar preferencias del usuario
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .gpu,
-  .gpu--opacity,
-  .gpu--transform,
-  .gpu--both {
-    will-change: auto;
-  }
-  
-  .image-optimized--lazy {
-    transition: none;
-  }
+    .gpu,
+    .gpu--opacity,
+    .gpu--transform,
+    .gpu--both {
+        will-change: auto;
+    }
+
+    .image-optimized--lazy {
+        transition: none;
+    }
 }

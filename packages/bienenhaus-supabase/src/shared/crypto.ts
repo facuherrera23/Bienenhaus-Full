@@ -19,13 +19,9 @@ function b64ToBytes(b64: string): Uint8Array {
 async function deriveKey(): Promise<CryptoKey> {
     const secret = process.env.CRYPTO_SECRET ?? '';
     if (!secret) throw new Error('CRYPTO_SECRET no configurado');
-    const material = await crypto.subtle.importKey(
-        'raw',
-        encoder.encode(secret),
-        'PBKDF2',
-        false,
-        ['deriveKey']
-    );
+    const material = await crypto.subtle.importKey('raw', encoder.encode(secret), 'PBKDF2', false, [
+        'deriveKey',
+    ]);
     return crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
@@ -36,7 +32,7 @@ async function deriveKey(): Promise<CryptoKey> {
         material,
         { name: 'AES-GCM', length: 256 },
         false,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
     );
 }
 
@@ -48,7 +44,11 @@ export interface EncryptedData {
 export async function encrypt(plain: string): Promise<EncryptedData> {
     const key = await deriveKey();
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const buf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv as BufferSource }, key, encoder.encode(plain));
+    const buf = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv as BufferSource },
+        key,
+        encoder.encode(plain),
+    );
     return { data: bytesToB64(new Uint8Array(buf)), iv: bytesToB64(iv) };
 }
 
@@ -57,7 +57,7 @@ export async function decrypt(data: string, iv: string): Promise<string> {
     const buf = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: b64ToBytes(iv) as BufferSource },
         key,
-        b64ToBytes(data) as BufferSource
+        b64ToBytes(data) as BufferSource,
     );
     return decoder.decode(buf);
 }

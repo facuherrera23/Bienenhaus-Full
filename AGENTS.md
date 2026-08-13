@@ -43,8 +43,8 @@ bienenhaus/
 ├── supabase/
 │   ├── config.toml       # Local config (ports, auth, realtime, storage, MFA, etc.)
 │   ├── seed.sql          # Admin user + sample properties + agents + leads
-│   ├── migrations/       # 36 migrations (0001_foundation → 0036_fix_owners_audit_trigger)
-│   └── functions/        # 14 Edge Functions (Deno 2)
+│   ├── migrations/       # 61 migrations (0001_foundation → 0062_chat_ai_assistant)
+│   └── functions/        # 18 Edge Functions (Deno 2)
 │       ├── _shared/      # crypto (AES-256-GCM), ml (API helpers), auto_reply, visits
 │       └── *.ts          # Individual functions
 │
@@ -82,7 +82,7 @@ bienenhaus/
 | API              | PostgREST                  | —       | Auto-generated, OpenAPI            |
 | Realtime         | Supabase Realtime          | —       | WebSockets (chat, visits)          |
 | Storage          | Supabase Storage           | —       | 4 buckets                          |
-| Edge Functions   | Deno 2                     | —       | 14 functions                       |
+| Edge Functions   | Deno 2                     | —       | 18 functions                       |
 | CI/CD            | GitHub Actions             | —       | TypeCheck → Unit → E2E → Build     |
 | Deploy           | GitHub Pages               | —       | Landing `/`, Admin `/admin/`       |
 
@@ -144,16 +144,16 @@ bienenhaus/
 
 ## ⚠️ Known Weak Points (Address Proactively)
 
-| Area                            | Issue                                                                 | Severity  | Fix Strategy                                                              |
-| ------------------------------- | --------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------- |
-| **Testing**                     | Only 2 unit tests; 5 E2E suites flaky                                 | 🔴 High   | Add Vitest coverage; stabilize Playwright with `test.use({ retries: 2 })` |
-| **Type Safety**                 | `any` in edge functions; `as unknown as` in `callRpc`                 | 🟡 Medium | Replace with proper generics; add `noImplicitAny`                         |
-| **Supabase Client Duplication** | 3 instances (landing supabase, landing supabase-data, admin supabase) | 🟡 Medium | Create `@bienenhaus/supabase` shared package                              |
-| **Bundle Size (Landing)**       | `@supabase/supabase-js` (47kb gz) for 2 RPCs only                     | 🟡 Medium | Replace with lightweight fetch client or RPC-only wrapper                 |
-| **Design Token Drift**          | Landing (`--accent`) vs Admin (`--bh-accent`)                         | 🟡 Medium | Unify in `@bienenhaus/ui/tokens.css`                                      |
-| **Edge Function Duplication**   | CORS, auth, `respond()` repeated 14×                                  | 🟡 Medium | Extract to `_shared/http.ts`, `_shared/auth.ts`                           |
+| Area                            | Issue                                                                                                                                      | Severity  | Fix Strategy                                                                                                                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Testing**                     | Only 2 unit tests; 5 E2E suites flaky                                                                                                      | 🔴 High   | Add Vitest coverage; stabilize Playwright with `test.use({ retries: 2 })`                                                                                                                                 |
+| **Type Safety**                 | `any` in edge functions; `as unknown as` in `callRpc`                                                                                      | 🟡 Medium | Replace with proper generics; add `noImplicitAny`                                                                                                                                                         |
+| **Supabase Client Duplication** | 3 instances (landing supabase, landing supabase-data, admin supabase)                                                                      | 🟡 Medium | Create `@bienenhaus/supabase` shared package                                                                                                                                                              |
+| **Bundle Size (Landing)**       | `@supabase/supabase-js` (47kb gz) for 2 RPCs only                                                                                          | 🟡 Medium | Replace with lightweight fetch client or RPC-only wrapper                                                                                                                                                 |
+| **Design Token Drift**          | Landing (`--accent`) vs Admin (`--bh-accent`)                                                                                              | 🟡 Medium | Unify in `@bienenhaus/ui/tokens.css`                                                                                                                                                                      |
+| **Edge Function Duplication**   | CORS, auth, `respond()` repeated 14×                                                                                                       | 🟡 Medium | Extract to `_shared/http.ts`, `_shared/auth.ts`                                                                                                                                                           |
 | **ESLint debt**                 | 258 errores pre-existentes (114 `no-explicit-any`, 75 `no-duplicate-imports`, 30 `no-alert` en stories) en 91 archivos; `eslint .` NO pasa | 🟡 Medium | CI lint gate = **diff-scoped** (solo archivos cambiados, job `lint` en ci.yml). Limpiar deuda por categorías: `--fix` ya aplicado (48); luego `any`→generics, unificar imports, `alert`→toasts en stories |
-| **Documentation**               | No ADRs, no API docs, no runbooks                                     | 🟡 Medium | Add `docs/adr/`, `docs/api/`, `docs/runbooks/`                            |
+| **Documentation**               | No ADRs, no API docs, no runbooks                                                                                                          | 🟡 Medium | Add `docs/adr/`, `docs/api/`, `docs/runbooks/`                                                                                                                                                            |
 
 ---
 

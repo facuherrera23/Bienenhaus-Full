@@ -20,10 +20,7 @@ type AdminRole = (typeof ADMIN_ROLES)[number];
  * Devuelve el `token` si el usuario es un admin activo (rol en ADMIN_ROLES),
  * o `null` si la credencial falta, es inválida o no corresponde a un admin activo.
  */
-export async function requireAdmin(
-    req: Request,
-    supabase: SupabaseClient,
-): Promise<string | null> {
+export async function requireAdmin(req: Request, supabase: SupabaseClient): Promise<string | null> {
     const auth = req.headers.get('authorization') ?? '';
     if (!auth.startsWith('Bearer ')) return null;
     const token = auth.slice(7);
@@ -48,9 +45,6 @@ export async function requireAdmin(
  * Wrapper booleano de `requireAdmin`. Útil cuando la función no necesita
  * reutilizar el token downstream (ej. para llamadas a la API de ML).
  */
-export async function isAdmin(
-    req: Request,
-    supabase: SupabaseClient,
-): Promise<boolean> {
+export async function isAdmin(req: Request, supabase: SupabaseClient): Promise<boolean> {
     return (await requireAdmin(req, supabase)) !== null;
 }

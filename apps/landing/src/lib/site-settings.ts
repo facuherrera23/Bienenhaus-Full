@@ -42,14 +42,17 @@ const DEFAULT_SETTINGS: SiteSettings = {
     stats: { comercializadas: 0, clientes: 0, exito: 0, anios: 0 },
 };
 
-function mapSettings(rows: Array<{ key: string; value: { value?: unknown } | unknown; value_type?: string }>): SiteSettings {
+function mapSettings(
+    rows: Array<{ key: string; value: { value?: unknown } | unknown; value_type?: string }>,
+): SiteSettings {
     const settings = { ...DEFAULT_SETTINGS };
 
     for (const row of rows) {
         const rowValue = row.value as { value?: unknown } | unknown;
-        const v = rowValue && typeof rowValue === 'object' && 'value' in rowValue
-            ? rowValue.value ?? rowValue
-            : rowValue;
+        const v =
+            rowValue && typeof rowValue === 'object' && 'value' in rowValue
+                ? (rowValue.value ?? rowValue)
+                : rowValue;
         switch (row.key) {
             case 'social':
                 settings.social = v as SocialLinks;

@@ -102,7 +102,9 @@ export async function checkInWithQr(code: string, userId: string): Promise<Check
  * Procesa los recordatorios vencidos (para ejecutar por cron).
  * Un recordatorio vence cuando falta trigger_minutes_before para la visita.
  */
-export async function processReminders(supabase: SupabaseClient = supabaseAdmin): Promise<RemindersResult> {
+export async function processReminders(
+    supabase: SupabaseClient = supabaseAdmin,
+): Promise<RemindersResult> {
     const { data: reminders, error } = await supabase
         .from('visit_reminders')
         .select('*, visit:visits(*)')

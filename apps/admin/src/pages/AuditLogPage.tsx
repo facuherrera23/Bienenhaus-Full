@@ -605,7 +605,11 @@ const AUDIT_EXPORT_COLUMNS: ExportColumn<AuditLogEntry>[] = [
     { key: 'id', label: 'ID' },
     { key: 'created_at', label: 'Fecha', format: (v) => formatDate(v as string) },
     { key: 'action', label: 'Acción', format: (v) => ACTION_LABELS[v as string] ?? (v as string) },
-    { key: 'entity_type', label: 'Entidad', format: (v) => ENTITY_LABELS[v as string] ?? (v as string) },
+    {
+        key: 'entity_type',
+        label: 'Entidad',
+        format: (v) => ENTITY_LABELS[v as string] ?? (v as string),
+    },
     { key: 'entity_id', label: 'ID Entidad' },
     { key: 'entity_title', label: 'Título' },
     { key: 'actor_email', label: 'Actor' },

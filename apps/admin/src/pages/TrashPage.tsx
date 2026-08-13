@@ -45,7 +45,6 @@ import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import styles from './TrashPage.module.css';
 
-
 type TabType = 'properties' | 'leads' | 'agents' | 'newsletter' | 'owners' | 'action_plans';
 
 function tabToType(
@@ -101,11 +100,11 @@ function formatDate(iso: string | null): string {
 
 export function TrashPage() {
     const [activeTab, setActiveTab] = useState<TabType>('properties');
-const [deleteTarget, setDeleteTarget] = useState<{
-    type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan';
-    id: string;
-    name: string;
-} | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{
+        type: 'property' | 'lead' | 'agent' | 'subscriber' | 'owner' | 'action_plan';
+        id: string;
+        name: string;
+    } | null>(null);
 
     const { data: deletedProperties, isPending: propsPending } = useQuery<PropertyRow[]>({
         queryKey: ['deleted-properties'],
@@ -308,9 +307,7 @@ const [deleteTarget, setDeleteTarget] = useState<{
                         <button
                             className="icon-btn icon-btn--danger"
                             title="Eliminar permanentemente"
-                            onClick={() =>
-                                setDeleteTarget({ type, id: item.id, name: name ?? '' })
-                            }
+                            onClick={() => setDeleteTarget({ type, id: item.id, name: name ?? '' })}
                         >
                             <Trash2 size={14} />
                         </button>

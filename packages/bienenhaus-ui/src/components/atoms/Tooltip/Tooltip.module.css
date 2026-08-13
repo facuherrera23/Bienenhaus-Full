@@ -10,35 +10,35 @@
  */
 
 .wrapper {
-  position: relative;
-  display: inline-flex;
-  /* Ensure the wrapper shrinks to the trigger so absolute placement is
+    position: relative;
+    display: inline-flex;
+    /* Ensure the wrapper shrinks to the trigger so absolute placement is
      relative to the trigger box, not a stretched container. */
-  max-width: max-content;
+    max-width: max-content;
 }
 
 /* ============================================================
    TOOLTIP BODY
    ============================================================ */
 .tooltip {
-  position: absolute;
-  z-index: var(--bh-z-tooltip);
-  max-width: 240px;
-  padding: var(--bh-space-2) var(--bh-space-3);
-  background-color: var(--bh-bg-raised);
-  border: 1px solid var(--bh-border);
-  border-radius: var(--bh-radius-sm);
-  box-shadow: var(--bh-shadow-md);
-  color: var(--bh-text-primary);
-  font-family: var(--bh-font-sans);
-  font-size: var(--bh-text-sm);
-  font-weight: var(--bh-weight-normal);
-  line-height: var(--bh-leading-normal);
-  /* Prevent the tooltip from stealing pointer events unless interactive
+    position: absolute;
+    z-index: var(--bh-z-tooltip);
+    max-width: 240px;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    background-color: var(--bh-bg-raised);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-sm);
+    box-shadow: var(--bh-shadow-md);
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-sans);
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-normal);
+    line-height: var(--bh-leading-normal);
+    /* Prevent the tooltip from stealing pointer events unless interactive
      mode opts in via the hover handlers on the element. */
-  pointer-events: none;
-  /* Entry animation — opacity + slight scale from the trigger. */
-  animation: tooltip-fade-in var(--bh-dur-fast) var(--bh-ease-premium);
+    pointer-events: none;
+    /* Entry animation — opacity + slight scale from the trigger. */
+    animation: tooltip-fade-in var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 /* ============================================================
@@ -50,36 +50,36 @@
 
 /* Arrow gap — distance between tooltip edge and trigger. */
 :root {
-  --tooltip-arrow-size: 6px;
-  --tooltip-gap: var(--bh-space-1);
+    --tooltip-arrow-size: 6px;
+    --tooltip-gap: var(--bh-space-1);
 }
 
 .top {
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: var(--tooltip-gap);
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: var(--tooltip-gap);
 }
 
 .bottom {
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: var(--tooltip-gap);
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: var(--tooltip-gap);
 }
 
 .left {
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-right: var(--tooltip-gap);
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: var(--tooltip-gap);
 }
 
 .right {
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: var(--tooltip-gap);
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: var(--tooltip-gap);
 }
 
 /* ============================================================
@@ -92,76 +92,76 @@
    ============================================================ */
 .withArrow::before,
 .withArrow::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-color: transparent;
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-color: transparent;
 }
 
 /* TOP — arrow on the bottom edge, pointing down at the trigger */
 .top.withArrow::before {
-  bottom: calc(-1 * var(--tooltip-arrow-size));
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
-  border-top-color: var(--bh-bg-raised);
+    bottom: calc(-1 * var(--tooltip-arrow-size));
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
+    border-top-color: var(--bh-bg-raised);
 }
 .top.withArrow::after {
-  bottom: calc(-1 * (var(--tooltip-arrow-size) + 1px));
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
-  border-top-color: var(--bh-border);
+    bottom: calc(-1 * (var(--tooltip-arrow-size) + 1px));
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
+    border-top-color: var(--bh-border);
 }
 
 /* BOTTOM — arrow on the top edge, pointing up at the trigger */
 .bottom.withArrow::before {
-  top: calc(-1 * var(--tooltip-arrow-size));
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
-  border-bottom-color: var(--bh-bg-raised);
+    top: calc(-1 * var(--tooltip-arrow-size));
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
+    border-bottom-color: var(--bh-bg-raised);
 }
 .bottom.withArrow::after {
-  top: calc(-1 * (var(--tooltip-arrow-size) + 1px));
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
-  border-bottom-color: var(--bh-border);
+    top: calc(-1 * (var(--tooltip-arrow-size) + 1px));
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
+    border-bottom-color: var(--bh-border);
 }
 
 /* LEFT — arrow on the right edge, pointing right at the trigger */
 .left.withArrow::before {
-  right: calc(-1 * var(--tooltip-arrow-size));
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: var(--tooltip-arrow-size) 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
-  border-left-color: var(--bh-bg-raised);
+    right: calc(-1 * var(--tooltip-arrow-size));
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: var(--tooltip-arrow-size) 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
+    border-left-color: var(--bh-bg-raised);
 }
 .left.withArrow::after {
-  right: calc(-1 * (var(--tooltip-arrow-size) + 1px));
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: var(--tooltip-arrow-size) 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
-  border-left-color: var(--bh-border);
+    right: calc(-1 * (var(--tooltip-arrow-size) + 1px));
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: var(--tooltip-arrow-size) 0 var(--tooltip-arrow-size) var(--tooltip-arrow-size);
+    border-left-color: var(--bh-border);
 }
 
 /* RIGHT — arrow on the left edge, pointing left at the trigger */
 .right.withArrow::before {
-  left: calc(-1 * var(--tooltip-arrow-size));
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
-  border-right-color: var(--bh-bg-raised);
+    left: calc(-1 * var(--tooltip-arrow-size));
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
+    border-right-color: var(--bh-bg-raised);
 }
 .right.withArrow::after {
-  left: calc(-1 * (var(--tooltip-arrow-size) + 1px));
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
-  border-right-color: var(--bh-border);
+    left: calc(-1 * (var(--tooltip-arrow-size) + 1px));
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: var(--tooltip-arrow-size) var(--tooltip-arrow-size) var(--tooltip-arrow-size) 0;
+    border-right-color: var(--bh-border);
 }
 
 /* ============================================================
@@ -173,26 +173,26 @@
    component toggles a `data-interactive` attribute on the tooltip.
    ============================================================ */
 .tooltip[data-interactive='true'] {
-  pointer-events: auto;
+    pointer-events: auto;
 }
 
 /* ============================================================
    ANIMATION
    ============================================================ */
 @keyframes tooltip-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .tooltip {
-    animation: none;
-  }
+    .tooltip {
+        animation: none;
+    }
 }

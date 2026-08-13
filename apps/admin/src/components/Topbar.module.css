@@ -156,7 +156,8 @@
     padding: var(--bh-space-3) var(--bh-space-2);
     border-radius: var(--bh-radius-sm);
     cursor: pointer;
-    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
         color var(--bh-dur-hover) var(--bh-ease-premium);
 }
 
@@ -370,7 +371,8 @@
     border: none;
     cursor: pointer;
     opacity: 0;
-    transition: opacity var(--bh-dur-hover) var(--bh-ease-premium),
+    transition:
+        opacity var(--bh-dur-hover) var(--bh-ease-premium),
         background var(--bh-dur-hover) var(--bh-ease-premium);
 }
 
@@ -422,7 +424,8 @@
     border: 1px solid transparent;
     background: none;
     cursor: pointer;
-    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
         border-color var(--bh-dur-hover) var(--bh-ease-premium);
 }
 
@@ -512,7 +515,8 @@
     background: none;
     border: none;
     text-align: left;
-    transition: background var(--bh-dur-hover) var(--bh-ease-premium),
+    transition:
+        background var(--bh-dur-hover) var(--bh-ease-premium),
         color var(--bh-dur-hover) var(--bh-ease-premium);
 }
 

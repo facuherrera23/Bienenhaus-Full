@@ -82,8 +82,8 @@ export const LeadScoreFactorsSchema = z.object({
     source_manual: z.number().int().min(0).max(100).default(10),
 
     // Message length
-    message_long: z.number().int().min(0).max(100).default(10),      // > 50 chars
-    message_medium: z.number().int().min(0).max(100).default(5),     // > 20 chars
+    message_long: z.number().int().min(0).max(100).default(10), // > 50 chars
+    message_medium: z.number().int().min(0).max(100).default(5), // > 20 chars
 
     // Phone presence
     phone_present: z.number().int().min(0).max(100).default(10),
@@ -100,7 +100,18 @@ export const LeadScoreFactorsSchema = z.object({
 
 export const LeadActivitySchema = z.object({
     lead_id: z.string().uuid(),
-    action: z.enum(['created', 'updated', 'status_changed', 'assigned', 'scored', 'note_added', 'tag_added', 'tag_removed', 'deleted', 'restored']),
+    action: z.enum([
+        'created',
+        'updated',
+        'status_changed',
+        'assigned',
+        'scored',
+        'note_added',
+        'tag_added',
+        'tag_removed',
+        'deleted',
+        'restored',
+    ]),
     from_value: z.string().nullable().optional(),
     to_value: z.string().nullable().optional(),
     agent_id: z.string().uuid().nullable().optional(),
@@ -124,7 +135,11 @@ export type LeadActivity = z.infer<typeof LeadActivitySchema>;
 export type LeadTag = z.infer<typeof LeadTagSchema>;
 
 // Validation helpers
-export function validateLeadForm(data: unknown): { valid: boolean; error?: string; data?: LeadFormValues } {
+export function validateLeadForm(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: LeadFormValues;
+} {
     const result = LeadFormSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -133,7 +148,11 @@ export function validateLeadForm(data: unknown): { valid: boolean; error?: strin
     return { valid: true, data: result.data };
 }
 
-export function validateLeadPatch(data: unknown): { valid: boolean; error?: string; data?: LeadPatch } {
+export function validateLeadPatch(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: LeadPatch;
+} {
     const result = LeadPatchSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -142,7 +161,11 @@ export function validateLeadPatch(data: unknown): { valid: boolean; error?: stri
     return { valid: true, data: result.data };
 }
 
-export function validateCsvLeadRow(data: unknown): { valid: boolean; error?: string; data?: CsvLeadRow } {
+export function validateCsvLeadRow(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: CsvLeadRow;
+} {
     const result = CsvLeadRowSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -151,7 +174,11 @@ export function validateCsvLeadRow(data: unknown): { valid: boolean; error?: str
     return { valid: true, data: result.data };
 }
 
-export function validateLeadScoreFactors(data: unknown): { valid: boolean; error?: string; data?: LeadScoreFactors } {
+export function validateLeadScoreFactors(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: LeadScoreFactors;
+} {
     const result = LeadScoreFactorsSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -160,7 +187,11 @@ export function validateLeadScoreFactors(data: unknown): { valid: boolean; error
     return { valid: true, data: result.data };
 }
 
-export function validateLeadActivity(data: unknown): { valid: boolean; error?: string; data?: LeadActivity } {
+export function validateLeadActivity(data: unknown): {
+    valid: boolean;
+    error?: string;
+    data?: LeadActivity;
+} {
     const result = LeadActivitySchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];

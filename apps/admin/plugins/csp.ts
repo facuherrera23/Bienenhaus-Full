@@ -41,8 +41,7 @@ export function csp(): Plugin {
         apply: 'build',
 
         transformIndexHtml(html) {
-            const metaTag =
-                `<meta http-equiv="Content-Security-Policy" content="${ADMIN_CSP}">`;
+            const metaTag = `<meta http-equiv="Content-Security-Policy" content="${ADMIN_CSP}">`;
             const result = html.replace(/<head>/i, `<head>\n    ${metaTag}`);
             this.info(`[csp] CSP inyectado en index.html (admin)`);
             return result;

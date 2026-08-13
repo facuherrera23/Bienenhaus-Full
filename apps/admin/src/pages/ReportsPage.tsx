@@ -211,8 +211,8 @@ export function ReportsPage() {
                                 value={typeFilter}
                                 onChange={(e) =>
                                     setTypeFilter(
-                                        (e.currentTarget as HTMLSelectElement)
-                                            .value as 'todos' | ReportType,
+                                        (e.currentTarget as HTMLSelectElement).value as
+                                            'todos' | ReportType,
                                     )
                                 }
                             >
@@ -232,8 +232,13 @@ export function ReportsPage() {
                                 value={statusFilter}
                                 onChange={(e) =>
                                     setStatusFilter(
-                                        (e.currentTarget as HTMLSelectElement)
-                                            .value as 'todos' | 'draft' | 'sent' | 'delivered' | 'read' | 'failed',
+                                        (e.currentTarget as HTMLSelectElement).value as
+                                            | 'todos'
+                                            | 'draft'
+                                            | 'sent'
+                                            | 'delivered'
+                                            | 'read'
+                                            | 'failed',
                                     )
                                 }
                             >

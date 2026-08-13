@@ -20,7 +20,6 @@ import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import styles from './AgentFormPage.module.css';
 
-
 const EMPTY: AgentFormValues = {
     name: '',
     email: '',

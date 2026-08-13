@@ -26,7 +26,7 @@ export function corsHeaders(req: Request): Record<string, string> {
     const origin = req.headers.get('origin');
     if (!origin) return { ...METHODS_HEADERS };
     if (ALLOWED_ORIGINS.has(origin)) {
-        return { ...METHODS_HEADERS, 'access-control-allow-origin': origin, 'vary': 'Origin' };
+        return { ...METHODS_HEADERS, 'access-control-allow-origin': origin, vary: 'Origin' };
     }
     return { vary: 'Origin' };
 }

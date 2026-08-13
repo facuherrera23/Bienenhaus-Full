@@ -16,9 +16,26 @@ type QueryResult = { data: unknown; error: unknown };
 const { chainMock, enqueue, resetChain } = vi.hoisted(() => {
     const queue: QueryResult[] = [];
     const methods = [
-        'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'not',
-        'is', 'order', 'limit', 'maybeSingle', 'single', 'returns', 'or',
-        'ilike', 'match', 'rpc', 'from', 'range',
+        'select',
+        'insert',
+        'update',
+        'delete',
+        'eq',
+        'neq',
+        'in',
+        'not',
+        'is',
+        'order',
+        'limit',
+        'maybeSingle',
+        'single',
+        'returns',
+        'or',
+        'ilike',
+        'match',
+        'rpc',
+        'from',
+        'range',
     ];
     const chain: Record<string, unknown> = {};
     for (const m of methods) {
@@ -45,7 +62,7 @@ const { chainMock, enqueue, resetChain } = vi.hoisted(() => {
     return { chainMock: chain, enqueue, resetChain };
 });
 
-vi.mock('../supabase', () => ({
+vi.mock('@bienenhaus/supabase', () => ({
     supabase: chainMock,
     supabaseUrl: 'https://test.supabase.co',
 }));
@@ -101,7 +118,11 @@ describe('ml settings', () => {
             enqueue([], null);
             await fetchMlSettings();
             expect(fn('from')).toHaveBeenCalledWith('site_settings');
-            expect(fn('in')).toHaveBeenCalledWith('key', ['ml_app_id', 'ml_defaults', 'ml_client_secret']);
+            expect(fn('in')).toHaveBeenCalledWith('key', [
+                'ml_app_id',
+                'ml_defaults',
+                'ml_client_secret',
+            ]);
         });
     });
 
@@ -169,7 +190,9 @@ describe('ml settings', () => {
     describe('buildAuthorizeUrl', () => {
         it('builds the ML OAuth URL with appId and supabase redirect', () => {
             const url = new URL(buildAuthorizeUrl('app-123'));
-            expect(url.origin + url.pathname).toBe('https://auth.mercadolibre.com.ar/authorization');
+            expect(url.origin + url.pathname).toBe(
+                'https://auth.mercadolibre.com.ar/authorization',
+            );
             expect(url.searchParams.get('response_type')).toBe('code');
             expect(url.searchParams.get('client_id')).toBe('app-123');
             expect(url.searchParams.get('redirect_uri')).toBe(
@@ -190,7 +213,10 @@ describe('ml settings', () => {
         });
 
         it('returns the object as-is for a single object', () => {
-            expect(embedProperty({ title: 'Casa', code: 123 })).toEqual({ title: 'Casa', code: 123 });
+            expect(embedProperty({ title: 'Casa', code: 123 })).toEqual({
+                title: 'Casa',
+                code: 123,
+            });
         });
 
         it('returns the first element for an array', () => {

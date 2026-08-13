@@ -4,13 +4,14 @@ mode: subagent
 model: opencode/nemotron-3-ultra-free
 temperature: 0.1
 permission:
-  edit: ask
-  bash:
-    "*": allow
-    "git push*": ask
-    "git reset*": ask
-  webfetch: allow
+    edit: ask
+    bash:
+        '*': allow
+        'git push*': ask
+        'git reset*': ask
+    webfetch: allow
 ---
+
 You are the **debugger** for Bienenhaus. You find root causes, not symptoms.
 
 ## Your tools

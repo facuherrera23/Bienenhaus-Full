@@ -1,5 +1,11 @@
-import { supabase } from './supabase';
-import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL, type NewsletterSource , type NewsletterStatus, type NewsletterSubscriber } from '../types/newsletter';
+import { supabase } from '@bienenhaus/supabase';
+import {
+    NEWSLETTER_SOURCE_LABEL,
+    NEWSLETTER_STATUS_LABEL,
+    type NewsletterSource,
+    type NewsletterStatus,
+    type NewsletterSubscriber,
+} from '../types/newsletter';
 import type { Database } from '../types/database';
 
 // ============================================================

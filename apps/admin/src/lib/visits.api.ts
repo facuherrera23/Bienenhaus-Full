@@ -70,7 +70,9 @@ export function useVisits(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.agent_id) apiFilters.agent_id = `eq.${filters.agent_id}`;
     if (filters?.lead_id) apiFilters.lead_id = `eq.${filters.lead_id}`;
@@ -163,14 +165,15 @@ export function useVisitsInfinite(filters?: {
 }) {
     return useInfiniteQuery({
         queryKey: ['visits-infinite', filters],
-        queryFn: ({ pageParam = 1 }) => fetchVisitsByDateRangePaginated(
-            filters?.from ?? '',
-            filters?.to ?? '',
-            filters?.agent_id,
-            pageParam,
-            filters?.pageSize ?? 100
-        ),
-        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.page + 1 : undefined,
+        queryFn: ({ pageParam = 1 }) =>
+            fetchVisitsByDateRangePaginated(
+                filters?.from ?? '',
+                filters?.to ?? '',
+                filters?.agent_id,
+                pageParam,
+                filters?.pageSize ?? 100,
+            ),
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
         initialPageParam: 1,
         enabled: !!(filters?.from && filters?.to),
     });

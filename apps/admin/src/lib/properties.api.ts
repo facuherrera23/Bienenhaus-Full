@@ -141,7 +141,9 @@ export function useProperties(filters?: {
     page?: number;
     pageSize?: number;
 }) {
-    const apiFilters: Record<string, string | number | boolean | undefined> = { deleted_at: 'is.null' };
+    const apiFilters: Record<string, string | number | boolean | undefined> = {
+        deleted_at: 'is.null',
+    };
 
     if (filters?.status) apiFilters.status = `eq.${filters.status}`;
     if (filters?.listing_type) apiFilters.listing_type = `eq.${filters.listing_type}`;
@@ -207,12 +209,7 @@ export function useCreateProperty() {
         queryKeys.properties(),
         PROPERTIES_PATH,
         {
-            invalidateKeys: [
-                ['properties'],
-                ['leads'],
-                ['owners'],
-                ['recent-activity'],
-            ],
+            invalidateKeys: [['properties'], ['leads'], ['owners'], ['recent-activity']],
         },
     );
 }
@@ -222,24 +219,14 @@ export function useUpdateProperty() {
         queryKeys.properties(),
         PROPERTIES_PATH,
         {
-            invalidateKeys: [
-                ['properties'],
-                ['leads'],
-                ['owners'],
-                ['recent-activity'],
-            ],
+            invalidateKeys: [['properties'], ['leads'], ['owners'], ['recent-activity']],
         },
     );
 }
 
 export function useDeleteProperty() {
     return useDelete(queryKeys.properties(), PROPERTIES_PATH, {
-        invalidateKeys: [
-            ['properties'],
-            ['leads'],
-            ['owners'],
-            ['recent-activity'],
-        ],
+        invalidateKeys: [['properties'], ['leads'], ['owners'], ['recent-activity']],
     });
 }
 

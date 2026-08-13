@@ -18,7 +18,6 @@ import {
 import { Building2, DollarSign, TrendingUp, Users } from 'lucide-preact';
 import styles from './DashboardCharts.module.css';
 
-
 const STATUS_COLORS = {
     // Property status
     publicada: '#1FC8C3',
@@ -370,7 +369,9 @@ export function DashboardCharts() {
                 <div className={styles['chart-card']}>
                     <div className={styles['chart-header']}>
                         <h3>Leads por Mes</h3>
-                        <p className={styles['chart-subtitle']}>Evolución temporal (últimos 6 meses)</p>
+                        <p className={styles['chart-subtitle']}>
+                            Evolución temporal (últimos 6 meses)
+                        </p>
                     </div>
                     <div className={styles['chart-wrapper']}>
                         <ResponsiveContainer width="100%" height={280}>

@@ -1,5 +1,12 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { addLeadTag, bulkImportLeadsParsed, importLeadsFromCsv, parseLeadsCsv, removeLeadTag, setLeadTags } from '../leads';
+import {
+    addLeadTag,
+    bulkImportLeadsParsed,
+    importLeadsFromCsv,
+    parseLeadsCsv,
+    removeLeadTag,
+    setLeadTags,
+} from '../leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {
@@ -60,7 +67,10 @@ describe.skip('leads tags & csv', () => {
         it('removes existing tag', async () => {
             const updateEqMock = vi.fn().mockResolvedValueOnce({ error: null });
             mockSupabase.update.mockReturnValue({ eq: updateEqMock });
-            mockSupabase.single.mockResolvedValueOnce({ data: { tags: ['vip', 'nuevo'] }, error: null });
+            mockSupabase.single.mockResolvedValueOnce({
+                data: { tags: ['vip', 'nuevo'] },
+                error: null,
+            });
 
             await removeLeadTag('lead-1', 'vip');
             expect(mockSupabase.update).toHaveBeenCalledWith({ tags: ['nuevo'] });
@@ -157,10 +167,8 @@ Carlos,Lopez,carlos@test.com,alquilar,whatsapp,nuevo,Busco depto`;
 Juan,PÃ©rez,juan@test.com,comprar,landing_form,nuevo,Quiero comprar
 Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
 
-            mockSupabase.maybeSingle
-                .mockResolvedValueOnce({ data: null, error: null });
-            mockSupabase.single
-                .mockResolvedValueOnce({ data: { id: 'lead-1' }, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+            mockSupabase.single.mockResolvedValueOnce({ data: { id: 'lead-1' }, error: null });
 
             const result = await importLeadsFromCsv(csvText);
             expect(result.created).toBe(1);
@@ -171,8 +179,24 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
     describe('bulkImportLeadsParsed', () => {
         it('imports parsed leads', async () => {
             const leads = [
-                { name: 'Juan', last_name: 'PÃ©rez', email: 'juan@test.com', intent: 'comprar', source: 'landing_form', status: 'nuevo', message: 'Test' },
-                { name: 'Maria', last_name: 'Gomez', email: 'maria@test.com', intent: 'vender', source: 'whatsapp', status: 'nuevo', message: 'Test 2' },
+                {
+                    name: 'Juan',
+                    last_name: 'PÃ©rez',
+                    email: 'juan@test.com',
+                    intent: 'comprar',
+                    source: 'landing_form',
+                    status: 'nuevo',
+                    message: 'Test',
+                },
+                {
+                    name: 'Maria',
+                    last_name: 'Gomez',
+                    email: 'maria@test.com',
+                    intent: 'vender',
+                    source: 'whatsapp',
+                    status: 'nuevo',
+                    message: 'Test 2',
+                },
             ];
 
             mockSupabase.maybeSingle
@@ -189,8 +213,24 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
 
         it('handles import errors', async () => {
             const leads = [
-                { name: 'Juan', last_name: 'PÃ©rez', email: 'juan@test.com', intent: 'comprar', source: 'landing_form', status: 'nuevo', message: 'Test' },
-                { name: 'Maria', last_name: 'Gomez', email: 'maria@test.com', intent: 'vender', source: 'whatsapp', status: 'nuevo', message: 'Test 2' },
+                {
+                    name: 'Juan',
+                    last_name: 'PÃ©rez',
+                    email: 'juan@test.com',
+                    intent: 'comprar',
+                    source: 'landing_form',
+                    status: 'nuevo',
+                    message: 'Test',
+                },
+                {
+                    name: 'Maria',
+                    last_name: 'Gomez',
+                    email: 'maria@test.com',
+                    intent: 'vender',
+                    source: 'whatsapp',
+                    status: 'nuevo',
+                    message: 'Test 2',
+                },
             ];
 
             mockSupabase.single

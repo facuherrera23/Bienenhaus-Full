@@ -1,5 +1,12 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { bulkImportLeadsParsed, bulkRecalculateScores, calculateLeadScore, importLeadsFromCsv, parseLeadsCsv, recalculateLeadScore } from '../leads';
+import {
+    bulkImportLeadsParsed,
+    bulkRecalculateScores,
+    calculateLeadScore,
+    importLeadsFromCsv,
+    parseLeadsCsv,
+    recalculateLeadScore,
+} from '../leads';
 import type { LeadFormValues } from '../../types/leads';
 
 const { mockSupabase } = vi.hoisted(() => {
@@ -146,14 +153,18 @@ describe.skip('leads scoring & csv', () => {
         });
 
         it('throws for non-existent lead', async () => {
-            mockSupabase.single.mockResolvedValueOnce({ data: null, error: { message: 'Not found' } });
+            mockSupabase.single.mockResolvedValueOnce({
+                data: null,
+                error: { message: 'Not found' },
+            });
             await expect(recalculateLeadScore('lead-1')).rejects.toThrow('Not found');
         });
     });
 
     describe('bulkRecalculateScores', () => {
         it('updates multiple leads', async () => {
-            const recalculateLeadScoreSpy = vi.spyOn({ recalculateLeadScore }, 'recalculateLeadScore')
+            const recalculateLeadScoreSpy = vi
+                .spyOn({ recalculateLeadScore }, 'recalculateLeadScore')
                 .mockResolvedValueOnce(65)
                 .mockResolvedValueOnce(70)
                 .mockResolvedValueOnce(0);
@@ -243,8 +254,24 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
     describe('bulkImportLeadsParsed', () => {
         it('imports parsed leads', async () => {
             const leads = [
-                { name: 'Juan', last_name: 'PÃ©rez', email: 'juan@test.com', intent: 'comprar', source: 'landing_form', status: 'nuevo', message: 'Test' },
-                { name: 'Maria', last_name: 'Gomez', email: 'maria@test.com', intent: 'vender', source: 'whatsapp', status: 'nuevo', message: 'Test 2' },
+                {
+                    name: 'Juan',
+                    last_name: 'PÃ©rez',
+                    email: 'juan@test.com',
+                    intent: 'comprar',
+                    source: 'landing_form',
+                    status: 'nuevo',
+                    message: 'Test',
+                },
+                {
+                    name: 'Maria',
+                    last_name: 'Gomez',
+                    email: 'maria@test.com',
+                    intent: 'vender',
+                    source: 'whatsapp',
+                    status: 'nuevo',
+                    message: 'Test 2',
+                },
             ];
 
             mockSupabase.single
@@ -258,8 +285,24 @@ Maria,Gomez,maria@test.com,invalid_intent,landing_form,nuevo,Quiero vender`;
 
         it('handles import errors', async () => {
             const leads = [
-                { name: 'Juan', last_name: 'PÃ©rez', email: 'juan@test.com', intent: 'comprar', source: 'landing_form', status: 'nuevo', message: 'Test' },
-                { name: 'Maria', last_name: 'Gomez', email: 'maria@test.com', intent: 'vender', source: 'whatsapp', status: 'nuevo', message: 'Test 2' },
+                {
+                    name: 'Juan',
+                    last_name: 'PÃ©rez',
+                    email: 'juan@test.com',
+                    intent: 'comprar',
+                    source: 'landing_form',
+                    status: 'nuevo',
+                    message: 'Test',
+                },
+                {
+                    name: 'Maria',
+                    last_name: 'Gomez',
+                    email: 'maria@test.com',
+                    intent: 'vender',
+                    source: 'whatsapp',
+                    status: 'nuevo',
+                    message: 'Test 2',
+                },
             ];
 
             mockSupabase.single

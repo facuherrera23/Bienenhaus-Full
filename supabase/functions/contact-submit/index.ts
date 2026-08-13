@@ -142,7 +142,8 @@ serve(async (req) => {
     });
     if (leadError) {
         console.error('Lead insert error:', leadError);
-        return new Response(JSON.stringify({ error: 'Error guardando consulta' }), {
+        const errorMsg = leadError.detail || leadError.message || 'Error guardando consulta';
+        return new Response(JSON.stringify({ error: errorMsg }), {
             status: 500,
             headers,
         });

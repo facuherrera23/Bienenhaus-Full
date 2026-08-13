@@ -14,8 +14,12 @@
 }
 
 @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .modalContainer {
@@ -30,7 +34,9 @@
     display: flex;
     flex-direction: column;
     animation: modalSlideUp var(--bh-dur-med) var(--bh-ease-premium);
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(31, 200, 195, 0.08);
+    box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(31, 200, 195, 0.08);
 }
 
 @keyframes modalSlideUp {
@@ -126,8 +132,12 @@
     transform: translateY(-50%) scale(1.1);
 }
 
-.galleryNavPrev { left: var(--bh-space-4); }
-.galleryNavNext { right: var(--bh-space-4); }
+.galleryNavPrev {
+    left: var(--bh-space-4);
+}
+.galleryNavNext {
+    right: var(--bh-space-4);
+}
 
 .galleryCounter {
     position: absolute;
@@ -224,7 +234,9 @@
 
 .galleryThumb.active {
     border-color: var(--bh-accent);
-    box-shadow: 0 0 0 1px var(--bh-accent), 0 8px 24px rgba(31, 200, 195, 0.2);
+    box-shadow:
+        0 0 0 1px var(--bh-accent),
+        0 8px 24px rgba(31, 200, 195, 0.2);
 }
 
 .thumbIndicator {
@@ -443,7 +455,9 @@
     color: var(--bh-bg-primary);
     cursor: pointer;
     transition: all var(--bh-dur-med) var(--bh-ease-premium);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 40px var(--bh-accent-glow-soft);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 40px var(--bh-accent-glow-soft);
 }
 
 .videoPlayBtn:hover {

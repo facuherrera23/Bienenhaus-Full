@@ -339,7 +339,9 @@ export function startSpan<T>(
     }
 
     try {
-        return Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () => operation());
+        return Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () =>
+            operation(),
+        );
     } catch (error) {
         console.error('[Sentry] Error en startSpan:', error);
         return operation();
@@ -359,7 +361,9 @@ export async function startSpanAsync<T>(
     }
 
     try {
-        return await Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () => operation());
+        return await Sentry.startSpan({ name, attributes: attributes as SpanAttributes }, () =>
+            operation(),
+        );
     } catch (error) {
         console.error('[Sentry] Error en startSpanAsync:', error);
         return await operation();

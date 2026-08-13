@@ -3,218 +3,176 @@
  * Clases: cover-badge, drag-over, dragging, gallery-empty, gallery-footer, image-action-btn, image-actions, image-gallery-dropzone, image-gallery-grid, image-gallery-item, image-position, image-thumb
  */
 
-/* -------------------------------------------------------------------------- Property Image Gallery -------------------------------------------------------------------------- */ .image-gallery-dropzone {
-
-      border: 2px dashed var(--bh-border);
-      border-radius: var(--bh-radius-lg);
-      padding: var(--bh-space-6);
-      transition: all var(--bh-dur-fast) var(--bh-ease-premium);
-      background: var(--bh-bg-hover);
-
+/* -------------------------------------------------------------------------- Property Image Gallery -------------------------------------------------------------------------- */
+.image-gallery-dropzone {
+    border: 2px dashed var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    padding: var(--bh-space-6);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    background: var(--bh-bg-hover);
 }
 
 .image-gallery-dropzone.drag-over {
-
-      border-color: var(--bh-accent);
-      background: var(--bh-accent-soft);
-      box-shadow: var(--bh-shadow-glow);
-
+    border-color: var(--bh-accent);
+    background: var(--bh-accent-soft);
+    box-shadow: var(--bh-shadow-glow);
 }
 
-:global(.gallery-loading), .gallery-empty {
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--bh-space-3);
-      padding: var(--bh-space-12) var(--bh-space-6);
-      text-align: center;
-      color: var(--bh-text-tertiary);
-
+:global(.gallery-loading),
+.gallery-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bh-space-3);
+    padding: var(--bh-space-12) var(--bh-space-6);
+    text-align: center;
+    color: var(--bh-text-tertiary);
 }
 
 .gallery-empty {
-
-      cursor: pointer;
-
+    cursor: pointer;
 }
 
 .gallery-empty:hover {
-
-      color: var(--bh-accent);
-
+    color: var(--bh-accent);
 }
 
 .gallery-empty :global(.btn) {
-
-      margin-top: var(--bh-space-2);
-
+    margin-top: var(--bh-space-2);
 }
 
 .image-gallery-grid {
-
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .image-gallery-item {
-
-      position: relative;
-      background: var(--bh-bg-card);
-      border: 1px solid var(--bh-border);
-      border-radius: var(--bh-radius-lg);
-      overflow: hidden;
-      transition: all var(--bh-dur-fast) var(--bh-ease-premium);
-
+    position: relative;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    overflow: hidden;
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
 }
 
 .image-gallery-item:hover {
-
-      transform: translateY(-2px);
-      box-shadow: var(--bh-shadow-md);
-      border-color: var(--bh-accent);
-
+    transform: translateY(-2px);
+    box-shadow: var(--bh-shadow-md);
+    border-color: var(--bh-accent);
 }
 
 .image-gallery-item.dragging {
-
-      opacity: 0.5;
-      border-color: var(--bh-accent);
-
+    opacity: 0.5;
+    border-color: var(--bh-accent);
 }
 
 .image-thumb {
-
-      position: relative;
-      aspect-ratio: 4 / 3;
-      overflow: hidden;
-      background: var(--bh-bg);
-
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--bh-bg);
 }
 
 .image-thumb img {
-
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform var(--dur-med) var(--ease-premium);
-
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--dur-med) var(--ease-premium);
 }
 
 .image-gallery-item:hover .image-thumb img {
-
-      transform: scale(1.05);
-
+    transform: scale(1.05);
 }
 
 .image-actions {
-
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      opacity: 0;
-      transform: translateX(8px);
-      transition: all var(--dur-fast) var(--ease-premium);
-
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(8px);
+    transition: all var(--dur-fast) var(--ease-premium);
 }
 
 .image-gallery-item:hover .image-actions {
-
-      opacity: 1;
-      transform: translateX(0);
-
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .image-action-btn {
-
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bh-bg-media);
-      border: 1px solid var(--bh-border);
-      border-radius: var(--bh-radius-sm);
-      color: var(--bh-text-secondary);
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: all var(--dur-fast) var(--ease-premium);
-
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bh-bg-media);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-sm);
+    color: var(--bh-text-secondary);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all var(--dur-fast) var(--ease-premium);
 }
 
 .image-action-btn:hover {
-
-      background: var(--bh-accent);
-      border-color: var(--bh-accent);
-      color: var(--bh-bg);
-
+    background: var(--bh-accent);
+    border-color: var(--bh-accent);
+    color: var(--bh-bg);
 }
 
 .image-action-btn:global(.danger):hover {
-
-      background: var(--bh-danger);
-      border-color: var(--bh-danger);
-
+    background: var(--bh-danger);
+    border-color: var(--bh-danger);
 }
 
 .image-action-btn:global(.active) {
-
-      background: var(--bh-accent);
-      border-color: var(--bh-accent);
-      color: var(--bh-bg);
-
+    background: var(--bh-accent);
+    border-color: var(--bh-accent);
+    color: var(--bh-bg);
 }
 
 .image-position {
-
-      position: absolute;
-      bottom: var(--bh-space-2);
-      left: var(--bh-space-2);
-      display: flex;
-      align-items: center;
-      gap: var(--bh-space-1);
-      padding: var(--bh-space-1) var(--bh-space-2);
-      background: var(--bh-bg-media);
-      border-radius: var(--bh-radius-sm);
-      font-size: var(--bh-text-xs);
-      font-weight: var(--bh-weight-semibold);
-      color: var(--bh-text-primary);
-      backdrop-filter: blur(8px);
-
+    position: absolute;
+    bottom: var(--bh-space-2);
+    left: var(--bh-space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    background: var(--bh-bg-media);
+    border-radius: var(--bh-radius-sm);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    backdrop-filter: blur(8px);
 }
 
 .cover-badge {
-
-      position: absolute;
-      top: var(--bh-space-2);
-      left: var(--bh-space-2);
-      padding: var(--bh-space-1) var(--bh-space-2);
-      background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-glow));
-      color: var(--bh-bg-primary);
-      font-size: var(--bh-text-xs);
-      font-weight: var(--bh-weight-bold);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-radius: var(--bh-radius-sm);
-      animation: coverBadgeIn var(--bh-dur-fast) var(--bh-ease-out);
-
+    position: absolute;
+    top: var(--bh-space-2);
+    left: var(--bh-space-2);
+    padding: var(--bh-space-1) var(--bh-space-2);
+    background: linear-gradient(135deg, var(--bh-accent), var(--bh-accent-glow));
+    color: var(--bh-bg-primary);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: var(--bh-radius-sm);
+    animation: coverBadgeIn var(--bh-dur-fast) var(--bh-ease-out);
 }
 
 .gallery-footer {
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: var(--bh-space-4);
-      border-top: 1px solid var(--bh-border);
-      color: var(--bh-text-tertiary);
-      font-size: var(--bh-text-sm);
-
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--bh-space-4);
+    border-top: 1px solid var(--bh-border);
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
 }

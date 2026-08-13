@@ -23,21 +23,23 @@ export const CHANNEL_TYPE_LABEL: Record<ChatChannelType, string> = {
 // DB row types with embedded relations
 // ============================================================
 
-import { supabase } from './supabase';
+import { supabase, supabaseUrl } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
 
 type MessageEmbedded = Database['public']['Tables']['chat_messages']['Row'] & {
-    sender: { name: string; photo_url: string | null } | { name: string; photo_url: string | null }[] | null;
-    reply_to?: MessageEmbedded | MessageEmbedded[] | null;
+    sender: { name: string; photo_url: string | null }[] | null;
+    reply_to?: MessageEmbedded[] | null;
     reads?: Array<
-        Database['public']['Tables']['chat_message_reads']['Row'] & { agent: { name: string } }
+        Database['public']['Tables']['chat_message_reads']['Row'] & {
+            agent: { name: string }[];
+        }
     >;
 };
 
 type ChannelApiRow = Database['public']['Tables']['chat_channels']['Row'] & {
     participants: Array<
         Database['public']['Tables']['chat_channel_participants']['Row'] & {
-            agent: { name: string; email: string | null; photo_url: string | null };
+            agent: { name: string; email: string | null; photo_url: string | null; is_ai: boolean }[];
         }
     >;
     last_message: MessageEmbedded[];
@@ -54,14 +56,25 @@ export function embedAgentName(v: { name: string } | { name: string }[] | null):
     return Array.isArray(v) ? (v[0]?.name ?? null) : v.name;
 }
 
-export function embedAgentEmail(v: { email: string | null } | { email: string | null }[] | null): string | null {
+export function embedAgentEmail(
+    v: { email: string | null } | { email: string | null }[] | null,
+): string | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0]?.email ?? null) : v.email;
 }
 
-export function embedAgentPhoto(v: { photo_url: string | null } | { photo_url: string | null }[] | null): string | null {
+export function embedAgentPhoto(
+    v: { photo_url: string | null } | { photo_url: string | null }[] | null,
+): string | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0]?.photo_url ?? null) : v.photo_url;
+}
+
+export function embedAgentIsAi(
+    v: { is_ai: boolean } | { is_ai: boolean }[] | null,
+): boolean {
+    if (!v) return false;
+    return Array.isArray(v) ? (v[0]?.is_ai ?? false) : v.is_ai;
 }
 
 // ============================================================
@@ -95,6 +108,7 @@ export function toChannelRow(c: ChannelApiRow): ChatChannel {
             agent_name: embedAgentName(p.agent),
             agent_email: embedAgentEmail(p.agent),
             agent_photo_url: embedAgentPhoto(p.agent),
+            is_ai: embedAgentIsAi(p.agent),
         })),
         last_message: lastMessage,
         unread_count: 0,
@@ -159,6 +173,7 @@ export interface ChannelParticipant {
     agent_name: string | null;
     agent_email: string | null;
     agent_photo_url: string | null;
+    is_ai: boolean;
 }
 
 export interface ChatMessage {
@@ -196,11 +211,12 @@ export interface MessageRead {
 export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
     const { data, error } = await supabase
         .from('chat_channels')
-        .select(`
+        .select(
+            `
             id, type, name, property_id, lead_id, created_by, created_at, updated_at, deleted_at,
             participants:chat_channel_participants!inner(
                 id, channel_id, agent_id, joined_at, last_read_at, notifications_enabled,
-                agent:agents(name, email, photo_url)
+                agent:agents(name, email, photo_url, is_ai)
             ),
             last_message:chat_messages!chat_messages_channel_id_fkey(
                 id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
@@ -213,7 +229,8 @@ export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
                 ),
                 reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
             )
-        `)
+        `,
+        )
         .eq('chat_channel_participants.agent_id', agentId)
         .is('deleted_at', null)
         .order('updated_at', { ascending: false });
@@ -225,11 +242,12 @@ export async function fetchChannels(agentId: string): Promise<ChatChannel[]> {
 export async function fetchChannel(channelId: string): Promise<ChatChannel> {
     const { data, error } = await supabase
         .from('chat_channels')
-        .select(`
+        .select(
+            `
             id, type, name, property_id, lead_id, created_by, created_at, updated_at, deleted_at,
             participants:chat_channel_participants!inner(
                 id, channel_id, agent_id, joined_at, last_read_at, notifications_enabled,
-                agent:agents(name, email, photo_url)
+                agent:agents(name, email, photo_url, is_ai)
             ),
             last_message:chat_messages!chat_messages_channel_id_fkey(
                 id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
@@ -242,7 +260,8 @@ export async function fetchChannel(channelId: string): Promise<ChatChannel> {
                 ),
                 reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
             )
-        `)
+        `,
+        )
         .eq('id', channelId)
         .maybeSingle();
 
@@ -317,7 +336,12 @@ export async function createPropertyChannel(
 
     const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
-        .insert({ type: 'property', name: prop?.title ?? 'Propiedad', property_id: propertyId, created_by: creatorId })
+        .insert({
+            type: 'property',
+            name: prop?.title ?? 'Propiedad',
+            property_id: propertyId,
+            created_by: creatorId,
+        })
         .select('id')
         .single();
 
@@ -350,7 +374,12 @@ export async function createLeadChannel(
 
     const { data: channel, error: channelError } = await supabase
         .from('chat_channels')
-        .insert({ type: 'lead', name: lead ? `${lead.name} ${lead.last_name}` : 'Lead', lead_id: leadId, created_by: creatorId })
+        .insert({
+            type: 'lead',
+            name: lead ? `${lead.name} ${lead.last_name}` : 'Lead',
+            lead_id: leadId,
+            created_by: creatorId,
+        })
         .select('id')
         .single();
 
@@ -381,7 +410,8 @@ export async function fetchMessages(
 ): Promise<ChatMessage[]> {
     let query = supabase
         .from('chat_messages')
-        .select(`
+        .select(
+            `
             id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
             reply_to_id, edited_at, created_at, updated_at, deleted_at,
             sender:agents(name, photo_url),
@@ -391,7 +421,8 @@ export async function fetchMessages(
                 sender:agents(name, photo_url)
             ),
             reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
-        `)
+        `,
+        )
         .eq('channel_id', channelId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -410,7 +441,8 @@ export async function fetchMessages(
 export async function fetchMessage(messageId: string): Promise<ChatMessage> {
     const { data, error } = await supabase
         .from('chat_messages')
-        .select(`
+        .select(
+            `
             id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
             reply_to_id, edited_at, created_at, updated_at, deleted_at,
             sender:agents(name, photo_url),
@@ -420,7 +452,8 @@ export async function fetchMessage(messageId: string): Promise<ChatMessage> {
                 sender:agents(name, photo_url)
             ),
             reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
-        `)
+        `,
+        )
         .eq('id', messageId)
         .maybeSingle();
 
@@ -455,7 +488,8 @@ export async function sendMessage(
             file_size: options?.file_size ?? null,
             reply_to_id: options?.reply_to_id ?? null,
         })
-        .select(`
+        .select(
+            `
             id, channel_id, sender_id, content, message_type, file_url, file_name, file_size,
             reply_to_id, edited_at, created_at, updated_at, deleted_at,
             sender:agents(name, photo_url),
@@ -465,12 +499,19 @@ export async function sendMessage(
                 sender:agents(name, photo_url)
             ),
             reads:chat_message_reads(id, message_id, agent_id, read_at, agent:agents(name))
-        `)
+        `,
+        )
         .single();
 
     if (error) throw new Error(error.message);
 
-    logChatAction({ action: 'sendMessage', channel_id: channelId, sender_id: senderId, message_id: message.id, duration_ms: Date.now() - start });
+    logChatAction({
+        action: 'sendMessage',
+        channel_id: channelId,
+        sender_id: senderId,
+        message_id: message.id,
+        duration_ms: Date.now() - start,
+    });
     return toMessageRow(message);
 }
 
@@ -628,4 +669,30 @@ export function logChatWarn(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): v
 
 export function logChatError(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
     log('error', entry);
+}
+
+// ============================================================
+// AI Assistant
+// ============================================================
+
+export async function askAiAssistant(channelId: string, messageId: string): Promise<void> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión activa');
+
+    const res = await fetch(`${supabaseUrl}/functions/v1/chat-ai`, {
+        method: 'POST',
+        headers: {
+            authorization: `Bearer ${token}`,
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({ channel_id: channelId, message_id: messageId }),
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `Error consultando al asistente (${res.status})`);
+    }
 }

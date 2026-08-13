@@ -1,7 +1,6 @@
 import { AlertTriangle, Check, Info, type LucideIcon, X } from 'lucide-preact';
-import { type  ToastItem ,toasts } from '../store/app';
+import { type ToastItem, toasts } from '../store/app';
 import styles from './ToastHost.module.css';
-
 
 const ICONS: Record<ToastItem['type'], LucideIcon> = {
     success: Check,

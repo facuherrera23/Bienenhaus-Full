@@ -1,34 +1,67 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchMlMeta, fetchMlOverview, fetchMlQueue } from '../ml';
+import { fetchMlQueue, fetchMlMeta, fetchMlOverview } from '../ml';
 import type { MlOverview } from '../../types/ml';
 
-const { mockSupabase } = vi.hoisted(() => {
-    const mockSupabase = {
-        from: vi.fn(() => mockSupabase),
-        select: vi.fn(() => mockSupabase),
-        eq: vi.fn(() => mockSupabase),
-        is: vi.fn(() => mockSupabase),
-        not: vi.fn(() => mockSupabase),
-        order: vi.fn(() => mockSupabase),
-        limit: vi.fn(() => mockSupabase),
-        returns: vi.fn(() => mockSupabase),
-        maybeSingle: vi.fn(() => mockSupabase),
-        single: vi.fn(() => mockSupabase),
-        rpc: vi.fn(() => mockSupabase),
-        auth: {
-            getSession: vi.fn(),
-        },
+// Chain-mock de supabase: cada método devuelve la cadena y `await` resuelve el
+// próximo valor encolado con { data, error }. `ml.ts` importa `supabase` desde
+// `@bienenhaus/supabase`, así que el mock reemplaza ese módulo por completo.
+type QueryResult = { data: unknown; error: unknown };
+
+const { chainMock, enqueue, resetChain } = vi.hoisted(() => {
+    const queue: QueryResult[] = [];
+    const methods = [
+        'select',
+        'insert',
+        'update',
+        'delete',
+        'eq',
+        'neq',
+        'in',
+        'not',
+        'is',
+        'order',
+        'limit',
+        'range',
+        'maybeSingle',
+        'single',
+        'returns',
+        'or',
+        'ilike',
+        'match',
+        'rpc',
+        'from',
+    ];
+    const chain: Record<string, unknown> = {};
+    for (const m of methods) {
+        chain[m] = vi.fn(() => chain);
+    }
+    chain.auth = {
+        getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     };
-    return { mockSupabase };
+    (chain as { then?: unknown }).then = (
+        onFulfilled: (v: QueryResult) => unknown,
+        _onRejected?: (e: unknown) => unknown,
+    ) => {
+        const next = queue.shift() ?? { data: null, error: null };
+        return Promise.resolve(next).then(onFulfilled);
+    };
+    const enqueue = (data: unknown, error: unknown = null) => queue.push({ data, error });
+    const resetChain = () => {
+        queue.length = 0;
+    };
+    return { chainMock: chain, enqueue, resetChain };
 });
 
-vi.mock('@supabase/supabase-js', () => ({
-    createClient: () => mockSupabase,
+vi.mock('@bienenhaus/supabase', () => ({
+    supabase: chainMock,
+    supabaseUrl: 'https://test.supabase.co',
 }));
 
-describe.skip('ml queue', () => {
+describe('ml queue', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        resetChain();
     });
 
     describe('fetchMlQueue', () => {
@@ -49,7 +82,7 @@ describe.skip('ml queue', () => {
                 },
             ];
 
-            mockSupabase.returns.mockResolvedValueOnce({ data: mockRows, error: null });
+            enqueue(mockRows, null);
 
             const queue = await fetchMlQueue();
             expect(queue).toHaveLength(1);
@@ -60,15 +93,13 @@ describe.skip('ml queue', () => {
         });
 
         it('returns empty array on error', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } });
+            enqueue(null, { message: 'DB error' });
             await expect(fetchMlQueue()).rejects.toThrow('DB error');
         });
 
         it('handles null property', async () => {
-            const mockRows = [
-                { ...mockSupabase, property: null },
-            ];
-            mockSupabase.returns.mockResolvedValueOnce({ data: mockRows, error: null });
+            const mockRows = [{ ...{}, property: null }];
+            enqueue(mockRows, null);
 
             const queue = await fetchMlQueue();
             expect(queue[0].property_title).toBeNull();
@@ -91,7 +122,7 @@ describe.skip('ml queue', () => {
                 },
             ];
 
-            mockSupabase.returns.mockResolvedValueOnce({ data: mockRows, error: null });
+            enqueue(mockRows, null);
 
             const meta = await fetchMlMeta();
             expect(meta).toHaveLength(1);
@@ -119,7 +150,7 @@ describe.skip('ml queue', () => {
                 },
             };
 
-            mockSupabase.rpc.mockResolvedValueOnce({ data: mockOverview, error: null });
+            enqueue(mockOverview, null);
 
             const overview = await fetchMlOverview();
             expect(overview.ml_enabled).toBe(true);
@@ -127,12 +158,12 @@ describe.skip('ml queue', () => {
         });
 
         it('returns empty overview on error', async () => {
-            mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'RPC error' } });
+            enqueue(null, { message: 'RPC error' });
             await expect(fetchMlOverview()).rejects.toThrow('RPC error');
         });
 
         it('returns disabled when no connection', async () => {
-            mockSupabase.rpc.mockResolvedValueOnce({ data: { ml_enabled: false, connection: null }, error: null });
+            enqueue({ ml_enabled: false, connection: null }, null);
             const overview = await fetchMlOverview();
             expect(overview.ml_enabled).toBe(false);
             expect(overview.connection).toBeNull();

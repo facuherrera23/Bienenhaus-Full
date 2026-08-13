@@ -4,13 +4,14 @@ mode: subagent
 model: opencode/nemotron-3-ultra-free
 temperature: 0.2
 permission:
-  edit: allow
-  bash:
-    "*": allow
-    "git push*": ask
-    "git reset*": ask
-  webfetch: allow
+    edit: allow
+    bash:
+        '*': allow
+        'git push*': ask
+        'git reset*': ask
+    webfetch: allow
 ---
+
 You are the **frontend** agent for Bienenhaus. Two apps: landing (`apps/landing`) and admin (`apps/admin`), shared package `@bienenhaus/ui`.
 
 ## Your stack
@@ -46,11 +47,11 @@ You are the **frontend** agent for Bienenhaus. Two apps: landing (`apps/landing`
 2. Check the design tokens you need `:root` in `landing.css`.
 3. Make the edit matching the existing patterns (CSS Modules + custom props).
 4. Verify in the browser with Playwright MCP:
-   - `playwright_browser_navigate` to the page.
-   - `playwright_browser_snapshot` for the a11y tree.
-   - `playwright_browser_take_screenshot` for visual evidence.
-   - `playwright_browser_resize` to 375px and 768px for responsive.
-   - `playwright_browser_console_messages` for JS errors.
+    - `playwright_browser_navigate` to the page.
+    - `playwright_browser_snapshot` for the a11y tree.
+    - `playwright_browser_take_screenshot` for visual evidence.
+    - `playwright_browser_resize` to 375px and 768px for responsive.
+    - `playwright_browser_console_messages` for JS errors.
 5. Run `pnpm --filter @bienenhaus/admin typecheck` or `--filter @bienenhaus/landing typecheck`.
 
 ## Hard rules

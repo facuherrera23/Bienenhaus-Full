@@ -21,7 +21,10 @@ interface MlConnectionRow {
     token_expires_at: string;
 }
 
-async function getAccessToken(_supabase: SupabaseClient, _conn: MlConnectionRow): Promise<string | null> {
+async function getAccessToken(
+    _supabase: SupabaseClient,
+    _conn: MlConnectionRow,
+): Promise<string | null> {
     // Stub: en tests se mockea. Retorna null por defecto.
     return null;
 }

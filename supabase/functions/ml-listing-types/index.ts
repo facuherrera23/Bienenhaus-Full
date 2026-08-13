@@ -11,8 +11,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 });
 
 Deno.serve(async (req) => {
-    const respond = (status: number, body: unknown): Response =>
-        jsonResponse(status, body, req);
+    const respond = (status: number, body: unknown): Response => jsonResponse(status, body, req);
     if (req.method === 'OPTIONS') return optionsResponse(req);
     if (req.method !== 'GET') return respond(405, { error: 'Method not allowed' });
 

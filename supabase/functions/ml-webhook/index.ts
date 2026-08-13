@@ -8,7 +8,12 @@ import {
 import { ML_API } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
-import { MlQuestionSchema, MlOrderSchema, MlWebhookPayloadSchema, parseMlResponse } from '../_shared/ml.schemas.ts';
+import {
+    MlQuestionSchema,
+    MlOrderSchema,
+    MlWebhookPayloadSchema,
+    parseMlResponse,
+} from '../_shared/ml.schemas.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -36,7 +41,14 @@ interface LogEntry {
     topic?: string;
     resource?: string;
     user_id?: number;
-    status?: 'received' | 'processed' | 'failed' | 'deduplicated' | 'auto_reply_sent' | 'unhandled' | number;
+    status?:
+        | 'received'
+        | 'processed'
+        | 'failed'
+        | 'deduplicated'
+        | 'auto_reply_sent'
+        | 'unhandled'
+        | number;
     duration_ms?: number;
     error?: string;
     question_id?: string;
@@ -67,7 +79,14 @@ async function logWebhookEvent(
     status: 'received' | 'processed' | 'failed' | 'deduplicated',
     error?: string,
 ): Promise<void> {
-    const { data: existing } = await supabase.from('ml_webhook_events').select('id').eq('user_id', payload.user_id).eq('resource', payload.resource).eq('topic', payload.topic).eq('sent_at', payload.sent).maybeSingle();
+    const { data: existing } = await supabase
+        .from('ml_webhook_events')
+        .select('id')
+        .eq('user_id', payload.user_id)
+        .eq('resource', payload.resource)
+        .eq('topic', payload.topic)
+        .eq('sent_at', payload.sent)
+        .maybeSingle();
     const row = {
         user_id: payload.user_id,
         resource: payload.resource,
@@ -81,7 +100,15 @@ async function logWebhookEvent(
         payload: JSON.stringify(payload),
     };
     if (existing?.id) {
-        await supabase.from('ml_webhook_events').update({ status, error: error ?? null, payload: JSON.stringify(payload), attempts: payload.attempts }).eq('id', existing.id);
+        await supabase
+            .from('ml_webhook_events')
+            .update({
+                status,
+                error: error ?? null,
+                payload: JSON.stringify(payload),
+                attempts: payload.attempts,
+            })
+            .eq('id', existing.id);
     } else {
         await supabase.from('ml_webhook_events').insert(row);
     }
@@ -93,7 +120,7 @@ async function getMlClientId(): Promise<string | null> {
         .select('key, value')
         .in('key', ['ml_app_id']);
 
-    const clientId = settings?.find(s => s.key === 'ml_app_id')?.value?.value as string ?? '';
+    const clientId = (settings?.find((s) => s.key === 'ml_app_id')?.value?.value as string) ?? '';
     if (clientId) return clientId;
 
     // Fallback a env vars (legacy)
@@ -157,7 +184,8 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
                         ml_item_id: mlItemId ?? 0,
                         question_text: typeof q?.text === 'string' ? q.text : null,
                         from_user_id: typeof q?.from?.user_id === 'number' ? q.from.user_id : null,
-                        from_user_nickname: typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
+                        from_user_nickname:
+                            typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
                         date_created: typeof q?.date_created === 'string' ? q.date_created : null,
                         status: 'answered',
                         answer_text: template.message,
@@ -167,13 +195,24 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
                 );
 
                 try {
-                    await sendQuestionAnswer(supabase, questionId, template.message, token, `answer:${questionId}`);
+                    await sendQuestionAnswer(
+                        supabase,
+                        questionId,
+                        template.message,
+                        token,
+                        `answer:${questionId}`,
+                    );
                 } catch (err) {
                     await supabase
                         .from('ml_questions')
                         .update({ status: 'unanswered', answer_text: null })
                         .eq('question_id', questionId);
-                    logWarn({ function: 'ml-webhook', topic: 'questions', question_id: questionId, error: (err as Error).message });
+                    logWarn({
+                        function: 'ml-webhook',
+                        topic: 'questions',
+                        question_id: questionId,
+                        error: (err as Error).message,
+                    });
                 }
                 return;
             }
@@ -244,7 +283,12 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
                 order = null;
             }
         } else {
-            logWarn({ function: 'ml-webhook', topic: 'orders', order_id: orderId, status: res.status });
+            logWarn({
+                function: 'ml-webhook',
+                topic: 'orders',
+                order_id: orderId,
+                status: res.status,
+            });
         }
     }
 
@@ -281,7 +325,8 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
     if (propertyId) orderPayload.property_id = propertyId;
     if (order) {
         if (typeof order.buyer?.id === 'number') orderPayload.buyer_id = order.buyer.id;
-        if (typeof order.buyer?.nickname === 'string') orderPayload.buyer_nickname = order.buyer.nickname;
+        if (typeof order.buyer?.nickname === 'string')
+            orderPayload.buyer_nickname = order.buyer.nickname;
         if (typeof order.total_amount === 'number') orderPayload.total_amount = order.total_amount;
         if (typeof order.currency_id === 'string') orderPayload.currency = order.currency_id;
         if (typeof order.date_created === 'string') orderPayload.date_created = order.date_created;
@@ -295,10 +340,28 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
         const template = await getActiveTemplate(supabase, trigger);
         if (template) {
             try {
-                await sendOrderMessage(supabase, orderId, template.message, token, `order:${orderId}:${status}`);
-                log({ function: 'ml-webhook', topic: 'orders', order_id: orderId, trigger, status: 'auto_reply_sent' });
+                await sendOrderMessage(
+                    supabase,
+                    orderId,
+                    template.message,
+                    token,
+                    `order:${orderId}:${status}`,
+                );
+                log({
+                    function: 'ml-webhook',
+                    topic: 'orders',
+                    order_id: orderId,
+                    trigger,
+                    status: 'auto_reply_sent',
+                });
             } catch (err) {
-                logWarn({ function: 'ml-webhook', topic: 'orders', order_id: orderId, trigger, error: (err as Error).message });
+                logWarn({
+                    function: 'ml-webhook',
+                    topic: 'orders',
+                    order_id: orderId,
+                    trigger,
+                    error: (err as Error).message,
+                });
             }
         }
     }
@@ -348,7 +411,8 @@ async function handleShipments(payload: MlWebhookPayload): Promise<void> {
 }
 
 Deno.serve(async (req) => {
-    const respond = (status: number, body: Record<string, unknown>): Response => jsonResponse(status, body, req);
+    const respond = (status: number, body: Record<string, unknown>): Response =>
+        jsonResponse(status, body, req);
 
     if (!ML_WEBHOOK_SECRET) {
         logError({ function: 'ml-webhook', error: 'ML_WEBHOOK_SECRET missing' });
@@ -359,7 +423,10 @@ Deno.serve(async (req) => {
     if (req.method !== 'POST') return respond(405, { error: 'Method not allowed' });
 
     // Rate Limiting
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
+    const clientIp =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+        req.headers.get('x-real-ip') ??
+        'unknown';
     const rlResult = await checkRateLimit('ml-webhook', clientIp);
     if (!rlResult.allowed) {
         return respond(429, { error: 'Rate limited', retry_after: rlResult.retryAfter });
@@ -380,7 +447,9 @@ Deno.serve(async (req) => {
     const start = Date.now();
 
     if (!(await validateNotificationBinding(payload))) {
-        return respond(401, { error: 'Notificación no perteneciente a la aplicación/cuenta conectada' });
+        return respond(401, {
+            error: 'Notificación no perteneciente a la aplicación/cuenta conectada',
+        });
     }
 
     // Deduplication check
@@ -393,7 +462,13 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
     if (existingEvent && existingEvent.status === 'processed') {
-        log({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, attempts: payload.attempts, status: 'deduplicated' });
+        log({
+            function: 'ml-webhook',
+            topic: payload.topic,
+            resource: payload.resource,
+            attempts: payload.attempts,
+            status: 'deduplicated',
+        });
         return respond(200, { ok: true, deduplicated: true });
     }
 
@@ -421,10 +496,23 @@ Deno.serve(async (req) => {
                 logWarn({ function: 'ml-webhook', topic: payload.topic, status: 'unhandled' });
         }
         await logWebhookEvent(payload, 'processed');
-        log({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, duration_ms: Date.now() - start, status: 'processed' });
+        log({
+            function: 'ml-webhook',
+            topic: payload.topic,
+            resource: payload.resource,
+            duration_ms: Date.now() - start,
+            status: 'processed',
+        });
         return respond(200, { ok: true });
     } catch (err) {
-        logError({ function: 'ml-webhook', topic: payload.topic, resource: payload.resource, duration_ms: Date.now() - start, status: 'failed', error: (err as Error).message });
+        logError({
+            function: 'ml-webhook',
+            topic: payload.topic,
+            resource: payload.resource,
+            duration_ms: Date.now() - start,
+            status: 'failed',
+            error: (err as Error).message,
+        });
         await logWebhookEvent(payload, 'failed', (err as Error).message);
         return respond(500, { error: (err as Error).message });
     }

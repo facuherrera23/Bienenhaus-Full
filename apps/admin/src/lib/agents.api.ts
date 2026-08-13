@@ -10,7 +10,7 @@ import {
     useUpdate,
     useUpload,
 } from './api';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@bienenhaus/supabase';
 import { useEffect, useState } from 'preact/hooks';
 import {
     type AgentAvailability,

@@ -107,7 +107,12 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    background: linear-gradient(
+        135deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.05) 60%,
+        transparent 80%
+    );
     transform: translateX(-100%);
     transition: transform 0.6s ease;
 }
@@ -207,7 +212,7 @@
 
 .searchInputWrapper input:focus {
     border-color: var(--bh-accent);
-    box-shadow: 
+    box-shadow:
         0 0 30px var(--bh-accent-glow-soft),
         inset 0 0 30px rgba(32, 184, 171, 0.03);
 }
@@ -309,7 +314,12 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.15) 60%, transparent 80%);
+    background: linear-gradient(
+        135deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.15) 60%,
+        transparent 80%
+    );
     transform: translateX(-100%);
     transition: transform 0.6s ease;
 }
@@ -324,7 +334,7 @@
 
 .btnSearch:hover {
     transform: scale(1.04);
-    box-shadow: 
+    box-shadow:
         0 0 40px var(--bh-accent-glow-soft),
         0 0 80px rgba(32, 184, 171, 0.05);
 }
@@ -457,12 +467,24 @@
 }
 
 /* Stagger delays para cada card */
-.propertyCard:nth-child(1) { transition-delay: 0ms; }
-.propertyCard:nth-child(2) { transition-delay: 100ms; }
-.propertyCard:nth-child(3) { transition-delay: 200ms; }
-.propertyCard:nth-child(4) { transition-delay: 300ms; }
-.propertyCard:nth-child(5) { transition-delay: 400ms; }
-.propertyCard:nth-child(6) { transition-delay: 500ms; }
+.propertyCard:nth-child(1) {
+    transition-delay: 0ms;
+}
+.propertyCard:nth-child(2) {
+    transition-delay: 100ms;
+}
+.propertyCard:nth-child(3) {
+    transition-delay: 200ms;
+}
+.propertyCard:nth-child(4) {
+    transition-delay: 300ms;
+}
+.propertyCard:nth-child(5) {
+    transition-delay: 400ms;
+}
+.propertyCard:nth-child(6) {
+    transition-delay: 500ms;
+}
 
 .propertyCard.visible {
     opacity: 1;
@@ -472,7 +494,7 @@
 .propertyCard:hover {
     transform: translateY(-8px) scale(1.02);
     border-color: var(--bh-accent);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.3),
         0 0 40px var(--bh-accent-glow-soft);
 }
@@ -558,11 +580,14 @@
 }
 
 @keyframes pulseGlow {
-    0%, 100% {
+    0%,
+    100% {
         box-shadow: 0 0 20px var(--bh-accent-glow-soft);
     }
     50% {
-        box-shadow: 0 0 40px var(--bh-accent-glow-soft), 0 0 80px rgba(31, 200, 195, 0.1);
+        box-shadow:
+            0 0 40px var(--bh-accent-glow-soft),
+            0 0 80px rgba(31, 200, 195, 0.1);
     }
 }
 
@@ -808,7 +833,12 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    background: linear-gradient(
+        135deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.05) 60%,
+        transparent 80%
+    );
     transform: translateX(-100%);
     transition: transform 0.6s ease;
 }

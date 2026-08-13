@@ -1,8 +1,8 @@
-import { afterEach , beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { supabase } from '../supabase';
 import { from } from '../../test/setup';
 import {
-    type  AgentApiRow,
+    type AgentApiRow,
     calculateCommission,
     createAgent,
     deleteAgentPhoto,
@@ -22,13 +22,16 @@ import {
     updateAgentCommission,
     updateAgentPermissions,
     updateAgentSchedule,
-uploadAgentPhoto } from '../agents';
+    uploadAgentPhoto,
+} from '../agents';
 import {
-    type  AgentRow,
-    type  AgentSchedule,
+    type AgentRow,
+    type AgentSchedule,
     DAY_LABELS,
     DEFAULT_COMMISSION,
-DEFAULT_PERMISSIONS,DEFAULT_SCHEDULE } from '../../types/agents';
+    DEFAULT_PERMISSIONS,
+    DEFAULT_SCHEDULE,
+} from '../../types/agents';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
@@ -151,7 +154,11 @@ describe('toRow (mapper)', () => {
         const row = toRow(apiRow({ specialties: null, social: null, leads: [] }));
 
         expect(row.specialties).toEqual([]);
-        expect(row.social).toEqual({ linkedin: undefined, instagram: undefined, whatsapp: undefined });
+        expect(row.social).toEqual({
+            linkedin: undefined,
+            instagram: undefined,
+            whatsapp: undefined,
+        });
         expect(row.lead_count).toBe(0);
     });
 });
@@ -187,7 +194,9 @@ describe('fetchAgents', () => {
 
 describe('fetchAgent', () => {
     it('devuelve el agente por id', async () => {
-        const chain = mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: apiRow(), error: null }) });
+        const chain = mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: apiRow(), error: null }),
+        });
 
         const row = await fetchAgent('a1');
 
@@ -203,7 +212,9 @@ describe('fetchAgent', () => {
     });
 
     it('lanza error si la consulta falla', async () => {
-        mockFrom({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+        mockFrom({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }),
+        });
 
         await expect(fetchAgent('a1')).rejects.toThrow('boom');
     });
@@ -254,9 +265,13 @@ describe('uploadAgentPhoto', () => {
         const url = await uploadAgentPhoto(file);
 
         expect(supabase.storage.from).toHaveBeenCalledWith('agent-photos');
-        expect(bucket.upload).toHaveBeenCalledWith(expect.stringMatching(/^[0-9a-f-]{36}\.png$/), file, {
-            upsert: false,
-        });
+        expect(bucket.upload).toHaveBeenCalledWith(
+            expect.stringMatching(/^[0-9a-f-]{36}\.png$/),
+            file,
+            {
+                upsert: false,
+            },
+        );
         expect(url).toBe('https://cdn.example.com/uuid.png');
     });
 
@@ -266,11 +281,15 @@ describe('uploadAgentPhoto', () => {
 
         await uploadAgentPhoto(file);
 
-        expect(bucket.upload).toHaveBeenCalledWith(expect.stringMatching(/\.jpg$/), file, { upsert: false });
+        expect(bucket.upload).toHaveBeenCalledWith(expect.stringMatching(/\.jpg$/), file, {
+            upsert: false,
+        });
     });
 
     it('lanza error si el upload falla', async () => {
-        mockStorageBucket({ upload: vi.fn().mockResolvedValue({ data: null, error: { message: 'upload fail' } }) });
+        mockStorageBucket({
+            upload: vi.fn().mockResolvedValue({ data: null, error: { message: 'upload fail' } }),
+        });
         const file = new File(['foto'], 'foto.jpg');
 
         await expect(uploadAgentPhoto(file)).rejects.toThrow('upload fail');
@@ -314,7 +333,9 @@ describe('deleteAgentPhoto', () => {
 
 describe('createAgent', () => {
     it('inserta el agente limpio y devuelve el id', async () => {
-        const chain = mockFrom({ single: vi.fn().mockResolvedValue({ data: { id: 'new-1' }, error: null }) });
+        const chain = mockFrom({
+            single: vi.fn().mockResolvedValue({ data: { id: 'new-1' }, error: null }),
+        });
 
         const id = await createAgent({
             name: '  Juan Pérez ',
@@ -350,7 +371,9 @@ describe('createAgent', () => {
     });
 
     it('lanza error si el insert falla', async () => {
-        mockFrom({ single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert fail' } }) });
+        mockFrom({
+            single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert fail' } }),
+        });
 
         await expect(
             createAgent({
@@ -409,7 +432,9 @@ describe('updateAgent', () => {
     });
 
     it('lanza error si el update falla', async () => {
-        mockFrom({ eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'update fail' } }) });
+        mockFrom({
+            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'update fail' } }),
+        });
 
         await expect(
             updateAgent('a1', {
@@ -544,7 +569,9 @@ describe('updateAgentPermissions', () => {
     it('fusiona los permisos existentes con los nuevos', async () => {
         const chain = mockFrom({
             maybeSingle: vi.fn().mockResolvedValue({
-                data: apiRow({ permissions: { ...DEFAULT_PERMISSIONS, can_edit_properties: true } }),
+                data: apiRow({
+                    permissions: { ...DEFAULT_PERMISSIONS, can_edit_properties: true },
+                }),
                 error: null,
             }),
         });
@@ -552,7 +579,10 @@ describe('updateAgentPermissions', () => {
         await updateAgentPermissions('a1', { can_view_reports: true });
 
         expect(chain.update).toHaveBeenCalledWith({
-            permissions: expect.objectContaining({ can_edit_properties: true, can_view_reports: true }),
+            permissions: expect.objectContaining({
+                can_edit_properties: true,
+                can_view_reports: true,
+            }),
         });
         expect(chain.eq).toHaveBeenCalledWith('id', 'a1');
     });
@@ -561,7 +591,9 @@ describe('updateAgentPermissions', () => {
 describe('getAgentPermissions', () => {
     it('devuelve los permisos del agente', async () => {
         const permissions = { ...DEFAULT_PERMISSIONS, can_manage_ml: true };
-        const chain = mockFrom({ single: vi.fn().mockResolvedValue({ data: { permissions }, error: null }) });
+        const chain = mockFrom({
+            single: vi.fn().mockResolvedValue({ data: { permissions }, error: null }),
+        });
 
         await expect(getAgentPermissions('a1')).resolves.toEqual(permissions);
 
@@ -604,7 +636,11 @@ describe('calculateCommission', () => {
     }
 
     it('calcula porcentaje + fijo para venta', async () => {
-        await mockAgentCommission({ sale_percentage: 10, rental_percentage: 5, fixed_per_sale: 100 });
+        await mockAgentCommission({
+            sale_percentage: 10,
+            rental_percentage: 5,
+            fixed_per_sale: 100,
+        });
 
         await expect(calculateCommission('a1', 'sale', 10000)).resolves.toBe(1100);
     });
@@ -718,7 +754,11 @@ describe('getAgentWorkingHours', () => {
     });
 
     it('devuelve cadena vacía si no hay días disponibles', () => {
-        expect(getAgentWorkingHours([{ day_of_week: 0, start_time: '09:00', end_time: '13:00', is_available: false }])).toBe('');
+        expect(
+            getAgentWorkingHours([
+                { day_of_week: 0, start_time: '09:00', end_time: '13:00', is_available: false },
+            ]),
+        ).toBe('');
     });
 });
 
@@ -741,9 +781,16 @@ describe('getAgentAvailabilityStatus', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2024-01-15T10:00:00')); // Lunes
 
-        const agent = { ...agentRow, schedule: [{ day_of_week: 1, start_time: '09:00', end_time: '18:00', is_available: true }] };
+        const agent = {
+            ...agentRow,
+            schedule: [
+                { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_available: true },
+            ],
+        };
         mockFrom({
-            maybeSingle: vi.fn().mockResolvedValue({ data: apiRow({ schedule: agent.schedule }), error: null }),
+            maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: apiRow({ schedule: agent.schedule }), error: null }),
         });
 
         expect(getAgentAvailabilityStatus(agent)).toBe('available');

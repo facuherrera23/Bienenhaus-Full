@@ -66,7 +66,6 @@ import {
 } from '../schemas/valuationSchemas';
 import styles from './TasarPage.module.css';
 
-
 // ============================================================
 // Paso 6 — Pasada 2: WIZARD COMPLETO con campos reales
 // Wizard de 8 pasos + auto-save a DB + carga de draft + routing.
@@ -84,14 +83,7 @@ const CHAR_LABELS = [
     'Comodidades',
 ];
 
-const EMPTY_CHARS: ComparableData['chars'] = [
-    'Igual',
-    'Igual',
-    'Igual',
-    'Igual',
-    'Igual',
-    'Igual',
-];
+const EMPTY_CHARS: ComparableData['chars'] = ['Igual', 'Igual', 'Igual', 'Igual', 'Igual', 'Igual'];
 
 const AMBIENTE_LABELS: Record<(typeof AMBIENTE_IDS)[number], string> = {
     f_ambCocina: 'Cocina',
@@ -451,9 +443,7 @@ function ComparablesEditor({
     }
 
     function removeComparable(index: number) {
-        onChange(
-            comparables.filter((_, i) => i !== index).map((c, i) => ({ ...c, orden: i + 1 })),
-        );
+        onChange(comparables.filter((_, i) => i !== index).map((c, i) => ({ ...c, orden: i + 1 })));
     }
 
     function updateChar(index: number, charIndex: number, value: NivelesComparacion) {
@@ -466,7 +456,12 @@ function ComparablesEditor({
         <div className={`${styles['comparable-section']} field--wide`}>
             <div className={styles['comparable-section-head']}>
                 <span>Comparables</span>
-                <button type="button" className="btn btn--sm btn--secondary" onClick={addComparable} disabled={disabled}>
+                <button
+                    type="button"
+                    className="btn btn--sm btn--secondary"
+                    onClick={addComparable}
+                    disabled={disabled}
+                >
                     <Plus size={14} /> Agregar comparable
                 </button>
             </div>
@@ -479,7 +474,9 @@ function ComparablesEditor({
                 comparables.map((c, i) => (
                     <div className={styles['comparable-card']} key={i}>
                         <div className={styles['comparable-card-head']}>
-                            <span className={styles['comparable-card-title']}>Comparable #{c.orden}</span>
+                            <span className={styles['comparable-card-title']}>
+                                Comparable #{c.orden}
+                            </span>
                             <button
                                 type="button"
                                 className="btn btn--sm btn--danger"
@@ -1171,7 +1168,9 @@ export function TasarPage() {
                         <div className="form-section">
                             <div className="form-section-head">
                                 <h3>Características del barrio</h3>
-                                <p>Tipologías, calidad predominante, usos y nivel socioeconómico.</p>
+                                <p>
+                                    Tipologías, calidad predominante, usos y nivel socioeconómico.
+                                </p>
                             </div>
                             <div className="form-grid">
                                 <SelectInput
@@ -1251,7 +1250,10 @@ export function TasarPage() {
                         <div className="form-section">
                             <div className="form-section-head">
                                 <h3>Descripción y % de uso de suelo</h3>
-                                <p>Vigilancia, tendencia, demanda, tiempo de venta y usos del terreno.</p>
+                                <p>
+                                    Vigilancia, tendencia, demanda, tiempo de venta y usos del
+                                    terreno.
+                                </p>
                             </div>
                             <div className="form-grid">
                                 <SelectInput
@@ -1386,7 +1388,8 @@ export function TasarPage() {
     if (location === '/tasar') {
         const rows = valuationsQuery.data?.data ?? [];
         const isListLoading = valuationsQuery.isLoading;
-        const isListError = valuationsQuery.error instanceof Error ? valuationsQuery.error.message : null;
+        const isListError =
+            valuationsQuery.error instanceof Error ? valuationsQuery.error.message : null;
 
         return (
             <div className="page">
@@ -1398,7 +1401,10 @@ export function TasarPage() {
                         </p>
                     </div>
                     <div className={styles['page-actions']}>
-                        <button className="btn btn--primary" onClick={() => setLocation('/tasar/nueva')}>
+                        <button
+                            className="btn btn--primary"
+                            onClick={() => setLocation('/tasar/nueva')}
+                        >
                             <Plus size={16} /> Nueva tasación
                         </button>
                     </div>
@@ -1412,33 +1418,52 @@ export function TasarPage() {
                             value={listSearch}
                             placeholder="Buscar por solicitante, dirección o barrio…"
                             aria-label="Buscar tasaciones"
-                            onInput={(e) => setListSearch((e.currentTarget as HTMLInputElement).value)}
+                            onInput={(e) =>
+                                setListSearch((e.currentTarget as HTMLInputElement).value)
+                            }
                         />
                         <select
                             className={styles['valuation-filter']}
                             value={listStatus}
                             aria-label="Filtrar tasaciones por estado"
                             onChange={(e) =>
-                                setListStatus((e.currentTarget as HTMLSelectElement).value as typeof listStatus)
+                                setListStatus(
+                                    (e.currentTarget as HTMLSelectElement)
+                                        .value as typeof listStatus,
+                                )
                             }
                         >
                             <option value="all">Todas</option>
                             <option value="draft">Borradores</option>
                             <option value="finalized">Finalizadas</option>
                         </select>
-                        <button className="btn btn--ghost" onClick={() => void valuationsQuery.refetch()} disabled={valuationsQuery.isFetching}>
-                            {valuationsQuery.isFetching ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+                        <button
+                            className="btn btn--ghost"
+                            onClick={() => void valuationsQuery.refetch()}
+                            disabled={valuationsQuery.isFetching}
+                        >
+                            {valuationsQuery.isFetching ? (
+                                <Loader2 className="spin" size={16} />
+                            ) : (
+                                <Save size={16} />
+                            )}
                             Actualizar
                         </button>
                     </div>
 
                     {isListLoading ? (
-                        <div className="page-loader" role="status" aria-label="Cargando tasaciones…">
+                        <div
+                            className="page-loader"
+                            role="status"
+                            aria-label="Cargando tasaciones…"
+                        >
                             <div className="spinner" aria-hidden="true" />
                             <p>Cargando tasaciones…</p>
                         </div>
                     ) : isListError ? (
-                        <div className={`${styles['valuation-banner']} ${styles['valuation-banner--error']}`}>
+                        <div
+                            className={`${styles['valuation-banner']} ${styles['valuation-banner--error']}`}
+                        >
                             {isListError}
                         </div>
                     ) : rows.length === 0 ? (
@@ -1446,7 +1471,10 @@ export function TasarPage() {
                             <FileText size={32} />
                             <h2>No hay tasaciones</h2>
                             <p>Creá la primera tasación para comenzar.</p>
-                            <button className="btn btn--primary" onClick={() => setLocation('/tasar/nueva')}>
+                            <button
+                                className="btn btn--primary"
+                                onClick={() => setLocation('/tasar/nueva')}
+                            >
                                 <Plus size={16} /> Crear tasación
                             </button>
                         </div>
@@ -1470,32 +1498,57 @@ export function TasarPage() {
                                         return (
                                             <tr key={row.id}>
                                                 <td>
-                                                    <strong>{row.f_solicitante || 'Sin solicitante'}</strong>
-                                                    <span className={styles['valuation-secondary']}>{row.f_telefono || '—'}</span>
+                                                    <strong>
+                                                        {row.f_solicitante || 'Sin solicitante'}
+                                                    </strong>
+                                                    <span className={styles['valuation-secondary']}>
+                                                        {row.f_telefono || '—'}
+                                                    </span>
                                                 </td>
                                                 <td>
-                                                    <strong>{row.f_direccion || 'Sin dirección'}</strong>
+                                                    <strong>
+                                                        {row.f_direccion || 'Sin dirección'}
+                                                    </strong>
                                                     <span className={styles['valuation-secondary']}>
-                                                        {[row.f_barrio, row.f_localidad].filter(Boolean).join(' · ') || '—'}
+                                                        {[row.f_barrio, row.f_localidad]
+                                                            .filter(Boolean)
+                                                            .join(' · ') || '—'}
                                                     </span>
                                                 </td>
                                                 <td>{row.f_tipo || '—'}</td>
                                                 <td>{row.f_fecha || '—'}</td>
                                                 <td>
-                                                    <span className={`${styles['valuation-status']} ${finalized ? styles['valuation-status--finalized'] : styles['valuation-status--draft']}`}>
+                                                    <span
+                                                        className={`${styles['valuation-status']} ${finalized ? styles['valuation-status--finalized'] : styles['valuation-status--draft']}`}
+                                                    >
                                                         {finalized ? 'Finalizada' : 'Borrador'}
                                                     </span>
                                                 </td>
-                                                <td>{row.updatedAt ? new Date(row.updatedAt).toLocaleString('es-AR') : '—'}</td>
                                                 <td>
-                                                    <div className={styles['valuation-row-actions']}>
-                                                        <button className="btn btn--ghost btn--sm" onClick={() => setLocation(`/tasar/${row.id}`)}>
+                                                    {row.updatedAt
+                                                        ? new Date(row.updatedAt).toLocaleString(
+                                                              'es-AR',
+                                                          )
+                                                        : '—'}
+                                                </td>
+                                                <td>
+                                                    <div
+                                                        className={styles['valuation-row-actions']}
+                                                    >
+                                                        <button
+                                                            className="btn btn--ghost btn--sm"
+                                                            onClick={() =>
+                                                                setLocation(`/tasar/${row.id}`)
+                                                            }
+                                                        >
                                                             <PencilLine size={15} /> Editar
                                                         </button>
                                                         <button
                                                             className="btn btn--ghost btn--sm"
                                                             aria-label={`Eliminar tasación de ${row.f_solicitante || 'sin solicitante'}`}
-                                                            onClick={() => setPendingDeleteId(row.id)}
+                                                            onClick={() =>
+                                                                setPendingDeleteId(row.id)
+                                                            }
                                                         >
                                                             <Trash2 size={15} />
                                                         </button>
@@ -1521,11 +1574,20 @@ export function TasarPage() {
                         deleteValuationMutation.mutate(pendingDeleteId, {
                             onSuccess: () => {
                                 setPendingDeleteId(null);
-                                pushToast({ type: 'success', title: 'Tasación eliminada', description: 'La tasación fue enviada a la papelera.' });
+                                pushToast({
+                                    type: 'success',
+                                    title: 'Tasación eliminada',
+                                    description: 'La tasación fue enviada a la papelera.',
+                                });
                             },
                             onError: (err) => {
                                 setPendingDeleteId(null);
-                                pushToast({ type: 'error', title: 'No se pudo eliminar', description: err instanceof Error ? err.message : 'Error desconocido' });
+                                pushToast({
+                                    type: 'error',
+                                    title: 'No se pudo eliminar',
+                                    description:
+                                        err instanceof Error ? err.message : 'Error desconocido',
+                                });
                             },
                         });
                     }}
@@ -1570,56 +1632,104 @@ export function TasarPage() {
                         <ArrowLeft size={16} /> Volver al listado
                     </button>
                     {!isLocked && (
-                        <button className="btn btn--secondary" onClick={handleSaveNow} disabled={saving}>
+                        <button
+                            className="btn btn--secondary"
+                            onClick={handleSaveNow}
+                            disabled={saving}
+                        >
                             {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
                             {saving ? 'Guardando…' : 'Guardar borrador'}
                         </button>
                     )}
                     {isLocked && editId && (
-                        <button className="btn btn--secondary" onClick={handleEnableEdit} disabled={enableEditMutation.isPending}>
-                            <PencilLine size={16} /> {enableEditMutation.isPending ? 'Habilitando…' : 'Habilitar edición'}
+                        <button
+                            className="btn btn--secondary"
+                            onClick={handleEnableEdit}
+                            disabled={enableEditMutation.isPending}
+                        >
+                            <PencilLine size={16} />{' '}
+                            {enableEditMutation.isPending ? 'Habilitando…' : 'Habilitar edición'}
                         </button>
                     )}
                     {!isLocked && (
-                        <button className="btn btn--primary" onClick={handleFinalize} disabled={finalizeMutation.isPending}>
-                            <Lock size={16} /> {finalizeMutation.isPending ? 'Finalizando…' : 'Finalizar tasación'}
+                        <button
+                            className="btn btn--primary"
+                            onClick={handleFinalize}
+                            disabled={finalizeMutation.isPending}
+                        >
+                            <Lock size={16} />{' '}
+                            {finalizeMutation.isPending ? 'Finalizando…' : 'Finalizar tasación'}
                         </button>
                     )}
                 </div>
             </div>
 
             {isLocked && (
-                <div className={`${styles['valuation-banner']} ${styles['valuation-banner--locked']}`}>
+                <div
+                    className={`${styles['valuation-banner']} ${styles['valuation-banner--locked']}`}
+                >
                     <Lock size={16} />
-                    <span>Esta tasación está finalizada. Para modificarla, usá «Habilitar edición».</span>
+                    <span>
+                        Esta tasación está finalizada. Para modificarla, usá «Habilitar edición».
+                    </span>
                 </div>
             )}
             {!isLocked && (
                 <div className={styles['valuation-banner']}>
-                    {saving ? <Loader2 className="spin" size={14} /> : <span className={`${styles['valuation-status-dot']} ${dirty ? styles['valuation-status-dot--dirty'] : styles['valuation-status-dot--saved']}`} />}
+                    {saving ? (
+                        <Loader2 className="spin" size={14} />
+                    ) : (
+                        <span
+                            className={`${styles['valuation-status-dot']} ${dirty ? styles['valuation-status-dot--dirty'] : styles['valuation-status-dot--saved']}`}
+                        />
+                    )}
                     <span>
-                        {saving ? 'Guardando…' : dirty ? 'Cambios sin guardar' : lastSavedAt ? `Guardado ${lastSavedAt.toLocaleTimeString('es-AR')}` : 'Borrador automático activo'}
+                        {saving
+                            ? 'Guardando…'
+                            : dirty
+                              ? 'Cambios sin guardar'
+                              : lastSavedAt
+                                ? `Guardado ${lastSavedAt.toLocaleTimeString('es-AR')}`
+                                : 'Borrador automático activo'}
                     </span>
                 </div>
             )}
 
-            {loadError && <div className={`${styles['valuation-banner']} ${styles['valuation-banner--error']}`}>{loadError}</div>}
+            {loadError && (
+                <div
+                    className={`${styles['valuation-banner']} ${styles['valuation-banner--error']}`}
+                >
+                    {loadError}
+                </div>
+            )}
 
             <div className={styles['valuation-form-stack']}>
                 {formSections.map((section, index) => {
                     const Icon = section.icon;
                     return (
-                        <section key={section.id} className={`card ${styles['valuation-step-card']}`} id={`tasacion-${section.id}`}>
+                        <section
+                            key={section.id}
+                            className={`card ${styles['valuation-step-card']}`}
+                            id={`tasacion-${section.id}`}
+                        >
                             <div className={styles['valuation-step-head']}>
                                 <div className={styles['valuation-section-heading']}>
-                                    <span className={styles['valuation-section-icon']}><Icon size={18} /></span>
+                                    <span className={styles['valuation-section-icon']}>
+                                        <Icon size={18} />
+                                    </span>
                                     <div>
-                                        <h2 className={styles['valuation-step-title']}>{index + 1}. {section.label}</h2>
-                                        <p className={styles['valuation-step-desc']}>{section.description}</p>
+                                        <h2 className={styles['valuation-step-title']}>
+                                            {index + 1}. {section.label}
+                                        </h2>
+                                        <p className={styles['valuation-step-desc']}>
+                                            {section.description}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                            <div className={styles['valuation-step-body']}>{renderStepContent(section.id)}</div>
+                            <div className={styles['valuation-step-body']}>
+                                {renderStepContent(section.id)}
+                            </div>
                         </section>
                     );
                 })}
@@ -1631,10 +1741,18 @@ export function TasarPage() {
                 </button>
                 {!isLocked && (
                     <div className={styles['page-actions']}>
-                        <button className="btn btn--secondary" onClick={handleSaveNow} disabled={saving}>
+                        <button
+                            className="btn btn--secondary"
+                            onClick={handleSaveNow}
+                            disabled={saving}
+                        >
                             <Save size={16} /> Guardar borrador
                         </button>
-                        <button className="btn btn--primary" onClick={handleFinalize} disabled={finalizeMutation.isPending}>
+                        <button
+                            className="btn btn--primary"
+                            onClick={handleFinalize}
+                            disabled={finalizeMutation.isPending}
+                        >
                             <Lock size={16} /> Finalizar tasación
                         </button>
                     </div>

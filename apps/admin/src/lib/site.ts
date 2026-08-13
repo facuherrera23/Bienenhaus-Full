@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '@bienenhaus/supabase';
 import type { Json } from '../types/database';
 
 // ============================================================
@@ -615,9 +615,7 @@ export async function fetchSiteSettingsVersions(limit = 50): Promise<SiteSetting
     return (data ?? []) as SiteSettingsVersionRow[];
 }
 
-export async function restoreSiteSettingsVersion(
-    version: SiteSettingsVersionRow,
-): Promise<void> {
+export async function restoreSiteSettingsVersion(version: SiteSettingsVersionRow): Promise<void> {
     for (const [key, entry] of Object.entries(version.snapshot)) {
         const valueType = entry.value_type as 'string' | 'number' | 'boolean' | 'json';
         await upsertSiteSetting(key, entry.value ?? {}, {

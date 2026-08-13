@@ -80,7 +80,11 @@ describe('Shell', () => {
         });
 
         it('renders Sidebar and Topbar stubs in the correct positions', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const sidebar = screen.getByTestId('sidebar-stub');
             const topbar = screen.getByTestId('topbar-stub');
             expect(sidebar).toBeInTheDocument();
@@ -92,27 +96,43 @@ describe('Shell', () => {
         });
 
         it('skip-link targets #main-content', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const skip = screen.getByText('Saltar al contenido');
             expect(skip.getAttribute('href')).toBe('#main-content');
         });
 
         it('main content has id main-content for skip-link target', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const main = document.getElementById('main-content');
             expect(main).not.toBeNull();
             expect(main?.tagName).toBe('MAIN');
         });
 
         it('renders the breadcrumb row inside shell-main', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(screen.getByTestId('breadcrumb-row')).toBeInTheDocument();
         });
     });
 
     describe('sidebar scrim', () => {
         it('is not visible when mobileMenuOpen is false', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const scrim = screen.getByTestId('sidebar-scrim');
             expect(scrim.classList.contains(styles['is-visible'])).toBe(false);
             expect(scrim.getAttribute('aria-hidden')).toBe('true');
@@ -120,7 +140,11 @@ describe('Shell', () => {
 
         it('becomes visible when mobileMenuOpen is true', () => {
             mobileMenuOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const scrim = screen.getByTestId('sidebar-scrim');
             expect(scrim.classList.contains(styles['is-visible'])).toBe(true);
             expect(scrim.getAttribute('aria-hidden')).toBe('false');
@@ -128,7 +152,11 @@ describe('Shell', () => {
 
         it('closes the drawer when clicked', () => {
             mobileMenuOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const scrim = screen.getByTestId('sidebar-scrim');
             expect(mobileMenuOpen.value).toBe(true);
             fireEvent.click(scrim);
@@ -138,14 +166,22 @@ describe('Shell', () => {
 
     describe('command palette keyboard', () => {
         it('opens the command palette on Ctrl+K', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(commandPaletteOpen.value).toBe(false);
             fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
             expect(commandPaletteOpen.value).toBe(true);
         });
 
         it('opens the command palette on Cmd+K', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(commandPaletteOpen.value).toBe(false);
             fireEvent.keyDown(document, { key: 'k', metaKey: true });
             expect(commandPaletteOpen.value).toBe(true);
@@ -153,7 +189,11 @@ describe('Shell', () => {
 
         it('closes the command palette on Escape when palette is open', () => {
             commandPaletteOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(commandPaletteOpen.value).toBe(true);
             fireEvent.keyDown(document, { key: 'Escape' });
             expect(commandPaletteOpen.value).toBe(false);
@@ -161,7 +201,11 @@ describe('Shell', () => {
 
         it('closes the mobile drawer on Escape when palette is closed', () => {
             mobileMenuOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(commandPaletteOpen.value).toBe(false);
             expect(mobileMenuOpen.value).toBe(true);
             fireEvent.keyDown(document, { key: 'Escape' });
@@ -171,7 +215,11 @@ describe('Shell', () => {
         it('does not close the drawer on Escape when palette is open (palette takes priority)', () => {
             commandPaletteOpen.value = true;
             mobileMenuOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             fireEvent.keyDown(document, { key: 'Escape' });
             expect(commandPaletteOpen.value).toBe(false);
             expect(mobileMenuOpen.value).toBe(true);
@@ -180,25 +228,41 @@ describe('Shell', () => {
 
     describe('command palette rendering', () => {
         it('does not render the command palette overlay when closed', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(screen.queryByTestId('command-palette-overlay')).not.toBeInTheDocument();
         });
 
         it('renders the command palette overlay when commandPaletteOpen is true', () => {
             commandPaletteOpen.value = true;
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(screen.getByTestId('command-palette-overlay')).toBeInTheDocument();
         });
     });
 
     describe('breadcrumb', () => {
         it('renders Inicio as the first crumb on the home route', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             expect(screen.getByText('Inicio')).toBeInTheDocument();
         });
 
         it('marks Inicio as the current page on the home route', () => {
-            render(<Shell><p>contenido</p></Shell>);
+            render(
+                <Shell>
+                    <p>contenido</p>
+                </Shell>,
+            );
             const current = screen.getByText('Inicio');
             expect(current.getAttribute('aria-current')).toBe('page');
         });

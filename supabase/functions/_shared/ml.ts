@@ -162,10 +162,10 @@ export async function getAccessToken(
     }
 
     const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
-    
+
     // Obtener credenciales de la app (BD o env vars)
     const { clientId, clientSecret } = await getMlAppCredentialsLegacy(supabase);
-    
+
     const tokens = await refreshToken(refresh, clientId, clientSecret);
     const access = await encrypt(tokens.access_token);
     const refreshEnc = await encrypt(tokens.refresh_token);
@@ -209,7 +209,7 @@ export interface MlItemPayload {
     listing_type_id?: string;
     condition: 'new' | 'used' | 'not_specified';
     pictures?: { source: string }[];
-    channels?: ('marketplace')[];
+    channels?: 'marketplace'[];
     location?: { address_line?: string };
     description?: { plain_text: string };
     [key: string]: unknown;
@@ -237,7 +237,9 @@ async function api(
         accept: 'application/json',
     };
     if (init?.headers) {
-        new Headers(init.headers).forEach((value, key) => { headers[key] = value; });
+        new Headers(init.headers).forEach((value, key) => {
+            headers[key] = value;
+        });
     }
     if (idempotencyKey) {
         headers['x-idempotency-key'] = idempotencyKey;

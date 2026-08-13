@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { embedVisitEmail, embedVisitName, embedVisitPhone, embedVisitTitle, toVisitRow } from '../visits';
+import {
+    embedVisitEmail,
+    embedVisitName,
+    embedVisitPhone,
+    embedVisitTitle,
+    toVisitRow,
+} from '../visits';
 
 describe('visits mappers', () => {
     const baseApiRow = {
@@ -62,7 +68,12 @@ describe('visits mappers', () => {
         });
 
         it('handles array lead', () => {
-            const row = { ...baseApiRow, lead: [{ name: 'Array Lead', email: 'array@test.com', phone: '+54 9 11 9999-9999' }] };
+            const row = {
+                ...baseApiRow,
+                lead: [
+                    { name: 'Array Lead', email: 'array@test.com', phone: '+54 9 11 9999-9999' },
+                ],
+            };
             const mapped = toVisitRow(row);
             expect(mapped.lead_name).toBe('Array Lead');
         });

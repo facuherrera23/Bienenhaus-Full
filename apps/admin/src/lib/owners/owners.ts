@@ -26,7 +26,8 @@ import {
     type PropertyOwnerLinkRow,
     type ReportFormValues,
     type ReportRow,
- type ReportType } from '../../types/owners';
+    type ReportType,
+} from '../../types/owners';
 // ============================================================
 // DB Row Types with embedded relations
 // ============================================================

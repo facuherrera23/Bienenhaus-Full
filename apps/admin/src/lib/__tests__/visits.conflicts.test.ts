@@ -58,7 +58,10 @@ describe.skip('visits conflicts', () => {
         });
 
         it('returns no errors when no conflicts', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }], error: null });
+            mockSupabase.returns.mockResolvedValueOnce({
+                data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }],
+                error: null,
+            });
             mockSupabase.returns.mockResolvedValueOnce({ data: [], error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
@@ -77,14 +80,19 @@ describe.skip('visits conflicts', () => {
         });
 
         it('detects double booking for agent', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }], error: null });
             mockSupabase.returns.mockResolvedValueOnce({
-                data: [{
-                    id: 'visit-2',
-                    title: 'Otra visita',
-                    starts_at: '2024-01-15T09:00:00Z',
-                    ends_at: '2024-01-15T10:00:00Z',
-                }],
+                data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }],
+                error: null,
+            });
+            mockSupabase.returns.mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'visit-2',
+                        title: 'Otra visita',
+                        starts_at: '2024-01-15T09:00:00Z',
+                        ends_at: '2024-01-15T10:00:00Z',
+                    },
+                ],
                 error: null,
             });
 
@@ -94,7 +102,10 @@ describe.skip('visits conflicts', () => {
         });
 
         it('detects lead double booking', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }], error: null });
+            mockSupabase.returns.mockResolvedValueOnce({
+                data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }],
+                error: null,
+            });
             mockSupabase.returns.mockResolvedValueOnce({ data: [], error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({
                 data: { id: 'visit-3', title: 'Visita del lead' },
@@ -107,7 +118,10 @@ describe.skip('visits conflicts', () => {
         });
 
         it('detects property double booking', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }], error: null });
+            mockSupabase.returns.mockResolvedValueOnce({
+                data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }],
+                error: null,
+            });
             mockSupabase.returns.mockResolvedValueOnce({ data: [], error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({
@@ -121,7 +135,10 @@ describe.skip('visits conflicts', () => {
         });
 
         it('excludes current visit when updating', async () => {
-            mockSupabase.returns.mockResolvedValueOnce({ data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }], error: null });
+            mockSupabase.returns.mockResolvedValueOnce({
+                data: [{ day_of_week: 0, start_time: '09:00', end_time: '18:00' }],
+                error: null,
+            });
             mockSupabase.returns.mockResolvedValueOnce({ data: [], error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
             mockSupabase.maybeSingle.mockResolvedValueOnce({ data: null, error: null });

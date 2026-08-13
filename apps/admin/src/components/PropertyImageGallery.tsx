@@ -11,7 +11,6 @@ import {
 import { pushToast } from '../store/app';
 import styles from './PropertyImageGallery.module.css';
 
-
 interface ImageGalleryProps {
     propertyId: string | null;
     isNew: boolean;
@@ -159,7 +158,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     // Keyboard accessibility handlers
     const handleKeyDown = (e: KeyboardEvent, index: number) => {
         const maxIndex = images.length - 1;
-        
+
         // Ctrl/Cmd + flecha reordena la imagen; flecha sola solo mueve el foco
         if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowRight' || e.key === 'ArrowDown')) {
             e.preventDefault();
@@ -231,7 +230,10 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
     const reorderAndUpdate = async (newOrder: PropertyImage[]) => {
         if (!propertyId) return;
         try {
-            await reorderPropertyImages(propertyId, newOrder.map((i) => i.id));
+            await reorderPropertyImages(
+                propertyId,
+                newOrder.map((i) => i.id),
+            );
             setImages(newOrder);
             onImagesChange?.(newOrder);
         } catch {
@@ -289,12 +291,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                     Arrastra para reordenar. La primera imagen es la portada. Click en la estrella
                     para cambiar portada.
                     <br />
-                    <small>
-                        JPG, PNG, WebP · máx 10 MB · se convierten a WebP automáticamente
-                    </small>
+                    <small>JPG, PNG, WebP · máx 10 MB · se convierten a WebP automáticamente</small>
                     <br />
                     <small className="muted">
-                        Navegación: ←/→ para moverse, Ctrl+←/→ para reordenar, Enter/Space = portada, Delete = eliminar, Home/End = primero/último
+                        Navegación: ←/→ para moverse, Ctrl+←/→ para reordenar, Enter/Space =
+                        portada, Delete = eliminar, Home/End = primero/último
                     </small>
                 </p>
             </div>
@@ -319,7 +320,12 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                 />
 
                 {loading ? (
-                    <div className={styles['image-gallery-grid']} aria-busy="true" aria-live="polite" role="list">
+                    <div
+                        className={styles['image-gallery-grid']}
+                        aria-busy="true"
+                        aria-live="polite"
+                        role="list"
+                    >
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div className="image-gallery-skeleton" key={i} role="listitem">
                                 <div className="image-gallery-skeleton-thumb" />
@@ -329,7 +335,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         ))}
                     </div>
                 ) : images.length === 0 ? (
-                    <div className={styles['gallery-empty']} onClick={() => fileInputRef.current?.click()} role="listitem">
+                    <div
+                        className={styles['gallery-empty']}
+                        onClick={() => fileInputRef.current?.click()}
+                        role="listitem"
+                    >
                         <div className="gallery-empty-icon">
                             <Upload size={48} strokeWidth={1.5} />
                         </div>
@@ -346,7 +356,9 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         {images.map((img, index) => (
                             <div
                                 key={img.id}
-                                ref={(el) => { itemRefs.current[index] = el; }}
+                                ref={(el) => {
+                                    itemRefs.current[index] = el;
+                                }}
                                 className={`${styles['image-gallery-item']}${img.is_cover ? ' is-cover' : ''}${draggedId === img.id ? ` ${styles['dragging']}` : ''}${focusedIndex === index ? ` ${styles['focused']}` : ''}`}
                                 draggable={true}
                                 onDragStart={(e) => handleDragStart(e, img.id)}
@@ -378,7 +390,11 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                                 : 'Establecer como portada (Enter/Space)'
                                         }
                                         disabled={uploading}
-                                        aria-label={img.is_cover ? 'Es la portada actual' : 'Establecer como portada'}
+                                        aria-label={
+                                            img.is_cover
+                                                ? 'Es la portada actual'
+                                                : 'Establecer como portada'
+                                        }
                                         aria-pressed={img.is_cover}
                                     >
                                         <Star
@@ -408,7 +424,9 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                 <div className={styles['image-position']}>
                                     <span>{index + 1}</span>
                                 </div>
-                                {img.is_cover && <span className={styles['cover-badge']}>PORTADA</span>}
+                                {img.is_cover && (
+                                    <span className={styles['cover-badge']}>PORTADA</span>
+                                )}
                             </div>
                         ))}
                     </div>
