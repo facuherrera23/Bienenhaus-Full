@@ -51,9 +51,15 @@ test.describe('Agentes - listado con lead_count', () => {
         );
 
         // Esperar a que aparezcan las tarjetas de agentes
-        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, {
-            timeout: 30000,
-        });
+        // 3 tarjetas: 2 fixtures del global-setup (María Fernández, Jorge Álvarez)
+        // + el "Asistente BIENENHAUS" (is_ai=true) sembrado por la migración 0062.
+        const cards = page.locator('article[class*="agent-card"]');
+        await expect(cards).toHaveCount(3, { timeout: 30000 });
+
+        // lead_count: los 5 leads del fixture están asignados a María Fernández.
+        await expect(cards.filter({ hasText: 'María Fernández' })).toContainText(
+            '5 leads asignados',
+        );
     });
 });
 

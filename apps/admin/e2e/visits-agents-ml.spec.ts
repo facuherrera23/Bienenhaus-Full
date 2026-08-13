@@ -50,7 +50,9 @@ test.describe('Agentes page', () => {
         );
 
         // Esperar a que aparezcan las tarjetas de agentes
-        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(2, {
+        // 3 tarjetas: 2 fixtures del global-setup (María Fernández, Jorge Álvarez)
+        // + el "Asistente BIENENHAUS" (is_ai=true) sembrado por la migración 0062.
+        await expect(page.locator('article[class*="agent-card"]')).toHaveCount(3, {
             timeout: 30000,
         });
     });

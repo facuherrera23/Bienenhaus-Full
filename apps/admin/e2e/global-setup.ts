@@ -3,7 +3,7 @@
  *
  * Garantiza que la base local tenga el estado determinista que los specs asumen:
  *   - Usuario E2E: e2e-test@bienenhaus.local (auth.users + admin_users, role=admin)
- *   - 2 agentes (María Fernández, Jorge Álvarez)            → 2 cards en Agentes
+ *   - 2 agentes (María Fernández, Jorge Álvarez)            → 3 cards en Agentes (2 + Asistente IA sembrado por migración 0062)
  *   - 3 propiedades publicadas con imagen de tapa            → KPI "Propiedades Publicadas" = 3
  *   - 5 leads asignados a María Fernández                    → tabla de leads = 5 filas
  *   - 1 visita E2E (lead + propiedad + agente)               → search "visita" en Visitas
