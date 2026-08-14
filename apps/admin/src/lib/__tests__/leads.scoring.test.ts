@@ -7,7 +7,6 @@ import {
     parseLeadsCsv,
     recalculateLeadScore,
 } from '../leads';
-import type { LeadFormValues } from '../../types/leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {
@@ -163,8 +162,7 @@ describe.skip('leads scoring & csv', () => {
 
     describe('bulkRecalculateScores', () => {
         it('updates multiple leads', async () => {
-            const recalculateLeadScoreSpy = vi
-                .spyOn({ recalculateLeadScore }, 'recalculateLeadScore')
+            vi.spyOn({ recalculateLeadScore }, 'recalculateLeadScore')
                 .mockResolvedValueOnce(65)
                 .mockResolvedValueOnce(70)
                 .mockResolvedValueOnce(0);

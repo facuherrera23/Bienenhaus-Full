@@ -123,7 +123,7 @@ export function ChatPage() {
         const unsubscribe = subscribeToChannelMessages(
             selectedChannelId,
             (msg) => {
-                queryClient.setQueryData(['chat-messages', selectedChannelId], (old: any[]) => {
+                queryClient.setQueryData<ChatMessage[]>(['chat-messages', selectedChannelId], (old) => {
                     if (!old) return [msg];
                     if (old.some((m) => m.id === msg.id)) return old;
                     return [...old, msg];
@@ -134,15 +134,15 @@ export function ChatPage() {
                 scrollToBottom();
             },
             (msg) => {
-                queryClient.setQueryData(
+                queryClient.setQueryData<ChatMessage[]>(
                     ['chat-messages', selectedChannelId],
-                    (old: any[]) => old?.map((m) => (m.id === msg.id ? msg : m)) ?? [],
+                    (old) => old?.map((m) => (m.id === msg.id ? msg : m)) ?? [],
                 );
             },
             (messageId) => {
-                queryClient.setQueryData(
+                queryClient.setQueryData<ChatMessage[]>(
                     ['chat-messages', selectedChannelId],
-                    (old: any[]) => old?.filter((m) => m.id !== messageId) ?? [],
+                    (old) => old?.filter((m) => m.id !== messageId) ?? [],
                 );
             },
         );

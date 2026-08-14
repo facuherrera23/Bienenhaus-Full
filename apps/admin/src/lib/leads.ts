@@ -204,7 +204,7 @@ export function embedTitle(v: { title: string } | { title: string }[] | null): s
 // Mappers
 // ============================================================
 
-export function toLeadRow(l: any): any {
+export function toLeadRow(l: LeadApiRow): LeadRow {
     return {
         id: l.id,
         name: l.name,
@@ -224,7 +224,7 @@ export function toLeadRow(l: any): any {
     };
 }
 
-export function toLeadDetail(l: any): any {
+export function toLeadDetail(l: LeadApiRow): LeadDetail {
     return {
         id: l.id,
         name: l.name,
@@ -296,14 +296,14 @@ export async function fetchLeads(filters?: FetchLeadsFilters): Promise<FetchLead
     const { data, error } = await query
         .order('created_at', { ascending: false })
         .range(from, to)
-        .returns<any[]>();
+        .returns<LeadApiRow[]>();
 
     if (error) throw new Error(error.message);
     const rows = (data ?? []).map(toLeadRow);
     return { data: rows, page, pageSize, hasMore: rows.length === pageSize };
 }
 
-export async function fetchLead(id: string): Promise<any> {
+export async function fetchLead(id: string): Promise<LeadDetail> {
     const { data, error } = await supabase
         .from('leads')
         .select(
@@ -314,6 +314,7 @@ export async function fetchLead(id: string): Promise<any> {
     `,
         )
         .eq('id', id)
+        .returns<LeadApiRow>()
         .maybeSingle();
 
     if (error) throw new Error(error.message);
@@ -321,7 +322,7 @@ export async function fetchLead(id: string): Promise<any> {
     return toLeadDetail(data);
 }
 
-export async function fetchDeletedLeads(): Promise<any[]> {
+export async function fetchDeletedLeads(): Promise<LeadRow[]> {
     const { data, error } = await supabase
         .from('leads')
         .select(
@@ -333,13 +334,13 @@ export async function fetchDeletedLeads(): Promise<any[]> {
         )
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false })
-        .returns<any[]>();
+        .returns<LeadApiRow[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
 }
 
-export async function fetchLeadsByStatus(status: LeadStatus): Promise<any[]> {
+export async function fetchLeadsByStatus(status: LeadStatus): Promise<LeadRow[]> {
     const { data, error } = await supabase
         .from('leads')
         .select(
@@ -352,13 +353,13 @@ export async function fetchLeadsByStatus(status: LeadStatus): Promise<any[]> {
         .eq('status', status)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .returns<any[]>();
+        .returns<LeadApiRow[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
 }
 
-export async function fetchLeadsByAgent(agentId: string): Promise<any[]> {
+export async function fetchLeadsByAgent(agentId: string): Promise<LeadRow[]> {
     const { data, error } = await supabase
         .from('leads')
         .select(
@@ -371,7 +372,7 @@ export async function fetchLeadsByAgent(agentId: string): Promise<any[]> {
         .eq('assigned_to', agentId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .returns<any[]>();
+        .returns<LeadApiRow[]>();
 
     if (error) throw new Error(error.message);
     return (data ?? []).map(toLeadRow);
@@ -381,7 +382,7 @@ export async function fetchLeadsByAgent(agentId: string): Promise<any[]> {
 // API Functions - CRUD with Validation
 // ============================================================
 
-export async function createLead(values: any): Promise<string> {
+export async function createLead(values: LeadFormValues): Promise<string> {
     const validation = validateLeadForm(values);
     if (!validation.valid) {
         logLeadError({ action: 'createLead', error: validation.error, metadata: values });
@@ -438,14 +439,14 @@ export async function createLead(values: any): Promise<string> {
     return data.id;
 }
 
-export async function updateLead(id: string, patch: any): Promise<void> {
+export async function updateLead(id: string, patch: LeadPatch): Promise<void> {
     const validation = validateLeadPatch(patch);
     if (!validation.valid) {
         logLeadError({ action: 'updateLead', lead_id: id, error: validation.error });
         throw new Error(validation.error ?? 'Datos de lead inválidos');
     }
 
-    logLeadAction({ action: 'updateLead', lead_id: id, metadata: patch });
+    logLeadAction({ action: 'updateLead', lead_id: id, metadata: { ...patch } });
     const { error } = await supabase.from('leads').update(patch).eq('id', id);
 
     if (error) throw new Error(error.message);
@@ -490,7 +491,7 @@ export async function permanentDeleteLead(id: string): Promise<void> {
 // API Functions - Assignment
 // ============================================================
 
-export async function fetchAgents(): Promise<any[]> {
+export async function fetchAgents(): Promise<AgentOption[]> {
     const { data, error } = await supabase
         .from('agents')
         .select('id, name')
@@ -499,13 +500,13 @@ export async function fetchAgents(): Promise<any[]> {
         .order('sort_order', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return (data ?? []) as any[];
+    return (data ?? []) as AgentOption[];
 }
 
 export async function getNextAgentForAssignment(lead?: {
     intent: string;
-    city?: string;
-}): Promise<any | null> {
+    city?: string | null;
+}): Promise<AgentOption | null> {
     let query = supabase
         .from('agents')
         .select('id, name, specialties, leads:leads(count)')
@@ -536,7 +537,7 @@ export async function autoAssignLead(
         .eq('id', leadId)
         .single();
 
-    const agent = await getNextAgentForAssignment(lead as any);
+    const agent = await getNextAgentForAssignment(lead ?? undefined);
     if (!agent) return null;
 
     await updateLead(leadId, { assigned_to: agent.id });
@@ -687,7 +688,7 @@ export async function setLeadTags(id: string, tags: string[]): Promise<void> {
 // ============================================================
 
 export async function parseLeadsCsv(csvText: string): Promise<{
-    valid: any[];
+    valid: CsvLeadRow[];
     errors: { row: number; message: string }[];
 }> {
     const lines = csvText.trim().split('\n');
@@ -704,7 +705,7 @@ export async function parseLeadsCsv(csvText: string): Promise<{
         }
     }
 
-    const valid: any[] = [];
+    const valid: CsvLeadRow[] = [];
     const errors: { row: number; message: string }[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -758,7 +759,7 @@ export async function parseLeadsCsv(csvText: string): Promise<{
             phone: row.phone ?? undefined,
             intent: row.intent as LeadIntent,
             source: row.source as LeadSource,
-            status: (row.status as any) || 'nuevo',
+            status: (row.status as LeadStatus) || 'nuevo',
         });
 
         // Deduplicación por email (case-insensitive)
@@ -808,7 +809,7 @@ export async function importLeadsFromCsv(csvText: string): Promise<{
     return { created: imported, errors };
 }
 
-export async function bulkImportLeadsParsed(leads: any[]): Promise<{
+export async function bulkImportLeadsParsed(leads: CsvLeadRow[]): Promise<{
     created: number;
     errors: { row: number; message: string }[];
 }> {

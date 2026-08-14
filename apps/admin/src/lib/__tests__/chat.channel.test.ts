@@ -6,7 +6,6 @@ import {
     createPropertyChannel,
     fetchChannels,
 } from '../chat';
-import type { ChatChannel } from '../../types/chat';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {

@@ -66,7 +66,7 @@ describe('Login Page', () => {
     });
 
     it('disables submit button while loading', async () => {
-        let resolveSignIn: (value: any) => void;
+        let resolveSignIn: (value: unknown) => void;
         const signInPromise = new Promise((resolve) => {
             resolveSignIn = resolve;
         });

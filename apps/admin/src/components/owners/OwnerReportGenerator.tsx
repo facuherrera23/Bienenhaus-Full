@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { Calendar, Check, FileText, Plus, TrendingUp, X } from 'lucide-preact';
+import { Calendar, Check, FileText, type LucideIcon, Plus, TrendingUp, X } from 'lucide-preact';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReportFormValues, reportSchema, type ReportType } from '../../lib/owners/schemas';
@@ -21,7 +21,7 @@ interface OwnerReportGeneratorProps {
     isLoading?: boolean;
 }
 
-const REPORT_TEMPLATES: Record<ReportType, { icon: any; description: string; sections: string[] }> =
+const REPORT_TEMPLATES: Record<ReportType, { icon: LucideIcon; description: string; sections: string[] }> =
     {
         price_analysis: {
             icon: TrendingUp,

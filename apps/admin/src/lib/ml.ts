@@ -647,7 +647,7 @@ export async function fetchMlDeadLetter(filters?: {
         .match(apiFilters)
         .order('moved_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1)
-        .returns<any[]>();
+        .returns<DeadLetterApiRow[]>();
 
     if (error) throw new Error(error.message);
     return {

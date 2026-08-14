@@ -1,14 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
     embedVisitEmail,
     embedVisitName,
     embedVisitPhone,
     embedVisitTitle,
     toVisitRow,
+    type VisitApiRow,
 } from '../visits';
 
 describe('visits mappers', () => {
-    const baseApiRow = {
+    const baseApiRow: VisitApiRow = {
         id: 'visit-1',
         lead_id: 'lead-1',
         property_id: 'prop-1',
@@ -35,7 +36,7 @@ describe('visits mappers', () => {
         lead: { name: 'Juan Pérez', email: 'juan@test.com', phone: '+54 9 11 1234-5678' },
         property: { title: 'Casa Test' },
         agent: { name: 'Agente 1' },
-    } as any;
+    };
 
     describe('toVisitRow', () => {
         it('maps nested property object correctly', () => {

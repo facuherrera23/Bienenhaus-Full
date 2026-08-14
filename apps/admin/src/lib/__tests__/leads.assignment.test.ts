@@ -5,7 +5,6 @@ import {
     fetchAgents,
     getNextAgentForAssignment,
 } from '../leads';
-import type { AgentOption } from '../../types/leads';
 
 const { mockSupabase } = vi.hoisted(() => {
     const mockSupabase = {

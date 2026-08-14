@@ -1,4 +1,5 @@
 // apps/admin/src/pages/Dashboard.tsx
+import type { JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import {
     Activity,
@@ -261,7 +262,7 @@ export function Dashboard() {
                                     className={`${styles.kpiCard} ${styles[`kpiCard--${kpi.tone}`]} ${sectionVisible ? styles.kpiReveal : ''}`}
                                     role="region"
                                     aria-label={`KPI: ${kpi.label}`}
-                                    style={{ '--reveal-delay': `${kpi.delay}ms` } as any}
+                                    style={{ '--reveal-delay': `${kpi.delay}ms` } as JSX.CSSProperties}
                                 >
                                     <span className={styles.kpiIcon} aria-hidden="true">
                                         <kpi.icon size={20} strokeWidth={1.8} />

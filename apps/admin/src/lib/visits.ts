@@ -543,7 +543,7 @@ export async function permanentDeleteVisit(id: string): Promise<void> {
 // API Functions - Agent Availability
 // ============================================================
 
-export async function fetchAgentAvailability(agentId: string): Promise<any[]> {
+export async function fetchAgentAvailability(agentId: string): Promise<AgentAvailability[]> {
     const { data, error } = await supabase
         .from('agent_availability')
         .select('*')
@@ -553,16 +553,20 @@ export async function fetchAgentAvailability(agentId: string): Promise<any[]> {
         .order('start_time', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return (data ?? []) as any[];
+    return (data ?? []) as AgentAvailability[];
 }
 
 export async function createAgentAvailability(
-    values: Omit<any, 'id' | 'created_at' | 'updated_at'>,
-): Promise<any> {
+    values: Omit<
+        Database['public']['Tables']['agent_availability']['Insert'],
+        'id' | 'created_at' | 'updated_at'
+    >,
+): Promise<AgentAvailability> {
     const { data, error } = await supabase
         .from('agent_availability')
         .insert(values)
         .select('*')
+        .returns<AgentAvailability>()
         .single();
 
     if (error) throw new Error(error.message);
@@ -591,7 +595,7 @@ export async function deleteAgentAvailability(id: string): Promise<void> {
 export async function createRecurringVisit(
     baseVisitId: string,
     rule: RecurrenceRule,
-): Promise<any> {
+): Promise<RecurringVisitDbRow> {
     const nextOccurrence = calculateNextOccurrence(rule, new Date());
 
     const { data, error } = await supabase
@@ -694,7 +698,7 @@ export async function generateOccurrences(
     return { created, skipped };
 }
 
-function getDurationMinutes(visit: any): number {
+function getDurationMinutes(visit: VisitDbRow): number {
     const start = new Date(visit.starts_at);
     const end = new Date(visit.ends_at);
     return Math.round((end.getTime() - start.getTime()) / 60000);
@@ -785,13 +789,14 @@ export async function processReminders(): Promise<{ sent: number; failed: number
 // API Functions - QR Check-in
 // ============================================================
 
-export async function generateQrCode(visitId: string): Promise<any> {
+export async function generateQrCode(visitId: string): Promise<QrCheckin> {
     const code = `VIS-${visitId.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`;
 
     const { data, error } = await supabase
         .from('qr_checkins')
         .insert({ visit_id: visitId, code })
         .select()
+        .returns<QrCheckin>()
         .single();
 
     if (error) throw new Error(error.message);
@@ -836,13 +841,14 @@ export async function checkInWithQr(
     return { success: true, visit, message: 'Check-in registrado correctamente' };
 }
 
-export async function getQrCode(visitId: string): Promise<any | null> {
+export async function getQrCode(visitId: string): Promise<QrCheckin | null> {
     const { data } = await supabase
         .from('qr_checkins')
         .select('*')
         .eq('visit_id', visitId)
         .order('created_at', { ascending: false })
         .limit(1)
+        .returns<QrCheckin>()
         .maybeSingle();
 
     return data;

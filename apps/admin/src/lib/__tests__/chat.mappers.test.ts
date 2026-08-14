@@ -1,14 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
+    type ChannelApiRow,
     embedAgentEmail,
     embedAgentName,
     embedAgentPhoto,
+    type MessageApiRow,
     toChannelRow,
     toMessageRow,
 } from '../chat';
 
 describe('chat mappers', () => {
-    const baseChannelApiRow = {
+    const baseChannelApiRow: ChannelApiRow = {
         id: 'channel-1',
         type: 'direct',
         name: null,
@@ -26,11 +28,14 @@ describe('chat mappers', () => {
                 joined_at: '2024-01-01T00:00:00Z',
                 last_read_at: '2024-01-01T00:00:00Z',
                 notifications_enabled: true,
-                agent: {
-                    name: 'Agente 1',
-                    email: 'agente1@test.com',
-                    photo_url: 'https://img.com/agent1.jpg',
-                },
+                agent: [
+                    {
+                        name: 'Agente 1',
+                        email: 'agente1@test.com',
+                        photo_url: 'https://img.com/agent1.jpg',
+                        is_ai: false,
+                    },
+                ],
             },
         ],
         last_message: [
@@ -48,7 +53,7 @@ describe('chat mappers', () => {
                 created_at: '2024-01-01T10:00:00Z',
                 updated_at: '2024-01-01T10:00:00Z',
                 deleted_at: null,
-                sender: { name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' },
+                sender: [{ name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' }],
                 reply_to: null,
                 reads: [
                     {
@@ -56,14 +61,14 @@ describe('chat mappers', () => {
                         message_id: 'msg-1',
                         agent_id: 'agent-2',
                         read_at: '2024-01-01T10:05:00Z',
-                        agent: { name: 'Agente 2' },
+                        agent: [{ name: 'Agente 2' }],
                     },
                 ],
             },
         ],
-    } as any;
+    };
 
-    const baseMessageEmbedded = {
+    const baseMessageEmbedded: MessageApiRow = {
         id: 'msg-1',
         channel_id: 'channel-1',
         sender_id: 'agent-1',
@@ -77,7 +82,7 @@ describe('chat mappers', () => {
         created_at: '2024-01-01T10:00:00Z',
         updated_at: '2024-01-01T10:00:00Z',
         deleted_at: null,
-        sender: { name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' },
+        sender: [{ name: 'Agente 1', photo_url: 'https://img.com/agent1.jpg' }],
         reply_to: null,
         reads: [
             {
@@ -85,10 +90,10 @@ describe('chat mappers', () => {
                 message_id: 'msg-1',
                 agent_id: 'agent-2',
                 read_at: '2024-01-01T10:05:00Z',
-                agent: { name: 'Agente 2' },
+                agent: [{ name: 'Agente 2' }],
             },
         ],
-    } as any;
+    };
 
     describe('toChannelRow', () => {
         it('maps channel with participants and last message', () => {
@@ -132,24 +137,26 @@ describe('chat mappers', () => {
         it('handles reply_to message', () => {
             const msgWithReply = {
                 ...baseMessageEmbedded,
-                reply_to: {
-                    id: 'msg-reply',
-                    channel_id: 'channel-1',
-                    sender_id: 'agent-2',
-                    content: 'Mensaje original',
-                    message_type: 'text',
-                    file_url: null,
-                    file_name: null,
-                    file_size: null,
-                    reply_to_id: null,
-                    edited_at: null,
-                    created_at: '2024-01-01T09:00:00Z',
-                    updated_at: '2024-01-01T09:00:00Z',
-                    deleted_at: null,
-                    sender: { name: 'Agente 2', photo_url: 'https://img.com/agent2.jpg' },
-                    reply_to: null,
-                    reads: [],
-                },
+                reply_to: [
+                    {
+                        id: 'msg-reply',
+                        channel_id: 'channel-1',
+                        sender_id: 'agent-2',
+                        content: 'Mensaje original',
+                        message_type: 'text',
+                        file_url: null,
+                        file_name: null,
+                        file_size: null,
+                        reply_to_id: null,
+                        edited_at: null,
+                        created_at: '2024-01-01T09:00:00Z',
+                        updated_at: '2024-01-01T09:00:00Z',
+                        deleted_at: null,
+                        sender: [{ name: 'Agente 2', photo_url: 'https://img.com/agent2.jpg' }],
+                        reply_to: null,
+                        reads: [],
+                    },
+                ],
             };
             const mapped = toMessageRow(msgWithReply);
             expect(mapped.reply_to).not.toBeNull();

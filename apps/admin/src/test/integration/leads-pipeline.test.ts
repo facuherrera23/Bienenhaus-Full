@@ -138,13 +138,6 @@ describe('Leads Integration (local supabase)', () => {
             leads.push(data?.id);
         }
 
-        // Get agent lead counts before
-        const { data: agentsBefore } = await supabase
-            .from('agents')
-            .select('id, name, leads:leads(count)')
-            .eq('is_active', true)
-            .order('leads.count', { ascending: true, referencedTable: 'leads' });
-
         // Bulk auto-assign
         // Note: This would use the RPC or edge function in real implementation
         // For test, we manually assign to test the logic
@@ -196,19 +189,6 @@ describe('Leads Integration (local supabase)', () => {
                 message: 'Original message',
             })
             .select('id')
-            .single();
-
-        // Import CSV with same email
-        const csvText = `name,last_name,email,intent,source,status,message
-Duplicate,Lead,duplicate@test.com,vender,landing_form,nuevo,New message`;
-
-        const { data: imported } = await supabase
-            .from('leads')
-            .select('id')
-            .or(`email.eq.duplicate@test.com,phone.eq.+54 9 11 1234-5678`)
-            .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-            .order('created_at', { ascending: false })
-            .limit(1)
             .single();
 
         // In real implementation, the createLead would deduplicate

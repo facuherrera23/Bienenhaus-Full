@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+interface MockMessage {
+    id: string;
+    channel_id: string;
+    sender_id: string;
+    content: string;
+    message_type: string;
+    reply_to_id: string | null;
+    created_at: string;
+}
+
+type ThreadNode = MockMessage & { replies: ThreadNode[] };
+
 // Mock message data for testing threading logic
-const mockMessages = [
+const mockMessages: MockMessage[] = [
     {
         id: 'msg-1',
         channel_id: 'ch-1',
@@ -42,12 +54,15 @@ const mockMessages = [
 
 describe('chat threading', () => {
     // Helper to build thread tree
-    function buildThreadTree(messages: any[]): any[] {
-        const messageMap = new Map(messages.map((m) => [m.id, { ...m, replies: [] }]));
-        const roots: any[] = [];
+    function buildThreadTree(messages: MockMessage[]): ThreadNode[] {
+        const messageMap = new Map<string, ThreadNode>(
+            messages.map((m) => [m.id, { ...m, replies: [] }]),
+        );
+        const roots: ThreadNode[] = [];
 
         for (const msg of messages) {
             const node = messageMap.get(msg.id);
+            if (!node) continue;
             if (msg.reply_to_id) {
                 const parent = messageMap.get(msg.reply_to_id);
                 if (parent) {
@@ -99,7 +114,7 @@ describe('chat threading', () => {
     });
 
     describe('reply depth calculation', () => {
-        function getDepth(message: any, messages: any[]): number {
+        function getDepth(message: MockMessage, messages: MockMessage[]): number {
             let depth = 0;
             let current = message;
             while (current.reply_to_id) {
@@ -121,7 +136,7 @@ describe('chat threading', () => {
     });
 
     describe('reply chain traversal', () => {
-        function getReplyChain(message: any, messages: any[]): any[] {
+        function getReplyChain(message: MockMessage, messages: MockMessage[]): MockMessage[] {
             const chain = [message];
             let current = message;
             while (current.reply_to_id) {

@@ -65,7 +65,7 @@ describe('leads-validation Zod schemas', () => {
         });
 
         it('defaults status to nuevo', () => {
-            const { status, ...rest } = validForm;
+            const { status: _status, ...rest } = validForm;
             const result = LeadFormSchema.safeParse(rest);
             expect(result.success).toBe(true);
             expect(result.data?.status).toBe('nuevo');
@@ -134,7 +134,7 @@ describe('leads-validation Zod schemas', () => {
         });
 
         it('defaults status to nuevo', () => {
-            const { status, ...rest } = {
+            const { status: _status, ...rest } = {
                 name: 'Juan',
                 last_name: 'Pérez',
                 email: 'juan@test.com',

@@ -1,23 +1,39 @@
 import '@testing-library/preact';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import type { ComponentChildren, ComponentType, JSX } from 'preact';
 
 // Mock de @bienenhaus/ui
 vi.mock('@bienenhaus/ui', () => ({
-    Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-    Input: ({ ...props }: any) => <input {...props} />,
-    Select: ({ children, ...props }: any) => <select {...props}>{children}</select>,
-    Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    Badge: ({ children, ...props }: any) => <span {...props}>{children}</span>,
-    Modal: ({ children, isOpen, onClose, ...props }: any) =>
+    Button: ({ children, ...props }: JSX.HTMLAttributes<HTMLButtonElement>) => (
+        <button {...props}>{children}</button>
+    ),
+    Input: ({ ...props }: JSX.HTMLAttributes<HTMLInputElement>) => <input {...props} />,
+    Select: ({ children, ...props }: JSX.HTMLAttributes<HTMLSelectElement>) => (
+        <select {...props}>{children}</select>
+    ),
+    Card: ({ children, ...props }: JSX.HTMLAttributes<HTMLDivElement>) => (
+        <div {...props}>{children}</div>
+    ),
+    Badge: ({ children, ...props }: JSX.HTMLAttributes<HTMLSpanElement>) => (
+        <span {...props}>{children}</span>
+    ),
+    Modal: ({
+        children,
+        isOpen,
+        onClose,
+        ...props
+    }: JSX.HTMLAttributes<HTMLDivElement> & { isOpen?: boolean; onClose?: () => void }) =>
         isOpen ? (
             <div {...props} role="dialog">
                 {children}
                 <button onClick={onClose}>Cerrar</button>
             </div>
         ) : null,
-    Toast: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    ToastProvider: ({ children }: any) => <>{children}</>,
+    Toast: ({ children, ...props }: JSX.HTMLAttributes<HTMLDivElement>) => (
+        <div {...props}>{children}</div>
+    ),
+    ToastProvider: ({ children }: { children?: ComponentChildren }) => <>{children}</>,
     useToast: () => ({ push: vi.fn() }),
 }));
 
@@ -77,14 +93,19 @@ vi.mock('./src/lib/supabase', () => {
 // Mock de wouter-preact
 vi.mock('wouter-preact', () => ({
     useLocation: () => ['/', vi.fn()],
-    useRoutes: (routes: any) => routes,
-    Link: ({ children, href, ...props }: any) => (
+    useRoutes: <T,>(routes: T) => routes,
+    Link: ({ children, href, ...props }: JSX.HTMLAttributes<HTMLAnchorElement>) => (
         <a href={href} {...props}>
             {children}
         </a>
     ),
-    Switch: ({ children }: any) => <>{children}</>,
-    Route: ({ component: Component, ...props }: any) => <Component {...props} />,
+    Switch: ({ children }: { children?: ComponentChildren }) => <>{children}</>,
+    Route: ({
+        component: Component,
+        ...props
+    }: { component: ComponentType } & Record<string, unknown>) => (
+        <Component {...props} />
+    ),
 }));
 
 // Mock de lucide-preact
@@ -143,9 +164,9 @@ vi.mock('lucide-preact', () => {
         'ShoppingBag',
         'Unplug',
     ];
-    const mocked: Record<string, any> = {};
+    const mocked: Record<string, (props: JSX.SVGAttributes<SVGSVGElement>) => JSX.Element> = {};
     icons.forEach((name) => {
-        mocked[name] = ({ ...props }: any) => (
+        mocked[name] = ({ ...props }: JSX.SVGAttributes<SVGSVGElement>) => (
             <svg {...props} data-testid={`icon-${name.toLowerCase()}`} />
         );
     });
@@ -154,20 +175,20 @@ vi.mock('lucide-preact', () => {
 
 // Mock de @preact/signals
 vi.mock('@preact/signals', () => ({
-    signal: (initial: any) => {
+    signal: <T,>(initial: T) => {
         let value = initial;
         return {
             get value() {
                 return value;
             },
-            set value(v) {
+            set value(v: T) {
                 value = v;
             },
             subscribe: vi.fn(),
             peek: () => value,
         };
     },
-    computed: (fn: any) => ({ value: fn(), subscribe: vi.fn() }),
+    computed: <T,>(fn: () => T) => ({ value: fn(), subscribe: vi.fn() }),
     effect: vi.fn(),
 }));
 
@@ -180,8 +201,8 @@ vi.mock('@tanstack/query-core', () => ({
         removeQueries: vi.fn(),
         clear: vi.fn(),
     })),
-    QueryClientProvider: ({ children }: any) => <>{children}</>,
-    useQuery: vi.fn((opts: any) => ({
+    QueryClientProvider: ({ children }: { children?: ComponentChildren }) => <>{children}</>,
+    useQuery: vi.fn((opts: Record<string, unknown>) => ({
         data: undefined,
         isPending: false,
         isError: false,
@@ -189,7 +210,7 @@ vi.mock('@tanstack/query-core', () => ({
         refetch: vi.fn(),
         ...opts,
     })),
-    useMutation: vi.fn((opts: any) => ({
+    useMutation: vi.fn((opts: Record<string, unknown>) => ({
         mutate: vi.fn(),
         mutateAsync: vi.fn(),
         isPending: false,
@@ -211,7 +232,13 @@ vi.mock('../store/app', () => ({
 Object.defineProperty(global, 'crypto', {
     value: {
         randomUUID: () => 'test-uuid-' + Math.random().toString(36).substr(2, 9),
-        getRandomValues: (arr: any) => arr.map(() => Math.floor(Math.random() * 256)),
+        getRandomValues: <T extends ArrayBufferView,>(arr: T): T => {
+            const bytes = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = Math.floor(Math.random() * 256);
+            }
+            return arr;
+        },
     },
 });
 
@@ -253,9 +280,10 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 // Suppress console.error in tests unless explicitly testing errors
 const originalError = console.error;
 beforeAll(() => {
-    console.error = (...args: any[]) => {
-        if (args[0]?.includes?.('Warning: ReactDOM.render is no longer supported')) return;
-        if (args[0]?.includes?.('act(...)')) return;
+    console.error = (...args: unknown[]) => {
+        const first = typeof args[0] === 'string' ? args[0] : '';
+        if (first.includes('Warning: ReactDOM.render is no longer supported')) return;
+        if (first.includes('act(...)')) return;
         originalError.call(console, ...args);
     };
 });

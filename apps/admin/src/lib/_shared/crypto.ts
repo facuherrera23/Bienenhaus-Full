@@ -11,14 +11,14 @@ function getSecret(): string {
     // In Vite (admin): import.meta.env.VITE_CRYPTO_SECRET
     // In Node test: process.env.CRYPTO_SECRET
     const secret =
-        (import.meta as any).env?.VITE_CRYPTO_SECRET ??
+        import.meta.env?.VITE_CRYPTO_SECRET ??
         (typeof process !== 'undefined' ? process.env?.CRYPTO_SECRET : '') ??
         '';
     if (
         !secret &&
         typeof process !== 'undefined' &&
         process.env?.CRYPTO_SECRET === undefined &&
-        (import.meta as any).env?.VITE_CRYPTO_SECRET === undefined
+        import.meta.env?.VITE_CRYPTO_SECRET === undefined
     ) {
         // For tests: allow Deno.env fallback if available (Deno runtime), else empty
         return '';

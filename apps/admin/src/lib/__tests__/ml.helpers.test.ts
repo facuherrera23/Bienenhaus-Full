@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { slugify, toFormValues, toNumeric } from '../properties';
 import type { PropertyDetail } from '../../types/ml';
 

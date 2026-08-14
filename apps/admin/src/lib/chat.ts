@@ -36,21 +36,23 @@ type MessageEmbedded = Database['public']['Tables']['chat_messages']['Row'] & {
     >;
 };
 
-type ChannelApiRow = Database['public']['Tables']['chat_channels']['Row'] & {
-    participants: Array<
-        Database['public']['Tables']['chat_channel_participants']['Row'] & {
-            agent: {
-                name: string;
-                email: string | null;
-                photo_url: string | null;
-                is_ai: boolean;
-            }[];
-        }
-    >;
+export type ChannelApiRow = Database['public']['Tables']['chat_channels']['Row'] & {
+    participants:
+        | Array<
+              Database['public']['Tables']['chat_channel_participants']['Row'] & {
+                  agent: {
+                      name: string;
+                      email: string | null;
+                      photo_url: string | null;
+                      is_ai: boolean;
+                  }[];
+              }
+          >
+        | null;
     last_message: MessageEmbedded[];
 };
 
-type MessageApiRow = MessageEmbedded;
+export type MessageApiRow = MessageEmbedded;
 
 // ============================================================
 // Embed helpers

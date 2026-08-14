@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { Database } from '../../types/database';
+import type { Database, Json } from '../../types/database';
 import {
     type ActionPlanCategory,
     type ActionPlanDetail,
@@ -602,10 +602,10 @@ export async function createPriceAnalysis(
         100;
     const price_status = getPriceStatusFromPct(diff);
 
-    const payload: any = {
+    const payload: Database['public']['Tables']['property_price_analyses']['Insert'] = {
         ...analysis,
         price_status,
-        comparable_properties: analysis.comparable_properties,
+        comparable_properties: analysis.comparable_properties as unknown as Json,
     };
 
     const { data, error } = await supabase
@@ -621,7 +621,10 @@ export async function updatePriceAnalysis(
     id: string,
     analysis: Partial<PriceAnalysisFormValues>,
 ): Promise<PriceAnalysisRow> {
-    const payload: any = { ...analysis };
+    const payload: Database['public']['Tables']['property_price_analyses']['Update'] = {
+        ...analysis,
+        comparable_properties: analysis.comparable_properties as unknown as Json | undefined,
+    };
 
     // Recalculate price_status if prices changed
     if (analysis.estimated_market_price !== undefined && analysis.our_listing_price !== undefined) {
@@ -633,7 +636,7 @@ export async function updatePriceAnalysis(
     }
 
     if (analysis.comparable_properties !== undefined) {
-        payload.comparable_properties = analysis.comparable_properties;
+        payload.comparable_properties = analysis.comparable_properties as unknown as Json;
     }
 
     const { data, error } = await supabase
@@ -1031,7 +1034,7 @@ export async function createReport(report: ReportFormValues): Promise<ReportRow>
         .insert({
             ...report,
             generated_at: new Date().toISOString(),
-            content_json: report.content_json as any,
+            content_json: report.content_json as unknown as Json,
         })
         .select(REPORTS_SELECT)
         .single();

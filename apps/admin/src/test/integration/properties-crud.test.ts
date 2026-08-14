@@ -160,17 +160,13 @@ describe('Properties Integration (local supabase)', () => {
         expect(testId).toBeDefined();
 
         // Add image record
-        const { data: image } = await supabase
-            .from('property_images')
-            .insert({
-                property_id: testId,
-                url: 'https://test.supabase.co/storage/v1/object/public/property-images/test/test.jpg',
-                alt: 'Test',
-                position: 0,
-                is_cover: false,
-            })
-            .select('id')
-            .single();
+        await supabase.from('property_images').insert({
+            property_id: testId,
+            url: 'https://test.supabase.co/storage/v1/object/public/property-images/test/test.jpg',
+            alt: 'Test',
+            position: 0,
+            is_cover: false,
+        });
 
         // Soft delete first
         await supabase

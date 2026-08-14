@@ -45,6 +45,7 @@ import {
     LEAD_STATUS_LABEL,
     LEAD_STATUS_ORDER,
     LEAD_STATUS_TONE,
+    type LeadApiRow,
     type LeadDetail,
     type LeadFormValues,
     type LeadIntent,
@@ -94,7 +95,7 @@ export function useLeads(filters?: {
         apiFilters.or = `(name.ilike.*${escaped}*,last_name.ilike.*${escaped}*,email.ilike.*${escaped}*,phone.ilike.*${escaped}*)`;
     }
 
-    return useListHook<LeadRow, any>({
+    return useListHook<LeadRow, LeadApiRow>({
         queryKey: queryKeys.leads(filters),
         path: LEADS_PATH,
         select: 'id,name,last_name,email,phone,city,intent,message,source,status,created_at,updated_at,agent:agents(name),tags,score',
@@ -165,7 +166,7 @@ export function useAgentOptions() {
 
 export function useCreateLead() {
     return useMutation({
-        mutationFn: async (values: any) => {
+        mutationFn: async (values: LeadFormValues) => {
             return createLead(values);
         },
     });
@@ -173,7 +174,7 @@ export function useCreateLead() {
 
 export function useUpdateLead() {
     return useMutation({
-        mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
+        mutationFn: async ({ id, patch }: { id: string; patch: LeadPatch }) => {
             return updateLead(id, patch);
         },
     });
@@ -189,7 +190,7 @@ export function useDeleteLead() {
 
 export function useUpdateLeadStatus() {
     return useMutation({
-        mutationFn: async ({ id, status }: { id: string; status: any }) => {
+        mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
             return updateLeadStatus(id, status);
         },
     });
@@ -319,7 +320,7 @@ export function useParseLeadsCsv() {
 
 export function useImportLeads() {
     return useMutation({
-        mutationFn: async (leads: any[]) => {
+        mutationFn: async (leads: CsvLeadRow[]) => {
             return bulkImportLeadsParsed(leads);
         },
     });
@@ -337,7 +338,7 @@ export function useImportLeadsFromCsv() {
 // Export
 // ============================================================
 
-export const LEAD_EXPORT_COLUMNS: ExportColumn<any>[] = [
+export const LEAD_EXPORT_COLUMNS: ExportColumn<LeadRow>[] = [
     { key: 'name', label: 'Nombre' },
     { key: 'last_name', label: 'Apellido' },
     { key: 'email', label: 'Email' },
@@ -357,7 +358,7 @@ export const LEAD_EXPORT_COLUMNS: ExportColumn<any>[] = [
 ];
 
 export function useExportLeads() {
-    const { exportToCSV } = useExport<any>();
+    const { exportToCSV } = useExport<LeadRow>();
     const leads = useLeads({ pageSize: 1000 });
 
     return {

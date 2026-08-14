@@ -47,7 +47,7 @@ export function OwnerForm({
         setFormData(createInitialState());
     }, [initialData]);
 
-    const validateField = (name: keyof OwnerFormValues, value: string) => {
+    const validateField = (name: keyof OwnerFormValues, value: string | boolean) => {
         const fieldSchema = ownerSchema.shape[name];
         if (fieldSchema) {
             const result = fieldSchema.safeParse(value);
@@ -63,14 +63,15 @@ export function OwnerForm({
         }
     };
 
-    const handleChange = (e: any) => {
-        const { name, value, type } = e.target;
-        const finalValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    const handleChange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const { name, value, type } = target;
+        const finalValue = type === 'checkbox' ? target.checked : value;
         setFormData((prev) => ({ ...prev, [name]: finalValue }));
         validateField(name as keyof OwnerFormValues, finalValue);
     };
 
-    const handleSubmitForm = async (e: any) => {
+    const handleSubmitForm = async (e: Event) => {
         e.preventDefault();
         const result = ownerSchema.safeParse(formData);
         if (!result.success) {

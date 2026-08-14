@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import type { Session } from '@supabase/supabase-js';
 import { Topbar } from '../Topbar';
 import {

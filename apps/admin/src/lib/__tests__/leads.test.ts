@@ -52,6 +52,7 @@ function buildChain(overrides: Record<string, unknown> = {}): Record<string, unk
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         range: vi.fn().mockReturnThis(),
+        returns: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({ data: null, error: null }),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         insert: vi.fn().mockReturnThis(),

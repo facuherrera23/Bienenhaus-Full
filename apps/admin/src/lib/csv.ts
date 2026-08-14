@@ -56,9 +56,9 @@ export function toCsv(
 /**
  * Convierte un array de objetos a CSV
  */
-export function toCsvFromObjects<T extends Record<string, any>>(
+export function toCsvFromObjects<T extends Record<string, unknown>>(
     data: T[],
-    columns: { key: keyof T; label: string; format?: (value: any) => string }[],
+    columns: { key: keyof T; label: string; format?: (value: unknown) => string }[],
     options: CsvOptions = {},
 ): string {
     const header = columns.map((col) => col.label);
@@ -68,7 +68,7 @@ export function toCsvFromObjects<T extends Record<string, any>>(
             if (col.format) {
                 return col.format(value);
             }
-            return value;
+            return value === null || value === undefined ? '' : String(value);
         }),
     );
 
@@ -320,7 +320,7 @@ export function validateCsvHeaders(
 /**
  * Valida que los datos tengan al menos una fila
  */
-export function validateCsvHasData(rows: any[]): { valid: boolean; message?: string } {
+export function validateCsvHasData(rows: unknown[]): { valid: boolean; message?: string } {
     if (rows.length === 0) {
         return { valid: false, message: 'El archivo CSV está vacío' };
     }

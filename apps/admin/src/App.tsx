@@ -105,8 +105,8 @@ function PageLoader() {
 }
 
 // Wrapper para Suspense en cada ruta
-function withSuspense(Component: ComponentType<any>) {
-    return function SuspenseWrapper(props: any) {
+function withSuspense<P extends object>(Component: ComponentType<P>) {
+    return function SuspenseWrapper(props: P) {
         return (
             <Suspense fallback={<PageLoader />}>
                 <Component {...props} />

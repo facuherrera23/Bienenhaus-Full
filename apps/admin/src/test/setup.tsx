@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { cleanup } from '@testing-library/preact';
+import type { ComponentChildren, ComponentType, JSX } from 'preact';
 
 vi.stubEnv('VITE_SUPABASE_URL', 'dummy');
 vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'dummy');
@@ -11,9 +12,16 @@ vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'dummy');
 vi.mock('wouter', () => ({
     useLocation: () => ['/', vi.fn()],
     useRoute: () => [null, {}],
-    Link: ({ children, href }: { children: any; href: string }) => <a href={href}>{children}</a>,
-    Switch: ({ children }: { children: any }) => children,
-    Route: ({ component }: { component: any }) => component({}),
+    Link: ({ children, href, ...props }: JSX.HTMLAttributes<HTMLAnchorElement>) => (
+        <a href={href} {...props}>
+            {children}
+        </a>
+    ),
+    Switch: ({ children }: { children?: ComponentChildren }) => <>{children}</>,
+    Route: ({
+        component: Component,
+        ...props
+    }: { component: ComponentType } & Record<string, unknown>) => <Component {...props} />,
 }));
 
 vi.mock('lucide-preact', () => ({
@@ -77,7 +85,7 @@ vi.mock('lucide-preact', () => ({
             'LinkedinIcon',
         ].map((name) => [
             name,
-            ({ children, ...props }: any) => (
+            ({ children, ...props }: JSX.SVGAttributes<SVGSVGElement>) => (
                 <svg {...props} data-testid={name.toLowerCase()}>
                     {children}
                 </svg>
