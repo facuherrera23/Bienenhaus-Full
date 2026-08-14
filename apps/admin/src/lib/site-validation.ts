@@ -7,7 +7,7 @@ const SettingValueSchemas = {
     json: z.record(z.unknown()),
     url: z.string().url(),
     email: z.string().email(),
-    phone: z.string().regex(/^[\d\s\-\+\(\)]{10,}$/),
+    phone: z.string().regex(/^[\d\s\-+()]{10,}$/),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     richtext: z.string(),
 } as const;

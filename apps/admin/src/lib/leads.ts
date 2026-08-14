@@ -173,17 +173,17 @@ interface LeadLogEntry {
 
 function logLeadAction(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
     const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'info', ...entry };
-    console.log(JSON.stringify(out));
+    console.warn(JSON.stringify(out));
 }
 
 function logLeadWarn(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
     const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'warn', ...entry };
-    console.log(JSON.stringify(out));
+    console.warn(JSON.stringify(out));
 }
 
 function logLeadError(entry: Omit<LeadLogEntry, 'timestamp' | 'level'>): void {
     const out: LeadLogEntry = { timestamp: new Date().toISOString(), level: 'error', ...entry };
-    console.log(JSON.stringify(out));
+    console.error(JSON.stringify(out));
 }
 
 // ============================================================
@@ -751,7 +751,7 @@ export async function parseLeadsCsv(csvText: string): Promise<{
             continue;
         }
 
-valid.push({
+        valid.push({
             name: row.name,
             last_name: row.last_name,
             email: row.email,
@@ -766,7 +766,10 @@ valid.push({
             (v) => (v.email ?? '').toLowerCase() === (row.email ?? '').toLowerCase(),
         );
         if (existingEmail >= 0 && existingEmail !== valid.length - 1) {
-            errors.push({ row: i, message: `Lead duplicado: el email ${row.email} ya fue ingresado` });
+            errors.push({
+                row: i,
+                message: `Lead duplicado: el email ${row.email} ya fue ingresado`,
+            });
             valid.pop();
             continue;
         }

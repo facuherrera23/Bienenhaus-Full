@@ -225,10 +225,8 @@ describe('downloadCsv', () => {
     let createObjectURLMock: Mock;
     let revokeObjectURLMock: Mock;
     let clickSpy: Mock;
-    let capturedAnchor: HTMLAnchorElement | null;
 
     beforeEach(() => {
-        capturedAnchor = null;
         createObjectURLMock = vi.fn(() => 'blob:mock');
         revokeObjectURLMock = vi.fn();
         Object.defineProperty(URL, 'createObjectURL', {
@@ -241,11 +239,9 @@ describe('downloadCsv', () => {
             configurable: true,
             writable: true,
         });
-        clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
-            this: HTMLAnchorElement,
-        ) {
-            capturedAnchor = this;
-        });
+        clickSpy = vi
+            .spyOn(HTMLAnchorElement.prototype, 'click')
+            .mockImplementation(() => undefined);
     });
 
     afterEach(() => {
@@ -262,7 +258,8 @@ describe('downloadCsv', () => {
         expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
         expect(new TextDecoder().decode(bytes.slice(3))).toBe('A;B\r\n1;2');
 
-        expect(capturedAnchor).not.toBeNull();
+        const capturedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement | undefined;
+        expect(capturedAnchor).not.toBeUndefined();
         expect(capturedAnchor?.download).toBe('propiedades.csv');
         expect(capturedAnchor?.href).toContain('blob:mock');
         expect(capturedAnchor?.parentElement).toBeNull();
@@ -271,6 +268,7 @@ describe('downloadCsv', () => {
 
     it('no duplica la extensión .csv', () => {
         downloadCsv('reporte.csv', 'x');
+        const capturedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement | undefined;
         expect(capturedAnchor?.download).toBe('reporte.csv');
     });
 });

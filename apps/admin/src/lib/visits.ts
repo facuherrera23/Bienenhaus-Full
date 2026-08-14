@@ -87,17 +87,17 @@ interface VisitLogEntry {
 
 function logVisitAction(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
     const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'info', ...entry };
-    console.log(JSON.stringify(out));
+    console.warn(JSON.stringify(out));
 }
 
 function logVisitWarn(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
     const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'warn', ...entry };
-    console.log(JSON.stringify(out));
+    console.warn(JSON.stringify(out));
 }
 
 function logVisitError(entry: Omit<VisitLogEntry, 'timestamp' | 'level'>): void {
     const out: VisitLogEntry = { timestamp: new Date().toISOString(), level: 'error', ...entry };
-    console.log(JSON.stringify(out));
+    console.error(JSON.stringify(out));
 }
 
 // ============================================================

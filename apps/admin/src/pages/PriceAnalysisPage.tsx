@@ -13,17 +13,16 @@ import { pushToast } from '@store/app';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ComparablePropertyInput, PriceAnalysisGauge } from '@components/owners';
 import { priceAnalysisSchema } from '@lib/owners/schemas';
-import type { PriceAnalysisFormValues } from '../types/owners';
-import { useForm } from 'react-hook-form';
-import type { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
 import {
     getPriceStatusLabel,
     MARKET_TREND_ICON,
     MARKET_TREND_LABEL,
     PRICE_STATUS_LABEL,
-} from '@/types/owners';
+    type PriceAnalysisFormValues,
+} from '../types/owners';
+import { useForm } from 'react-hook-form';
+import type { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export function PriceAnalysisPage() {
     const [, params] = useRoute('/propiedades/:id');

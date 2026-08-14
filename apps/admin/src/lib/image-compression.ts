@@ -20,26 +20,12 @@ export interface CompressionOptions {
     fileType?: string;
 }
 
-export interface ThumbnailFile {
-    file: File;
-    width: number;
-    suffix: string;
-    originalName: string;
-}
-
 export interface CompressedThumbnail {
     file: File;
     width: number;
     suffix: string;
     originalName: string;
     size: number;
-}
-
-export interface CompressionOptions {
-    maxSizeMB?: number;
-    maxWidthOrHeight?: number;
-    useWebWorker?: boolean;
-    fileType?: string;
 }
 
 /**

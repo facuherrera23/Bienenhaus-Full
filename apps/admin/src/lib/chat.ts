@@ -39,7 +39,12 @@ type MessageEmbedded = Database['public']['Tables']['chat_messages']['Row'] & {
 type ChannelApiRow = Database['public']['Tables']['chat_channels']['Row'] & {
     participants: Array<
         Database['public']['Tables']['chat_channel_participants']['Row'] & {
-            agent: { name: string; email: string | null; photo_url: string | null; is_ai: boolean }[];
+            agent: {
+                name: string;
+                email: string | null;
+                photo_url: string | null;
+                is_ai: boolean;
+            }[];
         }
     >;
     last_message: MessageEmbedded[];
@@ -70,9 +75,7 @@ export function embedAgentPhoto(
     return Array.isArray(v) ? (v[0]?.photo_url ?? null) : v.photo_url;
 }
 
-export function embedAgentIsAi(
-    v: { is_ai: boolean } | { is_ai: boolean }[] | null,
-): boolean {
+export function embedAgentIsAi(v: { is_ai: boolean } | { is_ai: boolean }[] | null): boolean {
     if (!v) return false;
     return Array.isArray(v) ? (v[0]?.is_ai ?? false) : v.is_ai;
 }
@@ -656,7 +659,11 @@ interface ChatLogEntry {
 
 function log(level: LogLevel, entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {
     const out: ChatLogEntry = { timestamp: new Date().toISOString(), level, ...entry };
-    console.log(JSON.stringify(out));
+    if (level === 'error') {
+        console.error(JSON.stringify(out));
+    } else {
+        console.warn(JSON.stringify(out));
+    }
 }
 
 export function logChatAction(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): void {

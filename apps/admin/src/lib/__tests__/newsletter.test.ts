@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { supabase } from '../supabase';
 import { from } from '../../test/setup';
 import {
     bulkCreateSubscribers,
@@ -19,11 +18,7 @@ import {
     unsubscribeSubscriber,
     updateSubscriber,
 } from '../newsletter';
-import {
-    NEWSLETTER_SOURCE_LABEL,
-    NEWSLETTER_STATUS_LABEL,
-    type NewsletterSubscriber,
-} from '../../types/newsletter';
+import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL } from '../../types/newsletter';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
@@ -58,15 +53,6 @@ function mockFrom(overrides: Record<string, unknown> = {}): Record<string, unkno
     (from as unknown as Mock).mockReturnValue(chain);
     return chain;
 }
-
-const subscriberRow: NewsletterSubscriber = {
-    id: 's1',
-    email: 'ana@example.com',
-    source: 'landing_footer',
-    status: 'active',
-    created_at: '2024-01-15T10:00:00Z',
-    deleted_at: undefined,
-};
 
 function apiRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
@@ -220,13 +206,10 @@ describe('countSubscribers', () => {
     });
 
     it('aplica filtros de estado y fuente', async () => {
-        let chain: Record<string, unknown>;
-        chain = mockFrom({
-            eq: vi
-                .fn()
-                .mockImplementationOnce(() => chain)
-                .mockResolvedValue({ count: 5, error: null }),
-        });
+        const chain = mockFrom({});
+        (chain.eq as Mock)
+            .mockImplementationOnce(() => chain)
+            .mockResolvedValue({ count: 5, error: null });
 
         await expect(countSubscribers({ status: 'active', source: 'manual' })).resolves.toBe(5);
 

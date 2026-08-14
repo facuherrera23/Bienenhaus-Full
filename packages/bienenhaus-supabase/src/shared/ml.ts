@@ -481,7 +481,7 @@ export async function runMlApiCallWithRetry<T>(
 
     if (!result.ok && result.retryAfter !== undefined) {
         const retryAfter = result.retryAfter;
-        console.log(
+        console.warn(
             `[ml-api] Rate limited on ${operationName}, waiting ${retryAfter}s before retry...`,
         );
         await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));

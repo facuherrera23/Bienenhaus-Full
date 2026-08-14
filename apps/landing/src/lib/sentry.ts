@@ -1,4 +1,4 @@
-import type { SeverityLevel } from '@sentry/browser';
+import type * as Sentry from '@sentry/browser';
 
 export interface SentryConfig {
     dsn: string;
@@ -21,7 +21,7 @@ const IGNORED_ERRORS = [
     'Permission denied',
 ];
 
-type SentryModule = typeof import('@sentry/browser');
+type SentryModule = typeof Sentry;
 let sentry: SentryModule | null = null;
 
 let isInitialized = false;
@@ -59,7 +59,7 @@ export function captureException(error: unknown, context?: Record<string, unknow
 
 export function captureMessage(
     message: string,
-    level: SeverityLevel = 'info',
+    level: Sentry.SeverityLevel = 'info',
     context?: Record<string, unknown>,
 ): void {
     if (!sentry) return;

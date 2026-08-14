@@ -131,7 +131,7 @@ export async function processReminders(
             const hours = Math.floor(minutesBefore / 60);
             const mins = minutesBefore % 60;
             const timeStr = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-            console.info(
+            console.warn(
                 `[visits-process-reminders] envío ${reminder.type} para visita ${visit.id} (${timeStr} antes)`,
             );
 

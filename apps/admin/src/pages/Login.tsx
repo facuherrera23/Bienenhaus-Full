@@ -14,7 +14,9 @@ function getAttempts(): { count: number; lastAttempt: number } {
     try {
         const stored = localStorage.getItem(RATE_LIMIT_KEY);
         if (stored) return JSON.parse(stored);
-    } catch {}
+    } catch {
+        // JSON corrupto en localStorage: se ignora y se devuelven 0 intentos
+    }
     return { count: 0, lastAttempt: 0 };
 }
 

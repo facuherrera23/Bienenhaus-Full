@@ -218,7 +218,6 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
                 focusItem(selectableIndices[0]);
             }
             // Only run on open transitions; item list changes are handled by nav.
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [isOpen]);
 
         // ----- Trigger click -----

@@ -1,5 +1,5 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchMlQueue, fetchMlMeta, fetchMlOverview } from '../ml';
+import { fetchMlMeta, fetchMlOverview, fetchMlQueue } from '../ml';
 import type { MlOverview } from '../../types/ml';
 
 // Chain-mock de supabase: cada método devuelve la cadena y `await` resuelve el
