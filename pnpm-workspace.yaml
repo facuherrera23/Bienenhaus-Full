@@ -1,11 +1,12 @@
 packages:
-    - 'apps/*'
-    - 'packages/*'
+  - 'apps/*'
+  - 'packages/*'
 
 allowBuilds:
-    core-js: true
-    esbuild: true
-    msw: true
+  core-js: true
+  esbuild: true
+  msw: true
+  unrs-resolver: true
 
 onlyBuiltDependencies:
-    - esbuild
+  - esbuild

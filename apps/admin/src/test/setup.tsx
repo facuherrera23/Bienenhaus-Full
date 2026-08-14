@@ -113,20 +113,24 @@ export const from = vi.fn(() => ({
     returns: vi.fn().mockResolvedValue({ data: null, error: null }),
 }));
 
+export const getSession = vi.fn().mockResolvedValue({ data: { session: null }, error: null });
+export const signInWithPassword = vi
+    .fn()
+    .mockResolvedValue({ data: { user: null, session: null }, error: null });
+
 vi.mock('@supabase/supabase-js', () => ({
     createClient: vi.fn(() => ({
         from,
         rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
         auth: {
-            getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+            getSession,
+            signInWithPassword,
             getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
             admin: {
-                generateLink: vi
-                    .fn()
-                    .mockResolvedValue({
-                        data: { properties: { action_link: 'https://test.com' } },
-                        error: null,
-                    }),
+                generateLink: vi.fn().mockResolvedValue({
+                    data: { properties: { action_link: 'https://test.com' } },
+                    error: null,
+                }),
             },
         },
         storage: {

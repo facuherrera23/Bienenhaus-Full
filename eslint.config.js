@@ -10,17 +10,27 @@ export default tseslint.config(
     importPlugin.flatConfigs.recommended,
     {
         // Resolver de eslint-plugin-import:
-        // - `import/resolver.node.extensions` incluye .ts/.tsx porque el flat config
-        //   recomendado solo resuelve extensiones JS → los imports relativos de
-        //   archivos TypeScript daban `import/no-unresolved` falso positivo en todo
-        //   el repo (p. ej. './api', './agents' en apps/admin/src/lib/*.api.ts).
-        // - `vitest/config` es un subpath export (exports map) que el resolver node
-        //   no resuelve → queda en core-modules. Los configs de vitest
+        // - `import/resolver.typescript` resuelve los path aliases del tsconfig
+        //   (p. ej. '@lib/owners/api' → apps/admin/src/lib/owners/api.ts) y las
+        //   extensiones .ts/.tsx, eliminando los import/no-unresolved falsos
+        //   positivos del resolver node puro en todo el repo.
+        // - `import/resolver.node.extensions` complementa para archivos JS puros.
+        // - `vitest/config` es un subpath export (exports map) que el resolver
+        //   node no resuelve → queda en core-modules. Los configs de vitest
         //   (vitest.config.ts, vitest.integration.config.ts) se validan igualmente
         //   por tsc y por vitest al ejecutarse.
         settings: {
             'import/core-modules': ['vitest/config'],
             'import/resolver': {
+                typescript: {
+                    alwaysTryTypes: true,
+                    project: [
+                        './tsconfig.base.json',
+                        './apps/*/tsconfig.json',
+                        './apps/*/tsconfig.test.json',
+                        './packages/*/tsconfig.json',
+                    ],
+                },
                 node: {
                     extensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx'],
                 },
@@ -49,6 +59,7 @@ export default tseslint.config(
                 project: [
                     './tsconfig.base.json',
                     './apps/*/tsconfig.json',
+                    './apps/*/tsconfig.test.json',
                     './packages/*/tsconfig.json',
                 ],
                 tsconfigRootDir: import.meta.dirname,

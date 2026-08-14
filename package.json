@@ -30,6 +30,7 @@
         "@vitest/coverage-v8": "^4.1.10",
         "eslint": "^10.8.0",
         "eslint-config-prettier": "^10.1.8",
+        "eslint-import-resolver-typescript": "^4.4.5",
         "eslint-plugin-import": "^2.32.0",
         "eslint-plugin-preact": "^0.1.0",
         "jsdom": "^30.0.1",
