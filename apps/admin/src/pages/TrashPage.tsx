@@ -43,6 +43,7 @@ import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Button, IconButton } from '@bienenhaus/ui';
 import styles from './TrashPage.module.css';
 
 type TabType = 'properties' | 'leads' | 'agents' | 'newsletter' | 'owners' | 'action_plans';
@@ -297,20 +298,24 @@ export function TrashPage() {
                 <td className="muted">{formatDate(item.deleted_at ?? '')}</td>
                 <td>
                     <div className="row-actions">
-                        <button
-                            className="icon-btn"
+                        <IconButton
+                            variant="ghost"
+                            aria-label="Restaurar"
                             title="Restaurar"
                             onClick={() => handleRestore(type, item.id, name ?? '')}
                         >
                             <RotateCcw size={14} />
-                        </button>
-                        <button
-                            className="icon-btn icon-btn--danger"
+                        </IconButton>
+                        <IconButton
+                            variant="danger"
+                            aria-label="Eliminar permanentemente"
                             title="Eliminar permanentemente"
-                            onClick={() => setDeleteTarget({ type, id: item.id, name: name ?? '' })}
+                            onClick={() =>
+                                setDeleteTarget({ type, id: item.id, name: name ?? '' })
+                            }
                         >
                             <Trash2 size={14} />
-                        </button>
+                        </IconButton>
                     </div>
                 </td>
             </tr>
@@ -350,15 +355,15 @@ export function TrashPage() {
                     </p>
                 </div>
                 {totalCount > 0 && (
-                    <button
-                        className="btn btn--ghost"
+                    <Button
+                        variant="ghost"
                         onClick={() =>
                             items.forEach((i) => handleRestore(tabToType(activeTab), i.id, ''))
                         }
                         disabled={pending}
                     >
                         <RotateCcw size={16} /> Restaurar todos
-                    </button>
+                    </Button>
                 )}
             </div>
 

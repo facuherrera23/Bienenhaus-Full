@@ -57,3 +57,28 @@
     color: var(--bh-text-tertiary);
     margin-top: 1px;
 }
+
+.tone-success {
+    background: var(--bh-success-soft);
+    color: var(--bh-success);
+}
+
+.tone-warning {
+    background: var(--bh-warning-soft);
+    color: var(--bh-warning);
+}
+
+.tone-info {
+    background: var(--bh-info-soft);
+    color: var(--bh-info);
+}
+
+.tone-neutral {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-tertiary);
+}
+
+.tone-danger {
+    background: var(--bh-danger-soft);
+    color: var(--bh-danger);
+}

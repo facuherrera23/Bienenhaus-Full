@@ -23,7 +23,7 @@ export const CHANNEL_TYPE_LABEL: Record<ChatChannelType, string> = {
 // DB row types with embedded relations
 // ============================================================
 
-import { supabase, supabaseUrl } from '@bienenhaus/supabase';
+import { supabase } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
 
 type MessageEmbedded = Database['public']['Tables']['chat_messages']['Row'] & {
@@ -680,28 +680,4 @@ export function logChatError(entry: Omit<ChatLogEntry, 'timestamp' | 'level'>): 
     log('error', entry);
 }
 
-// ============================================================
-// AI Assistant
-// ============================================================
 
-export async function askAiAssistant(channelId: string, messageId: string): Promise<void> {
-    const {
-        data: { session },
-    } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error('No hay sesión activa');
-
-    const res = await fetch(`${supabaseUrl}/functions/v1/chat-ai`, {
-        method: 'POST',
-        headers: {
-            authorization: `Bearer ${token}`,
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({ channel_id: channelId, message_id: messageId }),
-    });
-
-    if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `Error consultando al asistente (${res.status})`);
-    }
-}

@@ -1,0 +1,354 @@
+/* apps/admin/src/styles/PropertiesPage.module.css — Rediseño visual BIENENHAUS */
+/* ============================================================
+   PROPERTIES PAGE — Tabla premium con tokens --bh-*
+   ============================================================ */
+
+/* ============================================================
+   PAGE — Contenedor principal
+   ============================================================ */
+
+.page {
+    padding: var(--bh-space-6) var(--bh-space-5);
+}
+
+/* ============================================================
+   PAGE HEAD — Header principal
+   ============================================================ */
+
+.pageHead {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-4);
+    margin-bottom: var(--bh-space-6);
+}
+
+.pageTitle {
+    margin: 0;
+    font-size: var(--bh-text-2xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+    font-family: var(--bh-font-serif);
+}
+
+.pageSubtitle {
+    margin: var(--bh-space-1) 0 0 0;
+    font-size: var(--bh-text-base);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   PAGE HEAD ACTIONS — Botones de acción superior derecha
+   ============================================================ */
+
+.pageHeadActions {
+    margin-left: auto;
+    display: flex;
+    gap: var(--bh-space-3);
+}
+
+/* ============================================================
+   TOOLBAR — Barra de herramientas con search y filtro
+   ============================================================ */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-4);
+    margin: var(--bh-space-4) 0;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.toolbarSearch {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    background: rgba(255, 255, 255, 0.03);
+    padding: var(--bh-space-3) var(--bh-space-4);
+    border-radius: var(--bh-radius-md);
+    border: 1px solid var(--bh-border-input);
+}
+
+.toolbarSearch .search-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--bh-text-tertiary);
+}
+
+.toolbarSearch input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-primary);
+    width: 0; /* Hidden, expand on focus via CSS */
+}
+
+/* ============================================================
+   SELECT — Dropdown select
+   ============================================================ */
+
+.select {
+    display: block;
+    padding: var(--bh-space-3) var(--bh-space-4);
+    font-size: var(--bh-text-md);
+    font-family: var(--bh-font-sans);
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    appearance: none;
+    cursor: pointer;
+    min-width: 180px;
+}
+
+.select:focus {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: -2px;
+    border-color: var(--bh-accent);
+}
+
+.select option {
+    background: var(--bh-bg-primary);
+    color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   TABLE — Tabla premium properties
+   ============================================================ */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+    table-layout: fixed;
+}
+
+.table th,
+.table td {
+    padding: var(--bh-space-3) var(--bh-space-4);
+    border-bottom: 1px solid var(--bh-border);
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+    vertical-align: top;
+}
+
+.table th {
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-secondary);
+    text-align: left;
+    background: var(--bh-bg-secondary);
+}
+
+.table tr:hover td:not(.emptyCell) {
+    background: var(--bh-bg-hover);
+}
+
+.table tr:hover td.emptyCell {
+    background: transparent;
+}
+
+/* ============================================================
+   ROW CLICK — Fila interactiva
+   ============================================================ */
+
+.rowClick {
+    cursor: pointer;
+    transition: background var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.rowClick:hover {
+    background: var(--bh-bg-hover);
+}
+
+.rowClick:focus-visible {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: -2px;
+}
+
+/* ============================================================
+   CELL PROPERTY — Columna de imagen/thumbnail propiedad
+   ============================================================ */
+
+.cellProperty {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    min-width: 120px;
+}
+
+.cellProperty img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--bh-radius-md);
+    flex-shrink: 0;
+}
+
+.cellProperty .cellThumb {
+    width: 80px;
+    height: 80px;
+    background: var(--bh-bg-tertiary);
+    border-radius: var(--bh-radius-md);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
+}
+
+/* ============================================================
+   CELL CAP — Columna tipo de operación
+   ============================================================ */
+
+.cap {
+    min-width: 100px;
+    font-weight: var(--bh-weight-medium);
+}
+
+/* ============================================================
+   CELL NUM — Columna de precio/cantidad
+   ============================================================ */
+
+.num {
+    min-width: 100px;
+    text-align: right;
+}
+
+/* ============================================================
+   MUTED TEXT — Texto secundario
+   ============================================================ */
+
+.muted {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   EMPTY CELL — Fila vacía de búsqueda
+   ============================================================ */
+
+.emptyCell {
+    padding: var(--bh-space-6) var(--bh-space-4);
+    text-align: center;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
+}
+
+/* Table empty state */
+.emptyState {
+    padding: var(--bh-space-8) var(--bh-space-4);
+    text-align: center;
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .form-field input,
+    .form-field select,
+    .form-field textarea,
+    .rowClick,
+    .price-metric:hover {
+        transition: none;
+    }
+
+    .table tr:hover td {
+        background: transparent;
+    }
+
+    .modal-overlay,
+    .modal {
+        transition: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--bh-space-4) var(--bh-space-3);
+    }
+
+    .pageHead {
+        flex-direction: column;
+        gap: var(--bh-space-3);
+    }
+
+    .pageHeadActions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: var(--bh-space-3);
+    }
+
+    .toolbarSearch {
+        width: 100%;
+    }
+
+    .select {
+        width: 100%;
+    }
+
+    .table {
+        font-size: var(--bh-text-xs);
+    }
+
+    .table th,
+    .table td {
+        padding: var(--bh-space-2) var(--bh-space-3);
+    }
+
+    .cellProperty {
+        min-width: 80px;
+    }
+
+    .cellProperty img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .cellProperty .cellThumb {
+        width: 60px;
+        height: 60px;
+    }
+
+    .cap,
+    .num {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 390px) {
+    .page {
+        padding: var(--bh-space-3) var(--bh-space-2);
+    }
+
+    .pageTitle {
+        font-size: var(--bh-text-xl);
+    }
+
+    .cellProperty {
+        min-width: 60px;
+    }
+
+    .cellProperty img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .cap,
+    .num {
+        min-width: 60px;
+    }
+
+    .emptyCell {
+        font-size: var(--bh-text-xs);
+    }
+}

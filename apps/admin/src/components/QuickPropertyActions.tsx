@@ -10,6 +10,7 @@ import {
     useUpdateProperty,
 } from '../lib/properties.api';
 import { pushToast } from '../store/app';
+import { Button } from '@bienenhaus/ui';
 import styles from './QuickPropertyActions.module.css';
 
 const STATUSES = Object.keys(STATUS_LABEL) as PropertyStatus[];
@@ -47,8 +48,10 @@ export function QuickPropertyActions({ properties }: QuickPropertyActionsProps) 
         <div className="card">
             <div className="card-head">
                 <h3>Acciones rápidas</h3>
-                <Link href="/propiedades" className="btn btn--sm btn--secondary">
-                    Ver todas
+                <Link href="/propiedades">
+                    <Button variant="secondary" size="sm">
+                        Ver todas
+                    </Button>
                 </Link>
             </div>
 
@@ -82,7 +85,7 @@ export function QuickPropertyActions({ properties }: QuickPropertyActionsProps) 
                                 </p>
                             </div>
                             <select
-                                className={`select select--sm badge-select badge--${STATUS_TONE[p.status]}`}
+                                className={`select select--sm ${styles['tone-' + STATUS_TONE[p.status]]}`}
                                 value={p.status}
                                 aria-label={`Estado de ${p.title}`}
                                 onChange={(e) =>

@@ -43,40 +43,40 @@ export function OwnerReportPreview({
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className={styles.modalOverlay} onClick={onClose}>
             <div
-                className="modal modal--large report-preview-modal"
+                className={styles.modal + ' ' + styles['modal--large'] + ' ' + styles['report-preview-modal']}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="modal-header">
-                    <div className="header-left">
+                <div className={styles.modalHeader}>
+                    <div className={styles.headerLeft}>
                         <FileText size={24} />
                         <div>
                             <h2>{report.title || 'Reporte sin título'}</h2>
-                            <span className={`badge badge--${report.status}`}>
+                            <span className={`${styles.badge} ${styles['badge--' + report.status]}`}>
                                 {REPORT_TYPE_LABEL[report.report_type]}
                             </span>
                         </div>
                     </div>
-                    <div className="header-right">
-                        <span className="generated-at">
+                    <div className={styles.headerRight}>
+                        <span className={styles.generatedAt}>
                             Generado: {formatDate(report.generated_at)}
                         </span>
-                        <button type="button" className="icon-btn" onClick={onClose}>
+                        <button type="button" className={styles.iconBtn} onClick={onClose}>
                             <X size={18} />
                         </button>
                     </div>
                 </div>
 
                 <div className="modal-body">
-                    <div className="report-content">
+                    <div className={styles.reportContent}>
                         {priceAnalysis && (
-                            <section className="report-section">
+                            <section className={styles.reportSection}>
                                 <h3>Análisis de Precio</h3>
-                                <div className="price-analysis-grid">
-                                    <div className="price-metric">
-                                        <span className="metric-label">Precio de publicación</span>
-                                        <span className="metric-value">
+                                <div className={styles.priceAnalysisGrid}>
+                                    <div className={styles.priceMetric}>
+                                        <span className={styles.metricLabel}>Precio de publicación</span>
+                                        <span className={styles.metricValue}>
                                             ${priceAnalysis.ourListingPrice.toLocaleString('es-AR')}
                                         </span>
                                     </div>
@@ -91,31 +91,31 @@ export function OwnerReportPreview({
                                             )}
                                         </span>
                                     </div>
-                                    <div className="price-metric highlight">
-                                        <span className="metric-label">Diferencia</span>
+                                    <div className={`${styles.priceMetric} ${styles.highlight}`}>
+                                        <span className={styles.metricLabel}>Diferencia</span>
                                         <span
-                                            className={`metric-value status-${priceAnalysis.status}`}
+                                            className={styles.metricValue + ' ' + styles['status-' + priceAnalysis.status]}
                                         >
                                             {priceAnalysis.differencePct >= 0 ? '+' : ''}
                                             {priceAnalysis.differencePct.toFixed(2)}%
                                         </span>
                                     </div>
-                                    <div className="price-metric">
-                                        <span className="metric-label">Estado del precio</span>
-                                        <span className={`badge badge--${priceAnalysis.status}`}>
+                                    <div className={styles.priceMetric}>
+                                        <span className={styles.metricLabel}>Estado del precio</span>
+                                        <span className={`${styles.badge} ${styles['badge--' + priceAnalysis.status]}`}>
                                             {priceAnalysis.status}
                                         </span>
                                     </div>
-                                    <div className="price-metric">
-                                        <span className="metric-label">Tendencia del mercado</span>
-                                        <span className="metric-value">{priceAnalysis.trend}</span>
+                                    <div className={styles.priceMetric}>
+                                        <span className={styles.metricLabel}>Tendencia del mercado</span>
+                                        <span className={styles.metricValue}>{priceAnalysis.trend}</span>
                                     </div>
                                 </div>
 
                                 {priceAnalysis.comparables.length > 0 && (
                                     <div className="comparables-table">
                                         <h4>Propiedades Comparables</h4>
-                                        <table className="table table--compact">
+                                        <table className={`${styles.table} ${styles['table--compact']}`}>
                                             <thead>
                                                 <tr>
                                                     <th>Dirección</th>
@@ -145,7 +145,7 @@ export function OwnerReportPreview({
                                 )}
 
                                 {priceAnalysis.recommendation && (
-                                    <div className="recommendation-box">
+                                    <div className={styles.recommendationBox}>
                                         <h4>Recomendación</h4>
                                         <p>{priceAnalysis.recommendation}</p>
                                     </div>
@@ -154,9 +154,9 @@ export function OwnerReportPreview({
                         )}
 
                         {content.actionPlans && (
-                            <section className="report-section">
+                            <section className={styles.reportSection}>
                                 <h3>Planes de Acción</h3>
-                                <ul className="plans-list">
+                                <ul className={styles.plansList}>
                                     {(
                                         content.actionPlans as Array<{
                                             title: string;
@@ -165,14 +165,14 @@ export function OwnerReportPreview({
                                             dueDate?: string;
                                         }>
                                     ).map((plan, i) => (
-                                        <li key={i} className="plan-item">
-                                            <div className="plan-info">
+                                        <li key={i} className={styles.planItem}>
+                                            <div className={styles.planInfo}>
                                                 <strong>{plan.title}</strong>
-                                                <span className={`badge badge--${plan.status}`}>
+                                                <span className={`${styles.badge} ${styles['badge--' + plan.status]}`}>
                                                     {plan.status}
                                                 </span>
                                                 <span
-                                                    className={`priority-badge priority-${plan.priority}`}
+                                                    className={`${styles.priorityBadge} ${styles['priority-badge--' + plan.priority]}`}
                                                 >
                                                     {plan.priority}
                                                 </span>
@@ -203,15 +203,15 @@ export function OwnerReportPreview({
                                             status: string;
                                         }>
                                     ).map((comm, i) => (
-                                        <li key={i} className="comm-item">
-                                            <span className="comm-type">{comm.type}</span>
-                                            <span className="comm-subject">
+                                        <li key={i} className={styles.commItem}>
+                                            <span className={styles.commType}>{comm.type}</span>
+                                            <span className={styles.commSubject}>
                                                 {comm.subject || 'Sin asunto'}
                                             </span>
-                                            <time className="comm-date">
+                                            <time className={styles.commDate}>
                                                 {new Date(comm.date).toLocaleDateString('es-AR')}
                                             </time>
-                                            <span className={`badge badge--${comm.status}`}>
+                                            <span className={`${styles.badge} ${styles['badge--' + comm.status]}`}>
                                                 {comm.status}
                                             </span>
                                         </li>
@@ -221,22 +221,22 @@ export function OwnerReportPreview({
                         )}
 
                         {content.customContent && (
-                            <section className="report-section">
-                                <h3>Contenido Personalizado</h3>
-                                <div
-                                    className="custom-content"
-                                    dangerouslySetInnerHTML={{
-                                        __html: content.customContent as string,
-                                    }}
-                                />
+<section className={styles.reportSection}>
+                                    <h3>Contenido Personalizado</h3>
+                                    <div
+                                        className={styles.customContent}
+                                        dangerouslySetInnerHTML={{
+                                            __html: content.customContent as string,
+                                        }}
+                                    />
                             </section>
                         )}
 
                         {content.customSections &&
                             (content.customSections as string[]).length > 0 && (
-                                <section className="report-section">
+                                <section className={styles.reportSection}>
                                     <h3>Secciones del Reporte</h3>
-                                    <ul className="sections-list">
+                                    <ul className={styles.sectionsList}>
                                         {(content.customSections as string[]).map((section, i) => (
                                             <li key={i}>{section}</li>
                                         ))}
@@ -247,9 +247,9 @@ export function OwnerReportPreview({
                 </div>
 
                 <div className={styles['modal-footer']}>
-                    <div className="footer-left">
+                    <div className={styles.footerLeft}>
                         {onRegenerate && (
-                            <button type="button" className="btn btn--ghost" onClick={onRegenerate}>
+                            <button type="button" className={styles.btn + ' ' + styles['btn--ghost']} onClick={onRegenerate}>
                                 <X size={14} /> Regenerar
                             </button>
                         )}
@@ -258,7 +258,7 @@ export function OwnerReportPreview({
                         {onDownload && (
                             <button
                                 type="button"
-                                className="btn btn--secondary"
+                                className={`${styles.btn} ${styles['btn--secondary']}`}
                                 onClick={onDownload}
                             >
                                 <Download size={14} /> Descargar JSON
@@ -267,7 +267,7 @@ export function OwnerReportPreview({
                         {onSendEmail && (
                             <button
                                 type="button"
-                                className="btn btn--secondary"
+                                className={`${styles.btn} ${styles['btn--secondary']}`}
                                 onClick={onSendEmail}
                             >
                                 <Mail size={14} /> Enviar por email
@@ -276,13 +276,13 @@ export function OwnerReportPreview({
                         {onSendWhatsApp && (
                             <button
                                 type="button"
-                                className="btn btn--primary"
+                                className={`${styles.btn} ${styles['btn--primary']}`}
                                 onClick={onSendWhatsApp}
                             >
                                 <MessageSquare size={14} /> Enviar por WhatsApp
                             </button>
                         )}
-                        <button type="button" className="btn btn--ghost" onClick={onClose}>
+                        <button type="button" className={`${styles.btn} ${styles['btn--ghost']}`} onClick={onClose}>
                             Cerrar
                         </button>
                     </div>

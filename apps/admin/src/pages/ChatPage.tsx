@@ -7,7 +7,6 @@ import {
     Edit2,
     Home,
     Image,
-    Loader2,
     MessageSquare,
     MoreHorizontal,
     Paperclip,
@@ -37,7 +36,6 @@ import {
     sendMessage,
     subscribeToChannelMessages,
 } from '../lib/chat';
-import { useAskAiAssistant } from '../lib/chat.api';
 import { fetchAgents } from '../lib/agents';
 import { fetchProperties } from '../lib/properties';
 import { fetchLeads } from '../lib/leads';
@@ -45,6 +43,7 @@ import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ImageLightbox } from '../components/ImageLightbox';
+import { Button, IconButton, Spinner } from '@bienenhaus/ui';
 import styles from './ChatPage.module.css';
 
 export function ChatPage() {
@@ -64,7 +63,6 @@ export function ChatPage() {
     const messageInputRef = useRef<HTMLInputElement>(null);
     const [sending, setSending] = useState(false);
     const [aiThinking, setAiThinking] = useState(false);
-    const askAiAssistantMutation = useAskAiAssistant();
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -155,25 +153,12 @@ export function ChatPage() {
 
         setSending(true);
         try {
-            const sent = await sendMessage(selectedChannelId, currentUserId!, messageText.trim());
+            await sendMessage(selectedChannelId, currentUserId!, messageText.trim());
             setMessageText('');
             scrollToBottom();
 
             if (aiParticipant) {
                 setAiThinking(true);
-                askAiAssistantMutation.mutate(
-                    { channelId: selectedChannelId, messageId: sent.id },
-                    {
-                        onError: (err) => {
-                            setAiThinking(false);
-                            pushToast({
-                                type: 'error',
-                                title: 'No se pudo consultar al asistente',
-                                description: (err as Error).message,
-                            });
-                        },
-                    },
-                );
             }
         } catch (err) {
             pushToast({
@@ -352,22 +337,24 @@ export function ChatPage() {
                     <div className={styles['chat-sidebar-header']}>
                         <h2>Mensajes</h2>
                         <div className={styles['sidebar-actions']}>
-                            <button
-                                className="icon-btn"
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Crear conversación"
                                 onClick={() => {
                                     setCreateMode('direct');
                                     setShowCreateChannel(true);
                                 }}
                             >
                                 <Plus size={18} />
-                            </button>
+                            </IconButton>
                             {window.innerWidth < 768 && (
-                                <button
-                                    className="icon-btn"
+                                <IconButton
+                                    variant="ghost"
+                                    aria-label="Cerrar lista de conversaciones"
                                     onClick={() => setShowChannelList(false)}
                                 >
                                     <ChevronLeft size={18} />
-                                </button>
+                                </IconButton>
                             )}
                         </div>
                     </div>
@@ -478,12 +465,13 @@ export function ChatPage() {
                             <header className={styles['chat-header']}>
                                 <div className={styles['header-left']}>
                                     {window.innerWidth < 768 && (
-                                        <button
-                                            className="icon-btn"
+                                        <IconButton
+                                            variant="ghost"
+                                            aria-label="Volver a conversaciones"
                                             onClick={() => setShowChannelList(true)}
                                         >
                                             <ChevronLeft size={20} />
-                                        </button>
+                                        </IconButton>
                                     )}
                                     <div className={styles['header-avatar']}>
                                         {activeChannel?.type === 'direct' &&
@@ -528,16 +516,20 @@ export function ChatPage() {
                                     </div>
                                 </div>
                                 <div className={styles['header-actions']}>
-                                    <button className="icon-btn" title="Información del canal">
+                                    <IconButton
+                                        variant="ghost"
+                                        title="Información del canal"
+                                        aria-label="Información del canal"
+                                    >
                                         <MoreHorizontal size={18} />
-                                    </button>
+                                    </IconButton>
                                 </div>
                             </header>
 
                             <div className={styles['chat-messages']} role="log" aria-live="polite">
                                 {messagesPending ? (
                                     <div className={styles['messages-loading']}>
-                                        <Loader2 size={24} className="spin" />
+                                        <Spinner size="md" inline color="inherit" />
                                     </div>
                                 ) : messages && messages.length === 0 ? (
                                     <div className={styles['messages-empty']}>
@@ -549,18 +541,19 @@ export function ChatPage() {
                                     <>
                                         {hasMoreMessages && (
                                             <div className={styles['load-more-container']}>
-                                                <button
-                                                    className="btn btn--ghost btn--sm"
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
                                                     onClick={loadMoreMessages}
                                                     disabled={loadingMore}
                                                 >
                                                     {loadingMore ? (
-                                                        <Loader2 size={14} className="spin" />
+                                                        <Spinner size="sm" inline color="inherit" />
                                                     ) : (
                                                         <ChevronUp size={14} />
                                                     )}{' '}
                                                     Cargar más
-                                                </button>
+                                                </Button>
                                             </div>
                                         )}
                                         {messages?.map((msg, idx) => {
@@ -842,7 +835,7 @@ export function ChatPage() {
                                                 role="status"
                                                 aria-label="El asistente IA está escribiendo"
                                             >
-                                                <Loader2 size={14} className="spin" />
+                                                <Spinner size="sm" inline color="inherit" />
                                                 <span>Asistente escribiendo…</span>
                                             </div>
                                         )}
@@ -895,7 +888,7 @@ export function ChatPage() {
                                             disabled={!messageText.trim() || sending}
                                         >
                                             {sending ? (
-                                                <Loader2 size={18} className="spin" />
+                                                <Spinner size="sm" inline color="inherit" />
                                             ) : (
                                                 <Send size={18} />
                                             )}
@@ -909,15 +902,14 @@ export function ChatPage() {
                             <MessageSquare size={64} />
                             <h2>Bienvenido al Chat</h2>
                             <p>Seleccioná una conversación o creá una nueva para empezar.</p>
-                            <button
-                                className="btn btn--primary"
+                            <Button
                                 onClick={() => {
                                     setCreateMode('direct');
                                     setShowCreateChannel(true);
                                 }}
                             >
                                 <Plus size={16} /> Nueva conversación
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </main>
@@ -1150,8 +1142,8 @@ export function ChatPage() {
                             )}
 
                             <div className="form-actions">
-                                <button
-                                    className="btn btn--ghost"
+                                <Button
+                                    variant="ghost"
                                     onClick={() => {
                                         setShowCreateChannel(false);
                                         setSelectedAgentIds([]);
@@ -1159,9 +1151,8 @@ export function ChatPage() {
                                     }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
-                                    className="btn btn--primary"
+                                </Button>
+                                <Button
                                     onClick={handleCreateChannel}
                                     disabled={
                                         createMode === 'direct'
@@ -1177,7 +1168,7 @@ export function ChatPage() {
                                     }
                                 >
                                     Crear
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>

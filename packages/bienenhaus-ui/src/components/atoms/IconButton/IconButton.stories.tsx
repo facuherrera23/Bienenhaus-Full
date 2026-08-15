@@ -27,7 +27,7 @@ const meta: Meta<typeof IconButton> = {
             description: {
                 component:
                     'Square icon-only button atom. `aria-label` is required for accessibility. ' +
-                    'Three variants (ghost, outline, solid) × three sizes (sm 32px, md 40px, lg 48px).',
+                    'Four variants (ghost, outline, solid, danger) × three sizes (sm 32px, md 40px, lg 48px).',
             },
         },
     },
@@ -35,7 +35,7 @@ const meta: Meta<typeof IconButton> = {
     argTypes: {
         variant: {
             control: 'select',
-            options: ['ghost', 'outline', 'solid'],
+            options: ['ghost', 'outline', 'solid', 'danger'],
             description: 'Visual variant of the button',
         },
         size: {
@@ -81,6 +81,10 @@ export const Solid: Story = {
     args: { variant: 'solid', size: 'md' },
 };
 
+export const Danger: Story = {
+    args: { variant: 'danger', size: 'md' },
+};
+
 export const Small: Story = {
     args: { variant: 'ghost', size: 'sm' },
 };
@@ -105,7 +109,7 @@ export const Disabled: Story = {
 export const AllVariants: Story = {
     render: () => (
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {(['ghost', 'outline', 'solid'] as IconButtonVariant[]).map((v) => (
+            {(['ghost', 'outline', 'solid', 'danger'] as IconButtonVariant[]).map((v) => (
                 <IconButton key={v} variant={v} aria-label={v}>
                     <PlusIcon />
                 </IconButton>
@@ -130,7 +134,7 @@ export const AllSizes: Story = {
 /** Full matrix: every variant × every size. */
 export const AllVariantsAllSizes: Story = {
     render: () => {
-        const variants: IconButtonVariant[] = ['ghost', 'outline', 'solid'];
+        const variants: IconButtonVariant[] = ['ghost', 'outline', 'solid', 'danger'];
         const sizes: IconButtonSize[] = ['sm', 'md', 'lg'];
         return (
             <div

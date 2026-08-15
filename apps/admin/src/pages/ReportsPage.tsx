@@ -6,6 +6,7 @@ import { useCreateReport, useDeleteReport, useReports, useSendReport } from '@li
 import { pushToast } from '@store/app';
 import { OwnerReportGenerator, OwnerReportPreview } from '@components/owners';
 import { ConfirmDialog } from '@components/ConfirmDialog';
+import { Badge, Button, IconButton } from '@bienenhaus/ui';
 import { type ReportFormValues, type ReportType } from '@lib/owners/schemas';
 
 import { REPORT_TYPE_LABEL, type ReportRow } from '@/types/owners';
@@ -140,13 +141,12 @@ export function ReportsPage() {
                         Generá y enviá reportes automáticos a propietarios.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn--primary"
+                <Button
+                    variant="primary"
                     onClick={() => setShowGenerator(true)}
                 >
                     <Plus size={16} /> Generar reporte
-                </button>
+                </Button>
             </div>
 
             {showGenerator && (
@@ -192,13 +192,13 @@ export function ReportsPage() {
                         onInput={(e) => setSearch((e.currentTarget as HTMLInputElement).value)}
                     />
                 </div>
-                <button
-                    type="button"
-                    className={`btn btn--ghost${showFilters ? ' active' : ''}`}
+                <Button
+                    variant={showFilters ? 'secondary' : 'ghost'}
+                    size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                 >
                     <Filter size={15} /> Filtros
-                </button>
+                </Button>
             </div>
 
             {showFilters && (
@@ -265,13 +265,12 @@ export function ReportsPage() {
                             ? 'No se encontraron coincidencias.'
                             : 'No se han generado reportes.'}
                     </p>
-                    <button
-                        type="button"
-                        className="btn btn--primary"
+                    <Button
+                        variant="primary"
                         onClick={() => setShowGenerator(true)}
                     >
                         <Plus size={16} /> Generar primer reporte
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -297,18 +296,29 @@ export function ReportsPage() {
                                         <strong>{report.title || 'Sin título'}</strong>
                                     </td>
                                     <td>
-                                        <span className="badge badge--neutral">
+                                        <Badge variant="neutral" size="sm">
                                             {REPORT_TYPE_LABEL[report.report_type]}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td>{report.property_title ?? '—'}</td>
                                     <td>{report.owner_name ?? '—'}</td>
                                     <td>
-                                        <span
-                                            className={`badge badge--${report.status === 'draft' ? 'neutral' : report.status === 'sent' ? 'info' : report.status === 'delivered' ? 'info' : report.status === 'read' ? 'success' : 'danger'}`}
+                                        <Badge
+                                            variant={
+                                                report.status === 'draft'
+                                                    ? 'neutral'
+                                                    : report.status === 'sent'
+                                                      ? 'info'
+                                                      : report.status === 'delivered'
+                                                        ? 'info'
+                                                        : report.status === 'read'
+                                                          ? 'success'
+                                                          : 'danger'
+                                            }
+                                            size="sm"
                                         >
                                             {report.status}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td>{formatDateShort(report.generated_at)}</td>
                                     <td>
@@ -316,32 +326,36 @@ export function ReportsPage() {
                                     </td>
                                     <td>
                                         <div className="row-actions">
-                                            <button
-                                                className="icon-btn"
-                                                title="Ver"
+                                            <IconButton
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label="Ver"
                                                 onClick={() => setPreviewReport(report)}
                                             >
                                                 <FileText size={14} />
-                                            </button>
+                                            </IconButton>
                                             {report.status === 'draft' && (
-                                                <button
-                                                    className="icon-btn"
-                                                    title="Enviar por WhatsApp"
+                                                <IconButton
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    aria-label="Enviar por WhatsApp"
                                                     onClick={() => handleSend(report)}
                                                 >
                                                     <MessageSquare size={14} />
-                                                </button>
+                                                </IconButton>
                                             )}
-                                            <button
-                                                className="icon-btn"
-                                                title="Descargar JSON"
+                                            <IconButton
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label="Descargar JSON"
                                                 onClick={() => handleDownload(report)}
                                             >
                                                 <Download size={14} />
-                                            </button>
-                                            <button
-                                                className="icon-btn icon-btn--danger"
-                                                title="Eliminar"
+                                            </IconButton>
+                                            <IconButton
+                                                variant="danger"
+                                                size="sm"
+                                                aria-label="Eliminar"
                                                 onClick={() =>
                                                     setDeleteTarget({
                                                         reportId: report.id,
@@ -350,7 +364,7 @@ export function ReportsPage() {
                                                 }
                                             >
                                                 <Trash2 size={14} />
-                                            </button>
+                                            </IconButton>
                                         </div>
                                     </td>
                                 </tr>

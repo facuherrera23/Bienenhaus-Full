@@ -20,6 +20,7 @@ import {
 } from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, IconButton } from '@bienenhaus/ui';
 
 export function CommunicationsPage() {
     const [activeTab, setActiveTab] = useState<'all' | 'drafts' | 'sent'>('all');
@@ -191,9 +192,9 @@ export function CommunicationsPage() {
                     <h2 className="page-title">Comunicaciones</h2>
                     <p className="page-subtitle">Centro de comunicaciones con propietarios.</p>
                 </div>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--primary"
+                    variant="primary"
                     onClick={() => {
                         commMethods.reset({
                             owner_id: '',
@@ -207,7 +208,7 @@ export function CommunicationsPage() {
                     }}
                 >
                     <Plus size={16} /> Nueva comunicación
-                </button>
+                </Button>
             </div>
 
             <div className="tabs-bar" role="tablist">
@@ -234,16 +235,17 @@ export function CommunicationsPage() {
                     >
                         <div className="form-header">
                             <h3>{editingComm ? 'Editar comunicación' : 'Nueva comunicación'}</h3>
-                            <button
+                            <IconButton
                                 type="button"
-                                className="icon-btn"
+                                variant="ghost"
+                                aria-label="Cerrar"
                                 onClick={() => {
                                     setShowNewComm(false);
                                     setEditingComm(null);
                                 }}
                             >
                                 <X size={18} />
-                            </button>
+                            </IconButton>
                         </div>
 
                         <div className="form-grid">
@@ -303,30 +305,30 @@ export function CommunicationsPage() {
                         </div>
 
                         <div className="form-actions">
-                            <button
+                            <Button
                                 type="button"
-                                className="btn btn--ghost"
+                                variant="ghost"
                                 onClick={() => {
                                     setShowNewComm(false);
                                     setEditingComm(null);
                                 }}
                             >
                                 <X size={14} /> Cancelar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
-                                className="btn btn--secondary"
+                                variant="secondary"
                                 onClick={() => handleSaveDraft(commMethods.getValues())}
                             >
                                 Guardar borrador
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="submit"
-                                className="btn btn--primary"
+                                variant="primary"
                                 disabled={createCommunication.isPending}
                             >
                                 {createCommunication.isPending ? 'Enviando...' : 'Enviar'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -342,13 +344,13 @@ export function CommunicationsPage() {
                         onInput={(e) => setSearch((e.currentTarget as HTMLInputElement).value)}
                     />
                 </div>
-                <button
+                <Button
                     type="button"
-                    className={`btn btn--ghost${showFilters ? ' active' : ''}`}
+                    variant={showFilters ? 'secondary' : 'ghost'}
                     onClick={() => setShowFilters(!showFilters)}
                 >
                     <Filter size={15} /> Filtros
-                </button>
+                </Button>
             </div>
 
             {showFilters && (
@@ -410,13 +412,13 @@ export function CommunicationsPage() {
                             ? 'No se encontraron coincidencias.'
                             : 'No hay comunicaciones registradas.'}
                     </p>
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--primary"
+                        variant="primary"
                         onClick={() => setShowNewComm(true)}
                     >
                         <Plus size={16} /> Crear primera comunicación
-                    </button>
+                    </Button>
                 </div>
             )}
 

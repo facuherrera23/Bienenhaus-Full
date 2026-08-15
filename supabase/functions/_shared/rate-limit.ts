@@ -29,6 +29,8 @@ export const RATE_LIMIT_CONFIG = {
     'qr-checkin': { requests: 30, windowMs: 60_000 }, // 30/min - QR check-ins
     'visits-process-reminders': { requests: 10, windowMs: 60_000 }, // 10/min - cron job
     'chat-ai': { requests: 10, windowMs: 60_000 }, // 10/min - AI chat assistant
+    'chat-upload': { requests: 10, windowMs: 60_000 }, // 10/min - adjuntos de chat
+    'convert-image': { requests: 30, windowMs: 60_000 }, // 30/min - conversión de imágenes
 } as const;
 
 export type RateLimitFnName = keyof typeof RATE_LIMIT_CONFIG;

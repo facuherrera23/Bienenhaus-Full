@@ -114,6 +114,24 @@
     box-shadow: 0 0 0 3px var(--bh-accent-soft);
 }
 
+/* Danger — destructive action */
+.danger {
+    background-color: transparent;
+    color: var(--bh-danger);
+    border-color: var(--bh-danger-border);
+}
+
+.danger:hover:not(:disabled) {
+    background-color: var(--bh-danger-soft);
+    color: var(--bh-danger);
+    border-color: var(--bh-danger-border);
+}
+
+.danger:focus-visible {
+    outline-color: var(--bh-danger);
+    box-shadow: 0 0 0 3px var(--bh-danger-soft);
+}
+
 /* ============================================================
    ICON WRAPPER — centered, never shrinks
    ============================================================ */

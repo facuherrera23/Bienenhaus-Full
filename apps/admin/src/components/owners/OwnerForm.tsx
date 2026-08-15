@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { FileText, Mail, MapPin, User, X } from 'lucide-preact';
 import { type OwnerFormValues, ownerSchema } from '../../lib/owners/schemas';
 import { OWNER_PREFERRED_CONTACT_LABEL, OWNER_TYPE_LABEL } from '../../types/owners';
+import { Button } from '@bienenhaus/ui';
 
 interface OwnerFormProps {
     initialData?: OwnerFormValues;
@@ -252,18 +253,18 @@ export function OwnerForm({
 
             <div className="form-actions">
                 {onCancel && (
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--ghost"
+                        variant="ghost"
                         onClick={onCancel}
                         disabled={isLoading}
                     >
                         <X size={14} /> Cancelar
-                    </button>
+                    </Button>
                 )}
-                <button type="submit" className="btn btn--primary" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading}>
                     {isLoading ? 'Guardando...' : submitLabel}
-                </button>
+                </Button>
             </div>
         </form>
     );

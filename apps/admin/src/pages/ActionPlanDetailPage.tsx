@@ -43,6 +43,7 @@ import {
 import { pushToast } from '@/store/app';
 import { ActionPlanCard, ActionPlanTaskList } from '@components/owners';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—';
@@ -231,8 +232,10 @@ export function ActionPlanDetailPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/planes-accion" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/planes-accion">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Cargando plan…</div>
@@ -244,8 +247,10 @@ export function ActionPlanDetailPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/planes-accion" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/planes-accion">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Plan no encontrado</div>
@@ -262,30 +267,29 @@ export function ActionPlanDetailPage() {
     return (
         <div className="page action-plan-detail-page">
             <div className="page-head">
-                <Link href="/planes-accion" className="btn btn--ghost">
-                    <ArrowLeft size={16} /> Volver
+                <Link href="/planes-accion">
+                    <Button variant="ghost">
+                        <ArrowLeft size={16} /> Volver
+                    </Button>
                 </Link>
                 <div>
                     <h2 className="page-title">{plan.title}</h2>
                     <p className="page-subtitle">
-                        <span className={`badge badge--${ACTION_PLAN_STATUS_TONE[plan.status]}`}>
+                        <Badge variant={ACTION_PLAN_STATUS_TONE[plan.status] as BadgeVariant}>
                             {ACTION_PLAN_STATUS_LABEL[plan.status]}
-                        </span>
-                        <span
-                            className={`badge badge--${ACTION_PLAN_PRIORITY_TONE[plan.priority]}`}
-                        >
+                        </Badge>
+                        <Badge variant={ACTION_PLAN_PRIORITY_TONE[plan.priority] as BadgeVariant}>
                             {ACTION_PLAN_PRIORITY_LABEL[plan.priority]}
-                        </span>
-                        <span className="badge badge--neutral">
+                        </Badge>
+                        <Badge variant="neutral">
                             {ACTION_PLAN_CATEGORY_LABEL[plan.category]}
-                        </span>
+                        </Badge>
                     </p>
                 </div>
                 <div style="display:flex; gap:8px;">
                     {plan.status !== 'completed' && plan.deleted_at === null && (
-                        <button
-                            type="button"
-                            className="btn btn--success"
+                        <Button
+                            variant="success"
                             onClick={() =>
                                 setConfirmAction({
                                     title: 'Completar plan',
@@ -297,12 +301,11 @@ export function ActionPlanDetailPage() {
                             disabled={completeActionPlan.isPending}
                         >
                             <Check size={16} /> Completar
-                        </button>
+                        </Button>
                     )}
                     {plan.deleted_at === null && !editingPlan && (
-                        <button
-                            type="button"
-                            className="btn btn--secondary"
+                        <Button
+                            variant="secondary"
                             onClick={() => {
                                 planMethods.reset({
                                     title: plan.title,
@@ -316,12 +319,11 @@ export function ActionPlanDetailPage() {
                             }}
                         >
                             <Edit size={16} /> Editar
-                        </button>
+                        </Button>
                     )}
                     {plan.deleted_at === null && (
-                        <button
-                            type="button"
-                            className="btn btn--danger"
+                        <Button
+                            variant="danger"
                             onClick={() =>
                                 setConfirmAction({
                                     title: 'Enviar a papelera',
@@ -334,21 +336,19 @@ export function ActionPlanDetailPage() {
                             disabled={softDeleteActionPlan.isPending}
                         >
                             <Trash2 size={16} /> Papelera
-                        </button>
+                        </Button>
                     )}
                     {plan.deleted_at !== null && (
                         <>
-                            <button
-                                type="button"
-                                className="btn btn--secondary"
+                            <Button
+                                variant="secondary"
                                 onClick={handleRestore}
                                 disabled={restoreActionPlan.isPending}
                             >
                                 <RotateCcw size={16} /> Restaurar
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn--danger"
+                            </Button>
+                            <Button
+                                variant="danger"
                                 onClick={() =>
                                     setConfirmAction({
                                         title: 'Eliminar permanentemente',
@@ -361,7 +361,7 @@ export function ActionPlanDetailPage() {
                                 disabled={permanentDeleteActionPlan.isPending}
                             >
                                 <Trash2 size={16} /> Eliminar
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
@@ -375,9 +375,13 @@ export function ActionPlanDetailPage() {
                     >
                         <div className="form-header">
                             <h3>Editar plan</h3>
-                            <button type="button" className="icon-btn" onClick={handleCancelEdit}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar edición"
+                                onClick={handleCancelEdit}
+                            >
                                 <X size={18} />
-                            </button>
+                            </IconButton>
                         </div>
 
                         <div className="form-grid">
@@ -438,20 +442,19 @@ export function ActionPlanDetailPage() {
                         </div>
 
                         <div className="form-actions">
-                            <button
-                                type="button"
-                                className="btn btn--ghost"
+                            <Button
+                                variant="ghost"
                                 onClick={handleCancelEdit}
                             >
                                 <X size={14} /> Cancelar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="primary"
                                 type="submit"
-                                className="btn btn--primary"
                                 disabled={updateActionPlan.isPending}
                             >
                                 {updateActionPlan.isPending ? 'Guardando...' : 'Guardar cambios'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -578,13 +581,13 @@ export function ActionPlanDetailPage() {
             <div className="tasks-section">
                 <div className="section-header">
                     <h3>Tareas del plan</h3>
-                    <button
-                        type="button"
-                        className="btn btn--primary btn--sm"
+                    <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => setShowNewTask(true)}
                     >
                         <Plus size={14} /> Nueva tarea
-                    </button>
+                    </Button>
                 </div>
 
                 {showNewTask && (
@@ -592,13 +595,13 @@ export function ActionPlanDetailPage() {
                         <form onSubmit={taskMethods.handleSubmit(handleTaskSubmit)}>
                             <div className="form-header">
                                 <h4>Nueva tarea</h4>
-                                <button
-                                    type="button"
-                                    className="icon-btn"
+                                <IconButton
+                                    variant="ghost"
+                                    aria-label="Cerrar formulario de tarea"
                                     onClick={() => setShowNewTask(false)}
                                 >
                                     <X size={18} />
-                                </button>
+                                </IconButton>
                             </div>
 
                             <div className="form-grid">
@@ -634,20 +637,19 @@ export function ActionPlanDetailPage() {
                             </div>
 
                             <div className="form-actions">
-                                <button
-                                    type="button"
-                                    className="btn btn--ghost"
+                                <Button
+                                    variant="ghost"
                                     onClick={() => setShowNewTask(false)}
                                 >
                                     <X size={14} /> Cancelar
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="primary"
                                     type="submit"
-                                    className="btn btn--primary"
                                     disabled={createTask.isPending}
                                 >
                                     {createTask.isPending ? 'Creando...' : 'Crear tarea'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

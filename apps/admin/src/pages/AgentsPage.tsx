@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Mail, Pencil, Phone, Plus } from 'lucide-preact';
 import { Link } from 'wouter-preact';
+import { Button, Badge } from '@bienenhaus/ui';
 import { type AgentRow, useAgents, useToggleAgentActive } from '../lib/agents.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
@@ -55,8 +56,10 @@ export function AgentsPage() {
                         Equipo de asesores que aparece en la landing y recibe leads.
                     </p>
                 </div>
-                <Link href="/agentes/nueva" className="btn btn--primary">
-                    <Plus size={16} /> Nuevo agente
+                <Link href="/agentes/nueva">
+                    <Button variant="primary" size="md" iconLeft={<Plus size={16} />}>
+                        Nuevo agente
+                    </Button>
                 </Link>
             </div>
 
@@ -89,11 +92,9 @@ export function AgentsPage() {
                                         </span>
                                     )}
                                 </div>
-                                <span
-                                    className={`badge badge--${a.is_active ? 'success' : 'neutral'}`}
-                                >
+                                <Badge variant={a.is_active ? 'success' : 'neutral'} size="sm">
                                     {a.is_active ? 'Activo' : 'Inactivo'}
-                                </span>
+                                </Badge>
                             </div>
 
                             <div className={styles['agent-card-contact']}>
@@ -121,15 +122,18 @@ export function AgentsPage() {
                                     {a.lead_count === 1 ? '' : 's'}
                                 </span>
                                 <div className={styles['agent-card-actions']}>
-                                    <button
-                                        className="btn btn--ghost"
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={() => handleToggleActive(a)}
                                         disabled={togglingId === a.id}
                                     >
                                         {a.is_active ? 'Desactivar' : 'Activar'}
-                                    </button>
-                                    <Link href={`/agentes/${a.id}`} className="btn btn--secondary">
-                                        <Pencil size={14} /> Editar
+                                    </Button>
+                                    <Link href={`/agentes/${a.id}`}>
+                                        <Button variant="secondary" size="sm" iconLeft={<Pencil size={14} />}>
+                                            Editar
+                                        </Button>
                                     </Link>
                                 </div>
                             </div>

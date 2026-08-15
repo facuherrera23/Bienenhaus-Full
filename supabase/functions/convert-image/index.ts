@@ -1,5 +1,6 @@
 import sharp from 'npm:sharp@0.33';
 import { corsHeaders, jsonResponse, optionsResponse } from '../_shared/http.ts';
+import { rateLimitMiddleware } from '../_shared/rate-limit.ts';
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -10,6 +11,10 @@ Deno.serve(async (req) => {
     if (req.method !== 'POST') {
         return jsonResponse(405, { error: 'Method not allowed' }, req);
     }
+
+    // Protección DoS: sharp es CPU-intensivo, limitar por IP.
+    const rl = await rateLimitMiddleware('convert-image', req);
+    if (rl) return rl;
 
     try {
         const formData = await req.formData();

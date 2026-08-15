@@ -16,6 +16,7 @@ import {
 } from '../../lib/owners/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { Button, IconButton } from '@bienenhaus/ui';
 
 interface PropertyOwnerManagerProps {
     propertyId: string;
@@ -117,14 +118,15 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
         <div className="property-owner-manager">
             <div className="manager-header">
                 <h3>Propietarios de esta propiedad</h3>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--primary btn--sm"
+                    variant="primary"
+                    size="sm"
                     onClick={() => setShowAddModal(true)}
                     disabled={linkMutation.isPending}
                 >
                     <Plus size={14} /> Agregar propietario
-                </button>
+                </Button>
             </div>
 
             {linkedOwners && linkedOwners.length > 0 && (
@@ -209,9 +211,9 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                                         )}
                                     </td>
                                     <td>
-                                        <button
+                                        <IconButton
                                             type="button"
-                                            className="icon-btn icon-btn--danger"
+                                            variant="danger"
                                             onClick={() =>
                                                 setUnlinkTarget({
                                                     ownerId: owner.owner_id,
@@ -220,9 +222,10 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                                             }
                                             disabled={unlinkMutation.isPending}
                                             title="Desvincular"
+                                            aria-label="Desvincular"
                                         >
                                             <Trash2 size={14} />
-                                        </button>
+                                        </IconButton>
                                     </td>
                                 </tr>
                             ))}
@@ -234,13 +237,14 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
             {linkedOwners && linkedOwners.length === 0 && (
                 <div className="empty-state">
                     <p>No hay propietarios vinculados a esta propiedad.</p>
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--primary btn--sm"
+                        variant="primary"
+                        size="sm"
                         onClick={() => setShowAddModal(true)}
                     >
                         <Plus size={14} /> Agregar primer propietario
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -250,13 +254,14 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>Agregar propietario</h3>
-                            <button
+                            <IconButton
                                 type="button"
-                                className="icon-btn"
+                                variant="ghost"
                                 onClick={() => setShowAddModal(false)}
+                                aria-label="Cerrar"
                             >
                                 <X size={18} />
-                            </button>
+                            </IconButton>
                         </div>
 
                         <form onSubmit={methods.handleSubmit(handleSubmit)} className="modal-body">
@@ -351,22 +356,21 @@ export function PropertyOwnerManager({ propertyId, onOwnersChange }: PropertyOwn
                             )}
 
                             <div className="modal-actions">
-                                <button
+                                <Button
                                     type="button"
-                                    className="btn btn--ghost"
+                                    variant="ghost"
                                     onClick={() => setShowAddModal(false)}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="submit"
-                                    className="btn btn--primary"
                                     disabled={!selectedOwnerId || linkMutation.isPending}
                                 >
                                     {linkMutation.isPending
                                         ? 'Vinculando...'
                                         : 'Vincular propietario'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

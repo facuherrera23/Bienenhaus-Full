@@ -12,7 +12,8 @@ import {
     UserCheck,
     Users,
 } from 'lucide-preact';
-import { Link } from 'wouter-preact';
+import { Link, useLocation } from 'wouter-preact';
+import { Button } from '@bienenhaus/ui';
 import { QuickPropertyActions } from '../components/QuickPropertyActions';
 import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
@@ -96,6 +97,7 @@ function useScrollReveal<T extends HTMLElement = HTMLDivElement>(threshold: numb
 }
 
 export function Dashboard() {
+    const [, setLocation] = useLocation();
     const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
     const { data: propertiesResult, isPending: propsPending } = useProperties({ pageSize: 1000 });
     const { data: actionPlansResult, isPending: plansPending } = useActionPlans({ pageSize: 1000 });
@@ -209,22 +211,24 @@ export function Dashboard() {
     ];
 
     return (
-        <div className={`page ${styles.dashboardPage}`} ref={sectionRef}>
+        <div className={styles.dashboardPage} ref={sectionRef}>
             <div className="page-head">
                 <div>
-                    <h2 className="page-title animate-fade-up animate-duration-normal">
+                    <h2 className="page-title">
                         Dashboard
                     </h2>
-                    <p className="page-subtitle animate-fade-up animate-delay-100">
+                    <p className="page-subtitle">
                         Vista general de tu negocio inmobiliario en tiempo real.
                     </p>
                 </div>
-                <Link
-                    href="/propiedades"
-                    className="btn btn--secondary animate-fade-up animate-delay-200"
+                <Button
+                    variant="secondary"
+                    size="md"
+                    iconRight={<ArrowUpRight size={16} />}
+                    onClick={() => setLocation('/propiedades', { replace: true })}
                 >
-                    Ver propiedades <ArrowUpRight size={16} />
-                </Link>
+                    Ver propiedades
+                </Button>
             </div>
 
             {loading && (
@@ -256,29 +260,29 @@ export function Dashboard() {
                             Indicadores Clave
                         </h3>
                         <div className={styles.kpiGrid}>
-                            {kpis.map((kpi) => (
-                                <article
-                                    key={kpi.label}
-                                    className={`${styles.kpiCard} ${styles[`kpiCard--${kpi.tone}`]} ${sectionVisible ? styles.kpiReveal : ''}`}
-                                    role="region"
-                                    aria-label={`KPI: ${kpi.label}`}
-                                    style={{ '--reveal-delay': `${kpi.delay}ms` } as JSX.CSSProperties}
-                                >
-                                    <span className={styles.kpiIcon} aria-hidden="true">
-                                        <kpi.icon size={20} strokeWidth={1.8} />
-                                    </span>
-                                    <div className={styles.kpiContent}>
-                                        <p className={styles.kpiLabel}>{kpi.label}</p>
-                                        <p className={styles.kpiValue}>
-                                            <span className={styles.countUp}>
-                                                {kpi.value === '—' ? '—' : kpi.value}
-                                            </span>
-                                        </p>
-                                        <p className={styles.kpiDelta}>{kpi.delta}</p>
-                                    </div>
-                                    <span className={styles.kpiAccent} aria-hidden="true" />
-                                </article>
-                            ))}
+{kpis.map((kpi) => (
+                                    <article
+                                        key={kpi.label}
+                                        className={`${styles.kpiCard} ${styles['kpiCard--' + kpi.tone]} ${sectionVisible ? styles.kpiReveal : ''}`}
+                                        role="region"
+                                        aria-label={`KPI: ${kpi.label}`}
+                                        style={{ '--reveal-delay': `${kpi.delay}ms` } as JSX.CSSProperties}
+                                    >
+                                        <span className={styles.kpiIcon} aria-hidden="true">
+                                            <kpi.icon size={20} strokeWidth={1.8} />
+                                        </span>
+                                        <div className={styles.kpiContent}>
+                                            <p className={styles.kpiLabel}>{kpi.label}</p>
+                                            <p className={styles.kpiValue}>
+                                                <span className={styles.countUp}>
+                                                    {kpi.value === '—' ? '—' : kpi.value}
+                                                </span>
+                                            </p>
+                                            <p className={styles.kpiDelta}>{kpi.delta}</p>
+                                        </div>
+                                        <span className={styles.kpiAccent} aria-hidden="true" />
+                                    </article>
+                                ))}
                         </div>
                     </section>
 

@@ -1,5 +1,6 @@
 import { useEffect } from 'preact/hooks';
 import { X } from 'lucide-preact';
+import { Button, IconButton } from '@bienenhaus/ui';
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -44,23 +45,27 @@ export function ConfirmDialog({
             >
                 <div className="modal-head">
                     <h3 id="confirm-dialog-title">{title}</h3>
-                    <button className="icon-btn" onClick={onCancel} aria-label="Cerrar">
+                    <IconButton
+                        variant="ghost"
+                        onClick={onCancel}
+                        aria-label="Cerrar"
+                    >
                         <X size={20} />
-                    </button>
+                    </IconButton>
                 </div>
                 <div className="modal-body">
                     <p>{message}</p>
                     <div className="modal-actions">
-                        <button type="button" className="btn btn--ghost" onClick={onCancel}>
+                        <Button type="button" variant="ghost" onClick={onCancel}>
                             {cancelLabel}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
-                            className={danger ? 'btn btn--danger' : 'btn btn--primary'}
+                            variant={danger ? 'danger' : 'primary'}
                             onClick={onConfirm}
                         >
                             {confirmLabel}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

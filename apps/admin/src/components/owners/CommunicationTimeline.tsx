@@ -8,6 +8,7 @@ import {
     type CommunicationType,
 } from '../../types/owners';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
 
 interface CommunicationTimelineProps {
     communications: CommunicationRow[];
@@ -82,11 +83,13 @@ export function CommunicationTimeline({
                                         <span>{COMMUNICATION_TYPE_LABEL[comm.type]}</span>
                                     </div>
                                     <div className="timeline-meta">
-                                        <span
-                                            className={`badge badge--${COMMUNICATION_STATUS_TONE[comm.status]}`}
+                                        <Badge
+                                            variant={
+                                                COMMUNICATION_STATUS_TONE[comm.status] as BadgeVariant
+                                            }
                                         >
                                             {COMMUNICATION_STATUS_LABEL[comm.status]}
-                                        </span>
+                                        </Badge>
                                         <time dateTime={comm.created_at}>
                                             {formatDate(comm.created_at)}
                                         </time>
@@ -125,46 +128,50 @@ export function CommunicationTimeline({
                                         </a>
                                     )}
                                     {comm.status === 'draft' && onResend && (
-                                        <button
+                                        <Button
                                             type="button"
-                                            className="btn btn--ghost btn--sm"
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => onResend(comm.id)}
                                         >
                                             <Send size={14} /> Enviar
-                                        </button>
+                                        </Button>
                                     )}
                                     {comm.status === 'failed' && onResend && (
-                                        <button
+                                        <Button
                                             type="button"
-                                            className="btn btn--ghost btn--sm btn--danger"
+                                            variant="danger"
+                                            size="sm"
                                             onClick={() => onResend(comm.id)}
                                         >
                                             <X size={14} /> Reintentar
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
 
                                 {(onEdit || onDelete) && (
                                     <div className="timeline-actions">
                                         {onEdit && (
-                                            <button
+                                            <IconButton
                                                 type="button"
-                                                className="icon-btn"
+                                                variant="ghost"
                                                 onClick={() => onEdit(comm)}
                                                 title="Editar"
+                                                aria-label="Editar"
                                             >
                                                 <FileText size={14} />
-                                            </button>
+                                            </IconButton>
                                         )}
                                         {onDelete && (
-                                            <button
+                                            <IconButton
                                                 type="button"
-                                                className="icon-btn icon-btn--danger"
+                                                variant="danger"
                                                 onClick={() => setConfirmDeleteId(comm.id)}
                                                 title="Eliminar"
+                                                aria-label="Eliminar"
                                             >
                                                 <X size={14} />
-                                            </button>
+                                            </IconButton>
                                         )}
                                     </div>
                                 )}

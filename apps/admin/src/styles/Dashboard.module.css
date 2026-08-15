@@ -309,3 +309,15 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================================
+   KEYFRAMES LOCALES — antes definidos en animations.module.css
+   (módulo eliminado en Fase 0). Copiados tal cual para que el
+   loader del Dashboard vuelva a funcionar.
+   ============================================================ */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

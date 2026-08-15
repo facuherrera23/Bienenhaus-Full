@@ -3,12 +3,16 @@ import { Calendar, Check, FileText, type LucideIcon, Plus, TrendingUp, X } from 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReportFormValues, reportSchema, type ReportType } from '../../lib/owners/schemas';
+import { Badge, type BadgeVariant } from '@bienenhaus/ui';
 import {
+    ACTION_PLAN_STATUS_TONE,
     type ActionPlanRow,
     type CommunicationRow,
     type PriceAnalysisRow,
+    PRICE_STATUS_TONE,
     REPORT_TYPE_LABEL,
 } from '../../types/owners';
+import styles from '../../styles/OwnerReportGenerator.module.css';
 
 interface OwnerReportGeneratorProps {
     propertyId: string;
@@ -193,9 +197,9 @@ export function OwnerReportGenerator({
     });
 
     const renderStepType = () => (
-        <div className="report-step">
+        <div className={styles.reportStep}>
             <h3>Seleccionar tipo de reporte</h3>
-            <div className="report-types-grid">
+            <div className={styles.reportTypesGrid}>
                 {(Object.keys(REPORT_TEMPLATES) as ReportType[]).map((type) => {
                     const template = REPORT_TEMPLATES[type];
                     const Icon = template.icon;
@@ -203,13 +207,13 @@ export function OwnerReportGenerator({
                         <button
                             key={type}
                             type="button"
-                            className={`report-type-card${selectedType === type ? ' selected' : ''}`}
+                            className={styles.reportTypeCard + (selectedType === type ? ' ' + styles.selected : '')}
                             onClick={() => handleTypeSelect(type)}
                         >
                             <Icon size={28} />
                             <h4>{REPORT_TYPE_LABEL[type]}</h4>
                             <p>{template.description}</p>
-                            <ul className="sections-preview">
+                            <ul className={styles.sectionsPreview}>
                                 {template.sections.map((s) => (
                                     <li key={s}>{s}</li>
                                 ))}
@@ -221,21 +225,21 @@ export function OwnerReportGenerator({
         </div>
     );
 
-    const renderStepConfigure = () => {
+const renderStepConfigure = () => {
         const template = REPORT_TEMPLATES[selectedType];
         const Icon = template.icon;
 
         return (
-            <div className="report-step">
-                <div className="step-header">
-                    <button type="button" className="icon-btn" onClick={handleBack}>
+            <div className={styles.reportStep}>
+                <div className={styles.stepHeader}>
+                    <button type="button" className={styles.iconBtn} onClick={handleBack}>
                         <X size={18} />
                     </button>
                     <Icon size={28} />
                     <h3>{REPORT_TYPE_LABEL[selectedType]}</h3>
                 </div>
 
-                <div className="form-field">
+                <div className={styles.formField}>
                     <label htmlFor="title">Título del reporte</label>
                     <input
                         id="title"
@@ -246,11 +250,11 @@ export function OwnerReportGenerator({
                 </div>
 
                 {selectedType === 'custom' && (
-                    <div className="custom-sections">
+                    <div className={styles.customSections}>
                         <h4>Secciones personalizadas</h4>
-                        <div className="section-inputs">
+                        <div className={styles.sectionInputs}>
                             {customSections.map((section, i) => (
-                                <div key={i} className="section-input-row">
+                                <div key={i} className={styles.sectionInputRow}>
                                     <input
                                         type="text"
                                         value={section}
@@ -265,7 +269,7 @@ export function OwnerReportGenerator({
                                     />
                                     <button
                                         type="button"
-                                        className="icon-btn icon-btn--danger"
+                                        className={styles.iconBtnDanger}
                                         onClick={() => {
                                             setCustomSections(
                                                 customSections.filter((_, idx) => idx !== i),
@@ -278,14 +282,14 @@ export function OwnerReportGenerator({
                             ))}
                             <button
                                 type="button"
-                                className="btn btn--ghost btn--sm"
+                                className={styles.btnBtnGhostBtnSm}
                                 onClick={() => setCustomSections([...customSections, ''])}
                             >
                                 <Plus size={14} /> Agregar sección
                             </button>
                         </div>
 
-                        <div className="form-field">
+                        <div className={styles.formField}>
                             <label htmlFor="custom_content">Contenido adicional (Markdown)</label>
                             <textarea
                                 id="custom_content"
@@ -300,7 +304,7 @@ export function OwnerReportGenerator({
                     </div>
                 )}
 
-                <div className="included-data">
+                <div className={styles.includedData}>
                     <h4>Datos que se incluirán automáticamente:</h4>
                     <ul>
                         {template.sections.map((s) => (
@@ -314,11 +318,11 @@ export function OwnerReportGenerator({
                     </ul>
                 </div>
 
-                <div className="step-actions">
-                    <button type="button" className="btn btn--ghost" onClick={handleBack}>
+                <div className={styles.stepActions}>
+                    <button type="button" className={styles.btnBtnGhost} onClick={handleBack}>
                         Volver
                     </button>
-                    <button type="button" className="btn btn--primary" onClick={handlePreview}>
+                    <button type="button" className={styles.btnBtnPrimary} onClick={handlePreview}>
                         <Check size={14} /> Generar vista previa
                     </button>
                 </div>
@@ -326,143 +330,145 @@ export function OwnerReportGenerator({
         );
     };
 
-    const renderStepPreview = () => (
-        <div className="report-step report-preview">
-            <div className="step-header">
-                <button type="button" className="icon-btn" onClick={handleBack}>
-                    <X size={18} />
-                </button>
-                <FileText size={28} />
-                <h3>Vista previa del reporte</h3>
-            </div>
-
-            <div className="preview-content">
-                <div className="preview-header">
-                    <h2>{methods.getValues('title') || 'Reporte sin título'}</h2>
-                    <div className="preview-meta">
-                        <span>
-                            Tipo:{' '}
-                            {REPORT_TYPE_LABEL[methods.getValues('report_type') as ReportType]}
-                        </span>
-                        <span>Generado: {new Date().toLocaleString('es-AR')}</span>
-                    </div>
+const renderStepPreview = () => {
+        return (
+            <div className={styles.reportStepReportPreview}>
+                <div className={styles.stepHeader}>
+                    <button type="button" className={styles.iconBtn} onClick={handleBack}>
+                        <X size={18} />
+                    </button>
+                    <FileText size={28} />
+                    <h3>Vista previa del reporte</h3>
                 </div>
 
-                <div className="preview-body">
-                    {selectedType === 'price_analysis' && priceAnalysis && (
-                        <div className="preview-section">
-                            <h3>Análisis de Precio</h3>
-                            <div className="price-summary">
-                                <div className="price-row">
-                                    <span>Precio publicación:</span>
-                                    <strong>
-                                        ${priceAnalysis.our_listing_price.toLocaleString('es-AR')}
-                                    </strong>
-                                </div>
-                                <div className="price-row">
-                                    <span>Precio mercado estimado:</span>
-                                    <strong>
-                                        $
-                                        {priceAnalysis.estimated_market_price.toLocaleString(
-                                            'es-AR',
-                                        )}
-                                    </strong>
-                                </div>
-                                <div className="price-row highlight">
-                                    <span>Diferencia:</span>
-                                    <strong className={`status-${priceAnalysis.price_status}`}>
-                                        {priceAnalysis.price_difference_pct >= 0 ? '+' : ''}
-                                        {priceAnalysis.price_difference_pct.toFixed(2)}%
-                                    </strong>
-                                </div>
-                                <div className="price-row">
-                                    <span>Estado:</span>
-                                    <span className={`badge badge--${priceAnalysis.price_status}`}>
-                                        {priceAnalysis.price_status}
-                                    </span>
-                                </div>
-                                {priceAnalysis.recommendation && (
-                                    <div className="recommendation">
-                                        <strong>Recomendación:</strong>{' '}
-                                        {priceAnalysis.recommendation}
-                                    </div>
-                                )}
-                            </div>
+                <div className={styles.previewContent}>
+                    <div className={styles.previewHeader}>
+                        <h2>{methods.getValues('title') || 'Reporte sin título'}</h2>
+                        <div className={styles.previewMeta}>
+                            <span>
+                                Tipo:{' '}
+                                {REPORT_TYPE_LABEL[methods.getValues('report_type') as ReportType]}
+                            </span>
+                            <span>Generado: {new Date().toLocaleString('es-AR')}</span>
                         </div>
-                    )}
+                    </div>
 
-                    {(selectedType === 'weekly' || selectedType === 'monthly') &&
-                        actionPlans.length > 0 && (
-                            <div className="preview-section">
+                    <div className={styles.previewBody}>
+                        {selectedType === 'price_analysis' && priceAnalysis && (
+                            <div className={styles.previewSection}>
+                                <h3>Análisis de Precio</h3>
+                                <div className={styles.priceSummary}>
+                                    <div className={styles.priceRow}>
+                                        <span>Precio publicación:</span>
+                                        <strong>
+                                            ${priceAnalysis.our_listing_price.toLocaleString('es-AR')}
+                                        </strong>
+                                    </div>
+                                    <div className={styles.priceRow}>
+                                        <span>Precio mercado estimado:</span>
+                                        <strong>
+                                            $
+                                            {priceAnalysis.estimated_market_price.toLocaleString(
+                                                'es-AR',
+                                            )}
+                                        </strong>
+                                    </div>
+                                    <div className={`${styles.priceRow} ${styles.highlight}`}>
+                                        <span>Diferencia:</span>
+                                        <strong className={`status-${priceAnalysis.price_status}`}>
+                                            {priceAnalysis.price_difference_pct >= 0 ? '+' : ''}
+                                            {priceAnalysis.price_difference_pct.toFixed(2)}%
+                                        </strong>
+                                    </div>
+                                    <div className={styles.priceRow}>
+                                        <span>Estado:</span>
+                                        <Badge variant={PRICE_STATUS_TONE[priceAnalysis.price_status] as BadgeVariant}>
+                                            {priceAnalysis.price_status}
+                                        </Badge>
+                                    </div>
+                                    {priceAnalysis.recommendation && (
+                                        <div className={styles.recommendation}>
+                                            <strong>Recomendación:</strong>{' '}
+                                            {priceAnalysis.recommendation}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {(selectedType === 'weekly' || selectedType === 'monthly') &&
+                            actionPlans.length > 0 && (
+                            <div className={styles.previewSection}>
                                 <h3>Planes de Acción ({actionPlans.length})</h3>
-                                <ul className="plans-preview">
+                                <ul className={styles.plansPreview}>
                                     {actionPlans.map((p) => (
                                         <li key={p.id}>
-                                            <span className="plan-title">{p.title}</span>
-                                            <span className={`badge badge--${p.status}`}>
+                                            <span className={styles.planTitle}>{p.title}</span>
+                                            <Badge variant={ACTION_PLAN_STATUS_TONE[p.status] as BadgeVariant}>
                                                 {p.status}
-                                            </span>
+                                            </Badge>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
 
-                    {communications.length > 0 && (
-                        <div className="preview-section">
-                            <h3>Comunicaciones Recientes ({communications.length})</h3>
-                            <ul className="communications-preview">
-                                {communications.slice(0, 5).map((c) => (
-                                    <li key={c.id}>
-                                        <span>
-                                            {c.type}: {c.subject || 'Sin asunto'}
-                                        </span>
-                                        <time>
-                                            {new Date(c.created_at).toLocaleDateString('es-AR')}
-                                        </time>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                        {communications.length > 0 && (
+                            <div className={styles.previewSection}>
+                                <h3>Comunicaciones Recientes ({communications.length})</h3>
+                                <ul className={styles.communicationsPreview}>
+                                    {communications.slice(0, 5).map((c) => (
+                                        <li key={c.id}>
+                                            <span>
+                                                {c.type}: {c.subject || 'Sin asunto'}
+                                            </span>
+                                            <time>
+                                                {new Date(c.created_at).toLocaleDateString('es-AR')}
+                                            </time>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
-                    {selectedType === 'custom' && customContent && (
-                        <div className="preview-section">
-                            <h3>Contenido Personalizado</h3>
-                            <div
-                                className="custom-content-preview"
-                                dangerouslySetInnerHTML={{ __html: customContent }}
-                            />
-                        </div>
-                    )}
+                        {selectedType === 'custom' && customContent && (
+                            <div className={styles.previewSection}>
+                                <h3>Contenido Personalizado</h3>
+                                <div
+                                    className={styles.customContentPreview}
+                                    dangerouslySetInnerHTML={{ __html: customContent }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className={styles.stepActions}>
+                    <button type="button" className={styles.btnBtnGhost} onClick={handleBack}>
+                        Editar
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.btnBtnPrimary}
+                        onClick={() => handleSubmit()}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Generando...' : 'Generar reporte'}
+                    </button>
                 </div>
             </div>
-
-            <div className="step-actions">
-                <button type="button" className="btn btn--ghost" onClick={handleBack}>
-                    Editar
-                </button>
-                <button
-                    type="button"
-                    className="btn btn--primary"
-                    onClick={() => handleSubmit()}
-                    disabled={isLoading}
-                >
-                    {isLoading ? 'Generando...' : 'Generar reporte'}
-                </button>
-            </div>
-        </div>
-    );
+        );
+    };
 
     return (
-        <div className="owner-report-generator">
+        <div className={styles.ownerReportGenerator}>
             {step === 'type' && renderStepType()}
             {step === 'configure' && renderStepConfigure()}
             {step === 'preview' && renderStepPreview()}
 
-            <form onSubmit={handleSubmit} className="hidden-form">
+            <form onSubmit={handleSubmit} className={styles.hiddenForm}>
                 {methods.formState.errors.title && (
-                    <span className="error">{methods.formState.errors.title.message}</span>
+                    <span className={styles.error}>{methods.formState.errors.title.message}</span>
                 )}
             </form>
         </div>

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { Button } from './Button';
+import styles from './Button.module.css';
 
 describe('Button', () => {
     const defaultProps = {
@@ -16,13 +17,10 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
     });
 
-    it('applies variant classes', () => {
-        const { container } = render(
-            <Button {...defaultProps} variant="secondary">
-                Secondary
-            </Button>,
-        );
-        expect(container.firstChild).toHaveClass('btn--secondary');
+    it('applies base + variant + size classes', () => {
+        const { container } = render(<Button {...defaultProps} variant="secondary" />);
+        expect(container.firstChild).toHaveClass(styles.btn);
+        expect(container.firstChild).toHaveClass(styles['btn--secondary']);
     });
 
     it('applies size classes', () => {
@@ -31,7 +29,7 @@ describe('Button', () => {
                 Large
             </Button>,
         );
-        expect(container.firstChild).toHaveClass('btn--lg');
+        expect(container.firstChild).toHaveClass(styles['btn--lg']);
     });
 
     it('calls onClick when clicked', () => {
@@ -66,12 +64,12 @@ describe('Button', () => {
 
     it('applies fullWidth class', () => {
         const { container } = render(<Button {...defaultProps} fullWidth />);
-        expect(container.firstChild).toHaveClass('btn--block');
+        expect(container.firstChild).toHaveClass(styles['btn--block']);
     });
 
     it('applies rounded class', () => {
         const { container } = render(<Button {...defaultProps} rounded />);
-        expect(container.firstChild).toHaveClass('btn--rounded');
+        expect(container.firstChild).toHaveClass(styles['btn--rounded']);
     });
 
     it('forwards ref', () => {
@@ -89,14 +87,38 @@ describe('Button', () => {
         'success',
         'warning',
         'link',
+        'icon',
     ] as const)('renders variant %s', (variant) => {
         const { container } = render(<Button {...defaultProps} variant={variant} />);
-        expect(container.firstChild).toHaveClass(`btn--${variant}`);
+        expect(container.firstChild).toHaveClass(styles[`btn--${variant}` as keyof typeof styles]);
+    });
+
+    it('renders icon variant with icon class', () => {
+        const { container } = render(
+            <Button {...defaultProps} variant="icon" aria-label="Edit">
+                <span data-testid="icon-node" />
+            </Button>,
+        );
+        expect(container.firstChild).toHaveClass(styles['btn--icon']);
+        expect(screen.getByTestId('icon-node')).toBeInTheDocument();
     });
 
     it.each(['xs', 'sm', 'md', 'lg', 'xl'] as const)('renders size %s', (size) => {
         const { container } = render(<Button {...defaultProps} size={size} />);
-        const expectedClass = size === 'md' ? 'btn' : `btn--${size}`;
-        expect(container.firstChild).toHaveClass(expectedClass);
+        expect(container.firstChild).toHaveClass(styles.btn);
+    });
+
+    it('renders text inside text wrapper', () => {
+        const { container } = render(<Button {...defaultProps}>Label</Button>);
+        expect(container.querySelector(`.${styles.btn__text}`)).toHaveTextContent('Label');
+    });
+
+    it('does not render text wrapper for icon variant', () => {
+        const { container } = render(
+            <Button {...defaultProps} variant="icon" aria-label="Delete">
+                <svg data-testid="svg" />
+            </Button>,
+        );
+        expect(container.querySelector(`.${styles.btn__text}`)).not.toBeInTheDocument();
     });
 });

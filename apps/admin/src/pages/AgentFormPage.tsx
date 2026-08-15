@@ -18,6 +18,7 @@ import {
 } from '../lib/agents';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
+import { Button } from '@bienenhaus/ui';
 import styles from './AgentFormPage.module.css';
 
 const EMPTY: AgentFormValues = {
@@ -205,8 +206,10 @@ export function AgentFormPage() {
                         {isEdit ? 'Actualizá los datos del asesor.' : 'Datos del nuevo asesor.'}
                     </p>
                 </div>
-                <Link href="/agentes" className="btn btn--secondary">
-                    <ArrowLeft size={16} /> Volver
+                <Link href="/agentes">
+                    <Button variant="secondary">
+                        <ArrowLeft size={16} /> Volver
+                    </Button>
                 </Link>
             </div>
 
@@ -214,8 +217,8 @@ export function AgentFormPage() {
                 <div className="card placeholder-card">
                     <h3>No se pudo abrir el agente</h3>
                     <p>{loadError}</p>
-                    <Link href="/agentes" className="btn btn--secondary">
-                        Volver al listado
+                    <Link href="/agentes">
+                        <Button variant="secondary">Volver al listado</Button>
                     </Link>
                 </div>
             )}
@@ -241,19 +244,21 @@ export function AgentFormPage() {
                                 )}
                             </span>
                             <div className={styles['photo-picker-actions']}>
-                                <label className="btn btn--secondary">
-                                    {photoPreview ? 'Cambiar foto' : 'Subir foto'}
+                                <label style={{ cursor: 'pointer' }}>
+                                    <Button variant="secondary">
+                                        {photoPreview ? 'Cambiar foto' : 'Subir foto'}
+                                    </Button>
                                     <input
                                         type="file"
                                         accept="image/png,image/jpeg,image/webp,image/gif"
                                         onChange={handlePhotoChange}
-                                        hidden
+                                        style={{ display: 'none' }}
                                     />
                                 </label>
                                 {photoPreview && (
-                                    <button className="btn btn--ghost" onClick={handleRemovePhoto}>
+                                    <Button variant="ghost" onClick={handleRemovePhoto}>
                                         Quitar foto
-                                    </button>
+                                    </Button>
                                 )}
                                 <span className={`muted ${styles['photo-picker-note']}`}>
                                     {photoFile
@@ -776,12 +781,11 @@ export function AgentFormPage() {
                     </section>
 
                     <div className="form-actions">
-                        <Link href="/agentes" className="btn btn--secondary">
-                            Cancelar
+                        <Link href="/agentes">
+                            <Button variant="secondary">Cancelar</Button>
                         </Link>
-                        <button
-                            type="button"
-                            className="btn btn--primary"
+                        <Button
+                            variant="primary"
                             onClick={handleSubmit}
                             disabled={saving || !canSave}
                         >
@@ -792,7 +796,7 @@ export function AgentFormPage() {
                                     <Save size={16} /> Guardar
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

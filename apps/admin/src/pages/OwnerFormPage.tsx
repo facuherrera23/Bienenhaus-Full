@@ -6,6 +6,7 @@ import { useCreateOwner, useOwner, useUpdateOwner } from '@lib/owners/api';
 import { queryClient } from '@lib/query/client';
 import { pushToast } from '@store/app';
 import type { OwnerFormValues } from '@lib/owners/schemas';
+import { Button } from '@bienenhaus/ui';
 
 export function OwnerFormPage() {
     const [, setLocation] = useLocation();
@@ -58,8 +59,10 @@ export function OwnerFormPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/propietarios" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/propietarios">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Cargando…</div>
@@ -71,8 +74,10 @@ export function OwnerFormPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/propietarios" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/propietarios">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">
@@ -85,8 +90,10 @@ export function OwnerFormPage() {
     return (
         <div className="page">
             <div className="page-head">
-                <Link href="/propietarios" className="btn btn--ghost">
-                    <ArrowLeft size={16} /> Volver
+                <Link href="/propietarios">
+                    <Button variant="ghost">
+                        <ArrowLeft size={16} /> Volver
+                    </Button>
                 </Link>
                 <div>
                     <h2 className="page-title">

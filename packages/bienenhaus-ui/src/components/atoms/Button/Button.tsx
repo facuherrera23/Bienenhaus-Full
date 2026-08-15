@@ -1,8 +1,17 @@
 import { type ButtonHTMLAttributes } from 'preact';
 import { forwardRef, type ReactNode } from 'preact/compat';
+import styles from './Button.module.css';
 
 export type ButtonVariant =
-    'primary' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'success' | 'warning' | 'link';
+    | 'primary'
+    | 'secondary'
+    | 'ghost'
+    | 'outline'
+    | 'danger'
+    | 'success'
+    | 'warning'
+    | 'link'
+    | 'icon';
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -18,22 +27,23 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-    primary: 'btn--primary',
-    secondary: 'btn--secondary',
-    ghost: 'btn--ghost',
-    outline: 'btn--outline',
-    danger: 'btn--danger',
-    success: 'btn--success',
-    warning: 'btn--warning',
-    link: 'btn--link',
+    primary: styles['btn--primary'],
+    secondary: styles['btn--secondary'],
+    ghost: styles['btn--ghost'],
+    outline: styles['btn--outline'],
+    danger: styles['btn--danger'],
+    success: styles['btn--success'],
+    warning: styles['btn--warning'],
+    link: styles['btn--link'],
+    icon: styles['btn--icon'],
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-    xs: 'btn--xs',
-    sm: 'btn--sm',
+    xs: styles['btn--xs'],
+    sm: styles['btn--sm'],
     md: '', // base
-    lg: 'btn--lg',
-    xl: 'btn--xl',
+    lg: styles['btn--lg'],
+    xl: styles['btn--xl'],
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -56,15 +66,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref,
     ) => {
         const isDisabled = disabled || loading;
+        const isIconOnly = variant === 'icon';
 
         const classNames = [
-            'btn',
+            styles.btn,
             VARIANT_CLASSES[variant],
             SIZE_CLASSES[size],
-            fullWidth && 'btn--block',
-            rounded && 'btn--rounded',
-            isDisabled && 'btn--disabled',
-            loading && 'btn--loading',
+            fullWidth && styles['btn--block'],
+            rounded && styles['btn--rounded'],
+            isDisabled && styles['btn--disabled'],
+            loading && styles['btn--loading'],
             className,
         ]
             .filter(Boolean)
@@ -82,8 +93,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 {...(isDisabled ? {} : { onClick })}
             >
                 {loading && (
-                    <span className="btn__spinner" aria-hidden="true">
-                        <svg className="spin" viewBox="0 0 24 24" width="16" height="16">
+                    <span className={styles.btn__spinner} aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
                             <circle
                                 cx="12"
                                 cy="12"
@@ -97,16 +108,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                         </svg>
                     </span>
                 )}
-                {!loading && iconLeft && (
-                    <span className="btn__icon btn__icon--left" aria-hidden="true">
-                        {iconLeft}
+                {!loading && isIconOnly && (
+                    <span className={styles.btn__icon} aria-hidden="true">
+                        {children}
                     </span>
                 )}
-                <span className="btn__text">{children}</span>
-                {!loading && iconRight && (
-                    <span className="btn__icon btn__icon--right" aria-hidden="true">
-                        {iconRight}
-                    </span>
+                {!loading && !isIconOnly && (
+                    <>
+                        {iconLeft && (
+                            <span className={`${styles.btn__icon} ${styles['btn__icon--left']}`} aria-hidden="true">
+                                {iconLeft}
+                            </span>
+                        )}
+                        <span className={styles.btn__text}>{children}</span>
+                        {iconRight && (
+                            <span className={`${styles.btn__icon} ${styles['btn__icon--right']}`} aria-hidden="true">
+                                {iconRight}
+                            </span>
+                        )}
+                    </>
                 )}
             </button>
         );

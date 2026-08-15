@@ -7,6 +7,7 @@ import {
     type ActionPlanTaskRow,
 } from '../../types/owners';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { IconButton } from '@bienenhaus/ui';
 
 interface ActionPlanTaskListProps {
     tasks: ActionPlanTaskRow[];
@@ -122,23 +123,25 @@ export function ActionPlanTaskList({
 
                         {canEdit && (
                             <div className="task-actions">
-                                <button
+                                <IconButton
                                     type="button"
-                                    className="icon-btn"
+                                    variant="ghost"
                                     onClick={() => onEdit?.(task)}
                                     title="Editar tarea"
+                                    aria-label="Editar tarea"
                                 >
                                     <MoreVertical size={14} />
-                                </button>
+                                </IconButton>
                                 {onDelete && (
-                                    <button
+                                    <IconButton
                                         type="button"
-                                        className="icon-btn icon-btn--danger"
+                                        variant="danger"
                                         onClick={() => setDeleteTaskId(task.id)}
                                         title="Eliminar tarea"
+                                        aria-label="Eliminar tarea"
                                     >
                                         <MoreVertical size={14} />
-                                    </button>
+                                    </IconButton>
                                 )}
                             </div>
                         )}

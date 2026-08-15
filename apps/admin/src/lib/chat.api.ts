@@ -10,7 +10,6 @@ import {
     type MessageType,
 } from '../types/chat';
 import {
-    askAiAssistant,
     createDirectChannel,
     createGroupChannel,
     createLeadChannel,
@@ -240,16 +239,7 @@ export function useMarkChannelAsRead() {
 // Mutation Hooks - AI Assistant
 // ============================================================
 
-export function useAskAiAssistant() {
-    return useMutation({
-        mutationFn: async ({ channelId, messageId }: { channelId: string; messageId: string }) => {
-            return askAiAssistant(channelId, messageId);
-        },
-    });
-}
 
-// ============================================================
-// Realtime Subscription
 // ============================================================
 
 export function useSubscribeToChannelMessages(

@@ -14,7 +14,6 @@ import {
     History,
     KeyRound,
     Languages,
-    Loader2,
     type LucideIcon,
     Plus,
     RefreshCw,
@@ -70,6 +69,7 @@ import {
     upsertSiteSettingWithVersion,
 } from '../lib/site';
 import { validateSetting } from '../lib/site-validation';
+import { Button, IconButton, Spinner } from '@bienenhaus/ui';
 import styles from './ConfigPage.module.css';
 
 // ============================================================
@@ -153,26 +153,26 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
             {url ? (
                 <div className={styles['image-preview']}>
                     <img src={url} alt="Vista previa" />
-                    <button
-                        type="button"
-                        className="btn btn--danger btn--sm"
+                    <Button
+                        variant="danger"
+                        size="sm"
                         onClick={() => {
                             onChange('');
                             void deleteSiteImage(url);
                         }}
                     >
                         <Trash2 size={13} /> Quitar
-                    </button>
+                    </Button>
                 </div>
             ) : (
-                <button
-                    type="button"
-                    className="btn btn--secondary btn--sm"
+                <Button
+                    variant="secondary"
+                    size="sm"
                     disabled={uploading}
                     onClick={() => inputRef.current?.click()}
                 >
                     <Upload size={14} /> {uploading ? 'Subiendo…' : 'Subir imagen'}
-                </button>
+                </Button>
             )}
             <input
                 type="file"
@@ -298,30 +298,30 @@ function ListEditor({
                             {meta.itemLabel} {i + 1}
                         </span>
                         <div className={styles['list-item-actions']}>
-                            <button
-                                type="button"
-                                className="icon-btn"
+                            <IconButton
+                                variant="ghost"
                                 title="Subir"
+                                aria-label="Subir"
                                 onClick={() => moveItem(i, -1)}
                             >
                                 <ChevronUp size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                className="icon-btn"
+                            </IconButton>
+                            <IconButton
+                                variant="ghost"
                                 title="Bajar"
+                                aria-label="Bajar"
                                 onClick={() => moveItem(i, 1)}
                             >
                                 <ChevronDown size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                className="icon-btn icon-btn--danger"
+                            </IconButton>
+                            <IconButton
+                                variant="danger"
                                 title="Eliminar"
+                                aria-label="Eliminar"
                                 onClick={() => removeItem(i)}
                             >
                                 <Trash2 size={13} />
-                            </button>
+                            </IconButton>
                         </div>
                     </div>
                     <div className="form-grid">
@@ -336,13 +336,13 @@ function ListEditor({
                     </div>
                 </div>
             ))}
-            <button
-                type="button"
-                className="btn btn--secondary btn--sm"
+            <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => onChange([...list, {}])}
             >
                 <Plus size={14} /> Agregar {meta.itemLabel.toLowerCase()}
-            </button>
+            </Button>
         </div>
     );
 }
@@ -522,19 +522,17 @@ function ContentEditor({ locale, onSaved }: { locale: string; onSaved: () => voi
                                         : 'Sin cambios pendientes'}
                                 </p>
                             </div>
-                            <button
-                                type="button"
-                                className="btn btn--primary"
+                            <Button
                                 onClick={() => saveSection(section)}
                                 disabled={saving !== null || dirtyCount === 0}
                             >
                                 {saving === `c-${section}` ? (
-                                    <Loader2 size={15} className="spin" />
+                                    <Spinner size="sm" inline color="inherit" />
                                 ) : (
                                     <Save size={15} />
                                 )}
                                 Guardar
-                            </button>
+                            </Button>
                         </div>
                         <div className={styles['editor-body']}>
                             {rows.map((key) => {
@@ -733,15 +731,13 @@ function SettingsEditor({ onSaved }: { onSaved: () => void }) {
                             : 'Sin cambios pendientes'}
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn--primary"
+                <Button
                     onClick={() => void save()}
                     disabled={saving || dirtyCount === 0}
                 >
-                    {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
+                    {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={15} />}
                     Guardar ajustes
-                </button>
+                </Button>
             </div>
             <div className={styles['editor-body']}>
                 {settingsQ.isPending && <div className="placeholder-card">Cargando ajustes…</div>}
@@ -978,13 +974,9 @@ function UsersTab() {
                         </p>
                     </div>
                     {isSuperAdmin && (
-                        <button
-                            type="button"
-                            className="btn btn--primary"
-                            onClick={() => setInviteOpen(true)}
-                        >
+                        <Button onClick={() => setInviteOpen(true)}>
                             <UserPlus size={16} /> Invitar usuario
-                        </button>
+                        </Button>
                     )}
                 </div>
 
@@ -1048,23 +1040,23 @@ function UsersTab() {
                                     <td>
                                         {isSuperAdmin && (
                                             <div className="row-actions">
-                                                <button
-                                                    type="button"
-                                                    className="icon-btn"
+                                                <IconButton
+                                                    variant="ghost"
                                                     title="Restablecer contraseña"
+                                                    aria-label="Restablecer contraseña"
                                                     onClick={() => resetMutation.mutate(u.email)}
                                                 >
                                                     <KeyRound size={14} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="icon-btn icon-btn--danger"
+                                                </IconButton>
+                                                <IconButton
+                                                    variant="danger"
                                                     title="Eliminar usuario"
+                                                    aria-label="Eliminar usuario"
                                                     disabled={u.id === myId}
                                                     onClick={() => setRemoveTarget(u.email)}
                                                 >
                                                     <Trash2 size={14} />
-                                                </button>
+                                                </IconButton>
                                             </div>
                                         )}
                                     </td>
@@ -1126,16 +1118,10 @@ function UsersTab() {
                         </label>
                     </div>
                     <div className="modal-actions">
-                        <button
-                            type="button"
-                            className="btn btn--secondary"
-                            onClick={() => setInviteOpen(false)}
-                        >
+                        <Button variant="secondary" onClick={() => setInviteOpen(false)}>
                             Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn--primary"
+                        </Button>
+                        <Button
                             disabled={
                                 inviteMutation.isPending ||
                                 !inviteForm.email.trim() ||
@@ -1144,12 +1130,12 @@ function UsersTab() {
                             onClick={() => inviteMutation.mutate()}
                         >
                             {inviteMutation.isPending ? (
-                                <Loader2 size={15} className="spin" />
+                                <Spinner size="sm" inline color="inherit" />
                             ) : (
                                 <UserPlus size={15} />
                             )}
                             Invitar
-                        </button>
+                        </Button>
                     </div>
                 </Modal>
             )}
@@ -1161,23 +1147,17 @@ function UsersTab() {
                     </p>
                     <div className={styles['link-box']}>
                         <code>{linkModal.link}</code>
-                        <button
-                            type="button"
-                            className="icon-btn"
+                        <IconButton
+                            variant="ghost"
                             title="Copiar enlace"
+                            aria-label="Copiar enlace"
                             onClick={copyLink}
                         >
                             <Copy size={14} />
-                        </button>
+                        </IconButton>
                     </div>
                     <div className="modal-actions">
-                        <button
-                            type="button"
-                            className="btn btn--primary"
-                            onClick={() => setLinkModal(null)}
-                        >
-                            Listo
-                        </button>
+                        <Button onClick={() => setLinkModal(null)}>Listo</Button>
                     </div>
                 </Modal>
             )}
@@ -1268,15 +1248,13 @@ function MLTab() {
                         la cola se administran en la sección «Mercado Libre».
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn--primary"
+                <Button
                     onClick={() => void save()}
                     disabled={saving || (!dirtyAppId && !dirtyDefaults && !dirtyClientSecret)}
                 >
-                    {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
+                    {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={15} />}
                     Guardar
-                </button>
+                </Button>
             </div>
 
             <div className="form-grid">
@@ -1301,14 +1279,13 @@ function MLTab() {
                             }
                             style={{ flex: 1 }}
                         />
-                        <button
-                            type="button"
-                            className="icon-btn"
+                        <IconButton
+                            variant="ghost"
                             onClick={() => setShowClientSecret(!showClientSecret)}
                             aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
                         >
                             {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
+                        </IconButton>
                     </div>
                     <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
                         Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
@@ -1453,22 +1430,22 @@ function VersionsTab({ onRestored }: { onRestored: () => void }) {
                                 </td>
                                 <td>
                                     <div className="row-actions">
-                                        <button
-                                            type="button"
-                                            className="icon-btn"
+                                        <IconButton
+                                            variant="ghost"
                                             title="Comparar con actual"
+                                            aria-label="Comparar con actual"
                                             onClick={() => setCompareTarget(v)}
                                         >
                                             <Eye size={14} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="icon-btn"
+                                        </IconButton>
+                                        <IconButton
+                                            variant="ghost"
                                             title="Restaurar esta versión"
+                                            aria-label="Restaurar esta versión"
                                             onClick={() => setRestoreTarget(v)}
                                         >
                                             <RotateCcw size={14} />
-                                        </button>
+                                        </IconButton>
                                     </div>
                                 </td>
                             </tr>
@@ -1521,13 +1498,7 @@ function VersionsTab({ onRestored }: { onRestored: () => void }) {
                         </tbody>
                     </table>
                     <div className="modal-actions">
-                        <button
-                            type="button"
-                            className="btn btn--primary"
-                            onClick={() => setCompareTarget(null)}
-                        >
-                            Cerrar
-                        </button>
+                        <Button onClick={() => setCompareTarget(null)}>Cerrar</Button>
                     </div>
                 </Modal>
             )}
@@ -1629,15 +1600,14 @@ function I18nTab({ onSaved }: { onSaved: () => void }) {
                             contenido de es-AR como fallback.
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        className="btn btn--secondary"
+                    <Button
+                        variant="secondary"
                         onClick={() => void copyFromEs()}
                         disabled={copying}
                     >
-                        {copying ? <Loader2 size={15} className="spin" /> : <RefreshCw size={15} />}
+                        {copying ? <Spinner size="sm" inline color="inherit" /> : <RefreshCw size={15} />}
                         Copiar desde es-AR
-                    </button>
+                    </Button>
                 </div>
                 <div className="form-grid">
                     <label className="field">
@@ -1694,13 +1664,9 @@ export function ConfigPage() {
                         Usuarios del panel, integraciones y contenido de la landing.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn--secondary"
-                    onClick={() => setShowPreview(true)}
-                >
+                <Button variant="secondary" onClick={() => setShowPreview(true)}>
                     <Eye size={15} /> Vista previa
-                </button>
+                </Button>
             </div>
 
             <div className={styles['tabs']} role="tablist">

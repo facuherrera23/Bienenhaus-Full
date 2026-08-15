@@ -24,6 +24,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { Button, IconButton } from '@bienenhaus/ui';
 import styles from './SitePage.module.css';
 
 interface DraftEntry {
@@ -127,9 +128,10 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
             {url ? (
                 <div className={styles['site-image-preview']}>
                     <img src={url} alt="Vista previa" />
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--danger btn--sm"
+                        variant="danger"
+                        size="sm"
                         onClick={() => {
                             onChange('');
                             void deleteSiteImage(url);
@@ -146,12 +148,13 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>{' '}
                         Quitar
-                    </button>
+                    </Button>
                 </div>
             ) : (
-                <button
+                <Button
                     type="button"
-                    className="btn btn--secondary btn--sm"
+                    variant="secondary"
+                    size="sm"
                     disabled={uploading}
                     onClick={() => inputRef.current?.click()}
                 >
@@ -166,7 +169,7 @@ function ImageInput({ value, onChange }: { value: unknown; onChange: (url: strin
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                     </svg>{' '}
                     {uploading ? 'Subiendo…' : 'Subir imagen'}
-                </button>
+                </Button>
             )}
             <input
                 type="file"
@@ -225,10 +228,11 @@ function ListEditor({
                             {meta.itemLabel} {i + 1}
                         </span>
                         <div className={styles['site-list-item-actions']}>
-                            <button
+                            <IconButton
                                 type="button"
-                                className="icon-btn"
+                                variant="ghost"
                                 title="Subir"
+                                aria-label="Subir"
                                 onClick={() => moveItem(i, -1)}
                             >
                                 <svg
@@ -241,11 +245,12 @@ function ListEditor({
                                 >
                                     <path d="M18 15l-6-6-6 6" />
                                 </svg>
-                            </button>
-                            <button
+                            </IconButton>
+                            <IconButton
                                 type="button"
-                                className="icon-btn"
+                                variant="ghost"
                                 title="Bajar"
+                                aria-label="Bajar"
                                 onClick={() => moveItem(i, 1)}
                             >
                                 <svg
@@ -258,11 +263,12 @@ function ListEditor({
                                 >
                                     <path d="M6 9l6 6 6-6" />
                                 </svg>
-                            </button>
-                            <button
+                            </IconButton>
+                            <IconButton
                                 type="button"
-                                className="icon-btn icon-btn--danger"
+                                variant="danger"
                                 title="Eliminar"
+                                aria-label="Eliminar"
                                 onClick={() => removeItem(i)}
                             >
                                 <svg
@@ -275,7 +281,7 @@ function ListEditor({
                                 >
                                     <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                 </svg>
-                            </button>
+                            </IconButton>
                         </div>
                     </div>
                     <div className="form-grid">
@@ -290,9 +296,10 @@ function ListEditor({
                     </div>
                 </div>
             ))}
-            <button
+            <Button
                 type="button"
-                className="btn btn--secondary btn--sm"
+                variant="secondary"
+                size="sm"
                 onClick={() => onChange([...list, {}])}
             >
                 <svg
@@ -306,7 +313,7 @@ function ListEditor({
                     <path d="M12 5v14M5 12h14" />
                 </svg>
                 Agregar {meta.itemLabel.toLowerCase()}
-            </button>
+            </Button>
         </div>
     );
 }
@@ -558,8 +565,7 @@ export function SitePage() {
                                 : 'Sin cambios pendientes'}
                         </p>
                     </div>
-                    <button
-                        className="btn btn--primary"
+                    <Button
                         onClick={() => saveSection(section)}
                         disabled={savingGroup !== null || dirtyCount === 0}
                     >
@@ -575,7 +581,7 @@ export function SitePage() {
                             <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
                         </svg>
                         {savingGroup === `c-${section}` ? 'Guardando…' : 'Guardar'}
-                    </button>
+                    </Button>
                 </div>
                 <div className={styles['site-section-body']}>
                     {rows.map((key) => {
@@ -710,8 +716,7 @@ export function SitePage() {
                                 : 'Sin cambios pendientes'}
                         </p>
                     </div>
-                    <button
-                        className="btn btn--primary"
+                    <Button
                         onClick={saveSettings}
                         disabled={savingGroup !== null || dirtyCount === 0}
                     >
@@ -727,7 +732,7 @@ export function SitePage() {
                             <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
                         </svg>
                         {savingGroup === 'settings' ? 'Guardando…' : 'Guardar todos los ajustes'}
-                    </button>
+                    </Button>
                 </div>
                 <div className={`${styles['site-section-body']} settings-body`}>
                     {SETTINGS_GROUPS.map((group) => {
@@ -825,9 +830,9 @@ export function SitePage() {
                         Gestioná el contenido y la configuración de la landing.
                     </p>
                 </div>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--secondary"
+                    variant="secondary"
                     onClick={() => setShowPreview(true)}
                 >
                     <svg
@@ -842,7 +847,7 @@ export function SitePage() {
                         <circle cx="12" cy="12" r="3" />
                     </svg>{' '}
                     Vista previa
-                </button>
+                </Button>
             </div>
 
             {(Object.keys(SECTION_KEYS) as ContentSection[]).map((section) =>
@@ -855,7 +860,11 @@ export function SitePage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>Vista previa</h3>
-                            <button className="icon-btn" onClick={() => setShowPreview(false)}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar vista previa"
+                                onClick={() => setShowPreview(false)}
+                            >
                                 <svg
                                     width="20"
                                     height="20"
@@ -866,7 +875,7 @@ export function SitePage() {
                                 >
                                     <path d="M18 6L6 18M6 6l12 12" />
                                 </svg>
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body" style={{ padding: 0 }}>
                             <iframe

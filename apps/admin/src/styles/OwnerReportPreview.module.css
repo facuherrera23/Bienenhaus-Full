@@ -1,0 +1,460 @@
+/* apps/admin/src/styles/OwnerReportPreview.module.css — Rediseño visual BIENENHAUS */
+ /* ============================================================
+    OWNER REPORT PREVIEW — Modal premium con tokens --bh-*
+    ============================================================ */
+
+/* ============================================================
+   MODAL OVERLAY — Fondo modal semi-transparente
+   ============================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--bh-dur-fast) var(--bh-ease-premium),
+        visibility var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================================
+   MODAL — Contenedor modal principal
+   ============================================================ */
+
+.modal {
+    width: 90%;
+    max-width: 800px;
+    background: var(--bh-bg-primary);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9) translateY(20px);
+    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+    box-shadow: var(--bh-shadow-lg);
+}
+
+.modal-overlay.open .modal {
+    transform: scale(1) translateY(0);
+}
+
+/* ============================================================
+   MODAL HEADER — Header del modal
+   ============================================================ */
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--bh-space-4) var(--bh-space-5);
+    border-bottom: 1px solid var(--bh-border);
+    background: var(--bh-bg-card);
+}
+
+.modal-header .icon {
+    width: 28px;
+    height: 28px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: var(--bh-text-xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+}
+
+.modal-header .icon-btn {
+    padding: var(--bh-space-1);
+    cursor: pointer;
+}
+
+/* ============================================================
+   MODAL BODY — Cuerpo del modal
+   ============================================================ */
+
+.modal-body {
+    flex: 1;
+    padding: var(--bh-space-5) var(--bh-space-4);
+    overflow-y: auto;
+}
+
+/* ============================================================
+   REPORT CONTENT — Área de contenido del reporte
+   ============================================================ */
+
+.report-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ============================================================
+   REPORT SECTION — Sección individual dentro del reporte
+   ============================================================ */
+
+.report-section {
+    margin-bottom: var(--bh-space-5);
+}
+
+.report-section h3 {
+    margin: 0 0 var(--bh-space-3) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   PRICE ANALYSIS GRID — Grid de métricas de precio
+   ============================================================ */
+
+.price-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--bh-space-3);
+    margin: var(--bh-space-3) 0;
+}
+
+.price-metric {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-3);
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.price-metric:hover {
+    border-color: var(--bh-border-strong);
+    box-shadow: var(--bh-shadow-sm);
+}
+
+.price-metric.highlight {
+    border: 1px solid var(--bh-accent);
+    background: rgba(32, 184, 171, 0.05);
+}
+
+.price-metric.highlight .metric-value {
+    color: var(--bh-accent);
+}
+
+.metric-label {
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--bh-space-1);
+}
+
+.metric-value {
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin: 0;
+}
+
+/* ============================================================
+   STATUS BADGE EN MÉTRICA — Badge con color de estado
+   ============================================================ */
+
+.metric-value.status-good {
+    color: var(--bh-success);
+}
+
+.metric-value.status-warning {
+    color: var(--bh-warning);
+}
+
+.metric-value.status-critical {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   RECOMMENDATION BOX — Box de recomendación
+   ============================================================ */
+
+.recommendation-box {
+    padding: var(--bh-space-4) var(--bh-space-5);
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    margin: var(--bh-space-3) 0;
+}
+
+.recommendation-box h4 {
+    margin: 0 0 var(--bh-space-2) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+}
+
+.recommendation-box p {
+    margin: 0;
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-primary);
+    line-height: 1.5;
+}
+
+/* ============================================================
+   PLANS LIST — Lista de planes de acción
+   ============================================================ */
+
+.plans-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.plan-item {
+    margin: 0 0 var(--bh-space-3) 0;
+    padding: var(--bh-space-3) 0;
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.plan-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.plan-item .plan-title {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin: 0 0 var(--bh-space-1) 0;
+}
+
+.plan-item .badge {
+    font-size: var(--bh-text-xs);
+}
+
+.plan-due {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   COMMUNICATIONS LIST — Lista de comunicaciones recientes
+   ============================================================ */
+
+.communications-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.comm-item {
+    margin: 0 0 var(--bh-space-2) 0;
+    padding: var(--bh-space-2) 0;
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.comm-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.comm-type {
+    display: inline-block;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--bh-text-tertiary);
+    margin-right: var(--bh-space-2);
+}
+
+.comm-subject {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+    margin: 0 0 var(--bh-space-1) 0;
+    display: block;
+}
+
+.comm-date {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   TABLE — Tablas compactas para propiedades comparables
+   ============================================================ */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: var(--bh-space-3) var(--bh-space-4);
+    border-bottom: 1px solid var(--bh-border);
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+}
+
+.table th {
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-secondary);
+    text-align: left;
+}
+
+.table tr:hover td {
+    background: var(--bh-bg-hover);
+}
+
+.table .status-good {
+    color: var(--bh-success);
+}
+
+.table .status-warning {
+    color: var(--bh-warning);
+}
+
+.table .status-critical {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   BADGES — Badges de estado
+   ============================================================ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--bh-space-1) var(--bh-space-2);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    border-radius: var(--bh-radius-sm);
+    white-space: nowrap;
+}
+
+.badge--primary {
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+}
+
+.badge--secondary {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.badge--success {
+    background: rgba(74, 222, 128, 0.2);
+    color: var(--bh-success);
+}
+
+.badge--warning {
+    background: rgba(251, 191, 36, 0.2);
+    color: var(--bh-warning);
+}
+
+.badge--danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--bh-danger);
+}
+
+.badge--draft {
+    background: var(--bh-bg-card);
+    color: var(--bh-text-tertiary);
+}
+
+.badge--sent {
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+}
+
+.badge--delivered {
+    background: rgba(74, 222, 128, 0.2);
+    color: var(--bh-success);
+}
+
+.badge--read {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.badge--failed {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   PRIORITY BADGE — Badge de prioridad
+   ============================================================ */
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--bh-space-1) var(--bh-space-2);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    border-radius: var(--bh-radius-sm);
+    white-space: nowrap;
+}
+
+.priority-badge.priority-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--bh-danger);
+}
+
+.priority-badge.priority-medium {
+    background: rgba(251, 191, 36, 0.2);
+    color: var(--bh-warning);
+}
+
+.priority-badge.priority-low {
+    background: rgba(74, 222, 128, 0.2);
+    color: var(--bh-success);
+}
+
+.priority-badge.priority-urgent {
+    background: rgba(156, 39, 176, 0.2);
+    color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .modal {
+        margin: var(--bh-space-4);
+        border-radius: var(--bh-radius-lg);
+    }
+}
+
+@media (max-width: 390px) {
+    .modal {
+        margin: var(--bh-space-3);
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-overlay,
+    .modal {
+        transition: none;
+    }
+
+    .price-metric:hover {
+        border-color: var(--bh-border);
+        box-shadow: none;
+    }
+}

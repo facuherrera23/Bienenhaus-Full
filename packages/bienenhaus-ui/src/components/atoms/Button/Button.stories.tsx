@@ -25,6 +25,7 @@ const meta: Meta<typeof Button> = {
                 'success',
                 'warning',
                 'link',
+                'icon',
             ],
             description: 'Visual variant of the button',
         },
@@ -119,6 +120,25 @@ export const Link: Story = {
     },
 };
 
+export const Icon: Story = {
+    args: {
+        children: (
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+            >
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a2 2 0 0 0 0-4h-1.1a6 6 0 0 1-1.9 4H9a6 6 0 1 1 6-8h3a2 2 0 0 0 0-4z" />
+            </svg>
+        ),
+        variant: 'icon',
+        'aria-label': 'Edit',
+    },
+};
+
 export const Sizes: Story = {
     render: () => (
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -142,6 +162,18 @@ export const Variants: Story = {
             <Button variant="success">Success</Button>
             <Button variant="warning">Warning</Button>
             <Button variant="link">Link</Button>
+            <Button variant="icon" aria-label="Edit">
+                <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a2 2 0 0 0 0-4h-1.1a6 6 0 0 1-1.9 4H9a6 6 0 1 1 6-8h3a2 2 0 0 0 0-4z" />
+                </svg>
+            </Button>
         </div>
     ),
 };

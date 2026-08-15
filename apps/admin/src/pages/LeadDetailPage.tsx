@@ -16,6 +16,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { Badge, Button, type BadgeVariant } from '@bienenhaus/ui';
 import styles from './LeadDetailPage.module.css';
 
 export function LeadDetailPage() {
@@ -116,17 +117,19 @@ export function LeadDetailPage() {
                     </p>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--secondary"
+                        variant="secondary"
                         onClick={() => openWhatsApp(lead!)}
                         disabled={!phone.trim()}
                         title={phone.trim() ? 'Abrir WhatsApp' : 'El lead no tiene teléfono'}
                     >
                         <MessageSquare size={16} /> WhatsApp
-                    </button>
-                    <Link href="/leads" className="btn btn--secondary">
-                        <ArrowLeft size={16} /> Volver
+                    </Button>
+                    <Link href="/leads">
+                        <Button variant="secondary">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -135,8 +138,8 @@ export function LeadDetailPage() {
                 <div className="card placeholder-card">
                     <h3>No se pudo abrir el lead</h3>
                     <p>{loadError}</p>
-                    <Link href="/leads" className="btn btn--secondary">
-                        Volver al listado
+                    <Link href="/leads">
+                        <Button variant="secondary">Volver al listado</Button>
                     </Link>
                 </div>
             )}
@@ -158,9 +161,9 @@ export function LeadDetailPage() {
                                 · Recibido {new Date(lead.created_at).toLocaleDateString('es-AR')}
                             </p>
                         </div>
-                        <span className={`badge badge--${LEAD_STATUS_TONE[lead.status]}`}>
+                        <Badge variant={LEAD_STATUS_TONE[lead.status] as BadgeVariant}>
                             {LEAD_STATUS_LABEL[lead.status]}
-                        </span>
+                        </Badge>
                     </div>
 
                     <div className={styles['lead-grid']}>
@@ -268,12 +271,12 @@ export function LeadDetailPage() {
                     </div>
 
                     <div className="form-actions">
-                        <Link href="/leads" className="btn btn--ghost">
-                            Cancelar
+                        <Link href="/leads">
+                            <Button variant="ghost">Cancelar</Button>
                         </Link>
-                        <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
+                        <Button onClick={handleSave} disabled={saving}>
                             <Save size={16} /> {saving ? 'Guardando…' : 'Guardar cambios'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

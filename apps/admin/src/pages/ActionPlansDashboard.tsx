@@ -12,6 +12,7 @@ import {
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,
@@ -161,8 +162,10 @@ export function ActionPlansDashboard() {
                     <p className="page-subtitle">Vista global de todos los planes del equipo.</p>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <Link href="/planes-accion/nuevo" className="btn btn--primary">
-                        <Plus size={16} /> Nuevo plan
+                    <Link href="/planes-accion/nuevo">
+                        <Button variant="primary">
+                            <Plus size={16} /> Nuevo plan
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -192,30 +195,30 @@ export function ActionPlansDashboard() {
                         <span>
                             {selectedIds.size} seleccionada{selectedIds.size === 1 ? '' : 's'}
                         </span>
-                        <button
-                            type="button"
-                            className="btn btn--ghost btn--sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={clearSelection}
                         >
                             <X size={14} /> Limpiar
-                        </button>
+                        </Button>
                     </div>
                     <div className="bulk-actions">
                         {activeTab === 'active' && (
                             <>
-                                <button
-                                    type="button"
-                                    className="btn btn--success btn--sm"
+                                <Button
+                                    variant="success"
+                                    size="sm"
                                     onClick={() => {
                                         selectedIds.forEach((id) => handleComplete(id));
                                         clearSelection();
                                     }}
                                 >
                                     <Check size={14} /> Completar
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn--danger btn--sm"
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
                                     onClick={() =>
                                         setConfirmAction({
                                             title: 'Enviar a papelera',
@@ -233,14 +236,14 @@ export function ActionPlansDashboard() {
                                     }
                                 >
                                     <Trash2 size={14} /> A papelera
-                                </button>
+                                </Button>
                             </>
                         )}
                         {activeTab === 'deleted' && (
                             <>
-                                <button
-                                    type="button"
-                                    className="btn btn--secondary btn--sm"
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
                                     onClick={() => {
                                         selectedIds.forEach((id) => {
                                             const plan = filtered.find((p) => p.id === id);
@@ -250,10 +253,10 @@ export function ActionPlansDashboard() {
                                     }}
                                 >
                                     <RotateCcw size={14} /> Restaurar
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn--danger btn--sm"
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
                                     onClick={() =>
                                         setConfirmAction({
                                             title: 'Eliminar permanentemente',
@@ -272,7 +275,7 @@ export function ActionPlansDashboard() {
                                     }
                                 >
                                     <Trash2 size={14} /> Eliminar
-                                </button>
+                                </Button>
                             </>
                         )}
                     </div>
@@ -289,13 +292,13 @@ export function ActionPlansDashboard() {
                         onInput={(e) => setSearch((e.currentTarget as HTMLInputElement).value)}
                     />
                 </div>
-                <button
-                    type="button"
-                    className={`btn btn--ghost${showFilters ? ' active' : ''}`}
+                <Button
+                    variant={showFilters ? 'secondary' : 'ghost'}
+                    size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                 >
                     <Filter size={15} /> Filtros
-                </button>
+                </Button>
             </div>
 
             {showFilters && (
@@ -404,8 +407,10 @@ export function ActionPlansDashboard() {
                             : 'No hay planes eliminados.'}
                     </p>
                     {activeTab === 'active' && (
-                        <Link href="/planes-accion/nuevo" className="btn btn--primary">
-                            <Plus size={16} /> Crear primer plan
+                        <Link href="/planes-accion/nuevo">
+                            <Button variant="primary">
+                                <Plus size={16} /> Crear primer plan
+                            </Button>
                         </Link>
                     )}
                 </div>
@@ -450,7 +455,7 @@ export function ActionPlansDashboard() {
                                         onClick={(e) => {
                                             if (
                                                 (e.target as HTMLElement).closest(
-                                                    'input,button,a,.icon-btn',
+                                                    'input,button,a',
                                                 )
                                             )
                                                 return;
@@ -472,18 +477,28 @@ export function ActionPlansDashboard() {
                                         <td>{plan.property_title ?? '—'}</td>
                                         <td>{plan.owner_name ?? '—'}</td>
                                         <td>
-                                            <span
-                                                className={`badge badge--${ACTION_PLAN_STATUS_TONE[plan.status]}`}
+                                            <Badge
+                                                variant={
+                                                    ACTION_PLAN_STATUS_TONE[
+                                                        plan.status
+                                                    ] as BadgeVariant
+                                                }
+                                                size="sm"
                                             >
                                                 {ACTION_PLAN_STATUS_LABEL[plan.status]}
-                                            </span>
+                                            </Badge>
                                         </td>
                                         <td>
-                                            <span
-                                                className={`badge badge--${ACTION_PLAN_PRIORITY_TONE[plan.priority]}`}
+                                            <Badge
+                                                variant={
+                                                    ACTION_PLAN_PRIORITY_TONE[
+                                                        plan.priority
+                                                    ] as BadgeVariant
+                                                }
+                                                size="sm"
                                             >
                                                 {ACTION_PLAN_PRIORITY_LABEL[plan.priority]}
-                                            </span>
+                                            </Badge>
                                         </td>
                                         <td>{ACTION_PLAN_CATEGORY_LABEL[plan.category]}</td>
                                         <td className={isOverdue ? 'overdue' : ''}>
@@ -494,20 +509,22 @@ export function ActionPlansDashboard() {
                                             <div className="row-actions">
                                                 {activeTab === 'active' &&
                                                     plan.status !== 'completed' && (
-                                                        <button
-                                                            className="icon-btn"
-                                                            title="Completar"
+                                                        <IconButton
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            aria-label="Completar"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleComplete(plan.id);
                                                             }}
                                                         >
                                                             <Check size={14} />
-                                                        </button>
+                                                        </IconButton>
                                                     )}
-                                                <button
-                                                    className="icon-btn"
-                                                    title={
+                                                <IconButton
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    aria-label={
                                                         activeTab === 'active'
                                                             ? 'A papelera'
                                                             : 'Restaurar'
@@ -534,11 +551,12 @@ export function ActionPlansDashboard() {
                                                     ) : (
                                                         <RotateCcw size={14} />
                                                     )}
-                                                </button>
+                                                </IconButton>
                                                 {activeTab === 'deleted' && (
-                                                    <button
-                                                        className="icon-btn icon-btn--danger"
-                                                        title="Eliminar permanentemente"
+                                                    <IconButton
+                                                        variant="danger"
+                                                        size="sm"
+                                                        aria-label="Eliminar permanentemente"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setConfirmAction({
@@ -555,7 +573,7 @@ export function ActionPlansDashboard() {
                                                         }}
                                                     >
                                                         <Trash2 size={14} />
-                                                    </button>
+                                                    </IconButton>
                                                 )}
                                             </div>
                                         </td>

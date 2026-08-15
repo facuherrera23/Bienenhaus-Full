@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { ArrowLeft, Loader2, Plus, Save, Trash2, TrendingUp, X } from 'lucide-preact';
+import { ArrowLeft, Plus, Save, Trash2, TrendingUp, X } from 'lucide-preact';
 import { Link, useRoute } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -13,11 +13,13 @@ import { pushToast } from '@store/app';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ComparablePropertyInput, PriceAnalysisGauge } from '@components/owners';
 import { priceAnalysisSchema } from '@lib/owners/schemas';
+import { Button, Badge, Spinner, type BadgeVariant } from '@bienenhaus/ui';
 import {
     getPriceStatusLabel,
     MARKET_TREND_ICON,
     MARKET_TREND_LABEL,
     PRICE_STATUS_LABEL,
+    PRICE_STATUS_TONE,
     type PriceAnalysisFormValues,
 } from '../types/owners';
 import { useForm } from 'react-hook-form';
@@ -129,8 +131,10 @@ export function PriceAnalysisPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href={`/propiedades/${propertyId}`} className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href={`/propiedades/${propertyId}`}>
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Cargando análisis…</div>
@@ -142,8 +146,10 @@ export function PriceAnalysisPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href={`/propiedades/${propertyId}`} className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href={`/propiedades/${propertyId}`}>
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Error: {error?.message}</div>
@@ -156,8 +162,10 @@ export function PriceAnalysisPage() {
     return (
         <div className="page price-analysis-page">
             <div className="page-head">
-                <Link href={`/propiedades/${propertyId}`} className="btn btn--ghost">
-                    <ArrowLeft size={16} /> Volver a la propiedad
+                <Link href={`/propiedades/${propertyId}`}>
+                    <Button variant="ghost">
+                        <ArrowLeft size={16} /> Volver a la propiedad
+                    </Button>
                 </Link>
                 <div>
                     <h2 className="page-title">Análisis de Precio</h2>
@@ -169,14 +177,16 @@ export function PriceAnalysisPage() {
                 </div>
                 <div style="display:flex; gap:8px;">
                     {hasAnalysis && !editing && (
-                        <Link href={`/propiedades/${propertyId}`} className="btn btn--secondary">
-                            <ArrowLeft size={16} /> Volver a la propiedad
+                        <Link href={`/propiedades/${propertyId}`}>
+                            <Button variant="secondary">
+                                <ArrowLeft size={16} /> Volver a la propiedad
+                            </Button>
                         </Link>
                     )}
                     {!editing && (
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--primary"
+                            variant="primary"
                             onClick={() => {
                                 if (hasAnalysis) {
                                     methods.setValue(
@@ -210,7 +220,7 @@ export function PriceAnalysisPage() {
                             }}
                         >
                             <Plus size={16} /> {hasAnalysis ? 'Editar' : 'Nuevo análisis'}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -347,28 +357,28 @@ export function PriceAnalysisPage() {
                         </div>
 
                         <div className="form-actions">
-                            <button type="button" className="btn btn--ghost" onClick={handleCancel}>
+                            <Button type="button" variant="ghost" onClick={handleCancel}>
                                 <X size={14} /> Cancelar
-                            </button>
+                            </Button>
                             {hasAnalysis && (
-                                <button
+                                <Button
                                     type="button"
-                                    className="btn btn--danger"
+                                    variant="danger"
                                     onClick={() => setConfirmDelete(true)}
                                 >
                                     <Trash2 size={14} /> Eliminar
-                                </button>
+                                </Button>
                             )}
-                            <button
+                            <Button
                                 type="submit"
-                                className="btn btn--primary"
+                                variant="primary"
                                 disabled={
                                     createPriceAnalysis.isPending || updatePriceAnalysis.isPending
                                 }
                             >
                                 {createPriceAnalysis.isPending || updatePriceAnalysis.isPending ? (
                                     <>
-                                        <Loader2 size={14} className="spin" /> Guardando...
+                                        <Spinner size="sm" inline color="inherit" /> Guardando...
                                     </>
                                 ) : (
                                     <>
@@ -377,7 +387,7 @@ export function PriceAnalysisPage() {
                                         {hasAnalysis ? 'Actualizar' : 'Crear análisis'}{' '}
                                     </>
                                 )}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -496,11 +506,16 @@ export function PriceAnalysisPage() {
                             <div className="info-card">
                                 <h4>Estado del precio</h4>
                                 <div className="status-display">
-                                    <span
-                                        className={`status-badge badge--${priceAnalysis.price_status}`}
+                                    <Badge
+                                        variant={
+                                            PRICE_STATUS_TONE[
+                                                priceAnalysis.price_status
+                                            ] as BadgeVariant
+                                        }
+                                        size="sm"
                                     >
                                         {PRICE_STATUS_LABEL[priceAnalysis.price_status]}
-                                    </span>
+                                    </Badge>
                                     <p className="status-description">
                                         {priceAnalysis.price_difference_pct >= 0
                                             ? `El precio de publicación está ${priceAnalysis.price_difference_pct.toFixed(2)}% por encima del mercado.`
@@ -553,15 +568,15 @@ export function PriceAnalysisPage() {
                         Creá un análisis para comparar el precio de publicación con el valor
                         estimado de mercado.
                     </p>
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--primary"
+                        variant="primary"
                         onClick={() => {
                             setEditing(true);
                         }}
                     >
                         <Plus size={16} /> Crear primer análisis
-                    </button>
+                    </Button>
                 </div>
             )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { Loader2, Plus, Trash2, Unlock } from 'lucide-preact';
+import { Plus, Trash2, Unlock } from 'lucide-preact';
 import { useAuthUserId } from '../lib/auth';
 import {
     type AdminRole,
@@ -15,6 +15,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Button, IconButton, Spinner } from '@bienenhaus/ui';
 import { authUserRole, pushToast } from '../store/app';
 import styles from './AdminUsersPage.module.css';
 
@@ -147,9 +148,9 @@ export function AdminUsersPage() {
                     </p>
                 </div>
                 {canManage && (
-                    <button className="btn btn--primary" onClick={() => setInviteOpen(true)}>
+                    <Button variant="primary" onClick={() => setInviteOpen(true)}>
                         <Plus size={16} /> Invitar usuario
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -234,21 +235,23 @@ export function AdminUsersPage() {
                                         <div className="row-actions">
                                             {canManage && (
                                                 <>
-                                                    <button
-                                                        className="icon-btn"
-                                                        title="Resetear contraseña"
+                                                    <IconButton
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        aria-label="Resetear contraseña"
                                                         onClick={() => handleResetPassword(u.email)}
                                                     >
                                                         <Unlock size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="icon-btn icon-btn--danger"
-                                                        title="Eliminar usuario"
+                                                    </IconButton>
+                                                    <IconButton
+                                                        variant="danger"
+                                                        size="sm"
+                                                        aria-label="Eliminar usuario"
                                                         disabled={u.id === currentUserId}
                                                         onClick={() => setRemoveTarget(u.email)}
                                                     >
                                                         <Trash2 size={14} />
-                                                    </button>
+                                                    </IconButton>
                                                 </>
                                             )}
                                         </div>
@@ -347,24 +350,23 @@ export function AdminUsersPage() {
                                     </label>
                                 </div>
                                 <div className="form-actions">
-                                    <button
-                                        type="button"
-                                        className="btn btn--ghost"
+                                    <Button
+                                        variant="ghost"
                                         onClick={() => setInviteOpen(false)}
                                     >
                                         Cancelar
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                        variant="primary"
                                         type="submit"
-                                        className="btn btn--primary"
                                         disabled={inviteMutation.isPending}
                                     >
                                         {inviteMutation.isPending ? (
-                                            <Loader2 size={16} className="spin" />
+                                            <Spinner size="sm" inline color="inherit" />
                                         ) : (
                                             'Enviar invitación'
                                         )}
-                                    </button>
+                                    </Button>
                                 </div>
                             </form>
                         </div>

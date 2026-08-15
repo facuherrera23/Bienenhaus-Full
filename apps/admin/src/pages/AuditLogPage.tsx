@@ -19,6 +19,7 @@ import { type ExportColumn, useExport } from '../lib/api/hooks';
 import { useAuthAccessToken } from '../lib/auth';
 import { pushToast } from '../store/app';
 import { supabaseUrl } from '../lib/supabase';
+import { Badge, Button, IconButton, Spinner } from '@bienenhaus/ui';
 
 interface AuditLogEntry {
     id: number;
@@ -270,24 +271,26 @@ export function AuditLogPage() {
                 </div>
                 <div className="page-head-actions">
                     {hasActiveFilters && (
-                        <button className="btn btn--ghost btn--sm" onClick={clearFilters}>
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
                             <X size={14} /> Limpiar filtros
-                        </button>
+                        </Button>
                     )}
-                    <button
-                        className="btn btn--secondary btn--sm"
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={exportLogs}
                         disabled={logs.length === 0}
                     >
                         <Download size={14} /> Exportar CSV
-                    </button>
-                    <button
-                        className="btn btn--secondary btn--sm"
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={loadLogs}
                         disabled={loading}
                     >
-                        <RefreshCw size={14} className={loading ? 'spin' : ''} /> Actualizar
-                    </button>
+                        {loading ? <Spinner size="sm" inline /> : <RefreshCw size={14} />} Actualizar
+                    </Button>
                 </div>
             </div>
 
@@ -299,9 +302,9 @@ export function AuditLogPage() {
                 >
                     <Filter size={16} /> Filtros{' '}
                     {hasActiveFilters && (
-                        <span className="badge badge--info">
+                        <Badge variant="info" size="sm">
                             {Object.values(filters).filter((v) => v).length}
-                        </span>
+                        </Badge>
                     )}
                 </button>
 
@@ -423,7 +426,7 @@ export function AuditLogPage() {
                         {loading ? (
                             <tr>
                                 <td colSpan={8} className="empty-cell">
-                                    <RefreshCw size={24} className="spin" /> Cargando...
+                                    <Spinner size="md" inline color="inherit" /> Cargando...
                                 </td>
                             </tr>
                         ) : logs.length === 0 ? (
@@ -443,25 +446,27 @@ export function AuditLogPage() {
                 {/* Paginación */}
                 {total > pageSize && (
                     <div className="pagination">
-                        <button
-                            className="btn btn--ghost btn--sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             <ChevronLeft size={16} />
-                        </button>
+                        </Button>
                         <span className="pagination-info">
                             Página {page} de {Math.ceil(total / pageSize)} ({total} total)
                         </span>
-                        <button
-                            className="btn btn--ghost btn--sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() =>
                                 setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))
                             }
                             disabled={page >= Math.ceil(total / pageSize)}
                         >
                             <ChevronRight size={16} />
-                        </button>
+                        </Button>
                     </div>
                 )}
             </section>
@@ -472,9 +477,13 @@ export function AuditLogPage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>Detalle de Auditoría #{selectedLog.id}</h3>
-                            <button className="icon-btn" onClick={closeDetail}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar detalle"
+                                onClick={closeDetail}
+                            >
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body">
                             <div className="audit-detail-grid">
@@ -590,9 +599,9 @@ export function AuditLogPage() {
                             </div>
                         </div>
                         <div className="modal-actions">
-                            <button className="btn btn--secondary" onClick={closeDetail}>
+                            <Button variant="secondary" onClick={closeDetail}>
                                 Cerrar
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

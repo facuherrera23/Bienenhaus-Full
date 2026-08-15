@@ -1,0 +1,827 @@
+/* apps/admin/src/styles/OwnerReportGenerator.module.css — Rediseño visual BIENENHAUS */
+ /* ============================================================
+    OWNER REPORT GENERATOR — Stepper premium con tokens --bh-*
+    ============================================================ */
+
+/* ============================================================
+   STEPPER — Contenedor de pasos
+   ============================================================ */
+
+.report-step {
+    padding: var(--bh-space-6) var(--bh-space-5);
+}
+
+.report-step.report-preview {
+    padding: var(--bh-space-4) var(--bh-space-5);
+}
+
+/* ============================================================
+   TYPES GRID — Grid de tipos de reporte
+   ============================================================ */
+
+.report-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--bh-space-3);
+    margin-top: var(--bh-space-4);
+}
+
+/* ============================================================
+   REPORT TYPE CARD — Card para selección de tipo
+   ============================================================ */
+
+.report-type-card {
+    padding: var(--bh-space-5) var(--bh-space-4);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    background: var(--bh-bg-card);
+    transition: all var(--bh-dur-med) var(--bh-ease-premium);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bh-space-2);
+}
+
+.report-type-card.selected {
+    border-color: var(--bh-accent);
+    background: rgba(32, 184, 171, 0.1);
+    box-shadow: 0 0 20px var(--bh-accent-glow-soft);
+}
+
+.report-type-card:hover:not(.selected) {
+    border-color: var(--bh-border-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px var(--bh-accent-glow-soft);
+}
+
+.report-type-card .icon {
+    width: 28px;
+    height: 28px;
+    color: var(--bh-text-tertiary);
+    transition: color var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.report-type-card.selected .icon {
+    color: var(--bh-accent);
+}
+
+.report-type-card:hover:not(.selected) .icon {
+    color: var(--bh-accent);
+}
+
+.report-type-card h4 {
+    margin: var(--bh-space-2) 0 0 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    text-align: center;
+}
+
+.report-type-card p {
+    margin: var(--bh-space-1) 0 0 0;
+    font-size: var(--bh-text-xs);
+    color: var(--bh-text-tertiary);
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ============================================================
+   STEP HEADER — Header dentro de cada paso
+   ============================================================ */
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    margin-bottom: var(--bh-space-4);
+    padding-bottom: var(--bh-space-3);
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.step-header .icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.step-header h3 {
+    margin: 0;
+    font-size: var(--bh-text-lg);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   FORM FIELD — Contenedor de campo de formulario
+   ============================================================ */
+
+.form-field {
+    margin-bottom: var(--bh-space-4);
+}
+
+.form-field label {
+    display: block;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin-bottom: var(--bh-space-1);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-3) var(--bh-space-8);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-md);
+    font-family: var(--bh-font-sans);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+    outline: none;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+    color: transparent;
+}
+
+.form-field input:hover,
+.form-field select:hover,
+.form-field textarea:hover {
+    border-color: var(--bh-accent);
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--bh-accent);
+    box-shadow:
+        0 0 30px var(--bh-accent-glow-soft),
+        inset 0 0 30px rgba(32, 184, 171, 0.02);
+}
+
+.form-field input:focus + .inputIcon,
+.form-field input:focus ~ .inputIcon,
+.form-field textarea:focus + .inputIcon,
+.form-field textarea:focus ~ .inputIcon {
+    color: var(--bh-accent);
+}
+
+/* Floating label */
+.form-field label {
+    position: absolute;
+    left: var(--bh-space-8);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-tertiary);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    font-weight: var(--bh-weight-normal);
+}
+
+/* Para textarea, la label flota diferente */
+.form-field textarea ~ label {
+    top: var(--bh-space-3);
+    transform: none;
+}
+
+.form-field input:focus ~ label,
+.form-field input:not(:placeholder-shown) ~ label,
+.form-field textarea:focus ~ label,
+.form-field textarea:not(:placeholder-shown) ~ label {
+    top: 6px;
+    font-size: 10px;
+    color: var(--bh-accent);
+    transform: translateY(0);
+}
+
+.form-field textarea:focus ~ label,
+.form-field textarea:not(:placeholder-shown) ~ label {
+    top: 8px;
+}
+
+/* ============================================================
+   INCLUDED DATA — Lista de datos incluidos automáticamente
+   ============================================================ */
+
+.included-data {
+    margin-top: var(--bh-space-3);
+    margin-bottom: var(--bh-space-4);
+}
+
+.included-data h4 {
+    margin: 0 0 var(--bh-space-2) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+}
+
+.included-data ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.included-data li {
+    margin: 0 0 var(--bh-space-1) 0;
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+.included-data li span {
+    font-weight: var(--bh-weight-medium);
+    color: var(--bh-text-primary);
+}
+
+/* ============================================================
+   STEP ACTIONS — Botones de acción al final de un paso
+   ============================================================ */
+
+.step-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--bh-space-3);
+    padding-top: var(--bh-space-3);
+    margin-top: var(--bh-space-3);
+    border-top: 1px solid var(--bh-border);
+}
+
+/* ============================================================
+   CUSTOM SECTIONS — Entradas para secciones personalizadas
+   ============================================================ */
+
+.custom-sections {
+    margin-top: var(--bh-space-3);
+}
+
+.custom-sections h4 {
+    margin: 0 0 var(--bh-space-2) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+}
+
+.custom-sections .section-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-3);
+}
+
+.custom-sections .section-input-row {
+    display: flex;
+    gap: var(--bh-space-2);
+}
+
+.custom-sections .section-input-row input {
+    flex: 1;
+    padding: var(--bh-space-2) var(--bh-space-3);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-primary);
+}
+
+.custom-sections .section-input-row input::placeholder {
+    color: transparent;
+}
+
+.custom-sections .section-input-row input:focus {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: -2px;
+    border-color: var(--bh-accent);
+}
+
+.custom-sections .icon-btn--danger {
+    margin-top: var(--bh-space-1);
+}
+
+/* ============================================================
+   CUSTOM CONTENT — Textarea para contenido adicional
+   ============================================================ */
+
+.custom-content {
+    width: 100%;
+    padding: var(--bh-space-3) var(--bh-space-3) var(--bh-space-3) var(--bh-space-8);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--bh-border-input);
+    border-radius: var(--bh-radius-md);
+    color: var(--bh-text-primary);
+    font-size: var(--bh-text-md);
+    font-family: var(--bh-font-sans);
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 120px;
+    margin-top: var(--bh-space-2);
+}
+
+.custom-content:focus {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: -2px;
+    border-color: var(--bh-accent);
+}
+
+/* ============================================================
+   REPORT CONTENT — Área de contenido del reporte
+   ============================================================ */
+
+.report-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.report-section {
+    margin-bottom: var(--bh-space-5);
+}
+
+.report-section h3 {
+    margin: 0 0 var(--bh-space-3) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.report-section:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================================
+   PRICE ANALYSIS GRID — Grid de métricas de precio
+   ============================================================ */
+
+.price-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--bh-space-3);
+    margin: var(--bh-space-3) 0;
+}
+
+.price-metric {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-1);
+    padding: var(--bh-space-3);
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    transition: all var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.price-metric:hover {
+    border-color: var(--bh-border-strong);
+    box-shadow: var(--bh-shadow-sm);
+}
+
+.price-metric.highlight {
+    border: 1px solid var(--bh-accent);
+    background: rgba(32, 184, 171, 0.05);
+}
+
+.price-metric.highlight .metric-value {
+    color: var(--bh-accent);
+}
+
+.price-metric .metric-label {
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--bh-space-1);
+}
+
+.price-metric .metric-value {
+    font-size: var(--bh-text-md);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin: 0;
+}
+
+/* ============================================================
+   STATUS BADGE EN MÉTRICA — Badge con color de estado
+   ============================================================ */
+
+.metric-value.status-good {
+    color: var(--bh-success);
+}
+
+.metric-value.status-warning {
+    color: var(--bh-warning);
+}
+
+.metric-value.status-critical {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   RECOMMENDATION BOX — Box de recomendación
+   ============================================================ */
+
+.recommendation-box {
+    padding: var(--bh-space-4) var(--bh-space-5);
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-lg);
+    margin: var(--bh-space-3) 0;
+}
+
+.recommendation-box h4 {
+    margin: 0 0 var(--bh-space-2) 0;
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+}
+
+.recommendation-box p {
+    margin: 0;
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-primary);
+    line-height: 1.5;
+}
+
+/* ============================================================
+   PREVIEW CONTENT — Contenido de la vista previa
+   ============================================================ */
+
+.preview-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--bh-space-3) var(--bh-space-4);
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--bh-space-3);
+    padding-bottom: var(--bh-space-3);
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.preview-header h2 {
+    margin: 0;
+    font-size: var(--bh-text-xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+}
+
+.preview-meta {
+    display: flex;
+    gap: var(--bh-space-4);
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+.preview-meta span {
+    font-size: var(--bh-text-sm);
+}
+
+/* ============================================================
+   PRICE SUMMARY — Resumen de precio en preview
+   ============================================================ */
+
+.price-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-space-2);
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.price-row span {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+.price-row strong {
+    font-size: var(--bh-text-md);
+    color: var(--bh-text-primary);
+}
+
+.price-row.highlight strong {
+    color: var(--bh-accent);
+}
+
+/* ============================================================
+   PLANS LIST — Lista de planes de acción
+   ============================================================ */
+
+.plans-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.plan-item {
+    margin: 0 0 var(--bh-space-3) 0;
+    padding: var(--bh-space-3) 0;
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.plan-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.plan-item .plan-title {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-primary);
+    margin: 0 0 var(--bh-space-1) 0;
+}
+
+.plan-item .badge {
+    font-size: var(--bh-text-xs);
+}
+
+.plan-due {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   COMMUNICATIONS LIST — Lista de comunicaciones recientes
+   ============================================================ */
+
+.communications-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.comm-item {
+    margin: 0 0 var(--bh-space-2) 0;
+    padding: var(--bh-space-2) 0;
+    border-bottom: 1px solid var(--bh-border);
+}
+
+.comm-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.comm-type {
+    display: inline-block;
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--bh-text-tertiary);
+    margin-right: var(--bh-space-2);
+}
+
+.comm-subject {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+    margin: 0 0 var(--bh-space-1) 0;
+    display: block;
+}
+
+.comm-date {
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-tertiary);
+}
+
+/* ============================================================
+   CUSTOM CONTENT PREVIEW — Vista previa de contenido personalizado
+   ============================================================ */
+
+.custom-content-preview {
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    padding: var(--bh-space-4);
+    min-height: 80px;
+}
+
+/* ============================================================
+   MODAL — Contenedor modal premium
+   ============================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--bh-dur-fast) var(--bh-ease-premium),
+        visibility var(--bh-dur-fast) var(--bh-ease-premium);
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: var(--bh-bg-primary);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9) translateY(20px);
+    transition: transform var(--bh-dur-fast) var(--bh-ease-premium);
+    box-shadow: var(--bh-shadow-lg);
+}
+
+.modal-overlay.open .modal {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--bh-space-4) var(--bh-space-5);
+    border-bottom: 1px solid var(--bh-border);
+    background: var(--bh-bg-card);
+}
+
+.modal-header .icon {
+    width: 32px;
+    height: 32px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: var(--bh-text-xl);
+    font-weight: var(--bh-weight-bold);
+    color: var(--bh-text-primary);
+}
+
+.modal-header .icon-btn {
+    padding: var(--bh-space-1);
+}
+
+.modal-body {
+    flex: 1;
+    padding: var(--bh-space-5) var(--bh-space-4);
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    padding: var(--bh-space-3) var(--bh-space-5);
+    border-top: 1px solid var(--bh-border);
+    background: var(--bh-bg-card);
+    justify-content: flex-end;
+    gap: var(--bh-space-3);
+}
+
+/* ============================================================
+   TABLES PREMIUM — Tablas compactas y estilizadas
+   ============================================================ */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: var(--bh-space-3) var(--bh-space-4);
+    border-bottom: 1px solid var(--bh-border);
+    font-size: var(--bh-text-sm);
+    color: var(--bh-text-primary);
+}
+
+.table th {
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-secondary);
+    text-align: left;
+}
+
+.table tr:hover td {
+    background: var(--bh-bg-hover);
+}
+
+.table .status-good {
+    color: var(--bh-success);
+}
+
+.table .status-warning {
+    color: var(--bh-warning);
+}
+
+.table .status-critical {
+    color: var(--bh-danger);
+}
+
+/* ============================================================
+   BADGES — Badges de estado
+   ============================================================ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--bh-space-1) var(--bh-space-2);
+    font-size: var(--bh-text-xs);
+    font-weight: var(--bh-weight-medium);
+    border-radius: var(--bh-radius-sm);
+    white-space: nowrap;
+}
+
+.badge--primary {
+    background: var(--bh-accent-soft);
+    color: var(--bh-accent);
+}
+
+.badge--secondary {
+    background: var(--bh-bg-hover);
+    color: var(--bh-text-primary);
+}
+
+.badge--success {
+    background: rgba(74, 222, 128, 0.2);
+    color: var(--bh-success);
+}
+
+.badge--warning {
+    background: rgba(251, 191, 36, 0.2);
+    color: var(--bh-warning);
+}
+
+.badge--danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--bh-danger);
+}
+
+.badge--ghost {
+    background: transparent;
+    color: var(--bh-text-secondary);
+    border: 1px solid var(--bh-border-strong);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .report-types-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .step-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .step-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 390px) {
+    .report-type-card {
+        padding: var(--bh-space-3) var(--bh-space-3);
+    }
+
+    .price-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .report-type-card,
+    .btn,
+    .icon-btn,
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+        transition: none;
+    }
+
+    .price-analysis-grid .price-metric:hover {
+        border-color: var(--bh-border);
+        box-shadow: none;
+    }
+
+    .modal-overlay,
+    .modal {
+        transition: none;
+    }
+}

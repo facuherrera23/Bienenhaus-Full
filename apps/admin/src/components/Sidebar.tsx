@@ -147,6 +147,47 @@ function useRouteMatch(href: string): boolean {
     return Boolean(match);
 }
 
+function renderSidebarCategorias(
+    mainNav: NavItem[],
+    collapsed: boolean,
+    handleNavigate: () => void,
+    query: string
+) {
+    const labelsOperacion = ['Dashboard', 'Propiedades', 'Leads', 'Visitas'];
+    const labelsPersonas = ['Agentes', 'Propietarios'];
+    const labelsComunicacion = ['Chat', 'Newsletter'];
+    const labelsHerramientas = ['Tasar', 'Mercado Libre', 'Reportes'];
+    const labelsSistema = ['Auditoría', 'Usuarios', 'Papelera'];
+
+    const categoriaOperacion = mainNav.filter((item) => labelsOperacion.includes(item.label));
+    const categoriaPersonas = mainNav.filter((item) => labelsPersonas.includes(item.label))
+        .concat(OWNERS_NAV.filter((item) => labelsPersonas.includes(item.label)));
+    const categoriaComunicacion = mainNav.filter((item) => labelsComunicacion.includes(item.label))
+        .concat(OWNERS_NAV.filter((item) => labelsComunicacion.includes(item.label)));
+    const categoriaHerramientas = mainNav.filter((item) => labelsHerramientas.includes(item.label))
+        .concat(OWNERS_NAV.filter((item) => labelsHerramientas.includes(item.label)));
+    const categoriaSistema = ADMIN_ONLY_NAV.filter((item) => labelsSistema.includes(item.label));
+
+    const categorias = [
+        { title: 'Operación', items: categoriaOperacion },
+        { title: 'Personas', items: categoriaPersonas },
+        { title: 'Comunicación', items: categoriaComunicacion },
+        { title: 'Herramientas', items: categoriaHerramientas },
+        { title: 'Sistema', items: categoriaSistema },
+    ].filter((c) => c.items.length > 0);
+
+    return categorias.map((c) => (
+        <NavSection
+            key={c.title}
+            title={c.title}
+            items={c.items}
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+            query={query}
+        />
+    ));
+}
+
 interface NavLinkProps {
     item: NavItem;
     collapsed: boolean;
@@ -360,8 +401,6 @@ export function Sidebar() {
     };
 
     const mainNav = filterByRole(NAV, role);
-    const ownersNav = filterByRole(OWNERS_NAV, role);
-    const adminNav = filterByRole(ADMIN_ONLY_NAV, role);
     const settingsVisible = !SETTINGS_NAV.roles || SETTINGS_NAV.roles.includes(role ?? 'viewer');
 
     return (
@@ -438,31 +477,7 @@ export function Sidebar() {
             </div>
 
             <nav className={styles['sidebar-nav']} aria-label="Navegación principal">
-                <NavSection
-                    title="Principal"
-                    items={mainNav}
-                    collapsed={collapsed}
-                    onNavigate={handleNavigate}
-                    query={query}
-                />
-                {ownersNav.length > 0 && (
-                    <NavSection
-                        title="Propietarios"
-                        items={ownersNav}
-                        collapsed={collapsed}
-                        onNavigate={handleNavigate}
-                        query={query}
-                    />
-                )}
-                {adminNav.length > 0 && (
-                    <NavSection
-                        title="Administración"
-                        items={adminNav}
-                        collapsed={collapsed}
-                        onNavigate={handleNavigate}
-                        query={query}
-                    />
-                )}
+                {renderSidebarCategorias(mainNav, collapsed, handleNavigate, query)}
             </nav>
 
             <div className={styles['sidebar-footer']} data-testid="sidebar-footer">

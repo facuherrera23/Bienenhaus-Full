@@ -5,8 +5,10 @@
  * Eliminates 3 separate client instances + 3 WebSocket connections.
  *
  * Usage:
- *   import { supabase, createServerClient, onAuthStateChange } from '@bienenhaus/supabase';
- *   const { data } = await supabase.from('properties').select('*');
+ *   import { supabase, createServerClient, onAuthStateChange, createTypedClient } from '@bienenhaus/supabase';
+ *   // For type-safe admin queries:
+ *   import type { Database } from '../types/database';
+ *   const adminSupabase = createTypedClient<Database>();
  */
 
 import {
@@ -46,6 +48,43 @@ function getClient(): SupabaseClient {
 export const supabase = getClient();
 
 export type { SupabaseClient, User, AuthChangeEvent, Session };
+
+/**
+ * Creates a new Supabase client typed with the provided Database schema.
+ * Use this for type-safe queries in admin/edge functions.
+ * Each caller gets its own client instance (no singleton).
+ */
+export function createTypedClient<Database = unknown>(
+    options?: {
+        url?: string;
+        anonKey?: string;
+        schema?: string;
+    },
+): SupabaseClient<Database> {
+    const url = options?.url || SUPABASE_URL;
+    const key = options?.anonKey || SUPABASE_ANON_KEY;
+
+    return createClient(url, key, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+        },
+        realtime: {
+            params: {
+                eventsPerSecond: 10,
+            },
+        },
+        db: {
+            schema: options?.schema || 'public',
+        },
+        global: {
+            headers: {
+                'x-application-name': 'bienenhaus-shared',
+            },
+        },
+    }) as unknown as SupabaseClient<Database>;
+}
 
 /**
  * Crea un cliente Supabase configurado para el panel de admin con

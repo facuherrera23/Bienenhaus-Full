@@ -153,83 +153,6 @@ select {
    Botones e inputs
    -------------------------------------------------------------------------- */
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    border: 1px solid transparent;
-    border-radius: var(--bh-radius-full);
-    padding: 8px 14px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-        background var(--bh-dur-fast) var(--bh-ease),
-        border-color var(--bh-dur-fast) var(--bh-ease),
-        transform var(--bh-dur-fast) var(--bh-ease);
-}
-
-.btn:active {
-    transform: translateY(1px);
-}
-
-.btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.btn--primary {
-    background: var(--bh-accent);
-    color: var(--bh-white);
-}
-
-.btn--primary:hover:not(:disabled) {
-    background: var(--bh-accent-hover);
-}
-
-.btn--secondary {
-    background: var(--bh-accent-soft);
-    color: var(--bh-accent);
-}
-
-.btn--secondary:hover:not(:disabled) {
-    background: rgba(32, 184, 171, 0.2);
-}
-
-.btn--ghost {
-    background: transparent;
-    color: var(--bh-text-secondary);
-    border-color: var(--bh-border-strong);
-}
-
-.btn--ghost:hover:not(:disabled) {
-    background: var(--bh-bg-hover);
-    color: var(--bh-text-primary);
-}
-
-.btn--block {
-    width: 100%;
-}
-
-.icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--bh-border);
-    border-radius: var(--bh-radius-sm);
-    background: transparent;
-    color: var(--bh-text-secondary);
-    cursor: pointer;
-}
-
-.icon-btn:hover {
-    background: var(--bh-bg-hover);
-    color: var(--bh-text-primary);
-}
-
 .field {
     display: flex;
     flex-direction: column;
@@ -498,42 +421,6 @@ select {
     text-align: center;
     color: var(--bh-text-tertiary);
     padding: 34px 16px !important;
-}
-
-/* Badges */
-
-.badge {
-    display: inline-block;
-    padding: 3px 9px;
-    border-radius: var(--bh-radius-full);
-    font-size: 11.5px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.badge--success {
-    background: var(--bh-success-soft);
-    color: var(--bh-success);
-}
-
-.badge--warning {
-    background: var(--bh-warning-soft);
-    color: var(--bh-warning);
-}
-
-.badge--info {
-    background: var(--bh-info-soft);
-    color: var(--bh-info);
-}
-
-.badge--neutral {
-    background: var(--bh-bg-hover);
-    color: var(--bh-text-tertiary);
-}
-
-.badge--danger {
-    background: var(--bh-danger-soft);
-    color: var(--bh-danger);
 }
 
 .toast {
@@ -810,27 +697,6 @@ select {
     transform: translateX(16px);
 }
 
-/* Botones chicos y de peligro */
-
-.btn--sm {
-    padding: 5px 10px;
-    font-size: 12.5px;
-}
-
-.btn--danger {
-    background: var(--bh-danger-bg);
-    color: var(--bh-danger);
-}
-
-.btn--danger:hover:not(:disabled) {
-    background: var(--bh-danger-bg-hover);
-}
-
-.icon-btn--danger {
-    color: var(--bh-danger);
-    border-color: var(--bh-danger-border);
-}
-
 /* --------------------------------------------------------------------------
    Editor de sitio — encabezado, idiomas y layout con preview
    -------------------------------------------------------------------------- */
@@ -923,10 +789,6 @@ select {
    Mercado Libre + Configuraci�n + Modales
    -------------------------------------------------------------------------- */
 
-.spin {
-    animation: bh-spin 0.9s linear infinite;
-}
-
 @keyframes bh-spin {
     to {
         transform: rotate(360deg);
@@ -998,10 +860,6 @@ select {
     font-size: var(--bh-text-lg);
     font-weight: var(--bh-weight-bold);
     color: var(--bh-text-primary);
-}
-
-.modal-head .icon-btn {
-    flex-shrink: 0;
 }
 
 .modal-body {
@@ -1160,17 +1018,6 @@ select {
    Responsive
    -------------------------------------------------------------------------- */
 
-/* ML Preview toggle button — active state reflects "showing preview" */
-.btn--ml-toggle.active {
-    background: var(--bh-accent-soft);
-    border-color: var(--bh-accent);
-    color: var(--bh-accent);
-}
-
-.btn--ml-toggle.active svg {
-    animation: ml-eye-pulse var(--bh-dur-med) var(--bh-ease-premium);
-}
-
 @keyframes ml-eye-pulse {
     0% {
         transform: scale(1);
@@ -1293,11 +1140,6 @@ select {
     gap: 10px;
 }
 
-.bulk-confirm .btn {
-    padding: 8px 16px;
-    font-size: 13px;
-}
-
 /* Table checkbox column */
 .table-select-all {
     width: 18px;
@@ -1340,10 +1182,6 @@ select {
     padding: var(--bh-space-12) var(--bh-space-6);
     text-align: center;
     color: var(--bh-text-tertiary);
-}
-
-.gallery-empty .btn {
-    margin-top: var(--bh-space-2);
 }
 
 .image-action-btn.danger:hover {
@@ -1857,14 +1695,5 @@ select {
 
 /* --- Total de ambientes --- */
 
-/* --- Navegaci�n --- */
+/* --- Navegación --- */
 
-.spin {
-    animation: bh-spin 0.9s linear infinite;
-}
-
-@keyframes bh-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}

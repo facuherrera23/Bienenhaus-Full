@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useActionPlans, useCreateActionPlan, usePropertyOwners } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { ActionPlanCard } from '@components/owners';
+import { Button, IconButton } from '@bienenhaus/ui';
 import { type ActionPlanFormValues, actionPlanSchema } from '@lib/owners/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -98,8 +99,10 @@ export function ActionPlansPage() {
     return (
         <div className="page action-plans-page">
             <div className="page-head">
-                <Link href={`/propiedades/${propertyId}`} className="btn btn--ghost">
-                    <ArrowLeft size={16} /> Volver a la propiedad
+                <Link href={`/propiedades/${propertyId}`}>
+                    <Button variant="ghost">
+                        <ArrowLeft size={16} /> Volver a la propiedad
+                    </Button>
                 </Link>
                 <div>
                     <h2 className="page-title">Planes de Acción</h2>
@@ -107,13 +110,12 @@ export function ActionPlansPage() {
                         Gestioná los planes de acción para esta propiedad.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn--primary"
+                <Button
+                    variant="primary"
                     onClick={() => setShowNewPlan(true)}
                 >
                     <Plus size={16} /> Nuevo plan
-                </button>
+                </Button>
             </div>
 
             {showNewPlan && (
@@ -121,13 +123,13 @@ export function ActionPlansPage() {
                     <form onSubmit={methods.handleSubmit(handleSubmit)} className="plan-form">
                         <div className="form-header">
                             <h3>Nuevo plan de acción</h3>
-                            <button
-                                type="button"
-                                className="icon-btn"
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar"
                                 onClick={() => setShowNewPlan(false)}
                             >
                                 <X size={18} />
-                            </button>
+                            </IconButton>
                         </div>
 
                         <div className="form-grid">
@@ -196,20 +198,19 @@ export function ActionPlansPage() {
                         </div>
 
                         <div className="form-actions">
-                            <button
-                                type="button"
-                                className="btn btn--ghost"
+                            <Button
+                                variant="ghost"
                                 onClick={() => setShowNewPlan(false)}
                             >
                                 <X size={14} /> Cancelar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="primary"
                                 type="submit"
-                                className="btn btn--primary"
                                 disabled={createActionPlan.isPending}
                             >
                                 {createActionPlan.isPending ? 'Creando...' : 'Crear plan'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -277,13 +278,12 @@ export function ActionPlansPage() {
                     <FileText size={48} className="placeholder-icon" />
                     <h3>Sin planes de acción</h3>
                     <p>No hay planes que coincidan con los filtros.</p>
-                    <button
-                        type="button"
-                        className="btn btn--primary"
+                    <Button
+                        variant="primary"
                         onClick={() => setShowNewPlan(true)}
                     >
                         <Plus size={16} /> Crear primer plan
-                    </button>
+                    </Button>
                 </div>
             )}
 

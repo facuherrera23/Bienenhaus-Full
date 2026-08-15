@@ -1,4 +1,5 @@
 import { Component, type ComponentChildren } from 'preact';
+import { Button } from '@bienenhaus/ui';
 
 export interface ErrorBoundaryProps {
     children: ComponentChildren;
@@ -62,9 +63,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <div className="card placeholder-card" role="alert">
                     <h2>{this.props.title ?? 'Algo salió mal'}</h2>
                     <p>{this.props.description ?? this.state.error.message}</p>
-                    <button type="button" className="btn btn--primary" onClick={this.handleReset}>
+                    <Button type="button" variant="primary" onClick={this.handleReset}>
                         Reintentar
-                    </button>
+                    </Button>
                 </div>
             );
         }

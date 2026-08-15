@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { AlertTriangle, Lock, Mail } from 'lucide-preact';
+import { Button, FormField, Input, Spinner } from '@bienenhaus/ui';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword, authSession } from '../store/app';
 import styles from '../styles/Login.module.css';
@@ -190,16 +191,20 @@ export function Login() {
                 <label className={styles.field}>
                     <span>Email</span>
                     <div className={styles.inputWrapper}>
-                        <input
-                            type="email"
-                            value={email}
-                            placeholder=" "
-                            required
-                            onInput={(e) => setEmail((e.currentTarget as HTMLInputElement).value)}
-                            disabled={loading || lockout}
-                        />
-                        <Mail size={18} className={styles.inputIcon} />
-                        <label>admin@bienenhaus.com</label>
+                        <FormField
+                            label="Email"
+                            error={error}
+                        >
+                            <Input
+                                type="email"
+                                placeholder=" "
+                                value={email}
+                                onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+                                disabled={loading || lockout}
+                            />
+                            <Mail size={18} className={styles.inputIcon} />
+                            <label>admin@bienenhaus.com</label>
+                        </FormField>
                     </div>
                 </label>
 
@@ -207,18 +212,22 @@ export function Login() {
                 <label className={styles.field}>
                     <span>Contraseña</span>
                     <div className={styles.inputWrapper}>
-                        <input
-                            type="password"
-                            value={password}
-                            placeholder=" "
-                            required
-                            onInput={(e) =>
-                                setPassword((e.currentTarget as HTMLInputElement).value)
-                            }
-                            disabled={loading || lockout}
-                        />
-                        <Lock size={18} className={styles.inputIcon} />
-                        <label>••••••••</label>
+                        <FormField
+                            label="Contraseña"
+                            error={error}
+                        >
+                            <Input
+                                type="password"
+                                placeholder=" "
+                                value={password}
+                                onInput={(e) =>
+                                    setPassword((e.target as HTMLInputElement).value)
+                                }
+                                disabled={loading || lockout}
+                            />
+                            <Lock size={18} className={styles.inputIcon} />
+                            <label>••••••••</label>
+                        </FormField>
                     </div>
                 </label>
 
@@ -250,37 +259,21 @@ export function Login() {
                     </div>
                 )}
 
-                <button
-                    className={`btn btn--primary btn--block btn--lg`}
-                    type="submit"
+                <Button
+                    variant="primary"
+                    fullWidth
+                    size="lg"
                     disabled={loading || lockout}
                 >
                     {loading ? (
                         <>
-                            <span className="spin" style={{ display: 'inline-block' }}>
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                    <circle
-                                        cx="9"
-                                        cy="9"
-                                        r="8"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        opacity="0.3"
-                                    />
-                                    <path
-                                        d="M9 1C13.4183 1 17 4.58172 17 9"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                            </span>
+                            <Spinner size="sm" inline color="white" />
                             Ingresando…
                         </>
                     ) : (
                         'Entrar'
                     )}
-                </button>
+                </Button>
 
                 <p className={styles.loginLegal}>
                     Primer acceso: usá las credenciales del seed. El sistema te pedirá cambiar la

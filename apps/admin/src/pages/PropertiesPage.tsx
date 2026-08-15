@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Download, Plus, Search } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
+import { Button, Badge } from '@bienenhaus/ui';
 import {
     type MlMetaRow,
     type PropertyRow,
@@ -11,9 +12,12 @@ import {
     useProperties,
 } from '../lib/properties.api';
 import { downloadCsv, getListData as getListDataUtil, toCsv, todayStamp } from '../lib/utils';
+import styles from '../styles/PropertiesPage.module.css';
+
+import { BadgeVariant } from '@bienenhaus/ui';
 
 function StatusBadge({ status }: { status: PropertyStatus }) {
-    return <span className={`badge badge--${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
+    return <Badge variant={STATUS_TONE[status] as BadgeVariant} size="sm">{STATUS_LABEL[status]}</Badge>;
 }
 
 function formatPrice(row: PropertyRow): string {
@@ -116,31 +120,35 @@ export function PropertiesPage() {
     };
 
     return (
-        <div className="page">
-            <div className="page-head">
+        <div className={styles.page}>
+            <div className={styles.pageHead}>
                 <div>
-                    <h2 className="page-title">Propiedades</h2>
-                    <p className="page-subtitle">
+                    <h2 className={styles.pageTitle}>Propiedades</h2>
+                    <p className={styles.pageSubtitle}>
                         Gestioná el catálogo completo de tu inmobiliaria.
                     </p>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button
-                        type="button"
-                        className="btn btn--secondary"
+
+                <div className={styles.pageHeadActions}>
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        iconLeft={<Download size={15} />}
                         onClick={handleExport}
                         disabled={properties.length === 0}
                     >
-                        <Download size={15} /> Exportar CSV
-                    </button>
-                    <Link href="/propiedades/nueva" className="btn btn--primary">
-                        <Plus size={16} /> Nueva propiedad
+                        Exportar CSV
+                    </Button>
+                    <Link href="/propiedades/nueva">
+                        <Button variant="primary" size="md" iconLeft={<Plus size={16} />}>
+                            Nueva propiedad
+                        </Button>
                     </Link>
                 </div>
             </div>
 
-            <div className="toolbar">
-                <div className="toolbar-search">
+            <div className={styles.toolbar}>
+                <div className={styles.toolbarSearch}>
                     <Search size={15} />
                     <input
                         type="text"
@@ -150,7 +158,7 @@ export function PropertiesPage() {
                     />
                 </div>
                 <select
-                    className="select"
+                    className={styles.select}
                     value={statusFilter}
                     onChange={(e) =>
                         setStatusFilter(
@@ -168,13 +176,20 @@ export function PropertiesPage() {
                 </select>
             </div>
 
-            {isPending && <div className="card placeholder-card">Cargando propiedades…</div>}
+            {isPending && (
+                <div className={styles.cardPlaceholder}>
+                    Cargando propiedades…
+                </div>
+            )}
+
             {isError && (
-                <div className="card placeholder-card">No se pudieron cargar las propiedades.</div>
+                <div className={styles.cardPlaceholder}>
+                    No se pudieron cargar las propiedades.
+                </div>
             )}
 
             {!isPending && !isError && (
-                <div className="card table-card">
+                <div className={styles.cardTable}>
                     <table className="table">
                         <thead>
                             <tr>
@@ -192,30 +207,35 @@ export function PropertiesPage() {
                                 return (
                                     <tr
                                         key={p.id}
-                                        className="row-click"
+                                        className={styles.rowClick}
                                         onClick={(e) => {
                                             if (
                                                 (e.target as HTMLElement).closest(
-                                                    'input,button,a,.icon-btn',
+                                                    'input,button,a',
                                                 )
-                                            )
+                                            ) {
                                                 return;
+                                            }
                                             setLocation(`/propiedades/${p.id}`);
                                         }}
                                     >
                                         <td>
-                                            <div className="cell-property">
+                                            <div className={styles.cellProperty}>
                                                 {p.cover_url ? (
-                                                    <img src={p.cover_url} alt="" loading="lazy" />
+                                                    <img
+                                                        src={p.cover_url}
+                                                        alt=""
+                                                        loading="lazy"
+                                                    />
                                                 ) : (
                                                     <span
-                                                        className="cell-thumb"
+                                                        className={styles.cellThumb}
                                                         aria-hidden="true"
                                                     />
                                                 )}
                                                 <div>
                                                     <strong>{p.title}</strong>
-                                                    <span className="muted">
+                                                    <span className={styles.muted}>
                                                         #{String(p.code).padStart(4, '0')}
                                                     </span>
                                                 </div>
@@ -224,19 +244,27 @@ export function PropertiesPage() {
                                         <td>
                                             <StatusBadge status={p.status} />
                                         </td>
-                                        <td className="cap">{p.listing_type}</td>
-                                        <td className="num">{formatPrice(p)}</td>
+                                        <td className={styles.cap}>
+                                            {p.listing_type}
+                                        </td>
+                                        <td className={styles.num}>
+                                            {formatPrice(p)}
+                                        </td>
                                         <td>{p.location}</td>
-                                        <td className="num">{p.bedrooms ?? '—'}</td>
-                                        <td className="muted">
-                                            {new Date(p.updated_at).toLocaleDateString('es-AR')}
+                                        <td className={styles.num}>
+                                            {p.bedrooms ?? '—'}
+                                        </td>
+                                        <td className={styles.muted}>
+                                            {new Date(p.updated_at).toLocaleDateString(
+                                                'es-AR',
+                                            )}
                                         </td>
                                     </tr>
                                 );
                             })}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="empty-cell">
+                                    <td colSpan={7} className={styles.emptyCell}>
                                         No hay propiedades que coincidan con la búsqueda.
                                     </td>
                                 </tr>

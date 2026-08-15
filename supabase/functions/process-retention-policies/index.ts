@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
+import { requireAdmin } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return optionsResponse(req);
@@ -15,6 +16,11 @@ Deno.serve(async (req) => {
             { auth: { persistSession: false } },
         );
 
+        // Solo staff puede ejecutar purgas permanentes
+        if (!(await requireAdmin(req, supabase))) {
+            return jsonResponse(401, { error: 'No autorizado' }, req);
+        }
+
         const now = new Date();
 
         // Obtener políticas de retención activas
@@ -25,6 +31,9 @@ Deno.serve(async (req) => {
 
         if (policiesError) throw policiesError;
 
+        let notified = 0;
+        let deleted = 0;
+
         for (const policy of policies ?? []) {
             if (!policy.auto_delete_enabled) continue;
 
@@ -34,36 +43,20 @@ Deno.serve(async (req) => {
                     (policy.retention_days - policy.notify_before_days) * 24 * 60 * 60 * 1000,
             );
 
-            const tableName = policy.entity;
-
             // 1. Notificar items próximos a auto-eliminarse
+            // (sin tabla `notifications` en el schema: se registra el conteo en logs)
             const { data: toNotify } = await supabase
                 .from(policy.entity)
-                .select('id, deleted_at')
+                .select('id')
                 .not('deleted_at', 'is', null)
                 .lte('deleted_at', notifyCutoff.toISOString())
                 .gt('deleted_at', cutoff.toISOString());
 
             if (toNotify?.length) {
-                // Enviar notificación a admins (implementar según sistema de notificaciones)
+                notified += toNotify.length;
                 console.log(
-                    `[retention] Notificar ${toNotify.length} items en ${policy.entity} próximos a auto-eliminación`,
+                    `[retention] ${toNotify.length} items en ${policy.entity} próximos a auto-eliminación (dentro de ${policy.notify_before_days} días)`,
                 );
-
-                // Ejemplo: crear notificación en BD
-                for (const item of toNotify) {
-                    await supabase.from('notifications').insert({
-                        type: 'trash_retention_warning',
-                        title: `Elemento próximo a eliminación automática`,
-                        content: `El elemento será eliminado permanentemente en ${policy.notify_before_days} días`,
-                        reference_id: item.id,
-                        reference_type: policy.entity,
-                        metadata: {
-                            entity: policy.entity,
-                            days_remaining: policy.notify_before_days,
-                        },
-                    });
-                }
             }
 
             // 2. Auto-eliminar items vencidos
@@ -74,6 +67,7 @@ Deno.serve(async (req) => {
                 .lte('deleted_at', cutoff.toISOString());
 
             if (toDelete?.length) {
+                deleted += toDelete.length;
                 console.log(
                     `[retention] Auto-eliminando ${toDelete.length} items de ${policy.entity}`,
                 );
@@ -84,9 +78,6 @@ Deno.serve(async (req) => {
                     const batch = toDelete.slice(i, i + batchSize);
                     const ids = batch.map((d) => d.id);
 
-                    // Llamar a la función de bulk permanent delete
-                    // Nota: Esto requeriría una RPC o llamada a la API
-                    // Por simplicidad, hacemos delete directo aquí
                     const { error } = await supabase.from(policy.entity).delete().in('id', ids);
 
                     if (error) {
@@ -96,7 +87,7 @@ Deno.serve(async (req) => {
             }
         }
 
-        return jsonResponse(200, { ok: true, processed: policies?.length ?? 0 }, req);
+        return jsonResponse(200, { ok: true, processed: policies?.length ?? 0, notified, deleted }, req);
     } catch (err) {
         console.error('[process-retention-policies] Error:', err);
         return jsonResponse(500, { error: (err as Error).message }, req);

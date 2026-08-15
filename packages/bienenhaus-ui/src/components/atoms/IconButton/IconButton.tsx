@@ -8,10 +8,10 @@ import styles from './IconButton.module.css';
  * Accessibility: `aria-label` is REQUIRED (icon-only buttons must label
  * themselves for screen readers). Enforced at the type level.
  *
- * Variants: ghost | outline | solid
+ * Variants: ghost | outline | solid | danger
  * Sizes:    sm (32px) | md (40px) | lg (48px)
  */
-export type IconButtonVariant = 'ghost' | 'outline' | 'solid';
+export type IconButtonVariant = 'ghost' | 'outline' | 'solid' | 'danger';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
 
 export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
@@ -35,6 +35,7 @@ const VARIANT_CLASS: Record<IconButtonVariant, string> = {
     ghost: styles.ghost,
     outline: styles.outline,
     solid: styles.solid,
+    danger: styles.danger,
 };
 
 const SIZE_CLASS: Record<IconButtonSize, string> = {

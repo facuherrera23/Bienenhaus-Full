@@ -5,7 +5,6 @@ import {
     ClipboardList,
     FileText,
     Home,
-    Loader2,
     Lock,
     MapPin,
     PencilLine,
@@ -64,6 +63,7 @@ import {
     ValuacionConValidacionesSchema,
     VigilanciaEnum,
 } from '../schemas/valuationSchemas';
+import { Button, Spinner } from '@bienenhaus/ui';
 import styles from './TasarPage.module.css';
 
 // ============================================================
@@ -456,14 +456,15 @@ function ComparablesEditor({
         <div className={`${styles['comparable-section']} field--wide`}>
             <div className={styles['comparable-section-head']}>
                 <span>Comparables</span>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--sm btn--secondary"
+                    variant="secondary"
+                    size="sm"
                     onClick={addComparable}
                     disabled={disabled}
                 >
                     <Plus size={14} /> Agregar comparable
-                </button>
+                </Button>
             </div>
 
             {comparables.length === 0 ? (
@@ -477,15 +478,16 @@ function ComparablesEditor({
                             <span className={styles['comparable-card-title']}>
                                 Comparable #{c.orden}
                             </span>
-                            <button
+                            <Button
                                 type="button"
-                                className="btn btn--sm btn--danger"
+                                variant="danger"
+                                size="sm"
                                 onClick={() => removeComparable(i)}
                                 disabled={disabled}
                                 aria-label={`Quitar comparable ${c.orden}`}
                             >
                                 <Trash2 size={13} /> Quitar
-                            </button>
+                            </Button>
                         </div>
                         <div className="form-grid">
                             <TextInput
@@ -1401,12 +1403,9 @@ export function TasarPage() {
                         </p>
                     </div>
                     <div className={styles['page-actions']}>
-                        <button
-                            className="btn btn--primary"
-                            onClick={() => setLocation('/tasar/nueva')}
-                        >
+                        <Button onClick={() => setLocation('/tasar/nueva')}>
                             <Plus size={16} /> Nueva tasación
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -1437,18 +1436,18 @@ export function TasarPage() {
                             <option value="draft">Borradores</option>
                             <option value="finalized">Finalizadas</option>
                         </select>
-                        <button
-                            className="btn btn--ghost"
+                        <Button
+                            variant="ghost"
                             onClick={() => void valuationsQuery.refetch()}
                             disabled={valuationsQuery.isFetching}
                         >
                             {valuationsQuery.isFetching ? (
-                                <Loader2 className="spin" size={16} />
+                                <Spinner size="sm" inline color="inherit" />
                             ) : (
                                 <Save size={16} />
                             )}
                             Actualizar
-                        </button>
+                        </Button>
                     </div>
 
                     {isListLoading ? (
@@ -1471,12 +1470,9 @@ export function TasarPage() {
                             <FileText size={32} />
                             <h2>No hay tasaciones</h2>
                             <p>Creá la primera tasación para comenzar.</p>
-                            <button
-                                className="btn btn--primary"
-                                onClick={() => setLocation('/tasar/nueva')}
-                            >
+                            <Button onClick={() => setLocation('/tasar/nueva')}>
                                 <Plus size={16} /> Crear tasación
-                            </button>
+                            </Button>
                         </div>
                     ) : (
                         <div className={styles['valuation-table-wrap']}>
@@ -1535,23 +1531,25 @@ export function TasarPage() {
                                                     <div
                                                         className={styles['valuation-row-actions']}
                                                     >
-                                                        <button
-                                                            className="btn btn--ghost btn--sm"
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
                                                             onClick={() =>
                                                                 setLocation(`/tasar/${row.id}`)
                                                             }
                                                         >
                                                             <PencilLine size={15} /> Editar
-                                                        </button>
-                                                        <button
-                                                            className="btn btn--ghost btn--sm"
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
                                                             aria-label={`Eliminar tasación de ${row.f_solicitante || 'sin solicitante'}`}
                                                             onClick={() =>
                                                                 setPendingDeleteId(row.id)
                                                             }
                                                         >
                                                             <Trash2 size={15} />
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1628,38 +1626,37 @@ export function TasarPage() {
                 </div>
 
                 <div className={styles['page-actions']}>
-                    <button className="btn btn--ghost" onClick={() => setLocation('/tasar')}>
+                    <Button variant="ghost" onClick={() => setLocation('/tasar')}>
                         <ArrowLeft size={16} /> Volver al listado
-                    </button>
+                    </Button>
                     {!isLocked && (
-                        <button
-                            className="btn btn--secondary"
+                        <Button
+                            variant="secondary"
                             onClick={handleSaveNow}
                             disabled={saving}
                         >
-                            {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+                            {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={16} />}
                             {saving ? 'Guardando…' : 'Guardar borrador'}
-                        </button>
+                        </Button>
                     )}
                     {isLocked && editId && (
-                        <button
-                            className="btn btn--secondary"
+                        <Button
+                            variant="secondary"
                             onClick={handleEnableEdit}
                             disabled={enableEditMutation.isPending}
                         >
                             <PencilLine size={16} />{' '}
                             {enableEditMutation.isPending ? 'Habilitando…' : 'Habilitar edición'}
-                        </button>
+                        </Button>
                     )}
                     {!isLocked && (
-                        <button
-                            className="btn btn--primary"
+                        <Button
                             onClick={handleFinalize}
                             disabled={finalizeMutation.isPending}
                         >
                             <Lock size={16} />{' '}
                             {finalizeMutation.isPending ? 'Finalizando…' : 'Finalizar tasación'}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -1677,7 +1674,7 @@ export function TasarPage() {
             {!isLocked && (
                 <div className={styles['valuation-banner']}>
                     {saving ? (
-                        <Loader2 className="spin" size={14} />
+                        <Spinner size="sm" inline color="inherit" />
                     ) : (
                         <span
                             className={`${styles['valuation-status-dot']} ${dirty ? styles['valuation-status-dot--dirty'] : styles['valuation-status-dot--saved']}`}
@@ -1736,25 +1733,24 @@ export function TasarPage() {
             </div>
 
             <div className={styles['valuation-form-footer']}>
-                <button className="btn btn--ghost" onClick={() => setLocation('/tasar')}>
+                <Button variant="ghost" onClick={() => setLocation('/tasar')}>
                     <ArrowLeft size={16} /> Volver al listado
-                </button>
+                </Button>
                 {!isLocked && (
                     <div className={styles['page-actions']}>
-                        <button
-                            className="btn btn--secondary"
+                        <Button
+                            variant="secondary"
                             onClick={handleSaveNow}
                             disabled={saving}
                         >
                             <Save size={16} /> Guardar borrador
-                        </button>
-                        <button
-                            className="btn btn--primary"
+                        </Button>
+                        <Button
                             onClick={handleFinalize}
                             disabled={finalizeMutation.isPending}
                         >
                             <Lock size={16} /> Finalizar tasación
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>

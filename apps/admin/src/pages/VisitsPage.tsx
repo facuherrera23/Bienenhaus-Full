@@ -5,7 +5,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
-    Loader2,
     QrCode,
     Search,
     X,
@@ -21,6 +20,7 @@ import {
 import { fetchAgents } from '../lib/agents';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { Button, IconButton, Spinner } from '@bienenhaus/ui';
 import styles from './VisitsPage.module.css';
 
 const VIEW_MODES = ['month', 'week', 'day'] as const;
@@ -254,9 +254,9 @@ export function VisitsPage() {
                                                     )}
                                                     <span>{v.title}</span>
                                                 </span>
-                                                <button
-                                                    type="button"
-                                                    className="chip-qr-btn"
+                                                <IconButton
+                                                    variant="ghost"
+                                                    size="sm"
                                                     title="Generar QR de check-in"
                                                     aria-label={'QR de ' + v.title}
                                                     onClick={(e) => {
@@ -264,8 +264,8 @@ export function VisitsPage() {
                                                         handleGenerateQr(v.id);
                                                     }}
                                                 >
-                                                    <QrCode size={12} />
-                                                </button>
+                                                    <QrCode size={14} />
+                                                </IconButton>
                                             </div>
                                         ))}
                                         {dayVisits.length > 3 && (
@@ -328,9 +328,9 @@ export function VisitsPage() {
                                     <time>{formatTime(v.starts_at)}</time>
                                     <strong>{v.title}</strong>
                                     <span className="muted">{v.location}</span>
-                                    <button
-                                        type="button"
-                                        className="chip-qr-btn"
+                                    <IconButton
+                                        variant="ghost"
+                                        size="sm"
                                         title="Generar QR de check-in"
                                         aria-label={'QR de ' + v.title}
                                         onClick={(e) => {
@@ -338,8 +338,8 @@ export function VisitsPage() {
                                             handleGenerateQr(v.id);
                                         }}
                                     >
-                                        <QrCode size={12} />
-                                    </button>
+                                        <QrCode size={14} />
+                                    </IconButton>
                                 </div>
                             ))}
                         </div>
@@ -382,9 +382,9 @@ export function VisitsPage() {
                                     <time>{formatTime(v.starts_at)}</time>
                                     <strong>{v.title}</strong>
                                     <span className="muted">{v.location}</span>
-                                    <button
-                                        type="button"
-                                        className="chip-qr-btn"
+                                    <IconButton
+                                        variant="ghost"
+                                        size="sm"
                                         title="Generar QR de check-in"
                                         aria-label={'QR de ' + v.title}
                                         onClick={(e) => {
@@ -392,8 +392,8 @@ export function VisitsPage() {
                                             handleGenerateQr(v.id);
                                         }}
                                     >
-                                        <QrCode size={12} />
-                                    </button>
+                                        <QrCode size={14} />
+                                    </IconButton>
                                 </div>
                             ))}
                         </div>
@@ -415,25 +415,29 @@ export function VisitsPage() {
             <div className={styles['visits-toolbar']}>
                 <div className={styles['toolbar-view']}>
                     {VIEW_MODES.map((mode) => (
-                        <button
+                        <Button
                             key={mode}
-                            className={
-                                'btn' + (viewMode === mode ? ' btn--primary' : ' btn--secondary')
+                            variant={viewMode === mode ? 'primary' : 'secondary'}
+                            iconLeft={
+                                mode === 'month' ? (
+                                    <Calendar size={16} />
+                                ) : mode === 'week' ? (
+                                    <CalendarClock size={16} />
+                                ) : (
+                                    <Clock size={16} />
+                                )
                             }
                             onClick={() => setViewMode(mode)}
                         >
-                            {mode === 'month' && <Calendar size={16} />}
-                            {mode === 'week' && <CalendarClock size={16} />}
-                            {mode === 'day' && <Clock size={16} />}
-                            <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
-                        </button>
+                            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                        </Button>
                     ))}
                 </div>
 
                 <div className={styles['toolbar-nav']}>
-                    <button className="btn btn--ghost" onClick={() => navigate('prev')}>
+                    <Button variant="ghost" onClick={() => navigate('prev')}>
                         <ChevronLeft size={16} />
-                    </button>
+                    </Button>
                     <span className={styles['current-period']}>
                         {viewMode === 'month' &&
                             currentDate.toLocaleDateString('es-AR', {
@@ -459,12 +463,12 @@ export function VisitsPage() {
                                 year: 'numeric',
                             })}
                     </span>
-                    <button className="btn btn--ghost" onClick={() => navigate('next')}>
+                    <Button variant="ghost" onClick={() => navigate('next')}>
                         <ChevronRight size={16} />
-                    </button>
-                    <button className="btn btn--secondary" onClick={navigateToday}>
+                    </Button>
+                    <Button variant="secondary" onClick={navigateToday}>
                         Hoy
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="toolbar-filters">
@@ -523,14 +527,18 @@ export function VisitsPage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>QR de Check-in</h3>
-                            <button className="icon-btn" onClick={() => setShowQrModal(null)}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar QR"
+                                onClick={() => setShowQrModal(null)}
+                            >
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body">
                             {generatingQr === showQrModal ? (
                                 <div className="ml-center">
-                                    <Loader2 size={32} className="spin" /> Generando QR...
+                                    <Spinner size="lg" inline color="inherit" /> Generando QR...
                                 </div>
                             ) : (
                                 <div className="qr-display">

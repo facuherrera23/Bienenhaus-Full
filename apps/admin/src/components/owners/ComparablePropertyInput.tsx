@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { GripVertical, Plus, Trash2 } from 'lucide-preact';
 import type { ComparableProperty } from '../../lib/owners/schemas';
+import { Button, IconButton } from '@bienenhaus/ui';
 
 interface ComparablePropertyInputProps {
     value: ComparableProperty[];
@@ -61,14 +62,15 @@ export function ComparablePropertyInput({
         <div className="comparable-properties-input">
             <div className="input-header">
                 <h4>Propiedades Comparables</h4>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--ghost btn--sm"
+                    variant="ghost"
+                    size="sm"
                     onClick={addComparable}
                     disabled={disabled}
                 >
                     <Plus size={14} /> Agregar
-                </button>
+                </Button>
             </div>
 
             {comparables.length === 0 && (
@@ -181,15 +183,16 @@ export function ComparablePropertyInput({
                             </div>
                         </div>
 
-                        <button
+                        <IconButton
                             type="button"
-                            className="icon-btn icon-btn--danger comparable-remove"
+                            variant="danger"
+                            className="comparable-remove"
                             onClick={() => removeComparable(index)}
                             disabled={disabled || comparables.length === 1}
                             aria-label="Eliminar comparable"
                         >
                             <Trash2 size={14} />
-                        </button>
+                        </IconButton>
                     </div>
                 ))}
             </div>

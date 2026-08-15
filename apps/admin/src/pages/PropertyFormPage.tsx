@@ -6,7 +6,6 @@ import {
     Eye,
     Home,
     List,
-    Loader2,
     MapPin,
     Save,
     Trash2,
@@ -41,6 +40,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
+import { Badge, Button, IconButton, Spinner } from '@bienenhaus/ui';
 import styles from './PropertyFormPage.module.css';
 
 const STORAGE_KEY = 'property-form-draft';
@@ -346,39 +346,43 @@ export function PropertyFormPage() {
                     style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}
                 >
                     {!isNew && (
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--secondary"
+                            variant="secondary"
                             onClick={handleDuplicate}
                             disabled={saving}
                         >
                             <Copy size={16} /> Duplicar
-                        </button>
+                        </Button>
                     )}
                     {!isNew && (
-                        <button
+                        <Button
                             type="button"
-                            className={`btn btn--secondary ${styles['btn--ml-toggle']}${showMLPreview ? ' active' : ''}`}
+                            variant="secondary"
+                            className={`${styles['btn--ml-toggle']}${showMLPreview ? ' active' : ''}`}
                             onClick={() => setShowMLPreview(!showMLPreview)}
                             disabled={saving}
                             aria-pressed={showMLPreview}
                         >
                             <Eye size={16} /> {showMLPreview ? 'Ocultar' : 'Vista previa'} ML
-                        </button>
+                        </Button>
                     )}
                     {!isNew && mapCoords && (
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--ghost btn--sm"
+                            variant="ghost"
+                            size="sm"
                             onClick={openMapPicker}
                             disabled={saving}
                         >
                             <MapPin size={14} /> Coordenadas: {mapCoords.lat.toFixed(6)},{' '}
                             {mapCoords.lng.toFixed(6)}
-                        </button>
+                        </Button>
                     )}
-                    <Link href="/propiedades" className="btn btn--secondary">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/propiedades">
+                        <Button variant="secondary">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -387,8 +391,8 @@ export function PropertyFormPage() {
                 <div className="card placeholder-card">
                     <h3>No se pudo abrir la propiedad</h3>
                     <p>{loadError}</p>
-                    <Link href="/propiedades" className="btn btn--secondary">
-                        Volver al listado
+                    <Link href="/propiedades">
+                        <Button variant="secondary">Volver al listado</Button>
                     </Link>
                 </div>
             )}
@@ -985,19 +989,19 @@ export function PropertyFormPage() {
 
                     <div className="form-actions">
                         {!isNew && (
-                            <button
+                            <Button
                                 type="button"
-                                className="btn btn--danger"
+                                variant="danger"
                                 onClick={() => setConfirmDelete(true)}
                                 disabled={saving}
                             >
                                 <Trash2 size={16} /> Mover a papelera
-                            </button>
+                            </Button>
                         )}
-                        <button type="submit" className="btn btn--primary" disabled={saving}>
-                            {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+                        <Button type="submit" disabled={saving}>
+                            {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={16} />}
                             {saving ? ' Guardando…' : ' Guardar'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             )}
@@ -1007,26 +1011,28 @@ export function PropertyFormPage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>Vista previa Mercado Libre</h3>
-                            <button className="icon-btn" onClick={() => setShowMLPreview(false)}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar vista previa Mercado Libre"
+                                onClick={() => setShowMLPreview(false)}
+                            >
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body">
                             <div className={styles['ml-preview']}>
                                 <div className={styles['ml-preview-header']}>
                                     <h4>{values.title}</h4>
                                     <div className={styles['ml-preview-badges']}>
-                                        <span className="badge badge--info">
+                                        <Badge variant="info">
                                             {getListingTypeLabel(values.listing_type)}
-                                        </span>
-                                        <span className="badge badge--success">
+                                        </Badge>
+                                        <Badge variant="success">
                                             {values.price
                                                 ? `${values.currency} ${values.price.toLocaleString('es-AR')}`
                                                 : 'Precio no definido'}
-                                        </span>
-                                        <span className="badge badge--neutral">
-                                            {values.currency}
-                                        </span>
+                                        </Badge>
+                                        <Badge variant="neutral">{values.currency}</Badge>
                                     </div>
                                 </div>
                                 <div className={styles['ml-preview-body']}>
@@ -1082,9 +1088,13 @@ export function PropertyFormPage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>Seleccionar coordenadas en el mapa</h3>
-                            <button className="icon-btn" onClick={() => setShowMap(false)}>
+                            <IconButton
+                                variant="ghost"
+                                aria-label="Cerrar selector de mapa"
+                                onClick={() => setShowMap(false)}
+                            >
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body" style={{ padding: 0 }}>
                             <div ref={mapRef} style={{ width: '100%', height: '500px' }} />
@@ -1107,8 +1117,8 @@ export function PropertyFormPage() {
                                     Coordenadas: <strong>{mapCoords?.lat.toFixed(6)}</strong>,{' '}
                                     <strong>{mapCoords?.lng.toFixed(6)}</strong>
                                 </span>
-                                <button
-                                    className="btn btn--secondary"
+                                <Button
+                                    variant="secondary"
                                     onClick={() => {
                                         setValues((v) => ({
                                             ...v,
@@ -1120,13 +1130,10 @@ export function PropertyFormPage() {
                                     disabled={!mapCoords}
                                 >
                                     <MapPin size={14} /> Usar estas coordenadas
-                                </button>
-                                <button
-                                    className="btn btn--ghost"
-                                    onClick={() => setShowMap(false)}
-                                >
+                                </Button>
+                                <Button variant="ghost" onClick={() => setShowMap(false)}>
                                     Cancelar
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>

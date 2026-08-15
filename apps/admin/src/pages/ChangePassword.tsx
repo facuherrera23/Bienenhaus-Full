@@ -1,7 +1,9 @@
+// apps/admin/src/pages/ChangePassword.tsx
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { supabase } from '../lib/supabase';
 import { authMustChangePassword } from '../store/app';
+import { Button } from '@bienenhaus/ui';
 import styles from './Login.module.css';
 
 export function ChangePassword() {
@@ -67,76 +69,78 @@ export function ChangePassword() {
     };
 
     return (
-        <div className={styles['login-page']}>
-            <form className={styles['login-card']} onSubmit={handleSubmit}>
-                <div className={styles['login-brand']}>
-                    <span className={styles['sidebar-logo']} aria-hidden="true">
-                        B
-                    </span>
-                    <div>
-                        <strong>BIENENHAUS</strong>
-                        <span>Panel de Administración</span>
+        <div className={styles.loginPage}>
+            <div className={styles.loginCard}>
+                <form onSubmit={handleSubmit}>
+                    <div className={styles.loginBrand}>
+                        <span className={styles.sidebarLogo} aria-hidden="true">
+                            B
+                        </span>
+                        <div>
+                            <strong>BIENENHAUS</strong>
+                            <span>Panel de Administración</span>
+                        </div>
                     </div>
-                </div>
 
-                <h1>Cambiar contraseña</h1>
-                <p className={styles['login-hint']}>
-                    Tu primera contraseña debe ser cambiada antes de continuar.
-                </p>
-
-                <label className="field">
-                    <span>Contraseña actual</span>
-                    <input
-                        type="password"
-                        value={currentPassword}
-                        placeholder="••••••••"
-                        required
-                        onInput={(e) =>
-                            setCurrentPassword((e.currentTarget as HTMLInputElement).value)
-                        }
-                        disabled={loading}
-                    />
-                </label>
-
-                <label className="field">
-                    <span>Nueva contraseña</span>
-                    <input
-                        type="password"
-                        value={newPassword}
-                        placeholder="••••••••"
-                        required
-                        minLength={8}
-                        onInput={(e) => setNewPassword((e.currentTarget as HTMLInputElement).value)}
-                        disabled={loading}
-                    />
-                </label>
-
-                <label className="field">
-                    <span>Confirmar nueva contraseña</span>
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        placeholder="••••••••"
-                        required
-                        onInput={(e) =>
-                            setConfirmPassword((e.currentTarget as HTMLInputElement).value)
-                        }
-                        disabled={loading}
-                    />
-                </label>
-
-                {error && <p className={styles['login-error']}>{error}</p>}
-
-                {success && (
-                    <p className={styles['login-success']}>
-                        Contraseña actualizada correctamente. Redirigiendo…
+                    <h1>Cambiar contraseña</h1>
+                    <p className={styles.loginHint}>
+                        Tu primera contraseña debe ser cambiada antes de continuar.
                     </p>
-                )}
 
-                <button className="btn btn--primary btn--block" type="submit" disabled={loading}>
-                    {loading ? 'Actualizando…' : 'Cambiar contraseña'}
-                </button>
-            </form>
+                    <label className={styles.field}>
+                        <span>Contraseña actual</span>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            placeholder="••••••••"
+                            required
+                            onInput={(e) =>
+                                setCurrentPassword((e.target as HTMLInputElement).value)
+                            }
+                            disabled={loading}
+                        />
+                    </label>
+
+                    <label className={styles.field}>
+                        <span>Nueva contraseña</span>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            placeholder="••••••••"
+                            required
+                            minLength={8}
+                            onInput={(e) => setNewPassword((e.target as HTMLInputElement).value)}
+                            disabled={loading}
+                        />
+                    </label>
+
+                    <label className={styles.field}>
+                        <span>Confirmar nueva contraseña</span>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            placeholder="••••••••"
+                            required
+                            onInput={(e) =>
+                                setConfirmPassword((e.target as HTMLInputElement).value)
+                            }
+                            disabled={loading}
+                        />
+                    </label>
+
+                    {error && <p className={styles.loginError}>{error}</p>}
+
+                    {success && (
+                        <p className={styles.loginSuccess}>
+                            Contraseña actualizada correctamente. Redirigiendo…
+                        </p>
+                    )}
+
+                    <Button variant="primary" fullWidth type="submit" disabled={loading}>
+                        {loading ? 'Actualizando…' : 'Cambiar contraseña'}
+                    </Button>
+                </form>
+            </div>
         </div>
     );
 }

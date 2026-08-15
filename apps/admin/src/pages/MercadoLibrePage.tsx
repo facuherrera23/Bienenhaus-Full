@@ -6,7 +6,6 @@ import {
     Edit2,
     ExternalLink,
     Link2,
-    Loader2,
     MessageSquare,
     Plus,
     Search,
@@ -17,6 +16,7 @@ import {
     X,
     Zap,
 } from 'lucide-preact';
+import { Badge, Button, IconButton, Spinner, type BadgeVariant } from '@bienenhaus/ui';
 import {
     answerMlQuestion,
     buildAuthorizeUrl,
@@ -62,9 +62,9 @@ const LISTING_TYPE_DESCRIPTIONS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: MlSyncStatus }) {
     return (
-        <span className={`badge badge--${ML_SYNC_STATUS_TONE[status]}`}>
+        <Badge variant={ML_SYNC_STATUS_TONE[status] as BadgeVariant}>
             {ML_SYNC_STATUS_LABEL[status]}
-        </span>
+        </Badge>
     );
 }
 
@@ -286,12 +286,13 @@ export function MercadoLibrePage() {
                         <h3>Metricas de Mercado Libre</h3>
                         <p>Rendimiento de tus publicaciones en la plataforma.</p>
                     </div>
-                    <button
-                        className="btn btn--ghost btn--sm"
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowMetrics(false)}
                     >
                         <X size={16} /> Cerrar
-                    </button>
+                    </Button>
                 </div>
                 {metricsQ.isPending && (
                     <div className="ml-skeleton">
@@ -314,12 +315,13 @@ export function MercadoLibrePage() {
                 {metricsQ.isError && (
                     <div className="ml-error">
                         <p>No se pudieron cargar las metricas.</p>
-                        <button
-                            className="btn btn--secondary btn--sm"
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => metricsQ.refetch()}
                         >
                             Reintentar
-                        </button>
+                        </Button>
                     </div>
                 )}
                 {metricsQ.data && !metricsQ.isPending && !metricsQ.isError && (
@@ -393,17 +395,18 @@ export function MercadoLibrePage() {
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         {questionsQ.data && (
-                            <span className="badge badge--info">
+                            <Badge variant="info">
                                 {questionsQ.data.filter((q) => q.status === 'unanswered').length}{' '}
                                 sin responder
-                            </span>
+                            </Badge>
                         )}
-                        <button
-                            className="btn btn--ghost btn--sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setShowQuestions(false)}
                         >
                             <X size={16} /> Cerrar
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 {questionsQ.isPending && (
@@ -419,12 +422,13 @@ export function MercadoLibrePage() {
                 {questionsQ.isError && (
                     <div className="ml-error">
                         <p>No se pudieron cargar las preguntas.</p>
-                        <button
-                            className="btn btn--secondary btn--sm"
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => questionsQ.refetch()}
                         >
                             Reintentar
-                        </button>
+                        </Button>
                     </div>
                 )}
                 {questionsQ.data && !questionsQ.isPending && !questionsQ.isError && (
@@ -476,15 +480,15 @@ export function MercadoLibrePage() {
                                         </td>
                                         <td>
                                             {q.status === 'unanswered' && (
-                                                <button
-                                                    className="btn btn--sm btn--primary"
+                                                <Button
+                                                    size="sm"
                                                     onClick={() => {
                                                         setSelectedQuestion(q);
                                                         setReplyText('');
                                                     }}
                                                 >
                                                     <MessageSquare size={14} /> Responder
-                                                </button>
+                                                </Button>
                                             )}
                                             {q.status === 'answered' && (
                                                 <span className="muted">Respondida</span>
@@ -515,8 +519,9 @@ export function MercadoLibrePage() {
                         <p>Plantillas de respuesta automatica para preguntas y eventos de ML.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                            className="btn btn--secondary btn--sm"
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => {
                                 setEditingTemplate(null);
                                 setTemplateForm({
@@ -529,13 +534,14 @@ export function MercadoLibrePage() {
                             }}
                         >
                             <Plus size={14} /> Nueva plantilla
-                        </button>
-                        <button
-                            className="btn btn--ghost btn--sm"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setShowAutoReply(false)}
                         >
                             <X size={16} /> Cerrar
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 {autoReplyQ.isPending && (
@@ -551,12 +557,13 @@ export function MercadoLibrePage() {
                 {autoReplyQ.isError && (
                     <div className="ml-error">
                         <p>No se pudieron cargar las plantillas.</p>
-                        <button
-                            className="btn btn--secondary btn--sm"
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => autoReplyQ.refetch()}
                         >
                             Reintentar
-                        </button>
+                        </Button>
                     </div>
                 )}
                 {autoReplyQ.data && !autoReplyQ.isPending && !autoReplyQ.isError && (
@@ -578,7 +585,7 @@ export function MercadoLibrePage() {
                                             <strong>{t.name}</strong>
                                         </td>
                                         <td>
-                                            <span className="badge badge--info">{t.trigger}</span>
+                                            <Badge variant="info">{t.trigger}</Badge>
                                         </td>
                                         <td
                                             style={{
@@ -591,15 +598,14 @@ export function MercadoLibrePage() {
                                             {t.message}
                                         </td>
                                         <td>
-                                            <span
-                                                className={`badge badge--${t.is_active ? 'success' : 'neutral'}`}
-                                            >
+                                            <Badge variant={t.is_active ? 'success' : 'neutral'}>
                                                 {t.is_active ? 'Activa' : 'Inactiva'}
-                                            </span>
+                                            </Badge>
                                         </td>
                                         <td>
-                                            <button
-                                                className="btn btn--ghost btn--sm"
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 onClick={() => {
                                                     setEditingTemplate(t);
                                                     setTemplateForm({
@@ -612,14 +618,15 @@ export function MercadoLibrePage() {
                                                 }}
                                             >
                                                 <Edit2 size={14} /> Editar
-                                            </button>
-                                            <button
-                                                className="btn btn--ghost btn--sm"
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 style={{ color: 'var(--bh-danger)' }}
                                                 onClick={() => setDeleteTemplateId(t.id)}
                                             >
                                                 <Trash2 size={14} />
-                                            </button>
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -642,9 +649,13 @@ export function MercadoLibrePage() {
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
                     <h3>Responder pregunta</h3>
-                    <button className="icon-btn" onClick={() => setSelectedQuestion(null)}>
+                    <IconButton
+                        variant="ghost"
+                        aria-label="Cerrar modal de respuesta"
+                        onClick={() => setSelectedQuestion(null)}
+                    >
                         <X size={20} />
-                    </button>
+                    </IconButton>
                 </div>
                 <div className="modal-body">
                     <p className="muted" style={{ marginBottom: '8px' }}>
@@ -674,17 +685,16 @@ export function MercadoLibrePage() {
                     </label>
                 </div>
                 <div className="modal-actions">
-                    <button className="btn btn--ghost" onClick={() => setSelectedQuestion(null)}>
+                    <Button variant="ghost" onClick={() => setSelectedQuestion(null)}>
                         Cancelar
-                    </button>
-                    <button
-                        className="btn btn--primary"
+                    </Button>
+                    <Button
                         onClick={handleReply}
                         disabled={!replyText.trim() || replying}
                     >
-                        {replying ? <Loader2 size={14} className="spin" /> : <Send size={14} />}{' '}
+                        {replying ? <Spinner size="sm" inline color="inherit" /> : <Send size={14} />}{' '}
                         Enviar respuesta
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -695,9 +705,13 @@ export function MercadoLibrePage() {
             <div className="modal-card modal--medium" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
                     <h3>{editingTemplate ? 'Editar plantilla' : 'Nueva plantilla'}</h3>
-                    <button className="icon-btn" onClick={closeTemplateModal}>
+                    <IconButton
+                        variant="ghost"
+                        aria-label="Cerrar modal de plantilla"
+                        onClick={closeTemplateModal}
+                    >
                         <X size={20} />
-                    </button>
+                    </IconButton>
                 </div>
                 <div className="modal-body">
                     <div style={{ display: 'grid', gap: '16px' }}>
@@ -773,21 +787,20 @@ export function MercadoLibrePage() {
                     </div>
                 </div>
                 <div className="modal-actions">
-                    <button className="btn btn--ghost" onClick={closeTemplateModal}>
+                    <Button variant="ghost" onClick={closeTemplateModal}>
                         Cancelar
-                    </button>
-                    <button
-                        className="btn btn--primary"
+                    </Button>
+                    <Button
                         onClick={handleTemplateSave}
                         disabled={savingTemplate}
                     >
                         {savingTemplate ? (
-                            <Loader2 size={14} className="spin" />
+                            <Spinner size="sm" inline color="inherit" />
                         ) : (
                             <CheckCircle2 size={14} />
                         )}
                         {editingTemplate ? 'Guardar cambios' : 'Crear plantilla'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -824,27 +837,30 @@ export function MercadoLibrePage() {
                                 marginBottom: '16px',
                             }}
                         >
-                            <button
-                                className={`btn btn--sm ${showMetrics ? 'btn--primary' : 'btn--ghost'}`}
+                            <Button
+                                size="sm"
+                                variant={showMetrics ? 'primary' : 'ghost'}
                                 onClick={() => setShowMetrics((v) => !v)}
                             >
                                 <BarChart2 size={14} /> {showMetrics ? 'Ocultar' : 'Ver'} metricas
-                            </button>
-                            <button
-                                className={`btn btn--sm ${showQuestions ? 'btn--primary' : 'btn--ghost'}`}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={showQuestions ? 'primary' : 'ghost'}
                                 onClick={() => setShowQuestions((v) => !v)}
                             >
                                 <MessageSquare size={14} /> Preguntas{' '}
                                 {questionsQ.data
                                     ? `(${questionsQ.data.filter((q) => q.status === 'unanswered').length})`
                                     : ''}
-                            </button>
-                            <button
-                                className={`btn btn--sm ${showAutoReply ? 'btn--primary' : 'btn--ghost'}`}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={showAutoReply ? 'primary' : 'ghost'}
                                 onClick={() => setShowAutoReply((v) => !v)}
                             >
                                 <Zap size={14} /> Respuestas automaticas
-                            </button>
+                            </Button>
                         </div>
                     )}
 
@@ -1117,30 +1133,32 @@ export function MercadoLibrePage() {
                                         <div className={styles['ml-connection-actions']}>
                                             {JSON.stringify(defaultsDraft) !==
                                                 JSON.stringify(settingsQ.data?.defaults ?? {}) && (
-                                                <button
-                                                    className="btn btn--secondary btn--sm"
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
                                                     onClick={saveDefaults}
                                                     disabled={savingDefaults}
                                                 >
                                                     {savingDefaults ? (
-                                                        <Loader2 size={14} className="spin" />
+                                                        <Spinner size="sm" inline color="inherit" />
                                                     ) : (
                                                         <CheckCircle2 size={14} />
                                                     )}
                                                     Guardar configuracion
-                                                </button>
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className={styles['ml-connection-actions']}>
-                                        <button
-                                            className="btn btn--danger btn--sm"
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
                                             onClick={() => disconnectMutation.mutate()}
                                             disabled={disconnectMutation.isPending}
                                         >
                                             <Unplug size={14} /> Desconectar cuenta
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             ) : (
@@ -1171,9 +1189,9 @@ export function MercadoLibrePage() {
                                     <div className={styles['ml-redirect']}>
                                         <span className="muted">Redirect URI configurada:</span>
                                         <code>{ML_REDIRECT_URI}</code>
-                                        <button
-                                            type="button"
-                                            className="icon-btn"
+                                        <IconButton
+                                            variant="ghost"
+                                            aria-label="Copiar redirect URI"
                                             title="Copiar redirect URI"
                                             onClick={() => {
                                                 void navigator.clipboard.writeText(ML_REDIRECT_URI);
@@ -1184,27 +1202,28 @@ export function MercadoLibrePage() {
                                             }}
                                         >
                                             <Copy size={14} />
-                                        </button>
+                                        </IconButton>
                                     </div>
 
                                     <div className={styles['ml-connection-actions']}>
                                         {appIdDraft.trim() !== (settingsQ.data?.app_id ?? '') && (
-                                            <button
-                                                className="btn btn--secondary btn--sm"
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
                                                 onClick={saveAppId}
                                                 disabled={savingAppId}
                                             >
                                                 {savingAppId ? (
-                                                    <Loader2 size={14} className="spin" />
+                                                    <Spinner size="sm" inline color="inherit" />
                                                 ) : (
                                                     <CheckCircle2 size={14} />
                                                 )}
                                                 Guardar ID
-                                            </button>
+                                            </Button>
                                         )}
-                                        <button className="btn btn--primary" onClick={connect}>
+                                        <Button onClick={connect}>
                                             <ShoppingBag size={16} /> Conectar cuenta
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -1336,9 +1355,10 @@ export function MercadoLibrePage() {
                                                     href={m.permalink}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="btn btn--sm btn--secondary"
                                                 >
-                                                    Ver publicacion <ExternalLink size={12} />
+                                                    <Button variant="secondary" size="sm">
+                                                        Ver publicacion <ExternalLink size={12} />
+                                                    </Button>
                                                 </a>
                                             ) : (
                                                 <span className="muted">-</span>

@@ -1,5 +1,5 @@
-export { Button } from './Button';
-export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
+export { Button } from './components/atoms/Button';
+export type { ButtonProps, ButtonVariant, ButtonSize } from './components/atoms/Button';
 
 export { IconButton } from './components/atoms/IconButton';
 export type {
@@ -27,6 +27,14 @@ export type {
 
 export { Spinner } from './components/atoms/Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerColor } from './components/atoms/Spinner';
+
+export { Skeleton } from './components/atoms/Skeleton';
+export type {
+    SkeletonProps,
+    SkeletonVariant,
+    SkeletonSize,
+    SkeletonAnimation,
+} from './components/atoms/Skeleton';
 
 export { ToastHost } from './components/atoms/ToastHost';
 export type { ToastHostProps, ToastItem, ToastType } from './components/atoms/ToastHost';

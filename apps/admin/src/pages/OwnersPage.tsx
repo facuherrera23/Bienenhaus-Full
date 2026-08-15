@@ -2,6 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { Building2, Download, Filter, Plus, Search, Trash2, User, X } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
+import { Button, Badge, IconButton, Select } from '@bienenhaus/ui';
 import {
     ownersKeys,
     useDeletedOwners,
@@ -188,25 +189,28 @@ export function OwnersPage() {
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     {!showTrash && (
-                        <button
-                            type="button"
-                            className="btn btn--secondary"
+                        <Button
+                            variant="secondary"
+                            size="md"
+                            iconLeft={<Download size={15} />}
                             onClick={handleExport}
                             disabled={owners.length === 0}
                         >
-                            <Download size={15} /> Exportar CSV
-                        </button>
+                            Exportar CSV
+                        </Button>
                     )}
-                    <Link href="/propietarios/nuevo" className="btn btn--primary">
-                        <Plus size={16} /> Nuevo propietario
+                    <Link href="/propietarios/nuevo">
+                        <Button variant="primary" size="md" iconLeft={<Plus size={16} />}>
+                            Nuevo propietario
+                        </Button>
                     </Link>
-                    <button
-                        type="button"
-                        className={`btn${showTrash ? ' btn--primary' : ' btn--ghost'}`}
+                    <Button
+                        variant={showTrash ? 'primary' : 'ghost'}
+                        size="md"
                         onClick={() => setShowTrash(!showTrash)}
                     >
                         <Trash2 size={15} /> {showTrash ? 'Ver activos' : 'Papelera'}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -216,18 +220,18 @@ export function OwnersPage() {
                         <span>
                             {selectedIds.size} seleccionada{selectedIds.size === 1 ? '' : 's'}
                         </span>
-                        <button
-                            type="button"
-                            className="btn btn--ghost btn--sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={clearSelection}
                         >
                             <X size={14} /> Limpiar
-                        </button>
+                        </Button>
                     </div>
                     <div className="bulk-actions">
-                        <button
-                            type="button"
-                            className="btn btn--danger btn--sm"
+<Button
+                            variant="danger"
+                            size="sm"
                             onClick={() =>
                                 setConfirmAction({
                                     title: 'Enviar a papelera',
@@ -241,11 +245,11 @@ export function OwnersPage() {
                                         });
                                         clearSelection();
                                     },
-                                })
-                            }
+                            })
+                        }
                         >
                             <Trash2 size={14} /> A papelera
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -261,13 +265,13 @@ export function OwnersPage() {
                     />
                 </div>
 
-                <button
-                    type="button"
-                    className={`btn btn--ghost${showFilters ? ' active' : ''}`}
-                    onClick={() => setShowFilters(!showFilters)}
-                >
-                    <Filter size={15} /> Filtros
-                </button>
+                <Button
+                            variant={showFilters ? 'secondary' : 'ghost'}
+                            size="sm"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <Filter size={15} /> Filtros
+                        </Button>
             </div>
 
             {showFilters && (
@@ -275,61 +279,46 @@ export function OwnersPage() {
                     <div className="filter-row">
                         <div className="filter-group">
                             <label>Tipo</label>
-                            <select
-                                className="select"
+                            <Select
                                 value={typeFilter}
-                                onChange={(e) =>
-                                    setTypeFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as
-                                            'todos' | OwnerType,
-                                    )
-                                }
-                            >
-                                <option value="todos">Todos</option>
-                                <option value="persona_fisica">
-                                    {OWNER_TYPE_LABEL.persona_fisica}
-                                </option>
-                                <option value="persona_juridica">
-                                    {OWNER_TYPE_LABEL.persona_juridica}
-                                </option>
-                            </select>
+                                onChange={(value) => setTypeFilter(value as 'todos' | OwnerType)}
+                                options={[
+                                    { value: 'todos', label: 'Todos' },
+                                    {
+                                        value: 'persona_fisica',
+                                        label: OWNER_TYPE_LABEL.persona_fisica,
+                                    },
+                                    {
+                                        value: 'persona_juridica',
+                                        label: OWNER_TYPE_LABEL.persona_juridica,
+                                    },
+                                ]}
+                            />
                         </div>
                         <div className="filter-group">
                             <label>Contacto preferido</label>
-                            <select
-                                className="select"
+                            <Select
                                 value={contactFilter}
-                                onChange={(e) =>
-                                    setContactFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as
-                                            'todos' | OwnerPreferredContact,
-                                    )
-                                }
-                            >
-                                <option value="todos">Todos</option>
-                                <option value="whatsapp">
-                                    {OWNER_PREFERRED_CONTACT_LABEL.whatsapp}
-                                </option>
-                                <option value="email">{OWNER_PREFERRED_CONTACT_LABEL.email}</option>
-                                <option value="call">{OWNER_PREFERRED_CONTACT_LABEL.call}</option>
-                            </select>
+                                onChange={(value) => setContactFilter(value as 'todos' | OwnerPreferredContact)}
+                                options={[
+                                    { value: 'todos', label: 'Todos' },
+                                    { value: 'whatsapp', label: OWNER_PREFERRED_CONTACT_LABEL.whatsapp },
+                                    { value: 'email', label: OWNER_PREFERRED_CONTACT_LABEL.email },
+                                    { value: 'call', label: OWNER_PREFERRED_CONTACT_LABEL.call },
+                                ]}
+                            />
                         </div>
                         <div className="filter-group">
                             <label>Propiedades</label>
-                            <select
-                                className="select"
+                            <Select
                                 value={hasPropertiesFilter}
-                                onChange={(e) =>
-                                    setHasPropertiesFilter(
-                                        (e.currentTarget as HTMLSelectElement).value as
-                                            'todos' | 'si' | 'no',
-                                    )
-                                }
-                            >
-                                <option value="todos">Todas</option>
-                                <option value="si">Con propiedades</option>
-                                <option value="no">Sin propiedades</option>
-                            </select>
+                                onChange={(value) => setHasPropertiesFilter(value as 'todos' | 'si' | 'no')}
+                                options={[
+                                    { value: 'todos', label: 'Todas' },
+                                    { value: 'si', label: 'Con propiedades' },
+                                    { value: 'no', label: 'Sin propiedades' },
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>
@@ -353,9 +342,11 @@ export function OwnersPage() {
                                     ? 'No se encontraron coincidencias.'
                                     : 'Comenzá agregando el primer propietario.'}
                             </p>
-                            <Link href="/propietarios/nuevo" className="btn btn--primary">
-                                <Plus size={16} /> Nuevo propietario
-                            </Link>
+<Link href="/propietarios/nuevo">
+                            <Button variant="primary" size="sm" iconLeft={<Plus size={16} />}>
+                                Nuevo propietario
+                            </Button>
+                        </Link>
                         </div>
                     )}
 
@@ -411,29 +402,29 @@ export function OwnersPage() {
                                                 </div>
                                             </td>
                                             <td>
-                                                <span
-                                                    className={`badge badge--${owner.owner_type === 'persona_juridica' ? 'info' : 'neutral'}`}
-                                                >
+<Badge variant={owner.owner_type === 'persona_juridica' ? 'info' : 'neutral'} size="sm">
                                                     {OWNER_TYPE_LABEL[owner.owner_type]}
-                                                </span>
+                                                </Badge>
                                             </td>
                                             <td className="muted">
                                                 {formatDate(owner.deleted_at ?? '')}
                                             </td>
                                             <td>
-                                                <div className="row-actions">
-                                                    <button
-                                                        className="icon-btn"
-                                                        title="Restaurar"
+<div className="row-actions">
+                                                    <IconButton
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        aria-label="Restaurar"
                                                         onClick={() =>
                                                             handleRestore(owner.id, owner.full_name)
                                                         }
                                                     >
                                                         <Building2 size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="icon-btn icon-btn--danger"
-                                                        title="Eliminar permanentemente"
+                                                    </IconButton>
+                                                    <IconButton
+                                                        variant="danger"
+                                                        size="sm"
+                                                        aria-label="Eliminar permanentemente"
                                                         onClick={() =>
                                                             setConfirmAction({
                                                                 title: 'Eliminar permanentemente',
@@ -449,7 +440,7 @@ export function OwnersPage() {
                                                         }
                                                     >
                                                         <Trash2 size={14} />
-                                                    </button>
+                                                    </IconButton>
                                                 </div>
                                             </td>
                                         </tr>

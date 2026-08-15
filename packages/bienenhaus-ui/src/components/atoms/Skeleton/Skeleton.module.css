@@ -1,0 +1,133 @@
+/**
+ * Skeleton Component Styles
+ * Loading placeholder atom. Uses ONLY --bh-* design tokens.
+ *
+ * Variants:  text (line) | circular (avatar) | rectangular (block) | rounded (card)
+ * Sizes:     sm | md | lg — line height, avatar diameter, or block height
+ * Animation: pulse (opacity) | wave (shimmer sweep) | none
+ *
+ * Decorative by default (`aria-hidden`); the loading container owns the live
+ * region. Animations respect `prefers-reduced-motion`.
+ */
+
+.skeleton {
+    display: block;
+    width: 100%;
+    flex-shrink: 0;
+    background-color: var(--bh-bg-raised);
+    border-radius: var(--bh-radius-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+/* ============================================================
+   VARIANTS
+   ============================================================ */
+.text {
+    border-radius: var(--bh-radius-sm);
+}
+
+.circular {
+    border-radius: var(--bh-radius-full);
+}
+
+.rectangular {
+    border-radius: 0;
+}
+
+.rounded {
+    border-radius: var(--bh-radius-lg);
+}
+
+/* ============================================================
+   SIZES — default dimensions
+   ============================================================ */
+/* Text — line heights */
+.text.sm {
+    height: 12px;
+}
+
+.text.md {
+    height: 14px;
+}
+
+.text.lg {
+    height: 16px;
+}
+
+/* Circular — avatar diameters (override the base width: 100%) */
+.circular.sm {
+    width: 32px;
+    height: 32px;
+}
+
+.circular.md {
+    width: 40px;
+    height: 40px;
+}
+
+.circular.lg {
+    width: 48px;
+    height: 48px;
+}
+
+/* Rectangular / Rounded — block heights */
+.rectangular.sm,
+.rounded.sm {
+    height: 40px;
+}
+
+.rectangular.md,
+.rounded.md {
+    height: 56px;
+}
+
+.rectangular.lg,
+.rounded.lg {
+    height: 72px;
+}
+
+/* ============================================================
+   ANIMATION — pulse (opacity fade)
+   ============================================================ */
+.pulse {
+    animation: bh-skeleton-pulse 1.6s var(--bh-ease-in-out) infinite;
+}
+
+@keyframes bh-skeleton-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* ============================================================
+   ANIMATION — wave (shimmer sweep)
+   ============================================================ */
+.wave::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--bh-bg-active), transparent);
+    transform: translateX(-100%);
+    animation: bh-skeleton-wave 1.6s var(--bh-ease-in-out) infinite;
+}
+
+@keyframes bh-skeleton-wave {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .pulse,
+    .wave::after {
+        animation: none;
+    }
+}

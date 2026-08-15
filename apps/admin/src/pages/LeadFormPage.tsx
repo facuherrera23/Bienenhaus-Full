@@ -16,6 +16,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
+import { Button } from '@bienenhaus/ui';
 
 export function LeadFormPage() {
     const [, setLocation] = useLocation();
@@ -84,8 +85,10 @@ export function LeadFormPage() {
                         Carga manual de un contacto recibido fuera de la landing.
                     </p>
                 </div>
-                <Link href="/leads" className="btn btn--secondary">
-                    <ArrowLeft size={16} /> Volver
+                <Link href="/leads">
+                    <Button variant="secondary">
+                        <ArrowLeft size={16} /> Volver
+                    </Button>
                 </Link>
             </div>
 
@@ -204,16 +207,12 @@ export function LeadFormPage() {
                 </section>
 
                 <div className="form-actions">
-                    <Link href="/leads" className="btn btn--ghost">
-                        Cancelar
+                    <Link href="/leads">
+                        <Button variant="ghost">Cancelar</Button>
                     </Link>
-                    <button
-                        className="btn btn--primary"
-                        onClick={handleSubmit}
-                        disabled={saving || !canSave}
-                    >
+                    <Button onClick={handleSubmit} disabled={saving || !canSave}>
                         <Save size={16} /> {saving ? 'Creando…' : 'Crear lead'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

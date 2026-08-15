@@ -37,7 +37,9 @@ describe('IconButton', () => {
         expect(btn.classList.length).toBeGreaterThanOrEqual(2);
     });
 
-    it.each(['ghost', 'outline', 'solid'] as const)('applies the %s variant class', (variant) => {
+    it.each(['ghost', 'outline', 'solid', 'danger'] as const)(
+        'applies the %s variant class',
+        (variant) => {
         const { container } = render(<IconButton {...defaultProps} variant={variant} />);
         // Different variants produce different hashed class names, so the
         // class set changes between variants.

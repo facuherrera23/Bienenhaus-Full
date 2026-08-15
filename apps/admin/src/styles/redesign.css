@@ -54,4 +54,18 @@
        active sidebar items and selection highlights.
        ============================================================ */
     --bh-ring-focus: 0 0 0 3px var(--bh-accent-soft);
+
+    /* ============================================================
+       LEGACY ADMIN TOKEN ALIASES — Fase 0
+       Estos nombres se usaban en CSS admin (styles.css y módulos
+       vivos) pero NUNCA estuvieron definidos. Mapeados a los tokens
+       oficiales de @bienenhaus/ui/tokens.css para reparar fondos,
+       textos, bordes y glows que renderizaban como declaración
+       inválida (transparente/heredado) en producción.
+       ============================================================ */
+    --bh-bg: var(--bh-bg-primary); /* page backgrounds + texto sobre acentos */
+    --bh-card-bg: var(--bh-bg-card); /* superficies de cards */
+    --bh-glow: var(--bh-accent-glow); /* color glow accent */
+    --bh-text: var(--bh-text-primary); /* texto primario (tooltips recharts) */
+    --bh-border-hover: var(--bh-border-strong); /* borde hover kpi-cards */
 }

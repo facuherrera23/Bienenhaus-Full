@@ -1,4 +1,5 @@
 import { AlertCircle, Calendar, User } from 'lucide-preact';
+import { Badge, type BadgeVariant } from '@bienenhaus/ui';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,
@@ -32,14 +33,14 @@ export function ActionPlanCard({ plan, tasks, onClick, onToggleTask }: ActionPla
             <div className="card-header">
                 <div className="plan-title-row">
                     <h3 className="plan-title">{plan.title}</h3>
-                    <span className={`badge badge--${ACTION_PLAN_STATUS_TONE[plan.status]}`}>
+                    <Badge variant={ACTION_PLAN_STATUS_TONE[plan.status] as BadgeVariant}>
                         {ACTION_PLAN_STATUS_LABEL[plan.status]}
-                    </span>
+                    </Badge>
                 </div>
                 <div className="plan-meta">
-                    <span className={`badge badge--${ACTION_PLAN_PRIORITY_TONE[plan.priority]}`}>
+                    <Badge variant={ACTION_PLAN_PRIORITY_TONE[plan.priority] as BadgeVariant}>
                         {ACTION_PLAN_PRIORITY_LABEL[plan.priority]}
-                    </span>
+                    </Badge>
                     <span className="category-badge">
                         {ACTION_PLAN_CATEGORY_LABEL[plan.category]}
                     </span>

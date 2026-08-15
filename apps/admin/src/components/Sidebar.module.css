@@ -287,10 +287,11 @@
 }
 
 .sidebar-link.is-active {
-    background: var(--bh-accent-soft);
     color: var(--bh-accent);
     font-weight: var(--bh-weight-semibold);
-    box-shadow: inset 3px 0 0 var(--bh-accent);
+    border-left: 2px var(--bh-accent);
+    box-shadow: none;
+    background: transparent;
 }
 
 .sidebar-link-icon {

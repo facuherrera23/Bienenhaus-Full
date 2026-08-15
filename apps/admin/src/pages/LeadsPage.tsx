@@ -5,7 +5,6 @@ import {
     Download,
     Kanban,
     List,
-    Loader2,
     Plus,
     Search,
     Trash2,
@@ -14,6 +13,7 @@ import {
     X,
 } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
+import { BadgeVariant, Button, Badge, IconButton, Spinner } from '@bienenhaus/ui';
 import {
     type CsvLeadRow,
     LEAD_INTENT_LABEL,
@@ -261,31 +261,39 @@ export function LeadsPage() {
                             overflow: 'hidden',
                         }}
                     >
-                        <button
-                            className={`btn btn--sm${view === 'table' ? ' btn--primary' : ' btn--ghost'}`}
+                        <Button
+                            variant={view === 'table' ? 'primary' : 'ghost'}
+                            size="sm"
                             onClick={() => setView('table')}
                         >
                             <List size={15} />
-                        </button>
-                        <button
-                            className={`btn btn--sm${view === 'kanban' ? ' btn--primary' : ' btn--ghost'}`}
+                        </Button>
+                        <Button
+                            variant={view === 'kanban' ? 'primary' : 'ghost'}
+                            size="sm"
                             onClick={() => setView('kanban')}
                         >
                             <Kanban size={15} />
-                        </button>
+                        </Button>
                     </div>
-                    <Link href="/leads/nueva" className="btn btn--primary">
-                        <Plus size={16} /> Nuevo lead
+                    <Link href="/leads/nueva">
+                        <Button variant="primary" size="md" iconLeft={<Plus size={16} />}>
+                            Nuevo lead
+                        </Button>
                     </Link>
-                    <button
-                        className="btn btn--secondary"
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        iconLeft={<Download size={15} />}
                         onClick={handleExport}
                         disabled={filtered.length === 0}
                     >
-                        <Download size={15} /> Exportar CSV
-                    </button>
-                    <label className="btn btn--secondary" style={{ cursor: 'pointer' }}>
-                        <Upload size={15} /> Importar CSV
+                        Exportar CSV
+                    </Button>
+                    <label style={{ cursor: 'pointer' }}>
+                        <Button variant="secondary" size="md" iconLeft={<Upload size={15} />}>
+                            Importar CSV
+                        </Button>
                         <input
                             type="file"
                             accept=".csv"
@@ -296,15 +304,15 @@ export function LeadsPage() {
                 </div>
             </div>
 
-            {someSelected && (
+{someSelected && (
                 <div className="bulk-bar">
                     <div className="bulk-info">
                         <span>
                             {selectedIds.size} seleccionado{selectedIds.size === 1 ? '' : 's'}
                         </span>
-                        <button className="btn btn--ghost btn--sm" onClick={clearSelection}>
+                        <Button variant="ghost" size="sm" onClick={clearSelection}>
                             Limpiar
-                        </button>
+                        </Button>
                     </div>
                     <div className="bulk-actions">
                         <div className="dropdown-wrapper">
@@ -337,37 +345,35 @@ export function LeadsPage() {
                                     {bulkOp === 'assign'
                                         ? 'Auto-asignar'
                                         : bulkOp === 'trash'
-                                          ? 'Mover a papelera'
-                                          : bulkOp === 'recalc'
-                                            ? 'Recalcular score'
-                                            : 'Gestionar tags'}{' '}
+                                        ? 'Mover a papelera'
+                                        : bulkOp === 'recalc'
+                                        ? 'Recalcular score'
+                                        : 'Gestionar tags'}{' '}
                                     {selectedIds.size} lead{selectedIds.size === 1 ? '' : 's'}?
                                 </span>
-                                <button
-                                    className="btn btn--secondary btn--sm"
-                                    onClick={() => setBulkOp(null)}
-                                >
+                                <Button variant="secondary" size="sm" onClick={() => setBulkOp(null)}>
                                     Cancelar
-                                </button>
-                                <button
-                                    className="btn btn--primary btn--sm"
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    size="sm"
                                     onClick={
                                         bulkOp === 'assign'
                                             ? runBulkAutoAssign
                                             : bulkOp === 'trash'
-                                              ? runBulkTrash
-                                              : bulkOp === 'recalc'
-                                                ? runBulkRecalc
-                                                : undefined
+                                            ? runBulkTrash
+                                            : bulkOp === 'recalc'
+                                            ? runBulkRecalc
+                                            : undefined
                                     }
                                     disabled={bulkBusy || bulkOp === 'tags'}
                                 >
                                     {bulkBusy ? (
-                                        <Loader2 size={14} className="spin" />
+                                        <Spinner size="sm" inline color="inherit" />
                                     ) : (
                                         'Confirmar'
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -412,7 +418,7 @@ export function LeadsPage() {
 
             {isPending && (
                 <div className="card placeholder-card">
-                    <Loader2 size={24} className="spin" /> Cargando leads…
+                    <Spinner size="md" inline color="inherit" /> Cargando leads…
                 </div>
             )}
             {isError && (
@@ -454,7 +460,7 @@ export function LeadsPage() {
                                         onClick={(e) => {
                                             if (
                                                 (e.target as HTMLElement).closest(
-                                                    'input,button,a,.icon-btn,select,.tag',
+                                                    'input,button,a,select,.tag',
                                                 )
                                             )
                                                 return;
@@ -488,7 +494,7 @@ export function LeadsPage() {
                                         <td className="cap">{LEAD_SOURCE_LABEL[l.source]}</td>
                                         <td onClick={(e) => e.stopPropagation()}>
                                             <select
-                                                className={`select select--sm badge-select badge--${LEAD_STATUS_TONE[l.status]}`}
+                                                className={`select select--sm ${styles['tone-' + LEAD_STATUS_TONE[l.status]]}`}
                                                 value={l.status}
                                                 onChange={(e) =>
                                                     handleStatusChange(
@@ -507,11 +513,9 @@ export function LeadsPage() {
                                             </select>
                                         </td>
                                         <td>
-                                            <span
-                                                className={`badge badge--${getScoreColor(l.score ?? 0)}`}
-                                            >
+                                            <Badge variant={getScoreColor(l.score ?? 0)} size="sm">
                                                 {l.score ?? 0}
-                                            </span>
+                                            </Badge>
                                         </td>
                                         <td
                                             style={{
@@ -522,21 +526,14 @@ export function LeadsPage() {
                                             }}
                                         >
                                             {(l.tags ?? []).slice(0, 3).map((t: string) => (
-                                                <span
-                                                    key={t}
-                                                    className={`${styles['tag']} badge badge--neutral`}
-                                                    style={{ marginRight: '4px', fontSize: '11px' }}
-                                                >
+                                                <Badge key={t} variant="neutral" size="sm" style={{ marginRight: '4px', fontSize: '11px' }}>
                                                     {t}
-                                                </span>
+                                                </Badge>
                                             ))}
                                             {(l.tags ?? []).length > 3 && (
-                                                <span
-                                                    className="badge badge--neutral"
-                                                    style={{ fontSize: '11px' }}
-                                                >
+                                                <Badge variant="neutral" size="sm" style={{ fontSize: '11px' }}>
                                                     +{(l.tags ?? []).length - 3}
-                                                </span>
+                                                </Badge>
                                             )}
                                         </td>
                                         <td className="muted">{l.agent ?? '—'}</td>
@@ -563,7 +560,7 @@ export function LeadsPage() {
                     {getKanbanColumns().map((col: { status: LeadStatus; leads: LeadRow[] }) => (
                         <div key={col.status} className={styles['kanban-column']}>
                             <div
-                                className={`${styles['kanban-column-header']} badge badge--${LEAD_STATUS_TONE[col.status]}`}
+                                className={`${styles['kanban-column-header']} ${styles['tone-' + LEAD_STATUS_TONE[col.status]]}`}
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -574,17 +571,9 @@ export function LeadsPage() {
                                 }}
                             >
                                 <span>{LEAD_STATUS_LABEL[col.status]}</span>
-                                <span
-                                    className={styles['kanban-count']}
-                                    style={{
-                                        background: 'rgba(0,0,0,0.1)',
-                                        padding: '2px 8px',
-                                        borderRadius: '999px',
-                                        fontSize: '12px',
-                                    }}
-                                >
+                                <Badge variant={LEAD_STATUS_TONE[col.status] as BadgeVariant} size="sm" className={styles['kanban-count']}>
                                     {col.leads.length}
-                                </span>
+                                </Badge>
                             </div>
                             <div
                                 className={styles['kanban-column-body']}
@@ -638,18 +627,12 @@ export function LeadsPage() {
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            <span
-                                                className={`badge badge--${LEAD_STATUS_TONE[l.status]}`}
-                                                style={{ fontSize: '11px' }}
-                                            >
+                                            <Badge variant={LEAD_STATUS_TONE[l.status] as BadgeVariant} size="sm">
                                                 {LEAD_STATUS_LABEL[l.status]}
-                                            </span>
-                                            <span
-                                                className={`badge badge--${getScoreColor(l.score ?? 0)}`}
-                                                style={{ fontSize: '11px' }}
-                                            >
+                                            </Badge>
+                                            <Badge variant={getScoreColor(l.score ?? 0)} size="sm">
                                                 {l.score ?? 0}
-                                            </span>
+                                            </Badge>
                                         </div>
                                         <strong style={{ display: 'block', marginBottom: '4px' }}>
                                             {l.name} {l.last_name}
@@ -686,13 +669,11 @@ export function LeadsPage() {
                                                 }}
                                             >
                                                 {l.tags.map((t: string) => (
-                                                    <span
+                                                    <Badge
                                                         key={t}
-                                                        className={`${styles['tag']} badge badge--neutral`}
-                                                        style={{
-                                                            fontSize: '10px',
-                                                            cursor: 'pointer',
-                                                        }}
+                                                        variant="neutral"
+                                                        size="sm"
+                                                        style={{ fontSize: '10px', cursor: 'pointer' }}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setShowTagInput(l.id);
@@ -700,7 +681,7 @@ export function LeadsPage() {
                                                         }}
                                                     >
                                                         {t} <X size={10} />
-                                                    </span>
+                                                    </Badge>
                                                 ))}
                                             </div>
                                         )}
@@ -726,8 +707,9 @@ export function LeadsPage() {
                                                 marginTop: '8px',
                                             }}
                                         >
-                                            <button
-                                                className="btn btn--ghost btn--sm"
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 style={{ flex: 1 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -743,7 +725,7 @@ export function LeadsPage() {
                                                 }}
                                             >
                                                 <ChevronDown size={12} /> Avanzar
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 ))}
@@ -764,15 +746,17 @@ export function LeadsPage() {
                     <div className="modal-card modal--large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-head">
                             <h3>Importar Leads desde CSV</h3>
-                            <button
-                                className="icon-btn"
+<IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Cerrar"
                                 onClick={() => {
                                     setShowImport(false);
                                     setImportPreview(null);
                                 }}
                             >
                                 <X size={20} />
-                            </button>
+                            </IconButton>
                         </div>
                         <div className="modal-body">
                             {importPreview ? (
@@ -873,36 +857,29 @@ export function LeadsPage() {
                                             </p>
                                         )}
                                     </div>
-                                    <div
-                                        className="modal-actions"
-                                        style={{
-                                            marginTop: '16px',
-                                            display: 'flex',
-                                            gap: '8px',
-                                            justifyContent: 'flex-end',
-                                        }}
-                                    >
-                                        <button
-                                            className="btn btn--secondary"
-                                            onClick={() => {
-                                                setImportPreview(null);
-                                                setImportFile(null);
-                                            }}
-                                        >
-                                            Volver
-                                        </button>
-                                        <button
-                                            className="btn btn--primary"
-                                            onClick={confirmImport}
-                                            disabled={importing}
-                                        >
-                                            {importing ? (
-                                                <Loader2 size={14} className="spin" />
-                                            ) : (
-                                                'Importar'
-                                            )}
-                                        </button>
-                                    </div>
+<div
+                                    className="modal-actions"
+                                    style={{
+                                        marginTop: '16px',
+                                        display: 'flex',
+                                        gap: '8px',
+                                        justifyContent: 'flex-end',
+                                    }}
+                                >
+                                <Button variant="secondary" onClick={() => {
+                                    setImportPreview(null);
+                                    setImportFile(null);
+                                }}>
+                                    Volver
+                                </Button>
+                                <Button variant="primary" onClick={confirmImport} disabled={importing}>
+                                    {importing ? (
+                                        <Spinner size="sm" inline color="inherit" />
+                                    ) : (
+                                        'Importar'
+                                    )}
+                                </Button>
+                                </div>
                                 </>
                             ) : (
                                 <div style={{ textAlign: 'center', padding: '32px' }}>
@@ -929,15 +906,11 @@ export function LeadsPage() {
                                         style={{ display: 'none' }}
                                         id="csv-import"
                                     />
-                                    <button
-                                        className="btn btn--primary"
-                                        style={{ marginTop: '16px' }}
-                                        onClick={() =>
-                                            document.getElementById('csv-import')?.click()
-                                        }
-                                    >
-                                        <Upload size={15} /> Seleccionar archivo
-                                    </button>
+                                    <Button variant="primary" style={{ marginTop: '16px' }} onClick={() =>
+    document.getElementById('csv-import')?.click()
+}>
+    <Upload size={15} /> Seleccionar archivo
+</Button>
                                 </div>
                             )}
                         </div>
@@ -966,30 +939,24 @@ export function LeadsPage() {
                         style={{ width: '200px', marginBottom: '8px' }}
                     />
                     <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                            className="btn btn--primary btn--sm"
-                            onClick={() => {
-                                if (showTagInput && tagInput) {
-                                    handleTagAction(showTagInput, tagInput, 'add');
-                                    setShowTagInput(null);
-                                    setTagInput('');
-                                }
-                            }}
-                        >
+                        <Button variant="primary" size="sm" onClick={() => {
+                            if (showTagInput && tagInput) {
+                                handleTagAction(showTagInput, tagInput, 'add');
+                                setShowTagInput(null);
+                                setTagInput('');
+                            }
+                        }}>
                             <Plus size={12} /> Agregar
-                        </button>
-                        <button
-                            className="btn btn--danger btn--sm"
-                            onClick={() => {
-                                if (showTagInput) {
-                                    handleTagAction(showTagInput, tagInput, 'remove');
-                                    setShowTagInput(null);
-                                    setTagInput('');
-                                }
-                            }}
-                        >
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => {
+                            if (showTagInput) {
+                                handleTagAction(showTagInput, tagInput, 'remove');
+                                setShowTagInput(null);
+                                setTagInput('');
+                            }
+                        }}>
                             <Trash2 size={12} /> Quitar
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

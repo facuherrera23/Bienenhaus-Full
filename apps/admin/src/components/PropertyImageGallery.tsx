@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Loader2, Move, Star, Trash2, Upload } from 'lucide-preact';
+import { Move, Star, Trash2, Upload } from 'lucide-preact';
 import {
     deletePropertyImage,
     fetchPropertyImages,
@@ -9,6 +9,7 @@ import {
     uploadPropertyImages,
 } from '../lib/properties';
 import { pushToast } from '../store/app';
+import { Button, Spinner } from '@bienenhaus/ui';
 import styles from './PropertyImageGallery.module.css';
 
 interface ImageGalleryProps {
@@ -347,9 +348,9 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                         <p className="gallery-empty-hint">
                             Arrastrá y soltá aquí, o hacé click para elegir archivos
                         </p>
-                        <button type="button" className="btn btn--secondary btn--sm">
+                        <Button type="button" variant="secondary" size="sm">
                             <Upload size={15} /> Seleccionar archivos
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <div className={styles['image-gallery-grid']} role="list">
@@ -377,7 +378,7 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
                                         alt={img.alt ?? `Imagen ${index + 1}`}
                                         loading="lazy"
                                     />
-                                    {uploading && <Loader2 size={20} className="spin" />}
+                                    {uploading && <Spinner size="md" inline color="inherit" />}
                                 </div>
                                 <div className={styles['image-actions']}>
                                     <button
@@ -434,12 +435,14 @@ export function PropertyImageGallery({ propertyId, isNew, onImagesChange }: Imag
 
                 {images.length > 0 && !loading && (
                     <div className={styles['gallery-footer']}>
-                        <label
-                            htmlFor="property-images-input"
-                            className="btn btn--secondary btn--sm"
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
                         >
                             <Upload size={15} /> Agregar más
-                        </label>
+                        </Button>
                         <span className="gallery-count-badge">
                             {images.length} imagen{images.length === 1 ? '' : 'es'}
                         </span>

@@ -11,6 +11,7 @@ import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Badge, Button, IconButton } from '@bienenhaus/ui';
 
 export function NewsletterPage() {
     const [search, setSearch] = useState('');
@@ -71,14 +72,14 @@ export function NewsletterPage() {
                     <h2 className="page-title">Newsletter</h2>
                     <p className="page-subtitle">Suscripciones recibidas desde la landing.</p>
                 </div>
-                <button
+                <Button
                     type="button"
-                    className="btn btn--secondary"
+                    variant="secondary"
                     onClick={handleExport}
                     disabled={filtered.length === 0}
                 >
                     <Download size={15} /> Exportar CSV
-                </button>
+                </Button>
             </div>
 
             <div className="toolbar">
@@ -125,20 +126,21 @@ export function NewsletterPage() {
                                         {NEWSLETTER_SOURCE_LABEL[s.source] ?? s.source}
                                     </td>
                                     <td>
-                                        <span
-                                            className={`badge badge--${s.status === 'active' ? 'success' : 'neutral'}`}
+                                        <Badge
+                                            variant={s.status === 'active' ? 'success' : 'neutral'}
                                         >
                                             {s.status}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="muted">
                                         {new Date(s.created_at).toLocaleDateString('es-AR')}
                                     </td>
                                     <td>
                                         <div className="row-actions">
-                                            <button
+                                            <IconButton
                                                 type="button"
-                                                className="icon-btn icon-btn--danger"
+                                                variant="danger"
+                                                aria-label={`Eliminar ${s.email}`}
                                                 title={`Eliminar ${s.email}`}
                                                 disabled={deleting === s.id}
                                                 onClick={() =>
@@ -146,7 +148,7 @@ export function NewsletterPage() {
                                                 }
                                             >
                                                 <Trash2 size={14} />
-                                            </button>
+                                            </IconButton>
                                         </div>
                                     </td>
                                 </tr>

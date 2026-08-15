@@ -16,6 +16,7 @@ import {
 } from 'lucide-preact';
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
+import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
 import {
     ownersKeys,
     sendReport,
@@ -166,8 +167,10 @@ export function OwnerDetailPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/propietarios" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/propietarios">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">Cargando propietario…</div>
@@ -179,8 +182,10 @@ export function OwnerDetailPage() {
         return (
             <div className="page">
                 <div className="page-head">
-                    <Link href="/propietarios" className="btn btn--ghost">
-                        <ArrowLeft size={16} /> Volver
+                    <Link href="/propietarios">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} /> Volver
+                        </Button>
                     </Link>
                 </div>
                 <div className="card placeholder-card">
@@ -212,17 +217,19 @@ export function OwnerDetailPage() {
     return (
         <div className="page owner-detail-page">
             <div className="page-head">
-                <Link href="/propietarios" className="btn btn--ghost">
-                    <ArrowLeft size={16} /> Volver
+                <Link href="/propietarios">
+                    <Button variant="ghost">
+                        <ArrowLeft size={16} /> Volver
+                    </Button>
                 </Link>
                 <div>
                     <h2 className="page-title">{owner.full_name}</h2>
                     <p className="page-subtitle">
-                        <span
-                            className={`badge badge--${owner.owner_type === 'persona_juridica' ? 'info' : 'neutral'}`}
+                        <Badge
+                            variant={owner.owner_type === 'persona_juridica' ? 'info' : 'neutral'}
                         >
                             {OWNER_TYPE_LABEL[owner.owner_type]}
-                        </span>
+                        </Badge>
                         {owner.company_name && (
                             <span className="muted"> · {owner.company_name}</span>
                         )}
@@ -231,21 +238,21 @@ export function OwnerDetailPage() {
                 </div>
                 <div style="display:flex; gap:8px;">
                     {!editing && (
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--secondary"
+                            variant="secondary"
                             onClick={() => setEditing(true)}
                         >
                             <Edit size={16} /> Editar
-                        </button>
+                        </Button>
                     )}
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn--danger"
+                        variant="danger"
                         onClick={() => setConfirmSoftDelete(true)}
                     >
                         <Trash2 size={16} /> Papelera
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -298,11 +305,15 @@ export function OwnerDetailPage() {
                                 </div>
                                 <div>
                                     <h3>{owner.full_name}</h3>
-                                    <span
-                                        className={`badge badge--${owner.owner_type === 'persona_juridica' ? 'info' : 'neutral'}`}
+                                    <Badge
+                                        variant={
+                                            owner.owner_type === 'persona_juridica'
+                                                ? 'info'
+                                                : 'neutral'
+                                        }
                                     >
                                         {OWNER_TYPE_LABEL[owner.owner_type]}
-                                    </span>
+                                    </Badge>
                                 </div>
                             </div>
 
@@ -535,9 +546,10 @@ export function OwnerDetailPage() {
                             {propertyOwners && propertyOwners.length > 0 && (
                                 <Link
                                     href={`/propiedades/${propertyOwners[0].property_id}/analisis`}
-                                    className="btn btn--primary"
                                 >
-                                    <Plus size={16} /> Crear análisis
+                                    <Button variant="primary">
+                                        <Plus size={16} /> Crear análisis
+                                    </Button>
                                 </Link>
                             )}
                         </div>
@@ -552,9 +564,10 @@ export function OwnerDetailPage() {
                         {propertyOwners && propertyOwners.length > 0 && (
                             <Link
                                 href={`/propiedades/${propertyOwners[0].property_id}/planes/nuevo`}
-                                className="btn btn--primary"
                             >
-                                <Plus size={16} /> Nuevo plan
+                                <Button variant="primary">
+                                    <Plus size={16} /> Nuevo plan
+                                </Button>
                             </Link>
                         )}
                     </div>
@@ -592,13 +605,13 @@ export function OwnerDetailPage() {
                         }
                     />
                     <div className="tab-footer">
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--primary"
+                            variant="primary"
                             onClick={() => setActiveTab('communications')}
                         >
                             <Plus size={16} /> Nueva comunicación
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -607,26 +620,26 @@ export function OwnerDetailPage() {
                 <div className="tab-content">
                     <div className="tab-header">
                         <h3>Reportes generados</h3>
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn--primary"
+                            variant="primary"
                             onClick={() => setShowReportGenerator(true)}
                         >
                             <Plus size={16} /> Generar reporte
-                        </button>
+                        </Button>
                     </div>
                     {reports.length === 0 ? (
                         <div className="empty-state">
                             <FileText size={48} className="placeholder-icon" />
                             <h3>Sin reportes</h3>
                             <p>No se han generado reportes para este propietario.</p>
-                            <button
+                            <Button
                                 type="button"
-                                className="btn btn--primary"
+                                variant="primary"
                                 onClick={() => setShowReportGenerator(true)}
                             >
                                 <Plus size={16} /> Generar primer reporte
-                            </button>
+                            </Button>
                         </div>
                     ) : (
                         <div className="card table-card">
@@ -649,11 +662,15 @@ export function OwnerDetailPage() {
                                             </td>
                                             <td>{REPORT_TYPE_LABEL[report.report_type]}</td>
                                             <td>
-                                                <span
-                                                    className={`badge badge--${COMMUNICATION_STATUS_TONE[report.status]}`}
+                                                <Badge
+                                                    variant={
+                                                        COMMUNICATION_STATUS_TONE[
+                                                            report.status
+                                                        ] as BadgeVariant
+                                                    }
                                                 >
                                                     {COMMUNICATION_STATUS_LABEL[report.status]}
-                                                </span>
+                                                </Badge>
                                             </td>
                                             <td>
                                                 {new Date(report.generated_at).toLocaleString(
@@ -669,24 +686,27 @@ export function OwnerDetailPage() {
                                             </td>
                                             <td>
                                                 <div className="row-actions">
-                                                    <button
-                                                        className="icon-btn"
+                                                    <IconButton
+                                                        variant="ghost"
+                                                        aria-label="Ver"
                                                         title="Ver"
                                                         onClick={() => setShowReportPreview(report)}
                                                     >
                                                         <FileText size={14} />
-                                                    </button>
+                                                    </IconButton>
                                                     {report.status === 'draft' && (
-                                                        <button
-                                                            className="icon-btn"
+                                                        <IconButton
+                                                            variant="ghost"
+                                                            aria-label="Enviar por WhatsApp"
                                                             title="Enviar por WhatsApp"
                                                             onClick={() => handleSendReport(report)}
                                                         >
                                                             <MessageSquare size={14} />
-                                                        </button>
+                                                        </IconButton>
                                                     )}
-                                                    <button
-                                                        className="icon-btn"
+                                                    <IconButton
+                                                        variant="ghost"
+                                                        aria-label="Descargar JSON"
                                                         title="Descargar JSON"
                                                         onClick={() => {
                                                             const blob = new Blob(
@@ -708,7 +728,7 @@ export function OwnerDetailPage() {
                                                         }}
                                                     >
                                                         <Download size={14} />
-                                                    </button>
+                                                    </IconButton>
                                                 </div>
                                             </td>
                                         </tr>

@@ -39,6 +39,33 @@ Landing pública + Panel administrativo integral para inmobiliaria. Una solució
 
 ---
 
+## 📊 Estado Actual del Proyecto (2026-08-14)
+
+| Área | Estado | Detalle |
+|---|---|---|
+| **Build & Typecheck** | ✅ | 3/3 paquetes pasan `tsc --noEmit` + `vite build` |
+| **Tests Unitarios** | ✅ | 25 archivos / 549 tests en `@bienenhaus/ui`; 22 archivos / 496 tests en `@bienenhaus/admin` |
+| **E2E Críticos** | ✅ | 7 suites Playwright verdes (login, admin-pages, create-property, owners-crud, visits-agents-ml, tasar, visual) |
+| **ESLint** | ✅ | 0 errores, 335 warnings (solo reglas warn-level) |
+| **Design System** | 🟡 Parcial | Atoms canónicos (Button, IconButton, Skeleton) — migración admin en Fase 1c+ |
+| **Supabase Client** | ✅ | 3 instancias → 1 shared (`@bienenhaus/supabase`) con `createTypedClient<Database>()` |
+| **Docs** | ✅ | 4 ADRs nuevos (005-008) + 4 runbooks |
+
+### 🟡 Migración Design System — Fase 1c+ (En progreso)
+
+| Componente | Estado |
+|---|---|
+| `Button` atom (variant `icon`) | ✅ Canónico en `@bienenhaus/ui` |
+| `IconButton` atom (variant `danger`) | ✅ Canónico en `@bienenhaus/ui` |
+| `Skeleton` atom (story `ButtonSkeleton`) | ✅ Canónico en `@bienenhaus/ui` |
+| Legacy `Button.tsx` / `Button.module.css` | ✅ Eliminados |
+| `Login.tsx` usando `Button` atom | ✅ Migrado |
+| Dashboard / PropertiesPage / resto | 🟡 Pendiente — usan clases globales `.btn`, `.icon-btn`, `.badge`, `.spin` de `styles.css` |
+
+**Próximos pasos**: Migrar Dashboard, PropertiesPage, y resto de páginas a atoms del design system; limpiar clases globales muertas en `styles.css`.
+
+---
+
 ## 🏗️ Arquitectura
 
 ```
@@ -832,12 +859,12 @@ Mejoras coherentes con la arquitectura actual:
 > necesitan emails de auth, y documentar runbooks de incidentes (caída
 > Supabase, rate limit ML, migración fallida).
 
-### Deuda técnica conocida (2026-08)
+### Deuda técnica conocida (2026-08-14)
 
 | Deuda                            | Detalle                                                                                                                                                                                                                                   |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Clientes Supabase duplicados** | 3 instancias: admin (`supabase.ts` tipado), landing (`supabase-data.ts` via `@bienenhaus/supabase`), landing fetch directo (`supabase.ts`). Migrar admin al paquete compartido.                                                           |
+| **Clientes Supabase duplicados** | ✅ **RESUELTO** (2026-08-14): 3 instancias unificadas en `@bienenhaus/supabase` shared package con `createTypedClient<Database>()` y `getAdminSupabase()` singleton.                                                                    |
 | **Invalidación de query keys**   | Fix completo (2026-08): prefijos puros en `valuationApi.ts`, `properties.api.ts`, `agents.api.ts`, `visits.api.ts`; `ml.api.ts` verificado OK (invalidaciones de página con claves literales puras, sin `queryKeys.x()` con `undefined`). |
 | **Lint debt**                    | ~258 errores pre-existentes en 91 archivos (`no-explicit-any`, `no-duplicate-imports`); CI lint es diff-scoped.                                                                                                                           |
-| **Coverage unit**                | Pocos tests unitarios para módulos críticos (sync ML, chat, visits).                                                                                                                                                                      |
-| **Docs operativas**              | Sin ADRs nuevos post-004, runbooks parciales.                                                                                                                                                                                             |
+| **Coverage unit**                | Mejorada: +4 test files nuevos (`ml.mappers`, `chat.mappers`, `visits.mappers`, `supabase.client`) — 496 tests pasan en admin.                                                                                                           |
+| **Docs operativas**              | ✅ **MEJORADO**: 4 ADRs nuevos (005-008) + 4 runbooks (supabase-client-migration, design-system-atoms-migration, edge-functions-deploy, database-migrations).                                                                             |

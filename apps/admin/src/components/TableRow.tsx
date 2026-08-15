@@ -28,7 +28,7 @@ export function TableRow({
     const handleClick = (e: MouseEvent) => {
         // No hacer nada si se clickeó un checkbox, botón o enlace
         const target = e.target as HTMLElement;
-        if (target.closest('input,button,a,.icon-btn,select')) return;
+        if (target.closest('input,button,a,select')) return;
 
         if (clickable && onClick) {
             onClick();
