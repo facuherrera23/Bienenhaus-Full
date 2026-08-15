@@ -1192,6 +1192,8 @@ function MLTab() {
     });
     const [clientSecretDraft, setClientSecretDraft] = useState('');
     const [showClientSecret, setShowClientSecret] = useState(false);
+    const [webhookSecretDraft, setWebhookSecretDraft] = useState('');
+    const [showWebhookSecret, setShowWebhookSecret] = useState(false);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -1199,6 +1201,7 @@ function MLTab() {
         setAppIdDraft(settingsQ.data.app_id);
         setDefaultsDraft(settingsQ.data.defaults);
         setClientSecretDraft(settingsQ.data.client_secret ?? '');
+        setWebhookSecretDraft(settingsQ.data.webhook_secret ?? '');
     }, [settingsQ.data]);
 
     const invalidateMlSettings = () => {
@@ -1222,6 +1225,17 @@ function MLTab() {
                     },
                 );
             }
+            if (webhookSecretDraft.trim()) {
+                await upsertSiteSettingWithVersion(
+                    'ml_webhook_secret',
+                    { value: webhookSecretDraft.trim() },
+                    {
+                        value_type: 'json',
+                        is_public: false,
+                        locale: 'es-AR',
+                    },
+                );
+            }
             pushToast({ type: 'success', title: 'Configuración de ML guardada' });
             invalidateMlSettings();
         } catch {
@@ -1237,6 +1251,7 @@ function MLTab() {
         defaultsDraft.listing_type_id !== settingsQ.data?.defaults.listing_type_id ||
         defaultsDraft.condition !== settingsQ.data?.defaults.condition;
     const dirtyClientSecret = clientSecretDraft.trim() !== (settingsQ.data?.client_secret ?? '');
+    const dirtyWebhookSecret = webhookSecretDraft.trim() !== (settingsQ.data?.webhook_secret ?? '');
 
     return (
         <section className="card">
@@ -1250,7 +1265,7 @@ function MLTab() {
                 </div>
                 <Button
                     onClick={() => void save()}
-                    disabled={saving || (!dirtyAppId && !dirtyDefaults && !dirtyClientSecret)}
+                    disabled={saving || (!dirtyAppId && !dirtyDefaults && !dirtyClientSecret && !dirtyWebhookSecret)}
                 >
                     {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={15} />}
                     Guardar
@@ -1289,6 +1304,30 @@ function MLTab() {
                     </div>
                     <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
                         Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
+                    </p>
+                </label>
+                <label className="field">
+                    <span>Webhook Secret</span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                            type={showWebhookSecret ? 'text' : 'password'}
+                            placeholder="Ingresá el webhook secret (x-meli-signature)"
+                            value={webhookSecretDraft}
+                            onInput={(e) =>
+                                setWebhookSecretDraft((e.currentTarget as HTMLInputElement).value)
+                            }
+                            style={{ flex: 1 }}
+                        />
+                        <IconButton
+                            variant="ghost"
+                            onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                            aria-label={showWebhookSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                        >
+                            {showWebhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </IconButton>
+                    </div>
+                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                        Secret para validar la firma HMAC de los webhooks de Mercado Libre.
                     </p>
                 </label>
                 <label className="field">

@@ -214,7 +214,7 @@ export async function fetchMlSettings(): Promise<MlSettings> {
     const { data, error } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['ml_app_id', 'ml_defaults', 'ml_client_secret']);
+        .in('key', ['ml_app_id', 'ml_defaults', 'ml_client_secret', 'ml_webhook_secret']);
 
     if (error) throw new Error(error.message);
 
@@ -238,6 +238,9 @@ export async function fetchMlSettings(): Promise<MlSettings> {
         }
         if (s.key === 'ml_client_secret') {
             settings.client_secret = String((s.value as { value?: unknown }).value ?? '');
+        }
+        if (s.key === 'ml_webhook_secret') {
+            settings.webhook_secret = String((s.value as { value?: unknown }).value ?? '');
         }
     }
 

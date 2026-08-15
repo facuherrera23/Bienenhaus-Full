@@ -122,6 +122,7 @@ describe('ml settings', () => {
                 'ml_app_id',
                 'ml_defaults',
                 'ml_client_secret',
+                'ml_webhook_secret',
             ]);
         });
     });

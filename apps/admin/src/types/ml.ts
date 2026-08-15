@@ -25,6 +25,7 @@ export interface MlSettings {
     app_id: string;
     defaults: { category_id: string; listing_type_id: string; condition: string };
     client_secret?: string;
+    webhook_secret?: string;
 }
 
 export interface MlQueueRow {
@@ -136,8 +137,8 @@ export const ML_OPERATION_LABEL: Record<MlOperation, string> = {
 export const ML_SYNC_STATUS_LABEL: Record<MlSyncStatus, string> = {
     pending: 'Pendiente',
     processing: 'Procesando',
-    success: '√âxito',
-    failed: 'Fall√≥',
+    success: '…xito',
+    failed: 'FallÛ',
     cancelled: 'Cancelada',
 };
 
@@ -152,7 +153,7 @@ export type MlDeadLetterStatus = 'pending' | 'resolved' | 'ignored';
 
 // Fila de la cola de fallos definitivos de sync con ML.
 // Mismo shape que ml_sync_queue (de donde "caen" los items tras agotar max_attempts),
-// m√°s los campos propios de resoluci√≥n manual.
+// m·s los campos propios de resoluciÛn manual.
 export interface MlDeadLetterRow {
     id: number;
     property_id: string;

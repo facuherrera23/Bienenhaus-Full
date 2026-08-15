@@ -17,7 +17,6 @@ import {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
-const ML_WEBHOOK_SECRET = Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
@@ -67,11 +66,26 @@ function logError(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
     console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: 'error', ...entry }));
 }
 
+async function getMlWebhookSecret(): Promise<string> {
+    const { data: settings } = await supabase
+        .from('site_settings')
+        .select('key, value')
+        .eq('key', 'ml_webhook_secret')
+        .maybeSingle();
+
+    const secret = (settings?.value?.value as string) ?? '';
+    if (secret) return secret;
+
+    // Fallback a env vars (legacy)
+    return Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
+}
+
 async function verifySignature(req: Request): Promise<boolean> {
-    if (!ML_WEBHOOK_SECRET) return false;
+    const secret = await getMlWebhookSecret();
+    if (!secret) return false;
     const signature = req.headers.get('x-meli-signature');
     if (!signature) return false;
-    return timingSafeEqual(signature, ML_WEBHOOK_SECRET);
+    return timingSafeEqual(signature, secret);
 }
 
 async function logWebhookEvent(
@@ -155,8 +169,8 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
         }
 
         if (token) {
-            const res = await fetch(`${ML_API}/questions/${questionId}?api_version=4`, {
-                headers: { authorization: `Bearer ${token}` },
+            const res = await fetch(\\/questions/\?api_version=4\, {
+                headers: { authorization: \Bearer \\ },
             });
 
             if (res.ok) {
@@ -200,7 +214,7 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
                         questionId,
                         template.message,
                         token,
-                        `answer:${questionId}`,
+                        \nswer:\\,
                     );
                 } catch (err) {
                     await supabase
@@ -272,8 +286,8 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
 
     let order: MlOrderSchema | null = null;
     if (token) {
-        const res = await fetch(`${ML_API}/orders/${orderId}`, {
-            headers: { authorization: `Bearer ${token}` },
+        const res = await fetch(\\/orders/\\, {
+            headers: { authorization: \Bearer \\ },
         });
         if (res.ok) {
             try {
@@ -345,7 +359,7 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
                     orderId,
                     template.message,
                     token,
-                    `order:${orderId}:${status}`,
+                    \order:\:\\,
                 );
                 log({
                     function: 'ml-webhook',
@@ -414,11 +428,6 @@ Deno.serve(async (req) => {
     const respond = (status: number, body: Record<string, unknown>): Response =>
         jsonResponse(status, body, req);
 
-    if (!ML_WEBHOOK_SECRET) {
-        logError({ function: 'ml-webhook', error: 'ML_WEBHOOK_SECRET missing' });
-        return respond(500, { error: 'ML_WEBHOOK_SECRET not configured' });
-    }
-
     if (req.method === 'OPTIONS') return optionsResponse(req);
     if (req.method !== 'POST') return respond(405, { error: 'Method not allowed' });
 
@@ -432,7 +441,7 @@ Deno.serve(async (req) => {
         return respond(429, { error: 'Rate limited', retry_after: rlResult.retryAfter });
     }
 
-    // Verify signature
+    // Verify signature (secret se lee dinámicamente en verifySignature)
     const verified = await verifySignature(req);
     if (!verified) return respond(401, { error: 'Invalid signature' });
 
@@ -448,7 +457,7 @@ Deno.serve(async (req) => {
 
     if (!(await validateNotificationBinding(payload))) {
         return respond(401, {
-            error: 'NotificaciÃ³n no perteneciente a la aplicaciÃ³n/cuenta conectada',
+            error: 'Notificación no perteneciente a la aplicación/cuenta conectada',
         });
     }
 
