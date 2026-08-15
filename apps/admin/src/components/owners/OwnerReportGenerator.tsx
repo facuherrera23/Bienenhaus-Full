@@ -8,8 +8,8 @@ import {
     ACTION_PLAN_STATUS_TONE,
     type ActionPlanRow,
     type CommunicationRow,
-    type PriceAnalysisRow,
     PRICE_STATUS_TONE,
+    type PriceAnalysisRow,
     REPORT_TYPE_LABEL,
 } from '../../types/owners';
 import styles from '../../styles/OwnerReportGenerator.module.css';

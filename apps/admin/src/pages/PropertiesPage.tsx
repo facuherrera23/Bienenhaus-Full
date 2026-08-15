@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Download, Plus, Search } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { Button, Badge } from '@bienenhaus/ui';
+import { Badge , type BadgeVariant, Button  } from '@bienenhaus/ui';
 import {
     type MlMetaRow,
     type PropertyRow,
@@ -14,7 +14,6 @@ import {
 import { downloadCsv, getListData as getListDataUtil, toCsv, todayStamp } from '../lib/utils';
 import styles from '../styles/PropertiesPage.module.css';
 
-import { BadgeVariant } from '@bienenhaus/ui';
 
 function StatusBadge({ status }: { status: PropertyStatus }) {
     return <Badge variant={STATUS_TONE[status] as BadgeVariant} size="sm">{STATUS_LABEL[status]}</Badge>;

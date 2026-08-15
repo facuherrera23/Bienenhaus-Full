@@ -13,7 +13,7 @@ import {
     X,
 } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
-import { BadgeVariant, Button, Badge, IconButton, Spinner } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton, Spinner } from '@bienenhaus/ui';
 import {
     type CsvLeadRow,
     LEAD_INTENT_LABEL,

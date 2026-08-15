@@ -105,7 +105,8 @@ jobs:
                   echo "Diff base: $BASE_REF"
 
                   # Solo archivos TS/TSX tocados (los .d.ts ya están en ignores de ESLint)
-                  CHANGED=$(git diff --name-only "$BASE_REF" HEAD -- '*.ts' '*.tsx' || true)
+                  # --diff-filter=ACMR excluye borrados: eslint falla si recibe un path inexistente
+                  CHANGED=$(git diff --name-only --diff-filter=ACMR "$BASE_REF" HEAD -- '*.ts' '*.tsx' || true)
                   FILES=$(echo "$CHANGED" | grep -v '\.d\.ts$' || true)
 
                   if [ -z "$FILES" ]; then

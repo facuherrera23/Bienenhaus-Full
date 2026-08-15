@@ -43,7 +43,7 @@ import {
 import { pushToast } from '@/store/app';
 import { ActionPlanCard, ActionPlanTaskList } from '@components/owners';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton } from '@bienenhaus/ui';
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—';

@@ -16,7 +16,7 @@ import {
 } from 'lucide-preact';
 import { Link, useLocation, useRoute } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
-import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton } from '@bienenhaus/ui';
 import {
     ownersKeys,
     sendReport,

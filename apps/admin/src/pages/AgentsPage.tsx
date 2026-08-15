@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Mail, Pencil, Phone, Plus } from 'lucide-preact';
 import { Link } from 'wouter-preact';
-import { Button, Badge } from '@bienenhaus/ui';
+import { Badge, Button } from '@bienenhaus/ui';
 import { type AgentRow, useAgents, useToggleAgentActive } from '../lib/agents.api';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';

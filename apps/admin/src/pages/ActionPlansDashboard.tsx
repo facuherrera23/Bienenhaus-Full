@@ -12,7 +12,7 @@ import {
 } from '@lib/owners/api';
 import { pushToast } from '@store/app';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton } from '@bienenhaus/ui';
 import {
     ACTION_PLAN_CATEGORY_LABEL,
     ACTION_PLAN_PRIORITY_LABEL,

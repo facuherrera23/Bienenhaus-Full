@@ -13,7 +13,7 @@ import { pushToast } from '@store/app';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ComparablePropertyInput, PriceAnalysisGauge } from '@components/owners';
 import { priceAnalysisSchema } from '@lib/owners/schemas';
-import { Button, Badge, Spinner, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, Spinner } from '@bienenhaus/ui';
 import {
     getPriceStatusLabel,
     MARKET_TREND_ICON,

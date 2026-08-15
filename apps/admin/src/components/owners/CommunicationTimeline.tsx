@@ -8,7 +8,7 @@ import {
     type CommunicationType,
 } from '../../types/owners';
 import { ConfirmDialog } from '../ConfirmDialog';
-import { Badge, Button, IconButton, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton } from '@bienenhaus/ui';
 
 interface CommunicationTimelineProps {
     communications: CommunicationRow[];

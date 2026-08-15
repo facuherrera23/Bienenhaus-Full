@@ -16,7 +16,7 @@ import {
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
-import { Badge, Button, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button } from '@bienenhaus/ui';
 import styles from './LeadDetailPage.module.css';
 
 export function LeadDetailPage() {

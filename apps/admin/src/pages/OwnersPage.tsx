@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { Building2, Download, Filter, Plus, Search, Trash2, User, X } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Badge, IconButton, Select } from '@bienenhaus/ui';
+import { Badge, Button, IconButton, Select } from '@bienenhaus/ui';
 import {
     ownersKeys,
     useDeletedOwners,

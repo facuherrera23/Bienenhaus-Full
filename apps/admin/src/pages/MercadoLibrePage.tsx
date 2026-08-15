@@ -16,7 +16,7 @@ import {
     X,
     Zap,
 } from 'lucide-preact';
-import { Badge, Button, IconButton, Spinner, type BadgeVariant } from '@bienenhaus/ui';
+import { Badge, type BadgeVariant, Button, IconButton, Spinner } from '@bienenhaus/ui';
 import {
     answerMlQuestion,
     buildAuthorizeUrl,
