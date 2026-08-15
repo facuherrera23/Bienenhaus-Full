@@ -415,6 +415,7 @@ export function OwnersPage() {
                                                         variant="ghost"
                                                         size="sm"
                                                         aria-label="Restaurar"
+                                                        title="Restaurar"
                                                         onClick={() =>
                                                             handleRestore(owner.id, owner.full_name)
                                                         }

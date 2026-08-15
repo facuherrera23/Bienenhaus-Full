@@ -191,10 +191,7 @@ export function Login() {
                 <label className={styles.field}>
                     <span>Email</span>
                     <div className={styles.inputWrapper}>
-                        <FormField
-                            label="Email"
-                            error={error}
-                        >
+                        <FormField label="Email">
                             <Input
                                 type="email"
                                 placeholder=" "
@@ -212,10 +209,7 @@ export function Login() {
                 <label className={styles.field}>
                     <span>Contraseña</span>
                     <div className={styles.inputWrapper}>
-                        <FormField
-                            label="Contraseña"
-                            error={error}
-                        >
+                        <FormField label="Contraseña">
                             <Input
                                 type="password"
                                 placeholder=" "

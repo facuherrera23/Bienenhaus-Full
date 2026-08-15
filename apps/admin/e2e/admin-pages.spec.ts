@@ -135,11 +135,11 @@ test.describe('Chat - lista de canales', () => {
         await expect(page.locator('text=Mensajes')).toBeVisible({ timeout: 30000 });
 
         // Botón nuevo chat
-        await expect(page.locator('button.icon-btn:has(.lucide-plus)')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Crear conversación' })).toBeVisible();
 
         // Sin canales inicialmente -> mensaje vacío (la query puede tardar o fallar por RLS)
         // Verificar al menos que el header y botón están presentes
         await expect(page.locator('text=Mensajes')).toBeVisible({ timeout: 30000 });
-        await expect(page.locator('button.icon-btn:has(.lucide-plus)')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Crear conversación' })).toBeVisible();
     });
 });
