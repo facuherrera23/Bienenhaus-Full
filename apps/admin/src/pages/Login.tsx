@@ -263,6 +263,7 @@ export function Login() {
                     variant="primary"
                     fullWidth
                     size="lg"
+                    type="submit"
                     disabled={loading || lockout}
                 >
                     {loading ? (
