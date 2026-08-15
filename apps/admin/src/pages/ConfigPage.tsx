@@ -9,7 +9,6 @@ import {
     ChevronUp,
     Copy,
     Eye,
-    EyeOff,
     Globe,
     History,
     KeyRound,
@@ -24,7 +23,6 @@ import {
     UserPlus,
     Users,
     X,
-    Zap,
 } from 'lucide-preact';
 import type { ComponentChildren } from 'preact';
 import {
@@ -38,7 +36,7 @@ import {
     resetAdminUserPassword,
     updateAdminUser,
 } from '../lib/admin';
-import { fetchMlSettings, setMlAppId, setMlDefaults } from '../lib/ml';
+
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -1159,13 +1157,13 @@ function UsersTab() {
                     <div className="modal-actions">
                         <Button onClick={() => setLinkModal(null)}>Listo</Button>
                     </div>
-                </Modal>
+</Modal>
             )}
 
             <ConfirmDialog
                 open={removeTarget !== null}
                 title="Eliminar acceso"
-                message={removeTarget ? `¿Eliminar el acceso de ${removeTarget}?` : ''}
+                message={removeTarget ? `��Eliminar el acceso de ${removeTarget}?` : ''}
                 confirmLabel="Eliminar"
                 danger
                 onConfirm={() => {
@@ -1179,214 +1177,7 @@ function UsersTab() {
 }
 
 // ============================================================
-// MLTab — integración Mercado Libre (original de ConfigPage)
-// ============================================================
-
-function MLTab() {
-    const settingsQ = useQuery({ queryKey: ['ml-settings'], queryFn: fetchMlSettings });
-    const [appIdDraft, setAppIdDraft] = useState('');
-    const [defaultsDraft, setDefaultsDraft] = useState({
-        category_id: '',
-        listing_type_id: 'gold_pro',
-        condition: 'used',
-    });
-    const [clientSecretDraft, setClientSecretDraft] = useState('');
-    const [showClientSecret, setShowClientSecret] = useState(false);
-    const [webhookSecretDraft, setWebhookSecretDraft] = useState('');
-    const [showWebhookSecret, setShowWebhookSecret] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        if (!settingsQ.data) return;
-        setAppIdDraft(settingsQ.data.app_id);
-        setDefaultsDraft(settingsQ.data.defaults);
-        setClientSecretDraft(settingsQ.data.client_secret ?? '');
-        setWebhookSecretDraft(settingsQ.data.webhook_secret ?? '');
-    }, [settingsQ.data]);
-
-    const invalidateMlSettings = () => {
-        void queryClient.invalidateQueries({ queryKey: ['ml-settings'] });
-        void queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
-    };
-
-    const save = async () => {
-        setSaving(true);
-        try {
-            await setMlAppId(appIdDraft.trim());
-            await setMlDefaults(defaultsDraft);
-            if (clientSecretDraft.trim()) {
-                await upsertSiteSettingWithVersion(
-                    'ml_client_secret',
-                    { value: clientSecretDraft.trim() },
-                    {
-                        value_type: 'json',
-                        is_public: false,
-                        locale: 'es-AR',
-                    },
-                );
-            }
-            if (webhookSecretDraft.trim()) {
-                await upsertSiteSettingWithVersion(
-                    'ml_webhook_secret',
-                    { value: webhookSecretDraft.trim() },
-                    {
-                        value_type: 'json',
-                        is_public: false,
-                        locale: 'es-AR',
-                    },
-                );
-            }
-            pushToast({ type: 'success', title: 'Configuración de ML guardada' });
-            invalidateMlSettings();
-        } catch {
-            pushToast({ type: 'error', title: 'No se pudo guardar la configuración' });
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const dirtyAppId = appIdDraft.trim() !== (settingsQ.data?.app_id ?? '');
-    const dirtyDefaults =
-        defaultsDraft.category_id !== settingsQ.data?.defaults.category_id ||
-        defaultsDraft.listing_type_id !== settingsQ.data?.defaults.listing_type_id ||
-        defaultsDraft.condition !== settingsQ.data?.defaults.condition;
-    const dirtyClientSecret = clientSecretDraft.trim() !== (settingsQ.data?.client_secret ?? '');
-    const dirtyWebhookSecret = webhookSecretDraft.trim() !== (settingsQ.data?.webhook_secret ?? '');
-
-    return (
-        <section className="card">
-            <div className="site-section-head">
-                <div>
-                    <h3>Integración Mercado Libre</h3>
-                    <p className="muted">
-                        Identificación de la app y valores por defecto para publicar. La conexión y
-                        la cola se administran en la sección «Mercado Libre».
-                    </p>
-                </div>
-                <Button
-                    onClick={() => void save()}
-                    disabled={saving || (!dirtyAppId && !dirtyDefaults && !dirtyClientSecret && !dirtyWebhookSecret)}
-                >
-                    {saving ? <Spinner size="sm" inline color="inherit" /> : <Save size={15} />}
-                    Guardar
-                </Button>
-            </div>
-
-            <div className="form-grid">
-                <label className="field">
-                    <span>ID de aplicación (client_id)</span>
-                    <input
-                        type="text"
-                        placeholder="Ej: 1234567890123456"
-                        value={appIdDraft}
-                        onInput={(e) => setAppIdDraft((e.currentTarget as HTMLInputElement).value)}
-                    />
-                </label>
-                <label className="field">
-                    <span>Client Secret</span>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                            type={showClientSecret ? 'text' : 'password'}
-                            placeholder="Ingresá el client_secret"
-                            value={clientSecretDraft}
-                            onInput={(e) =>
-                                setClientSecretDraft((e.currentTarget as HTMLInputElement).value)
-                            }
-                            style={{ flex: 1 }}
-                        />
-                        <IconButton
-                            variant="ghost"
-                            onClick={() => setShowClientSecret(!showClientSecret)}
-                            aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
-                        >
-                            {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </IconButton>
-                    </div>
-                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
-                        Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
-                    </p>
-                </label>
-                <label className="field">
-                    <span>Webhook Secret</span>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                            type={showWebhookSecret ? 'text' : 'password'}
-                            placeholder="Ingresá el webhook secret (x-meli-signature)"
-                            value={webhookSecretDraft}
-                            onInput={(e) =>
-                                setWebhookSecretDraft((e.currentTarget as HTMLInputElement).value)
-                            }
-                            style={{ flex: 1 }}
-                        />
-                        <IconButton
-                            variant="ghost"
-                            onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                            aria-label={showWebhookSecret ? 'Ocultar secret' : 'Mostrar secret'}
-                        >
-                            {showWebhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </IconButton>
-                    </div>
-                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
-                        Secret para validar la firma HMAC de los webhooks de Mercado Libre.
-                    </p>
-                </label>
-                <label className="field">
-                    <span>Category ID (opcional)</span>
-                    <input
-                        type="text"
-                        placeholder="Ej: MLA1459"
-                        value={defaultsDraft.category_id}
-                        onInput={(e) =>
-                            setDefaultsDraft((d) => ({
-                                ...d,
-                                category_id: (e.currentTarget as HTMLInputElement).value,
-                            }))
-                        }
-                    />
-                </label>
-                <label className="field">
-                    <span>Listing type</span>
-                    <select
-                        className="select"
-                        value={defaultsDraft.listing_type_id}
-                        onChange={(e) =>
-                            setDefaultsDraft((d) => ({
-                                ...d,
-                                listing_type_id: (e.currentTarget as HTMLSelectElement).value,
-                            }))
-                        }
-                    >
-                        <option value="gold_pro">Gold Pro</option>
-                        <option value="gold_special">Gold Special</option>
-                        <option value="gold">Gold</option>
-                        <option value="silver">Silver</option>
-                        <option value="bronze">Bronze</option>
-                        <option value="free">Free</option>
-                    </select>
-                </label>
-                <label className="field">
-                    <span>Condición</span>
-                    <select
-                        className="select"
-                        value={defaultsDraft.condition}
-                        onChange={(e) =>
-                            setDefaultsDraft((d) => ({
-                                ...d,
-                                condition: (e.currentTarget as HTMLSelectElement).value,
-                            }))
-                        }
-                    >
-                        <option value="new">A estrenar / Nuevo</option>
-                        <option value="used">Usado</option>
-                    </select>
-                </label>
-            </div>
-        </section>
-    );
-}
-
-// ============================================================
-// VersionsTab — historial de versiones de ajustes + restore + comparar
+// VersionsTab �?" historial de versiones de ajustes + restore + comparar
 // ============================================================
 
 function VersionsTab({ onRestored }: { onRestored: () => void }) {
@@ -1572,7 +1363,6 @@ type TabId = 'users' | 'ml' | 'site' | 'i18n' | 'versions';
 
 const TABS: { id: TabId; label: string; icon: IconCmp }[] = [
     { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'ml', label: 'Mercado Libre', icon: Zap },
     { id: 'site', label: 'Sitio Web', icon: Globe },
     { id: 'i18n', label: 'Idiomas', icon: Languages },
     { id: 'versions', label: 'Versiones', icon: History },
@@ -1725,7 +1515,6 @@ export function ConfigPage() {
             </div>
 
             {activeTab === 'users' && <UsersTab />}
-            {activeTab === 'ml' && <MLTab />}
             {activeTab === 'site' && <SiteTab onSaved={bumpPreview} />}
             {activeTab === 'i18n' && <I18nTab onSaved={bumpPreview} />}
             {activeTab === 'versions' && <VersionsTab onRestored={bumpPreview} />}

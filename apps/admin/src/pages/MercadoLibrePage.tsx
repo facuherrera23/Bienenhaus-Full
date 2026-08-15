@@ -5,6 +5,8 @@ import {
     Copy,
     Edit2,
     ExternalLink,
+    Eye,
+    EyeOff,
     Link2,
     MessageSquare,
     Plus,
@@ -47,6 +49,7 @@ import {
     setMlEnabled,
     updateMlAutoReplyTemplate,
 } from '../lib/ml';
+import { upsertSiteSettingWithVersion } from '../lib/site';
 import { queryClient } from '../lib/query/client';
 import { useMutation, useQuery } from '../lib/query/hooks';
 import { pushToast } from '../store/app';
@@ -101,6 +104,10 @@ export function MercadoLibrePage() {
 
     const [appIdDraft, setAppIdDraft] = useState('');
     const [savingAppId, setSavingAppId] = useState(false);
+    const [clientSecretDraft, setClientSecretDraft] = useState('');
+    const [showClientSecret, setShowClientSecret] = useState(false);
+    const [webhookSecretDraft, setWebhookSecretDraft] = useState('');
+    const [showWebhookSecret, setShowWebhookSecret] = useState(false);
     const [defaultsDraft, setDefaultsDraft] = useState({
         category_id: '',
         listing_type_id: 'gold_pro',
@@ -189,12 +196,26 @@ export function MercadoLibrePage() {
         setSavingAppId(true);
         try {
             await setMlAppId(appIdDraft.trim());
-            pushToast({ type: 'success', title: 'ID de aplicacion guardado' });
+            if (clientSecretDraft.trim()) {
+                await upsertSiteSettingWithVersion(
+                    'ml_client_secret',
+                    { value: clientSecretDraft.trim() },
+                    { value_type: 'json', is_public: false, locale: 'es-AR' },
+                );
+            }
+            if (webhookSecretDraft.trim()) {
+                await upsertSiteSettingWithVersion(
+                    'ml_webhook_secret',
+                    { value: webhookSecretDraft.trim() },
+                    { value_type: 'json', is_public: false, locale: 'es-AR' },
+                );
+            }
+            pushToast({ type: 'success', title: 'Configuración de ML guardada' });
             await queryClient.invalidateQueries({ queryKey: ['ml-settings'] });
         } catch (err) {
             pushToast({
                 type: 'error',
-                title: 'Error al guardar ID',
+                title: 'Error al guardar configuración',
                 description: err instanceof Error ? err.message : 'Intenta de nuevo.',
             });
         } finally {
@@ -1185,6 +1206,58 @@ export function MercadoLibrePage() {
                                             />
                                         </div>
                                     </label>
+                                    <label className="field">
+                                        <span>Client Secret</span>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input
+                                                type={showClientSecret ? 'text' : 'password'}
+                                                placeholder="Ingresá el client_secret"
+                                                value={clientSecretDraft}
+                                                onInput={(e) =>
+                                                    setClientSecretDraft(
+                                                        (e.currentTarget as HTMLInputElement).value,
+                                                    )
+                                                }
+                                                style={{ flex: 1 }}
+                                            />
+                                            <IconButton
+                                                variant="ghost"
+                                                onClick={() => setShowClientSecret(!showClientSecret)}
+                                                aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                                            >
+                                                {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </IconButton>
+                                        </div>
+                                        <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                                            Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
+                                        </p>
+                                    </label>
+                                    <label className="field">
+                                        <span>Webhook Secret</span>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input
+                                                type={showWebhookSecret ? 'text' : 'password'}
+                                                placeholder="Ingresá el webhook secret (x-meli-signature)"
+                                                value={webhookSecretDraft}
+                                                onInput={(e) =>
+                                                    setWebhookSecretDraft(
+                                                        (e.currentTarget as HTMLInputElement).value,
+                                                    )
+                                                }
+                                                style={{ flex: 1 }}
+                                            />
+                                            <IconButton
+                                                variant="ghost"
+                                                onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                                                aria-label={showWebhookSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                                            >
+                                                {showWebhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </IconButton>
+                                        </div>
+                                        <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                                            Secret para validar la firma HMAC de los webhooks de Mercado Libre.
+                                        </p>
+                                    </label>
 
                                     <div className={styles['ml-redirect']}>
                                         <span className="muted">Redirect URI configurada:</span>
@@ -1206,7 +1279,11 @@ export function MercadoLibrePage() {
                                     </div>
 
                                     <div className={styles['ml-connection-actions']}>
-                                        {appIdDraft.trim() !== (settingsQ.data?.app_id ?? '') && (
+                                        {(
+                                            appIdDraft.trim() !== (settingsQ.data?.app_id ?? '') ||
+                                            clientSecretDraft.trim() !== (settingsQ.data?.client_secret ?? '') ||
+                                            webhookSecretDraft.trim() !== (settingsQ.data?.webhook_secret ?? '')
+                                        ) && (
                                             <Button
                                                 variant="secondary"
                                                 size="sm"
@@ -1218,7 +1295,7 @@ export function MercadoLibrePage() {
                                                 ) : (
                                                     <CheckCircle2 size={14} />
                                                 )}
-                                                Guardar ID
+                                                Guardar configuración
                                             </Button>
                                         )}
                                         <Button onClick={connect}>
