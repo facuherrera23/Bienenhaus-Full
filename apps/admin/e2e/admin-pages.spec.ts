@@ -93,13 +93,12 @@ test.describe('Mercado Libre - cola y estado', () => {
         await page.goto('/admin/#/mercadolibre');
         await page.waitForURL((url) => url.hash.includes('/mercadolibre'));
 
-        // Cola de sincronización
         await expect(
-            page.locator('section:has(h3:has-text("Cola de sincronizacion"))'),
+            page.locator('section:has(h3:has-text("Cola de sincronización"))'),
         ).toBeVisible({ timeout: 60000 });
         await expect(page.locator('text=Cargando')).toBeHidden({ timeout: 60000 });
         await expect(
-            page.locator('section:has(h3:has-text("Cola de sincronizacion")) table.table'),
+            page.locator('section:has(h3:has-text("Cola de sincronización")) table.table'),
         ).toBeVisible();
 
         // Estado en Mercado Libre
@@ -112,7 +111,7 @@ test.describe('Mercado Libre - cola y estado', () => {
 
         // Ambas tablas tienen header "Propiedad"
         const queueHeader = page.locator(
-            'section:has(h3:has-text("Cola de sincronizacion")) table.table thead th:first-child',
+            'section:has(h3:has-text("Cola de sincronización")) table.table thead th:first-child',
         );
         const metaHeader = page.locator(
             'section:has(h3:has-text("Estado en Mercado Libre")) table.table thead th:first-child',

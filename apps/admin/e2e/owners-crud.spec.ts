@@ -65,9 +65,7 @@ test.describe('Propietarios - CRUD', () => {
 
         // El detalle refresca con el nuevo email
         await expect(page.getByText('Propietario actualizado')).toBeVisible({ timeout: 10000 });
-        // El email puede mostrarse como texto plano o mailto link - aceptar ambos
-        // Usar un locator más flexible que busque el email en cualquier elemento
-        await expect(page.getByText(newEmail)).toBeVisible({ timeout: 10000 });
+        await expect(page.locator(`text="${newEmail}"`)).toBeVisible({ timeout: 10000 });
     });
 
     test('envía a papelera y restaura', async ({ page }) => {

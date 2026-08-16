@@ -67,8 +67,7 @@ test.describe('Mercado Libre page', () => {
         await page.goto('/admin/#/mercadolibre');
         await page.waitForURL((url) => url.hash.includes('/mercadolibre'));
 
-        // Queue table is under "Cola de sincronizacion" heading (sin tilde)
-        const queueSection = page.locator('section:has(h3:has-text("Cola de sincronizacion"))');
+        const queueSection = page.locator('section:has(h3:has-text("Cola de sincronización"))');
         await expect(queueSection).toBeVisible({ timeout: 60000 });
         const queueTable = queueSection.locator('table.table');
         await expect(queueTable).toBeVisible();
@@ -122,7 +121,7 @@ test.describe('Mercado Libre page', () => {
             const row = metaRows.nth(i);
             const firstCell = row.locator('td').first();
             const text = await firstCell.textContent();
-            if (text && !text.includes('Todavia no hay propiedades')) {
+            if (text && !text.includes('Todavía no hay propiedades')) {
                 hasDataRow = true;
                 await expect(firstCell.locator('strong')).toBeVisible();
                 const title = await firstCell.locator('strong').textContent();
