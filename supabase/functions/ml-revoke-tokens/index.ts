@@ -3,6 +3,7 @@ import { decrypt } from '../_shared/crypto.ts';
 import { getAccessToken, ML_API, type MlConnectionRow } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 import { isAdmin } from '../_shared/auth.ts';
+import { rateLimitMiddleware } from '../_shared/rate-limit.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -15,6 +16,10 @@ Deno.serve(async (req) => {
     const respond = (status: number, body: Record<string, unknown>): Response =>
         jsonResponse(status, body, req);
     if (req.method === 'OPTIONS') return optionsResponse(req);
+
+    const rl = await rateLimitMiddleware('ml-revoke-tokens', req);
+    if (rl) return rl;
+
     if (req.method !== 'POST') return respond(405, { error: 'Method not allowed' });
     if (!(await isAdmin(req, supabase))) return respond(401, { error: 'No autorizado' });
 
@@ -71,7 +76,7 @@ Deno.serve(async (req) => {
     const { error: delErr } = await supabase
         .from('ml_connection')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
+        .eq('id', conn.id);
 
     if (delErr) {
         return respond(500, {

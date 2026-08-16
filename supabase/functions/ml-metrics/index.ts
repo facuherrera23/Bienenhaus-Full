@@ -4,9 +4,12 @@ import {
     type MlConnectionRow,
     categorizeMlError,
     MlErrorType,
+    fetchWithTimeout,
+    runMlApiCallWithRetry,
 } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 import { requireAdmin } from '../_shared/auth.ts';
+import { rateLimitMiddleware } from '../_shared/rate-limit.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -14,45 +17,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
 });
-
-async function fetchWithTimeout(
-    url: string,
-    options: RequestInit,
-    timeoutMs = 10000,
-): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timeoutId);
-    }
-}
-
-/**
- * Ejecuta un fetch a la API de ML con manejo de rate limiting (429).
- * Si recibe 429, extrae Retry-After header, espera y reintenta una vez.
- */
-async function fetchMlWithRetry(
-    url: string,
-    options: RequestInit,
-    operationName: string,
-    timeoutMs = 10000,
-): Promise<Response> {
-    const res = await fetchWithTimeout(url, options, timeoutMs);
-
-    if (res.status === 429) {
-        const retryAfterHeader = res.headers.get('retry-after');
-        const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
-        console.log(
-            `[ml-metrics] Rate limited on ${operationName}, waiting ${retryAfter}s before retry...`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-        return await fetchWithTimeout(url, options, timeoutMs);
-    }
-
-    return res;
-}
 
 async function getActiveConnection(): Promise<{
     access_token: string;
@@ -145,13 +109,15 @@ async function fetchMlMetrics(
     conversion_rate: number;
 }> {
     // Get user's items
-    const itemsRes = await fetchMlWithRetry(
-        `https://api.mercadolibre.com/users/${userId}/items/search`,
-        {
+    const itemsResult = await runMlApiCallWithRetry(
+        accessToken,
+        () => fetchWithTimeout(`https://api.mercadolibre.com/users/${userId}/items/search`, {
             headers: { Authorization: `Bearer ${accessToken}` },
-        },
+        }),
         'fetchUserItems',
     );
+    if (!itemsResult.ok) throw new Error(itemsResult.error);
+    const itemsRes = itemsResult.data;
     const itemsData = await itemsRes.json();
     const itemIds = itemsData.results || [];
 
@@ -179,13 +145,15 @@ async function fetchMlMetrics(
         const idsParam = batch.join(',');
 
         // Get item details
-        const detailsRes = await fetchMlWithRetry(
-            `https://api.mercadolibre.com/items?ids=${idsParam}`,
-            {
+        const detailsResult = await runMlApiCallWithRetry(
+            accessToken,
+            () => fetchWithTimeout(`https://api.mercadolibre.com/items?ids=${idsParam}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
-            },
+            }),
             'fetchItemDetails',
         );
+        if (!detailsResult.ok) throw new Error(detailsResult.error);
+        const detailsRes = detailsResult.data;
         const detailsData = await detailsRes.json();
 
         for (const itemResult of detailsData) {
@@ -210,13 +178,15 @@ async function fetchMlMetrics(
 
     // Fetch visits for all items (using visits API)
     try {
-        const visitsRes = await fetchMlWithRetry(
-            `https://api.mercadolibre.com/items/visits?ids=${itemIds.join(',')}`,
-            {
+        const visitsResult = await runMlApiCallWithRetry(
+            accessToken,
+            () => fetchWithTimeout(`https://api.mercadolibre.com/items/visits?ids=${itemIds.join(',')}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
-            },
+            }),
             'fetchVisits',
         );
+        if (!visitsResult.ok) throw new Error(visitsResult.error);
+        const visitsRes = visitsResult.data;
         const visitsData = (await visitsRes.json()) as MlVisitsResponse[];
 
         for (const visitData of visitsData) {
@@ -236,13 +206,15 @@ async function fetchMlMetrics(
         const idsParam = batch.join(',');
 
         try {
-            const questionsRes = await fetchMlWithRetry(
-                `https://api.mercadolibre.com/questions/search?item_ids=${idsParam}&limit=50`,
-                {
+            const questionsResult = await runMlApiCallWithRetry(
+                accessToken,
+                () => fetchWithTimeout(`https://api.mercadolibre.com/questions/search?item_ids=${idsParam}&limit=50`, {
                     headers: { Authorization: `Bearer ${accessToken}` },
-                },
+                }),
                 'fetchQuestions',
             );
+            if (!questionsResult.ok) throw new Error(questionsResult.error);
+            const questionsRes = questionsResult.data;
             const questionsData = (await questionsRes.json()) as MlQuestionsResponse;
 
             for (const q of questionsData.questions || []) {
@@ -263,13 +235,15 @@ async function fetchMlMetrics(
     let totalRevenue = 0;
 
     try {
-        const ordersRes = await fetchMlWithRetry(
-            `https://api.mercadolibre.com/orders/search?seller_id=${userId}&limit=50&sort=date_desc`,
-            {
+        const ordersResult = await runMlApiCallWithRetry(
+            accessToken,
+            () => fetchWithTimeout(`https://api.mercadolibre.com/orders/search?seller_id=${userId}&limit=50&sort=date_desc`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
-            },
+            }),
             'fetchOrders',
         );
+        if (!ordersResult.ok) throw new Error(ordersResult.error);
+        const ordersRes = ordersResult.data;
         const ordersData = (await ordersRes.json()) as MlOrdersResponse;
 
         for (const order of ordersData.orders || []) {
@@ -299,6 +273,9 @@ Deno.serve(async (req) => {
     const respond = (status: number, body: unknown): Response => jsonResponse(status, body, req);
     if (req.method === 'OPTIONS') return optionsResponse(req);
     if (req.method !== 'GET') return respond(405, { error: 'Method not allowed' });
+
+    const rl = await rateLimitMiddleware('ml-metrics', req);
+    if (rl) return rl;
 
     const token = await requireAdmin(req, supabase);
     if (!token) return respond(401, { error: 'No autorizado' });

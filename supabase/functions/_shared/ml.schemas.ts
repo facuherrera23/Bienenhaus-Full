@@ -126,7 +126,7 @@ export const MlQuestionFromSchema = z.object({
 
 export const MlQuestionSchema = z.object({
     id: z.number().int().positive(),
-    item_id: z.number().int().positive(),
+    item_id: z.string(),
     text: z.string().nullable().optional(),
     from: MlQuestionFromSchema.nullable().optional(),
     date_created: z.string(),
@@ -151,7 +151,7 @@ export const MlOrderShippingSchema = z.object({
 });
 
 export const MlOrderItemSchema = z.object({
-    item: z.object({ id: z.number().int().positive() }),
+    item: z.object({ id: z.string() }),
 });
 
 export const MlOrderBuyerSchema = z.object({
@@ -234,7 +234,7 @@ export const MlSyncQueueRowSchema = z.object({
     attempts: z.number().int().nonnegative(),
     max_attempts: z.number().int().positive(),
     next_attempt_at: z.string().datetime(),
-    ml_item_id: z.number().int().positive().nullable().optional(),
+    ml_item_id: z.string().nullable().optional(),
     last_error: z.string().nullable().optional(),
     created_at: z.string().datetime(),
     payload: z.record(z.unknown()).optional(),

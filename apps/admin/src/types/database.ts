@@ -929,7 +929,7 @@ export type Database = {
                     date_closed: string | null;
                     date_created: string | null;
                     id: number;
-                    ml_item_id: number;
+                    ml_item_id: string | null;
                     order_id: string;
                     property_id: string | null;
                     received_at: string;
@@ -944,7 +944,7 @@ export type Database = {
                     date_closed?: string | null;
                     date_created?: string | null;
                     id?: number;
-                    ml_item_id: number;
+                    ml_item_id?: string | null;
                     order_id: string;
                     property_id?: string | null;
                     received_at?: string;
@@ -959,7 +959,7 @@ export type Database = {
                     date_closed?: string | null;
                     date_created?: string | null;
                     id?: number;
-                    ml_item_id?: number;
+                    ml_item_id?: string | null;
                     order_id?: string;
                     property_id?: string | null;
                     received_at?: string;
@@ -1040,7 +1040,7 @@ export type Database = {
                     from_user_id: number | null;
                     from_user_nickname: string | null;
                     id: number;
-                    ml_item_id: number;
+                    ml_item_id: string | null;
                     property_id: string | null;
                     question_id: string;
                     question_text: string | null;
@@ -1054,7 +1054,7 @@ export type Database = {
                     from_user_id?: number | null;
                     from_user_nickname?: string | null;
                     id?: number;
-                    ml_item_id: number;
+                    ml_item_id?: string | null;
                     property_id?: string | null;
                     question_id: string;
                     question_text?: string | null;
@@ -1068,7 +1068,7 @@ export type Database = {
                     from_user_id?: number | null;
                     from_user_nickname?: string | null;
                     id?: number;
-                    ml_item_id?: number;
+                    ml_item_id?: string | null;
                     property_id?: string | null;
                     question_id?: string;
                     question_text?: string | null;
@@ -1145,7 +1145,7 @@ export type Database = {
                     id: number;
                     last_error: string | null;
                     max_attempts: number;
-                    ml_item_id: number | null;
+                    ml_item_id: string | null;
                     moved_at: string | null;
                     operation: Database['public']['Enums']['ml_operation'];
                     original_queue_id: number;
@@ -1161,7 +1161,7 @@ export type Database = {
                     id?: number;
                     last_error?: string | null;
                     max_attempts: number;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     moved_at?: string | null;
                     operation: Database['public']['Enums']['ml_operation'];
                     original_queue_id: number;
@@ -1177,7 +1177,7 @@ export type Database = {
                     id?: number;
                     last_error?: string | null;
                     max_attempts?: number;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     moved_at?: string | null;
                     operation?: Database['public']['Enums']['ml_operation'];
                     original_queue_id?: number;
@@ -1262,7 +1262,7 @@ export type Database = {
                     locked_at: string | null;
                     locked_by: string | null;
                     max_attempts: number;
-                    ml_item_id: number | null;
+                    ml_item_id: string | null;
                     next_attempt_at: string;
                     operation: Database['public']['Enums']['ml_operation'];
                     payload: Json;
@@ -1279,7 +1279,7 @@ export type Database = {
                     locked_at?: string | null;
                     locked_by?: string | null;
                     max_attempts?: number;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     next_attempt_at?: string;
                     operation: Database['public']['Enums']['ml_operation'];
                     payload?: Json;
@@ -1296,7 +1296,7 @@ export type Database = {
                     locked_at?: string | null;
                     locked_by?: string | null;
                     max_attempts?: number;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     next_attempt_at?: string;
                     operation?: Database['public']['Enums']['ml_operation'];
                     payload?: Json;
@@ -1936,7 +1936,7 @@ export type Database = {
                     last_sync_at: string | null;
                     last_sync_status: Database['public']['Enums']['ml_sync_status'] | null;
                     listing_type_id: number | null;
-                    ml_item_id: number | null;
+                    ml_item_id: string | null;
                     permalink: string | null;
                     price: number | null;
                     property_id: string;
@@ -1951,7 +1951,7 @@ export type Database = {
                     last_sync_at?: string | null;
                     last_sync_status?: Database['public']['Enums']['ml_sync_status'] | null;
                     listing_type_id?: number | null;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     permalink?: string | null;
                     price?: number | null;
                     property_id: string;
@@ -1966,7 +1966,7 @@ export type Database = {
                     last_sync_at?: string | null;
                     last_sync_status?: Database['public']['Enums']['ml_sync_status'] | null;
                     listing_type_id?: number | null;
-                    ml_item_id?: number | null;
+                    ml_item_id?: string | null;
                     permalink?: string | null;
                     price?: number | null;
                     property_id?: string;

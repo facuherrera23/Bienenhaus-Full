@@ -56,6 +56,7 @@ import {
     setMlAppId,
     setMlDefaults,
     setMlEnabled,
+    startMlOAuth,
     toMlMetaRow,
     toMlQueueRow,
     updateMlAutoReplyTemplate,
@@ -292,50 +293,6 @@ export function useSetMlEnabled() {
     });
 }
 
-export function useSetMlAppId() {
-    return useMutation({
-        mutationFn: async (appId: string) => {
-            return setMlAppId(appId);
-        },
-    });
-}
-
-export function useSetMlDefaults() {
-    return useMutation({
-        mutationFn: async (defaults: {
-            category_id: string;
-            listing_type_id: string;
-            condition: string;
-        }) => {
-            return setMlDefaults(defaults);
-        },
-    });
-}
-
-export function useBuildAuthorizeUrl() {
-    return useMutation({
-        mutationFn: async (appId: string) => {
-            return buildAuthorizeUrl(appId);
-        },
-    });
-}
-
-export function useDisconnectMl() {
-    return useMutation({
-        mutationFn: async () => {
-            return disconnectMl();
-        },
-    });
-}
-
-export function useRevokeMlTokens() {
-    return useMutation({
-        mutationFn: async () => {
-            return revokeMlTokens();
-        },
-    });
-}
-
 // ============================================================
 // Query Hooks - Dead Letter Queue
 // ============================================================
@@ -483,6 +440,7 @@ export {
     setMlAppId,
     setMlDefaults,
     buildAuthorizeUrl,
+    startMlOAuth,
     disconnectMl,
     embedProperty,
     revokeMlTokens,

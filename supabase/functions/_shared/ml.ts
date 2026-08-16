@@ -38,47 +38,59 @@ export interface MlTokenResponse {
 }
 
 /**
- * Obtiene client_id y client_secret desencriptados desde la BD.
- * Requiere que el caller sea staff (validado en RPC get_ml_credentials).
+ * Obtiene client_id, client_secret y webhook_secret desde site_settings (BD).
+ * Fallback a env vars (legacy) si no encuentran en BD.
+ * Esta es la función canónica que deben usar todas las edge functions de ML.
  */
-export async function getMlAppCredentials(
+let cachedCredentials: {
+    data: { clientId: string; clientSecret: string; webhookSecret: string };
+    expiresAt: number;
+} | null = null;
+
+const CREDENTIALS_TTL_MS = 30_000;
+
+export async function getMlCredentials(
     supabase: SupabaseClient,
-): Promise<{ clientId: string; clientSecret: string } | null> {
-    const { data, error } = await supabase.rpc('get_ml_credentials');
-    if (error || !data) {
-        return null;
+): Promise<{
+    clientId: string;
+    clientSecret: string;
+    webhookSecret: string;
+}> {
+    if (cachedCredentials && cachedCredentials.expiresAt > Date.now()) {
+        return cachedCredentials.data;
     }
 
-    const { client_id_encrypted, client_id_iv, client_secret_encrypted, client_secret_iv } = data;
+    const { data: settings } = await supabase
+        .from('site_settings')
+        .select('key, value')
+        .in('key', ['ml_app_id', 'ml_client_secret', 'ml_webhook_secret']);
 
-    if (!data.client_id_encrypted || !data.client_secret_encrypted) {
-        return null;
+    const getSetting = (key: string): string =>
+        (settings?.find((s) => s.key === key)?.value?.value as string) ?? '';
+
+    const clientId = getSetting('ml_app_id') || Deno.env.get('ML_CLIENT_ID') ?? '';
+    const clientSecret = getSetting('ml_client_secret') || Deno.env.get('ML_CLIENT_SECRET') ?? '';
+    const webhookSecret = getSetting('ml_webhook_secret') || Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
+
+    if (!clientId || !clientSecret) {
+        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados (ni en BD ni en env)');
     }
 
-    const clientId = await decrypt(client_id_encrypted, client_id_iv);
-    const clientSecret = await decrypt(client_secret_encrypted, client_secret_iv);
-
-    return { clientId, clientSecret };
+    const data = { clientId, clientSecret, webhookSecret };
+    cachedCredentials = { data, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
+    return data;
 }
 
 /**
- * Obtiene credenciales de la app ML. Primero intenta BD, fallback a env vars (legacy).
- * @deprecated Usar getMlAppCredentials(supabase) en nuevo código.
+ * Obtiene client_id y client_secret desencriptados desde la BD.
+ * Requiere que el caller sea staff (validado en RPC get_ml_credentials).
+ * @deprecated Usar getMlCredentials(supabase) en nuevo código.
  */
 export async function getMlAppCredentialsLegacy(
     supabase: SupabaseClient,
 ): Promise<{ clientId: string; clientSecret: string }> {
-    // Primero intenta BD
-    const fromDb = await getMlAppCredentials(supabase);
-    if (fromDb) return fromDb;
-
-    // Fallback a env vars (legacy)
-    const clientId = Deno.env.get('ML_CLIENT_ID') ?? '';
-    const clientSecret = Deno.env.get('ML_CLIENT_SECRET') ?? '';
-    if (!clientId || !clientSecret) {
-        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados (ni en BD ni en env)');
-    }
-    return { clientId, clientSecret };
+    const creds = await getMlCredentials(supabase);
+    return { clientId: creds.clientId, clientSecret: creds.clientSecret };
 }
 
 export async function exchangeCode(
@@ -420,12 +432,15 @@ export interface MlError {
 
 export function categorizeMlError(err: unknown, statusCode?: number): MlError {
     const message = err instanceof Error ? err.message : String(err);
+    const lower = message.toLowerCase();
 
     // Rate limiting
     if (
         statusCode === 429 ||
-        message.includes('rate limit') ||
-        message.includes('too many requests')
+        message.includes('429') ||
+        lower.includes('rate limit') ||
+        lower.includes('user_rate_limited') ||
+        lower.includes('too many requests')
     ) {
         return { type: MlErrorType.RATE_LIMIT, message, retryable: true, statusCode };
     }
@@ -434,9 +449,9 @@ export function categorizeMlError(err: unknown, statusCode?: number): MlError {
     if (
         statusCode === 401 ||
         statusCode === 403 ||
-        message.includes('invalid_token') ||
-        message.includes('unauthorized') ||
-        message.includes('access denied')
+        lower.includes('invalid_token') ||
+        lower.includes('unauthorized') ||
+        lower.includes('access denied')
     ) {
         return { type: MlErrorType.AUTH_ERROR, message, retryable: false, statusCode };
     }
@@ -444,15 +459,15 @@ export function categorizeMlError(err: unknown, statusCode?: number): MlError {
     // Validation errors (no retry)
     if (
         statusCode === 400 ||
-        message.includes('validation') ||
-        message.includes('invalid') ||
-        message.includes('required')
+        lower.includes('validation') ||
+        lower.includes('invalid') ||
+        lower.includes('required')
     ) {
         return { type: MlErrorType.VALIDATION_ERROR, message, retryable: false, statusCode };
     }
 
     // Not found
-    if (statusCode === 404 || message.includes('not found')) {
+    if (statusCode === 404 || lower.includes('not found')) {
         return { type: MlErrorType.NOT_FOUND, message, retryable: false, statusCode };
     }
 
@@ -463,10 +478,10 @@ export function categorizeMlError(err: unknown, statusCode?: number): MlError {
 
     // Network errors
     if (
-        message.includes('network') ||
-        message.includes('timeout') ||
-        message.includes('ECONNREFUSED') ||
-        message.includes('ETIMEDOUT')
+        lower.includes('network') ||
+        lower.includes('timeout') ||
+        lower.includes('econnrefused') ||
+        lower.includes('etimedout')
     ) {
         return { type: MlErrorType.NETWORK_ERROR, message, retryable: true, statusCode };
     }
@@ -550,9 +565,11 @@ export interface MlListingType {
     name: string;
 }
 
-export async function fetchMlCategories(accessToken: string): Promise<MlCategory[]> {
-    // Get categories for Argentina real estate (MLA1459 = Inmuebles)
-    const res = await fetchWithTimeout(`${ML_API}/sites/MLA/categories/MLA1459`, {
+export async function fetchMlCategories(
+    accessToken: string,
+    parentId = 'MLA1459',
+): Promise<MlCategory[]> {
+    const res = await fetchWithTimeout(`${ML_API}/sites/MLA/categories/${parentId}`, {
         headers: { authorization: `Bearer ${accessToken}` },
     });
     if (!res.ok) throw new Error(`ML categories falló (${res.status})`);

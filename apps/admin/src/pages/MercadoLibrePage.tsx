@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import {
     BarChart2,
     CheckCircle2,
@@ -24,29 +24,37 @@ import {
     buildAuthorizeUrl,
     createMlAutoReplyTemplate,
     deleteMlAutoReplyTemplate,
+    deleteDeadLetter,
     disconnectMl,
     fetchMlAutoReplyTemplates,
     fetchMlCategories,
+    fetchMlDeadLetter,
     fetchMlListingTypes,
     fetchMlMeta,
     fetchMlMetrics,
+    fetchMlOrders,
     fetchMlOverview,
     fetchMlQuestions,
     fetchMlQueue,
+    fetchMlQueueStats,
     fetchMlSettings,
     ML_OPERATION_LABEL,
     ML_REDIRECT_URI,
     ML_SYNC_STATUS_LABEL,
     ML_SYNC_STATUS_TONE,
+    retryDeadLetter,
     type MlAutoReplyTemplate,
     type MlCategory,
     type MlListingType,
+    type MlOrder,
     type MlQuestion,
     type MlQueueRow,
     type MlSyncStatus,
     setMlAppId,
     setMlDefaults,
     setMlEnabled,
+    startMlOAuth,
+    testMlCredentials,
     updateMlAutoReplyTemplate,
 } from '../lib/ml';
 import { upsertSiteSettingWithVersion } from '../lib/site';
@@ -58,9 +66,11 @@ import styles from './MercadoLibrePage.module.css';
 
 const LISTING_TYPE_DESCRIPTIONS: Record<string, string> = {
     free: 'Gratuita: sin costo, menor visibilidad, ideal para probar',
-    gold_special: 'Clasica: comision por venta, buena visibilidad',
-    gold_pro: 'Premium: mayor exposicion, comision mas alta, mejor posicionamiento',
-    gold_premium: 'Premium Plus: maxima visibilidad, comision mas alta',
+    silver: 'Básica: baja comisión, visibilidad media-baja',
+    gold: 'Clásica: comisión por venta, buena visibilidad',
+    gold_special: 'Clásica: comisión por venta, buena visibilidad',
+    gold_pro: 'Premium: mayor exposición, comisión más alta, mejor posicionamiento',
+    gold_premium: 'Premium Plus: máxima visibilidad, comisión más alta',
 };
 
 function StatusBadge({ status }: { status: MlSyncStatus }) {
@@ -87,9 +97,17 @@ function StatCard({ label, value }: { label: string; value: number }) {
 
 export function MercadoLibrePage() {
     const overviewQ = useQuery({ queryKey: ['ml-overview'], queryFn: fetchMlOverview });
-    const settingsQ = useQuery({ queryKey: ['ml-settings'], queryFn: fetchMlSettings });
     const queueQ = useQuery<MlQueueRow[]>({ queryKey: ['ml-queue'], queryFn: fetchMlQueue });
+    const queueStatsQ = useQuery({
+        queryKey: ['ml-queue-stats'],
+        queryFn: fetchMlQueueStats,
+    });
+    const deadLetterQ = useQuery({
+        queryKey: ['ml-dead-letter'],
+        queryFn: () => fetchMlDeadLetter({ pageSize: 100 }),
+    });
     const metaQ = useQuery({ queryKey: ['ml-meta'], queryFn: fetchMlMeta });
+    const ordersQ = useQuery<MlOrder[]>({ queryKey: ['ml-orders'], queryFn: fetchMlOrders });
     const metricsQ = useQuery({ queryKey: ['ml-metrics'], queryFn: fetchMlMetrics });
     const categoriesQ = useQuery({ queryKey: ['ml-categories'], queryFn: fetchMlCategories });
     const listingTypesQ = useQuery({
@@ -113,13 +131,23 @@ export function MercadoLibrePage() {
         listing_type_id: 'gold_pro',
         condition: 'used',
     });
-    const [savingDefaults, setSavingDefaults] = useState(false);
     const [categorySearch, setCategorySearch] = useState('');
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
     const [showMetrics, setShowMetrics] = useState(false);
     const [showQuestions, setShowQuestions] = useState(false);
     const [showAutoReply, setShowAutoReply] = useState(false);
+
+    // Toast al completar OAuth de Mercado Libre (la edge function redirige a #/mercadolibre?ml=connected=1)
+    useEffect(() => {
+        const hash = window.location.hash;
+        const queryIndex = hash.indexOf('?');
+        if (queryIndex === -1) return;
+        const params = new URLSearchParams(hash.slice(queryIndex + 1));
+        if (params.get('ml') !== 'connected') return;
+        pushToast({ type: 'success', title: 'Cuenta de Mercado Libre conectada' });
+        history.replaceState(null, '', '#/mercadolibre');
+    }, []);
 
     const [selectedQuestion, setSelectedQuestion] = useState<MlQuestion | null>(null);
     const [replyText, setReplyText] = useState('');
@@ -144,11 +172,38 @@ export function MercadoLibrePage() {
     const mlEnabled = !!overview?.ml_enabled;
 
     const queueRows = queueQ.data ?? [];
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const settings = await fetchMlSettings();
+                if (cancelled) return;
+                setAppIdDraft(settings.app_id ?? '');
+                setClientSecretDraft(settings.client_secret ?? '');
+                setWebhookSecretDraft(settings.webhook_secret ?? '');
+                if (settings.defaults) {
+                    setDefaultsDraft({
+                        category_id: settings.defaults.category_id ?? '',
+                        listing_type_id: settings.defaults.listing_type_id ?? 'gold_pro',
+                        condition: settings.defaults.condition ?? 'used',
+                    });
+                    if (settings.defaults.category_id) {
+                        setCategorySearch(settings.defaults.category_id);
+                    }
+                }
+            } catch {
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
     const stats = {
-        pending: queueRows.filter((q) => q.status === 'pending').length,
-        processing: queueRows.filter((q) => q.status === 'processing').length,
-        success: queueRows.filter((q) => q.status === 'success').length,
-        failed: queueRows.filter((q) => q.status === 'failed').length,
+        pending: queueStatsQ.data?.pending ?? 0,
+        processing: queueStatsQ.data?.processing ?? 0,
+        success: queueStatsQ.data?.success ?? 0,
+        failed: queueStatsQ.data?.failed ?? 0,
         onMl: (metaQ.data ?? []).length,
     };
 
@@ -156,7 +211,18 @@ export function MercadoLibrePage() {
         mutationFn: disconnectMl,
         onSuccess: async () => {
             pushToast({ type: 'success', title: 'Cuenta desconectada' });
-            await queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['ml-overview'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-queue'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-queue-stats'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-meta'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-metrics'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-orders'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-questions'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-auto-reply'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-dead-letter'] }),
+            ]);
+            setShowDisconnectConfirm(false);
         },
         onError: (err) => {
             pushToast({
@@ -167,12 +233,46 @@ export function MercadoLibrePage() {
         },
     });
 
+    const retryDeadLetterMutation = useMutation({
+        mutationFn: retryDeadLetter,
+        onSuccess: async () => {
+            pushToast({ type: 'success', title: 'Trabajo reencolado' });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['ml-queue'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-queue-stats'] }),
+                queryClient.invalidateQueries({ queryKey: ['ml-dead-letter'] }),
+            ]);
+        },
+        onError: (err) => {
+            pushToast({
+                type: 'error',
+                title: 'Error al reintentar',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        },
+    });
+
+    const deleteDeadLetterMutation = useMutation({
+        mutationFn: deleteDeadLetter,
+        onSuccess: async () => {
+            pushToast({ type: 'success', title: 'Trabajo eliminado' });
+            await queryClient.invalidateQueries({ queryKey: ['ml-dead-letter'] });
+        },
+        onError: (err) => {
+            pushToast({
+                type: 'error',
+                title: 'Error al eliminar',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        },
+    });
+
     const toggleEnabled = async (checked: boolean) => {
         try {
             await setMlEnabled(checked);
             pushToast({
                 type: 'success',
-                title: checked ? 'Integracion activada' : 'Integracion desactivada',
+                title: checked ? 'Integración activada' : 'Integración desactivada',
             });
             await queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
         } catch (err) {
@@ -184,59 +284,106 @@ export function MercadoLibrePage() {
         }
     };
 
-    const connect = () => {
-        if (!appIdDraft.trim()) {
-            pushToast({ type: 'warning', title: 'Falta el ID de aplicacion' });
+    const saveConfig = async () => {
+        const trimmedAppId = appIdDraft.trim();
+        if (trimmedAppId && !/^\d{10,}$/.test(trimmedAppId)) {
+            pushToast({
+                type: 'warning',
+                title: 'ID de aplicación inválido',
+                description: 'El client_id debe ser un número de al menos 10 dígitos.',
+            });
             return;
         }
-        window.open(buildAuthorizeUrl(appIdDraft.trim()), '_blank', 'noopener');
-    };
-
-    const saveAppId = async () => {
         setSavingAppId(true);
         try {
             await setMlAppId(appIdDraft.trim());
-            if (clientSecretDraft.trim()) {
-                await upsertSiteSettingWithVersion(
-                    'ml_client_secret',
-                    { value: clientSecretDraft.trim() },
-                    { value_type: 'json', is_public: false, locale: 'es-AR' },
-                );
-            }
-            if (webhookSecretDraft.trim()) {
-                await upsertSiteSettingWithVersion(
-                    'ml_webhook_secret',
-                    { value: webhookSecretDraft.trim() },
-                    { value_type: 'json', is_public: false, locale: 'es-AR' },
-                );
-            }
+            await upsertSiteSettingWithVersion(
+                'ml_client_secret',
+                { value: clientSecretDraft.trim() },
+                { value_type: 'json', is_public: false, locale: 'es-AR' },
+            );
+            await upsertSiteSettingWithVersion(
+                'ml_webhook_secret',
+                { value: webhookSecretDraft.trim() },
+                { value_type: 'json', is_public: false, locale: 'es-AR' },
+            );
+            await setMlDefaults(defaultsDraft);
             pushToast({ type: 'success', title: 'Configuración de ML guardada' });
-            await queryClient.invalidateQueries({ queryKey: ['ml-settings'] });
+            await queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
         } catch (err) {
             pushToast({
                 type: 'error',
                 title: 'Error al guardar configuración',
                 description: err instanceof Error ? err.message : 'Intenta de nuevo.',
             });
+            throw err;
         } finally {
             setSavingAppId(false);
         }
     };
 
-    const saveDefaults = async () => {
-        setSavingDefaults(true);
+    const [connecting, setConnecting] = useState(false);
+    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+    const [testingCredentials, setTestingCredentials] = useState(false);
+
+    const connect = async () => {
+        if (!appIdDraft.trim()) {
+            pushToast({ type: 'warning', title: 'Falta el ID de aplicación' });
+            return;
+        }
+        if (!clientSecretDraft.trim()) {
+            pushToast({ type: 'warning', title: 'Falta el Client Secret' });
+            return;
+        }
+        if (!webhookSecretDraft.trim()) {
+            pushToast({ type: 'warning', title: 'Falta el Webhook Secret' });
+            return;
+        }
+        setConnecting(true);
         try {
-            await setMlDefaults(defaultsDraft);
-            pushToast({ type: 'success', title: 'Configuracion guardada' });
-            await queryClient.invalidateQueries({ queryKey: ['ml-settings'] });
+            await saveConfig();
+            if (!mlEnabled) {
+                await setMlEnabled(true);
+                await queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
+            }
+            const { state, code_challenge } = await startMlOAuth();
+            window.open(
+                buildAuthorizeUrl(appIdDraft.trim(), state, code_challenge),
+                '_blank',
+                'noopener',
+            );
         } catch (err) {
             pushToast({
                 type: 'error',
-                title: 'Error al guardar configuracion',
+                title: 'No se pudo iniciar la conexión',
                 description: err instanceof Error ? err.message : 'Intenta de nuevo.',
             });
         } finally {
-            setSavingDefaults(false);
+            setConnecting(false);
+        }
+    };
+
+    const testCredentials = async () => {
+        if (!appIdDraft.trim()) {
+            pushToast({ type: 'warning', title: 'Ingresá el ID de aplicación primero' });
+            return;
+        }
+        setTestingCredentials(true);
+        try {
+            const result = await testMlCredentials(appIdDraft.trim());
+            pushToast({
+                type: result.ok ? 'success' : 'error',
+                title: result.ok ? 'Credenciales válidas' : 'Credenciales inválidas',
+                description: result.message,
+            });
+        } catch (err) {
+            pushToast({
+                type: 'error',
+                title: 'Error al probar credenciales',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        } finally {
+            setTestingCredentials(false);
         }
     };
 
@@ -304,7 +451,7 @@ export function MercadoLibrePage() {
             <section className="card">
                 <div className="site-section-head">
                     <div>
-                        <h3>Metricas de Mercado Libre</h3>
+                        <h3>Métricas de Mercado Libre</h3>
                         <p>Rendimiento de tus publicaciones en la plataforma.</p>
                     </div>
                     <Button
@@ -335,7 +482,7 @@ export function MercadoLibrePage() {
                 )}
                 {metricsQ.isError && (
                     <div className="ml-error">
-                        <p>No se pudieron cargar las metricas.</p>
+                        <p>No se pudieron cargar las métricas.</p>
                         <Button
                             variant="secondary"
                             size="sm"
@@ -365,7 +512,7 @@ export function MercadoLibrePage() {
                             <table className="table">
                                 <thead>
                                     <tr>
-                                        <th>Publicacion</th>
+                                        <th>Publicación</th>
                                         <th>Visitas</th>
                                         <th>Preguntas</th>
                                         <th>Vendidas</th>
@@ -391,7 +538,7 @@ export function MercadoLibrePage() {
                                     {metricsQ.data.items.length === 0 && (
                                         <tr>
                                             <td colSpan={7} className="empty-cell">
-                                                Sin metricas aun.
+                                                Sin métricas aún.
                                             </td>
                                         </tr>
                                     )}
@@ -457,7 +604,7 @@ export function MercadoLibrePage() {
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Publicacion</th>
+                                    <th>Publicación</th>
                                     <th>Pregunta</th>
                                     <th>Comprador</th>
                                     <th>Fecha</th>
@@ -520,7 +667,7 @@ export function MercadoLibrePage() {
                                 {questionsQ.data.length === 0 && (
                                     <tr>
                                         <td colSpan={6} className="empty-cell">
-                                            No hay preguntas aun.
+                                            No hay preguntas aún.
                                         </td>
                                     </tr>
                                 )}
@@ -536,8 +683,8 @@ export function MercadoLibrePage() {
             <section className="card">
                 <div className="site-section-head">
                     <div>
-                        <h3>Respuestas automaticas</h3>
-                        <p>Plantillas de respuesta automatica para preguntas y eventos de ML.</p>
+                        <h3>Respuestas automáticas</h3>
+                        <p>Plantillas de respuesta automática para preguntas y eventos de ML.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <Button
@@ -833,17 +980,30 @@ export function MercadoLibrePage() {
                 <div>
                     <h2 className="page-title">Mercado Libre</h2>
                     <p className="page-subtitle">
-                        Conecta la cuenta, sincroniza el catalogo y controla el estado de cada
-                        publicacion.
+                        Conecta la cuenta, sincroniza el catálogo y controla el estado de cada
+                        publicación.
                     </p>
                 </div>
             </div>
 
             {overviewQ.isPending && (
-                <div className="card placeholder-card">Cargando integracion...</div>
+                <div className="ml-skeleton">
+                    <div className="skeleton-row">
+                        <div className="skeleton-stat"></div>
+                        <div className="skeleton-stat"></div>
+                        <div className="skeleton-stat"></div>
+                        <div className="skeleton-stat"></div>
+                    </div>
+                    <div className="skeleton-table">
+                        <div className="skeleton-row header"></div>
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="skeleton-row"></div>
+                        ))}
+                    </div>
+                </div>
             )}
             {overviewQ.isError && (
-                <div className="card placeholder-card">No se pudo cargar la integracion.</div>
+                <div className="card placeholder-card">No se pudo cargar la integración.</div>
             )}
 
             {!overviewQ.isPending && !overviewQ.isError && (
@@ -863,7 +1023,7 @@ export function MercadoLibrePage() {
                                 variant={showMetrics ? 'primary' : 'ghost'}
                                 onClick={() => setShowMetrics((v) => !v)}
                             >
-                                <BarChart2 size={14} /> {showMetrics ? 'Ocultar' : 'Ver'} metricas
+                                <BarChart2 size={14} /> {showMetrics ? 'Ocultar' : 'Ver'} métricas
                             </Button>
                             <Button
                                 size="sm"
@@ -903,9 +1063,9 @@ export function MercadoLibrePage() {
 
                             <div className="switch-row">
                                 <div>
-                                    <strong>Integracion activa</strong>
+                                    <strong>Integración activa</strong>
                                     <span className="muted">
-                                        Habilita la cola de sincronizacion y la auto-publicacion.
+                                        Habilita la cola de sincronización y la auto-publicación.
                                     </span>
                                 </div>
                                 <input
@@ -955,227 +1115,11 @@ export function MercadoLibrePage() {
                                         </div>
                                     </dl>
 
-                                    <div className={styles['ml-defaults']}>
-                                        <h4>Configuracion de publicaciones</h4>
-                                        <div className={styles['defaults-grid']}>
-                                            <label className="field">
-                                                <span>Categoria (category_id)</span>
-                                                <div
-                                                    className={styles['typeahead']}
-                                                    onMouseLeave={() =>
-                                                        setShowCategoryDropdown(false)
-                                                    }
-                                                >
-                                                    <Search
-                                                        size={16}
-                                                        className={styles['typeahead-icon']}
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Buscar categoria... (ej: MLA1459)"
-                                                        value={
-                                                            categorySearch ||
-                                                            defaultsDraft.category_id
-                                                        }
-                                                        onInput={(e) => {
-                                                            const val = (
-                                                                e.currentTarget as HTMLInputElement
-                                                            ).value;
-                                                            setCategorySearch(val);
-                                                            setShowCategoryDropdown(true);
-                                                            setDefaultsDraft({
-                                                                ...defaultsDraft,
-                                                                category_id: val,
-                                                            });
-                                                        }}
-                                                        onFocus={() =>
-                                                            setShowCategoryDropdown(true)
-                                                        }
-                                                        onBlur={() =>
-                                                            setTimeout(
-                                                                () =>
-                                                                    setShowCategoryDropdown(false),
-                                                                150,
-                                                            )
-                                                        }
-                                                    />
-                                                    {showCategoryDropdown &&
-                                                        categorySearch &&
-                                                        categoriesQ.data && (
-                                                            <ul
-                                                                className={
-                                                                    styles['typeahead-dropdown']
-                                                                }
-                                                            >
-                                                                {categoriesQ.data
-                                                                    .filter(
-                                                                        (c: MlCategory) =>
-                                                                            c.name
-                                                                                .toLowerCase()
-                                                                                .includes(
-                                                                                    categorySearch.toLowerCase(),
-                                                                                ) ||
-                                                                            c.id
-                                                                                .toLowerCase()
-                                                                                .includes(
-                                                                                    categorySearch.toLowerCase(),
-                                                                                ),
-                                                                    )
-                                                                    .slice(0, 10)
-                                                                    .map((c: MlCategory) => (
-                                                                        <li
-                                                                            key={c.id}
-                                                                            onClick={() => {
-                                                                                setDefaultsDraft({
-                                                                                    ...defaultsDraft,
-                                                                                    category_id:
-                                                                                        c.id,
-                                                                                });
-                                                                                setCategorySearch(
-                                                                                    `${c.id} - ${c.name}`,
-                                                                                );
-                                                                                setShowCategoryDropdown(
-                                                                                    false,
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            <strong>{c.id}</strong>{' '}
-                                                                            {c.name}
-                                                                        </li>
-                                                                    ))}
-                                                                {categoriesQ.data.filter(
-                                                                    (c: MlCategory) =>
-                                                                        c.name
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                categorySearch.toLowerCase(),
-                                                                            ) ||
-                                                                        c.id
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                categorySearch.toLowerCase(),
-                                                                            ),
-                                                                ).length === 0 && (
-                                                                    <li className="muted">
-                                                                        Sin coincidencias
-                                                                    </li>
-                                                                )}
-                                                            </ul>
-                                                        )}
-                                                    {categorySearch &&
-                                                        defaultsDraft.category_id && (
-                                                            <button
-                                                                type="button"
-                                                                className={
-                                                                    styles['typeahead-clear']
-                                                                }
-                                                                onClick={() => {
-                                                                    setDefaultsDraft({
-                                                                        ...defaultsDraft,
-                                                                        category_id: '',
-                                                                    });
-                                                                    setCategorySearch('');
-                                                                }}
-                                                                title="Limpiar"
-                                                            >
-                                                                <X size={14} />
-                                                            </button>
-                                                        )}
-                                                </div>
-                                            </label>
-                                            <label className="field">
-                                                <span>Tipo de publicacion (listing_type_id)</span>
-                                                <div className={styles['select-with-desc']}>
-                                                    <select
-                                                        className="select"
-                                                        value={defaultsDraft.listing_type_id}
-                                                        onChange={(e) =>
-                                                            setDefaultsDraft({
-                                                                ...defaultsDraft,
-                                                                listing_type_id: (
-                                                                    e.currentTarget as HTMLSelectElement
-                                                                ).value,
-                                                            })
-                                                        }
-                                                    >
-                                                        {(
-                                                            listingTypesQ.data ?? [
-                                                                { id: 'free', name: 'Gratuita' },
-                                                                {
-                                                                    id: 'gold_special',
-                                                                    name: 'Clasica',
-                                                                },
-                                                                { id: 'gold_pro', name: 'Premium' },
-                                                                {
-                                                                    id: 'gold_premium',
-                                                                    name: 'Premium Plus',
-                                                                },
-                                                            ]
-                                                        ).map(
-                                                            (
-                                                                lt:
-                                                                    | MlListingType
-                                                                    | { id: string; name: string },
-                                                            ) => (
-                                                                <option key={lt.id} value={lt.id}>
-                                                                    {lt.name} ({lt.id})
-                                                                </option>
-                                                            ),
-                                                        )}
-                                                    </select>
-                                                    <p className={styles['select-desc']}>
-                                                        {
-                                                            LISTING_TYPE_DESCRIPTIONS[
-                                                                defaultsDraft.listing_type_id
-                                                            ]
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </label>
-                                            <label className="field">
-                                                <span>Condicion</span>
-                                                <select
-                                                    className="select"
-                                                    value={defaultsDraft.condition}
-                                                    onChange={(e) =>
-                                                        setDefaultsDraft({
-                                                            ...defaultsDraft,
-                                                            condition: (
-                                                                e.currentTarget as HTMLSelectElement
-                                                            ).value,
-                                                        })
-                                                    }
-                                                >
-                                                    <option value="new">Nuevo</option>
-                                                    <option value="used">Usado</option>
-                                                </select>
-                                            </label>
-                                        </div>
-                                        <div className={styles['ml-connection-actions']}>
-                                            {JSON.stringify(defaultsDraft) !==
-                                                JSON.stringify(settingsQ.data?.defaults ?? {}) && (
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    onClick={saveDefaults}
-                                                    disabled={savingDefaults}
-                                                >
-                                                    {savingDefaults ? (
-                                                        <Spinner size="sm" inline color="inherit" />
-                                                    ) : (
-                                                        <CheckCircle2 size={14} />
-                                                    )}
-                                                    Guardar configuracion
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-
                                     <div className={styles['ml-connection-actions']}>
                                         <Button
                                             variant="danger"
                                             size="sm"
-                                            onClick={() => disconnectMutation.mutate()}
+                                            onClick={() => setShowDisconnectConfirm(true)}
                                             disabled={disconnectMutation.isPending}
                                         >
                                             <Unplug size={14} /> Desconectar cuenta
@@ -1186,124 +1130,368 @@ export function MercadoLibrePage() {
                                 <div className={styles['ml-connect']}>
                                     <p>
                                         {mlEnabled
-                                            ? 'No hay ninguna cuenta conectada. Conectala para empezar a publicar.'
-                                            : 'Activa la integracion y luego conecta la cuenta de Mercado Libre.'}
+                                            ? 'No hay ninguna cuenta conectada. Conéctala para empezar a publicar.'
+                                            : 'Activa la integración y luego conecta la cuenta de Mercado Libre.'}
                                     </p>
-
-                                    <label className="field">
-                                        <span>ID de aplicacion (client_id)</span>
-                                        <div className="toolbar-search">
-                                            <Link2 size={15} />
-                                            <input
-                                                type="text"
-                                                placeholder="Ej: 1234567890123456"
-                                                value={appIdDraft}
-                                                onInput={(e) =>
-                                                    setAppIdDraft(
-                                                        (e.currentTarget as HTMLInputElement).value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </label>
-                                    <label className="field">
-                                        <span>Client Secret</span>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <input
-                                                type={showClientSecret ? 'text' : 'password'}
-                                                placeholder="Ingresá el client_secret"
-                                                value={clientSecretDraft}
-                                                onInput={(e) =>
-                                                    setClientSecretDraft(
-                                                        (e.currentTarget as HTMLInputElement).value,
-                                                    )
-                                                }
-                                                style={{ flex: 1 }}
-                                            />
-                                            <IconButton
-                                                variant="ghost"
-                                                onClick={() => setShowClientSecret(!showClientSecret)}
-                                                aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
-                                            >
-                                                {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-                                            </IconButton>
-                                        </div>
-                                        <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
-                                            Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
-                                        </p>
-                                    </label>
-                                    <label className="field">
-                                        <span>Webhook Secret</span>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <input
-                                                type={showWebhookSecret ? 'text' : 'password'}
-                                                placeholder="Ingresá el webhook secret (x-meli-signature)"
-                                                value={webhookSecretDraft}
-                                                onInput={(e) =>
-                                                    setWebhookSecretDraft(
-                                                        (e.currentTarget as HTMLInputElement).value,
-                                                    )
-                                                }
-                                                style={{ flex: 1 }}
-                                            />
-                                            <IconButton
-                                                variant="ghost"
-                                                onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                                                aria-label={showWebhookSecret ? 'Ocultar secret' : 'Mostrar secret'}
-                                            >
-                                                {showWebhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-                                            </IconButton>
-                                        </div>
-                                        <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
-                                            Secret para validar la firma HMAC de los webhooks de Mercado Libre.
-                                        </p>
-                                    </label>
-
-                                    <div className={styles['ml-redirect']}>
-                                        <span className="muted">Redirect URI configurada:</span>
-                                        <code>{ML_REDIRECT_URI}</code>
-                                        <IconButton
-                                            variant="ghost"
-                                            aria-label="Copiar redirect URI"
-                                            title="Copiar redirect URI"
-                                            onClick={() => {
-                                                void navigator.clipboard.writeText(ML_REDIRECT_URI);
-                                                pushToast({
-                                                    type: 'info',
-                                                    title: 'Redirect URI copiada',
-                                                });
-                                            }}
-                                        >
-                                            <Copy size={14} />
-                                        </IconButton>
-                                    </div>
-
-                                    <div className={styles['ml-connection-actions']}>
-                                        {(
-                                            appIdDraft.trim() !== (settingsQ.data?.app_id ?? '') ||
-                                            clientSecretDraft.trim() !== (settingsQ.data?.client_secret ?? '') ||
-                                            webhookSecretDraft.trim() !== (settingsQ.data?.webhook_secret ?? '')
-                                        ) && (
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={saveAppId}
-                                                disabled={savingAppId}
-                                            >
-                                                {savingAppId ? (
-                                                    <Spinner size="sm" inline color="inherit" />
-                                                ) : (
-                                                    <CheckCircle2 size={14} />
-                                                )}
-                                                Guardar configuración
-                                            </Button>
-                                        )}
-                                        <Button onClick={connect}>
-                                            <ShoppingBag size={16} /> Conectar cuenta
-                                        </Button>
-                                    </div>
                                 </div>
                             )}
+
+                            {/* Configuración de la app (siempre visible, conectado o no) */}
+                            <div className={styles['ml-defaults']}>
+                                <h4>Configuración de la app</h4>
+                                <label className="field">
+                                    <span>ID de aplicación (client_id)</span>
+                                    <div className="toolbar-search">
+                                        <Link2 size={15} />
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: 1234567890123456"
+                                            value={appIdDraft}
+                                            onInput={(e) =>
+                                                setAppIdDraft(
+                                                    (e.currentTarget as HTMLInputElement).value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    {appIdDraft.trim() ? (
+                                        <Badge variant="success" >
+                                            <CheckCircle2 size={12} /> Configurado
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="warning">Falta configurar</Badge>
+                                    )}
+                                </label>
+                                <label className="field">
+                                    <span>Client Secret</span>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <input
+                                            type={showClientSecret ? 'text' : 'password'}
+                                            placeholder="Ingresá el client_secret"
+                                            value={clientSecretDraft}
+                                            onInput={(e) =>
+                                                setClientSecretDraft(
+                                                    (e.currentTarget as HTMLInputElement).value,
+                                                )
+                                            }
+                                            style={{ flex: 1 }}
+                                        />
+                                        <IconButton
+                                            variant="ghost"
+                                            onClick={() => setShowClientSecret(!showClientSecret)}
+                                            aria-label={showClientSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                                        >
+                                            {showClientSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </IconButton>
+                                    </div>
+                                    {clientSecretDraft.trim() ? (
+                                        <Badge variant="success">
+                                            <CheckCircle2 size={12} /> Configurado
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="warning">Falta configurar</Badge>
+                                    )}
+                                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                                        Se guarda encriptado (AES-256-GCM). Solo visible en esta vista.
+                                    </p>
+                                </label>
+                                <label className="field">
+                                    <span>Webhook Secret</span>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <input
+                                            type={showWebhookSecret ? 'text' : 'password'}
+                                            placeholder="Ingresá el webhook secret (x-meli-signature)"
+                                            value={webhookSecretDraft}
+                                            onInput={(e) =>
+                                                setWebhookSecretDraft(
+                                                    (e.currentTarget as HTMLInputElement).value,
+                                                )
+                                            }
+                                            style={{ flex: 1 }}
+                                        />
+                                        <IconButton
+                                            variant="ghost"
+                                            onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                                            aria-label={showWebhookSecret ? 'Ocultar secret' : 'Mostrar secret'}
+                                        >
+                                            {showWebhookSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </IconButton>
+                                    </div>
+                                    {webhookSecretDraft.trim() ? (
+                                        <Badge variant="success">
+                                            <CheckCircle2 size={12} /> Configurado
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="warning">Falta configurar</Badge>
+                                    )}
+                                    <p className="muted" style={{ marginTop: '4px', fontSize: '12px' }}>
+                                        Secret para validar la firma HMAC de los webhooks de Mercado Libre.
+                                    </p>
+                                </label>
+
+                                <div className={styles['ml-redirect']}>
+                                    <span className="muted">Redirect URI configurada:</span>
+                                    <code>{ML_REDIRECT_URI}</code>
+                                    <IconButton
+                                        variant="ghost"
+                                        aria-label="Copiar redirect URI"
+                                        title="Copiar redirect URI"
+                                        onClick={() => {
+                                            void navigator.clipboard.writeText(ML_REDIRECT_URI);
+                                            pushToast({
+                                                type: 'info',
+                                                title: 'Redirect URI copiada',
+                                            });
+                                        }}
+                                    >
+                                        <Copy size={14} />
+                                    </IconButton>
+                                </div>
+                            </div>
+
+                            {/* Configuración de publicaciones (siempre visible) */}
+                            <div className={styles['ml-defaults']}>
+                                <h4>Configuración de publicaciones</h4>
+                                <div className={styles['defaults-grid']}>
+                                    <label className="field">
+                                        <span>Categoría (category_id)</span>
+                                        <div
+                                            className={styles['typeahead']}
+                                            onMouseLeave={() =>
+                                                setShowCategoryDropdown(false)
+                                            }
+                                        >
+                                            <Search
+                                                size={16}
+                                                className={styles['typeahead-icon']}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar categoría... (ej: MLA1459)"
+                                                value={
+                                                    categorySearch ||
+                                                    defaultsDraft.category_id
+                                                }
+                                                onInput={(e) => {
+                                                    const val = (
+                                                        e.currentTarget as HTMLInputElement
+                                                    ).value;
+                                                    setCategorySearch(val);
+                                                    setShowCategoryDropdown(true);
+                                                    const mlIdMatch = val.match(/^(MLA\d+)$/);
+                                                    setDefaultsDraft({
+                                                        ...defaultsDraft,
+                                                        category_id: mlIdMatch ? mlIdMatch[1] : '',
+                                                    });
+                                                }}
+                                                onFocus={() =>
+                                                    setShowCategoryDropdown(true)
+                                                }
+                                                onBlur={() =>
+                                                    setTimeout(
+                                                        () =>
+                                                            setShowCategoryDropdown(false),
+                                                        150,
+                                                    )
+                                                }
+                                            />
+                                            {showCategoryDropdown &&
+                                                categorySearch &&
+                                                categoriesQ.data && (
+                                                    <ul
+                                                        className={
+                                                            styles['typeahead-dropdown']
+                                                        }
+                                                    >
+                                                        {categoriesQ.data
+                                                            .filter(
+                                                                (c: MlCategory) =>
+                                                                    c.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            categorySearch.toLowerCase(),
+                                                                        ) ||
+                                                                    c.id
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            categorySearch.toLowerCase(),
+                                                                        ),
+                                                            )
+                                                            .slice(0, 10)
+                                                            .map((c: MlCategory) => (
+                                                                <li
+                                                                    key={c.id}
+                                                                    onClick={() => {
+                                                                        setDefaultsDraft({
+                                                                            ...defaultsDraft,
+                                                                            category_id:
+                                                                                c.id,
+                                                                        });
+                                                                        setCategorySearch(
+                                                                            `${c.id} - ${c.name}`,
+                                                                        );
+                                                                        setShowCategoryDropdown(
+                                                                            false,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <strong>{c.id}</strong>{' '}
+                                                                    {c.name}
+                                                                </li>
+                                                            ))}
+                                                        {categoriesQ.data.filter(
+                                                            (c: MlCategory) =>
+                                                                c.name
+                                                                    .toLowerCase()
+                                                                    .includes(
+                                                                        categorySearch.toLowerCase(),
+                                                                    ) ||
+                                                                c.id
+                                                                    .toLowerCase()
+                                                                    .includes(
+                                                                        categorySearch.toLowerCase(),
+                                                                    ),
+                                                        ).length === 0 && (
+                                                            <li className="muted">
+                                                                Sin coincidencias
+                                                            </li>
+                                                        )}
+                                                    </ul>
+                                                )}
+                                            {categorySearch &&
+                                                defaultsDraft.category_id && (
+                                                    <button
+                                                        type="button"
+                                                        className={
+                                                            styles['typeahead-clear']
+                                                        }
+                                                        onClick={() => {
+                                                            setDefaultsDraft({
+                                                                ...defaultsDraft,
+                                                                category_id: '',
+                                                            });
+                                                            setCategorySearch('');
+                                                        }}
+                                                        title="Limpiar"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                        </div>
+                                    </label>
+                                    <label className="field">
+                                        <span>Tipo de publicación (listing_type_id)</span>
+                                        <div className={styles['select-with-desc']}>
+                                            <select
+                                                className="select"
+                                                value={defaultsDraft.listing_type_id}
+                                                onChange={(e) =>
+                                                    setDefaultsDraft({
+                                                        ...defaultsDraft,
+                                                        listing_type_id: (
+                                                            e.currentTarget as HTMLSelectElement
+                                                        ).value,
+                                                    })
+                                                }
+                                            >
+                                                {(
+                                                    listingTypesQ.data ?? [
+                                                        { id: 'free', name: 'Gratuita' },
+                                                        {
+                                                            id: 'gold_special',
+                                                            name: 'Clasica',
+                                                        },
+                                                        { id: 'gold_pro', name: 'Premium' },
+                                                        {
+                                                            id: 'gold_premium',
+                                                            name: 'Premium Plus',
+                                                        },
+                                                    ]
+                                                ).map(
+                                                    (
+                                                        lt:
+                                                            | MlListingType
+                                                            | { id: string; name: string },
+                                                    ) => (
+                                                        <option key={lt.id} value={lt.id}>
+                                                            {lt.name} ({lt.id})
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                            <p className={styles['select-desc']}>
+                                                {
+                                                    LISTING_TYPE_DESCRIPTIONS[
+                                                        defaultsDraft.listing_type_id
+                                                    ]
+                                                }
+                                            </p>
+                                        </div>
+                                    </label>
+                                    <label className="field">
+                                        <span>Condicion</span>
+                                        <select
+                                            className="select"
+                                            value={defaultsDraft.condition}
+                                            onChange={(e) =>
+                                                setDefaultsDraft({
+                                                    ...defaultsDraft,
+                                                    condition: (
+                                                        e.currentTarget as HTMLSelectElement
+                                                    ).value,
+                                                })
+                                            }
+                                        >
+                                            <option value="new">Nuevo</option>
+                                            <option value="used">Usado</option>
+                                            <option value="not_specified">No especificado</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Botón unificado: Guardar + Conectar */}
+                            <div className={styles['ml-connection-actions']}>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={saveConfig}
+                                    disabled={savingAppId}
+                                >
+                                    {savingAppId ? (
+                                        <Spinner size="sm" inline color="inherit" />
+                                    ) : (
+                                        <CheckCircle2 size={14} />
+                                    )}
+                                    Guardar configuración
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={testCredentials}
+                                    disabled={testingCredentials || !appIdDraft.trim()}
+                                >
+                                    {testingCredentials ? (
+                                        <Spinner size="sm" inline color="inherit" />
+                                    ) : (
+                                        <Zap size={14} />
+                                    )}
+                                    Probar credenciales
+                                </Button>
+                                {!connected && (
+                                    <Button
+                                        onClick={connect}
+                                        disabled={connecting || savingAppId}
+                                    >
+                                        {connecting ? (
+                                            <Spinner size="sm" inline color="inherit" />
+                                        ) : (
+                                            <ShoppingBag size={16} />
+                                        )}
+                                        Conectar cuenta
+                                    </Button>
+                                )}
+                            </div>
                         </section>
 
                         <section className="card">
@@ -1321,7 +1509,7 @@ export function MercadoLibrePage() {
                                 <StatCard label="En Mercado Libre" value={stats.onMl} />
                             </div>
                             <p className={`muted ${styles['ml-note']}`}>
-                                La sincronizacion corre en segundo plano automaticamente cada pocos
+                                La sincronización corre en segundo plano automáticamente cada pocos
                                 minutos.
                             </p>
                         </section>
@@ -1330,7 +1518,7 @@ export function MercadoLibrePage() {
                     <section className="card table-card">
                         <div className="site-section-head">
                             <div>
-                                <h3>Cola de sincronizacion</h3>
+                                <h3>Cola de sincronización</h3>
                                 <p>Ultimos trabajos encolados (publicar, actualizar o eliminar).</p>
                             </div>
                         </div>
@@ -1391,6 +1579,111 @@ export function MercadoLibrePage() {
                     <section className="card table-card">
                         <div className="site-section-head">
                             <div>
+                                <h3>Fallos definitivos</h3>
+                                <p>
+                                    Trabajos que agotaron los reintentos. Reencolá o eliminá
+                                    manualmente.
+                                </p>
+                            </div>
+                            {deadLetterQ.data && deadLetterQ.data.count > 0 && (
+                                <Badge variant="warning">
+                                    {deadLetterQ.data.count}{' '}
+                                    {deadLetterQ.data.count === 1 ? 'fallo' : 'fallos'}
+                                </Badge>
+                            )}
+                        </div>
+                        {deadLetterQ.isPending && (
+                            <div className="ml-skeleton">
+                                <div className="skeleton-table">
+                                    <div className="skeleton-row header"></div>
+                                    {[...Array(2)].map((_, i) => (
+                                        <div key={i} className="skeleton-row"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {deadLetterQ.isError && (
+                            <div className="ml-error">
+                                <p>No se pudieron cargar los fallos.</p>
+                                <Button variant="secondary" size="sm" onClick={() => deadLetterQ.refetch()}>
+                                    Reintentar
+                                </Button>
+                            </div>
+                        )}
+                        {deadLetterQ.data && !deadLetterQ.isPending && !deadLetterQ.isError && (
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Propiedad</th>
+                                        <th>Operación</th>
+                                        <th>Intentos</th>
+                                        <th>Error</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {deadLetterQ.data.data.map((d) => (
+                                        <tr key={d.id}>
+                                            <td>
+                                                <strong>{d.property_title ?? 'Propiedad eliminada'}</strong>
+                                                {d.property_code !== null && (
+                                                    <span className="muted">
+                                                        {' '}
+                                                        #{String(d.property_code).padStart(4, '0')}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="cap">
+                                                {ML_OPERATION_LABEL[
+                                                    d.operation as keyof typeof ML_OPERATION_LABEL
+                                                ] ?? d.operation}
+                                            </td>
+                                            <td className="num">
+                                                {d.attempts}/{d.max_attempts}
+                                            </td>
+                                            <td
+                                                className={`muted ${styles['cell-error']}`}
+                                                title={d.last_error ?? undefined}
+                                            >
+                                                {d.last_error ?? '-'}
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        disabled={retryDeadLetterMutation.isPending}
+                                                        onClick={() => retryDeadLetterMutation.mutate(d.id)}
+                                                    >
+                                                        Reintentar
+                                                    </Button>
+                                                    <IconButton
+                                                        variant="ghost"
+                                                        aria-label="Eliminar trabajo fallido"
+                                                        disabled={deleteDeadLetterMutation.isPending}
+                                                        onClick={() => deleteDeadLetterMutation.mutate(d.id)}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </IconButton>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {deadLetterQ.data.data.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="empty-cell">
+                                                No hay fallos definitivos.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+                    </section>
+
+                    <section className="card table-card">
+                        <div className="site-section-head">
+                            <div>
                                 <h3>Estado en Mercado Libre</h3>
                                 <p>Propiedades publicadas y su estado en la plataforma.</p>
                             </div>
@@ -1402,8 +1695,8 @@ export function MercadoLibrePage() {
                                     <th>Item ML</th>
                                     <th>Estado ML</th>
                                     <th>Precio</th>
-                                    <th>Ultima sync</th>
-                                    <th>Publicacion</th>
+                                    <th>Última sync</th>
+                                    <th>Publicación</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1422,7 +1715,10 @@ export function MercadoLibrePage() {
                                         <td className="cap">{m.status ?? '-'}</td>
                                         <td className="num">
                                             {m.price !== null
-                                                ? `USD ${m.price.toLocaleString('es-AR')}`
+                                                ? m.price.toLocaleString('es-AR', {
+                                                      style: 'currency',
+                                                      currency: 'ARS',
+                                                  })
                                                 : '-'}
                                         </td>
                                         <td className="muted">{formatDate(m.last_sync_at)}</td>
@@ -1434,7 +1730,7 @@ export function MercadoLibrePage() {
                                                     rel="noreferrer"
                                                 >
                                                     <Button variant="secondary" size="sm">
-                                                        Ver publicacion <ExternalLink size={12} />
+                                                        Ver publicación <ExternalLink size={12} />
                                                     </Button>
                                                 </a>
                                             ) : (
@@ -1446,18 +1742,98 @@ export function MercadoLibrePage() {
                                 {(metaQ.data ?? []).length === 0 && (
                                     <tr>
                                         <td colSpan={6} className="empty-cell">
-                                            Todavia no hay propiedades publicadas en Mercado Libre.
+                                            Todavía no hay propiedades publicadas en Mercado Libre.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </section>
+
+                    <section className="card table-card">
+                        <div className="site-section-head">
+                            <div>
+                                <h3>Órdenes de compra</h3>
+                                <p>Órdenes recibidas vía webhook de Mercado Libre.</p>
+                            </div>
+                            {ordersQ.data && ordersQ.data.length > 0 && (
+                                <Badge variant="success">
+                                    <ShoppingBag size={12} /> {ordersQ.data.length}
+                                </Badge>
+                            )}
+                        </div>
+                        {ordersQ.isPending && (
+                            <div className="ml-skeleton">
+                                <div className="skeleton-table">
+                                    <div className="skeleton-row header"></div>
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="skeleton-row"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {ordersQ.isError && (
+                            <div className="ml-error">
+                                <p>No se pudieron cargar las órdenes.</p>
+                                <Button variant="secondary" size="sm" onClick={() => ordersQ.refetch()}>
+                                    Reintentar
+                                </Button>
+                            </div>
+                        )}
+                        {ordersQ.data && !ordersQ.isPending && !ordersQ.isError && (
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Orden</th>
+                                        <th>Comprador</th>
+                                        <th>Estado</th>
+                                        <th>Total</th>
+                                        <th>Recibida</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {ordersQ.data.map((o) => (
+                                        <tr key={o.id}>
+                                            <td className="num">{o.order_id}</td>
+                                            <td>{o.buyer_nickname ?? '-'}</td>
+                                            <td className="cap">{o.status}</td>
+                                            <td className="num">
+                                                {o.total_amount !== null
+                                                    ? o.total_amount.toLocaleString('es-AR', {
+                                                          style: 'currency',
+                                                          currency: o.currency || 'ARS',
+                                                      })
+                                                    : '-'}
+                                            </td>
+                                            <td className="muted">{formatDate(o.received_at)}</td>
+                                        </tr>
+                                    ))}
+                                    {ordersQ.data.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="empty-cell">
+                                                Todavía no hay órdenes de compra.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+                    </section>
                 </>
             )}
 
             {replyModal}
             {templateModal}
+
+            <ConfirmDialog
+                open={showDisconnectConfirm}
+                title="Desconectar cuenta de Mercado Libre"
+                message="Vas a desconectar la cuenta de Mercado Libre. Esto detiene la sincronización y las auto-respuestas. Las publicaciones existentes quedan activas en Mercado Libre pero no se actualizarán. ¿Continuar?"
+                confirmLabel="Desconectar"
+                danger
+                onConfirm={() => disconnectMutation.mutate()}
+                onCancel={() => setShowDisconnectConfirm(false)}
+            />
 
             <ConfirmDialog
                 open={deleteTemplateId !== null}

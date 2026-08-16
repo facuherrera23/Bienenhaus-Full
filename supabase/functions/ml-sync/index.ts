@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
+    ML_API,
+    fetchWithTimeout,
     getAccessToken,
     mlCloseItem,
     mlCreateItem,
@@ -34,7 +36,7 @@ interface LogEntry {
     function: string;
     job_id?: number;
     property_id?: string;
-    ml_item_id?: number | string;
+    ml_item_id?: string | null;
     operation?: string;
     duration_ms?: number;
     ml_api_latency_ms?: number;
@@ -64,10 +66,22 @@ const logger = {
 // Auth
 // ============================================================
 
+function timingSafeEqual(a: string, b: string): boolean {
+    const ba = new TextEncoder().encode(a);
+    const bb = new TextEncoder().encode(b);
+    if (ba.length !== bb.length) return false;
+    let diff = 0;
+    for (let i = 0; i < ba.length; i++) diff |= ba[i] ^ bb[i];
+    return diff === 0;
+}
+
 async function isAuthorized(req: Request): Promise<boolean> {
     // x-sync-secret bypasses JWT for server-to-server sync triggers.
     const secret = Deno.env.get('ML_SYNC_SECRET');
-    if (secret && req.headers.get('x-sync-secret') === secret) return true;
+    if (secret) {
+        const headerSecret = req.headers.get('x-sync-secret');
+        if (headerSecret && timingSafeEqual(headerSecret, secret)) return true;
+    }
 
     return (await requireAdmin(req, supabase)) !== null;
 }
@@ -104,7 +118,7 @@ interface QueueJob {
     id: number;
     property_id: string;
     operation: string;
-    ml_item_id: number | null;
+    ml_item_id: string | null;
 }
 
 // ============================================================
@@ -188,7 +202,7 @@ async function prepareImagesForML(
             const safeName = `image_${crypto.randomUUID()}.${ext || 'jpg'}`;
             formData.append('file', blob, safeName);
 
-            const uploadRes = await fetch(`https://api.mercadolibre.com/pictures`, {
+            const uploadRes = await fetchWithTimeout(`${ML_API}/pictures`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${accessToken}` },
                 body: formData,
@@ -205,9 +219,9 @@ async function prepareImagesForML(
             }
 
             const uploadData = await uploadRes.json();
+            const variations = (uploadData as { variations?: Array<{ id?: string; url?: string }> }).variations ?? [];
             const mainVariation =
-                uploadData.variations?.find((v: any) => v.id === 'original') ??
-                uploadData.variations?.[0];
+                variations.find((v) => v.id === 'original') ?? variations[0];
             return mainVariation?.url ?? null;
         } catch (err) {
             logger.error({
@@ -244,7 +258,7 @@ async function mlCreateItemValidated(
     idempotencyKey?: string,
 ): Promise<MlItem> {
     const start = Date.now();
-    const res = await fetch('https://api.mercadolibre.com/items', {
+    const res = await fetchWithTimeout(`${ML_API}/items`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -269,7 +283,7 @@ async function mlUpdateItemValidated(
     idempotencyKey?: string,
 ): Promise<MlItem> {
     const start = Date.now();
-    const res = await fetch(`https://api.mercadolibre.com/items/${itemId}`, {
+    const res = await fetchWithTimeout(`${ML_API}/items/${itemId}`, {
         method: 'PUT',
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -293,7 +307,7 @@ async function mlCloseItemValidated(
     idempotencyKey?: string,
 ): Promise<MlItem> {
     const start = Date.now();
-    const res = await fetch(`https://api.mercadolibre.com/items/${itemId}`, {
+    const res = await fetchWithTimeout(`${ML_API}/items/${itemId}`, {
         method: 'PUT',
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -318,7 +332,7 @@ async function mlSetDescriptionValidated(
     idempotencyKey?: string,
 ): Promise<void> {
     const start = Date.now();
-    const res = await fetch(`https://api.mercadolibre.com/items/${itemId}/description`, {
+    const res = await fetchWithTimeout(`${ML_API}/items/${itemId}/description`, {
         method: 'PUT',
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -450,11 +464,11 @@ async function runJob(
     queueId: number,
     operation: string,
     propertyId: string,
-    mlItemId: number | null,
+    mlItemId: string | null,
     accessToken: string,
 ): Promise<{
     ok: boolean;
-    itemId?: number | null;
+    itemId?: string | null;
     permalink?: string;
     mlStatus?: string;
     price?: number | null;
@@ -591,7 +605,7 @@ async function runJob(
             }
             return {
                 ok: true,
-                itemId: Number(item.id),
+                itemId: item.id,
                 permalink: item.permalink,
                 mlStatus: item.status,
                 price: Number(item.price),

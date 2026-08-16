@@ -4,9 +4,11 @@ import {
     exchangeCode,
     getMe,
     runMlApiCallWithRetry,
-    getMlAppCredentialsLegacy,
+    getMlCredentials,
 } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
+import { requireAdmin } from '../_shared/auth.ts';
+import { rateLimitMiddleware } from '../_shared/rate-limit.ts';
 
 const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -50,20 +52,6 @@ async function hmac(value: string, clientSecret: string): Promise<string> {
     );
 }
 
-async function authenticateAdmin(req: Request): Promise<{ id: string } | null> {
-    const auth = req.headers.get('authorization') ?? '';
-    if (!auth.startsWith('Bearer ')) return null;
-    const { data, error } = await supabase.auth.getUser(auth.slice(7));
-    if (error || !data.user) return null;
-    const { data: admin } = await supabase
-        .from('admin_users')
-        .select('id, is_active, role')
-        .eq('id', data.user.id)
-        .maybeSingle();
-    if (!admin?.is_active || !['super_admin', 'admin', 'staff'].includes(admin.role)) return null;
-    return { id: admin.id };
-}
-
 function timingSafeEqual(a: string, b: string): boolean {
     const ba = new TextEncoder().encode(a);
     const bb = new TextEncoder().encode(b);
@@ -82,33 +70,14 @@ function isInternalUrl(url: string): boolean {
     return false;
 }
 
-// Obtiene client_id/client_secret desde site_settings (fallback a env vars legacy)
-async function getMlCredentials(
-    supabaseClient: typeof supabase,
-): Promise<{ clientId: string; clientSecret: string }> {
-    const { data: settings } = await supabaseClient
-        .from('site_settings')
-        .select('key, value')
-        .in('key', ['ml_app_id', 'ml_client_secret']);
-
-    const clientId = (settings?.find((s) => s.key === 'ml_app_id')?.value?.value as string) ?? '';
-    const clientSecret =
-        (settings?.find((s) => s.key === 'ml_client_secret')?.value?.value as string) ?? '';
-
-    if (clientId && clientSecret) return { clientId, clientSecret };
-
-    // Fallback a env vars (legacy)
-    const legacyClientId = Deno.env.get('ML_CLIENT_ID') ?? '';
-    const legacyClientSecret = Deno.env.get('ML_CLIENT_SECRET') ?? '';
-    if (!legacyClientId || !legacyClientSecret)
-        throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados');
-    return { clientId: legacyClientId, clientSecret: legacyClientSecret };
-}
-
 Deno.serve(async (req) => {
     const respond = (status: number, body: Record<string, unknown>): Response =>
         jsonResponse(status, body, req);
     if (req.method === 'OPTIONS') return optionsResponse(req);
+
+    // Rate limiting (aplica a POST y GET)
+    const rl = await rateLimitMiddleware('ml-oauth', req);
+    if (rl) return rl;
 
     if (req.method === 'POST') {
         let body: { action?: unknown; admin?: unknown };
@@ -118,8 +87,11 @@ Deno.serve(async (req) => {
             return respond(400, { error: 'JSON inválido' });
         }
         if (body.action !== 'start') return respond(400, { error: 'Acción inválida' });
-        const admin = await authenticateAdmin(req);
-        if (!admin) return respond(401, { error: 'No autorizado' });
+        const token = await requireAdmin(req, supabase);
+        if (!token) return respond(401, { error: 'No autorizado' });
+        const { data: userData } = await supabase.auth.getUser(token);
+        const adminId = userData?.user?.id;
+        if (!adminId) return respond(401, { error: 'No autorizado' });
         const adminUrl =
             typeof body.admin === 'string' && isInternalUrl(body.admin)
                 ? body.admin
@@ -131,7 +103,7 @@ Deno.serve(async (req) => {
 
         // Obtener client_secret de BD para HMAC
         const { clientSecret } = await getMlCredentials(supabase);
-        const signature = await hmac(`${nonce}|${admin.id}|${exp}`, clientSecret);
+        const signature = await hmac(`${nonce}|${adminId}|${exp}`, clientSecret);
         const state = base64UrlEncode(
             new TextEncoder().encode(
                 JSON.stringify({ nonce, admin: adminUrl, exp, sig: signature }),
@@ -141,7 +113,7 @@ Deno.serve(async (req) => {
             .from('ml_oauth_states')
             .insert({
                 nonce,
-                admin_user_id: admin.id,
+                admin_user_id: adminId,
                 admin_url: adminUrl,
                 code_verifier: codeVerifier,
                 expires_at: new Date(exp).toISOString(),
@@ -155,6 +127,13 @@ Deno.serve(async (req) => {
     }
 
     const url = new URL(req.url);
+
+    // Purga no bloqueante de estados OAuth expirados (>10 min pasados su expiry)
+    await supabase
+        .from('ml_oauth_states')
+        .delete()
+        .lt('expires_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
+
     const code = url.searchParams.get('code');
     const stateRaw = url.searchParams.get('state');
 
@@ -262,89 +241,11 @@ Deno.serve(async (req) => {
         });
 
         const redirectTarget = validatedAdminUrl.endsWith('/admin')
-            ? `${validatedAdminUrl}/mercadolibre?ml=connected=1`
-            : `${validatedAdminUrl}/admin/mercadolibre?ml=connected=1`;
+            ? `${validatedAdminUrl}#/mercadolibre?ml=connected=1`
+            : `${validatedAdminUrl}/admin#/mercadolibre?ml=connected=1`;
         return Response.redirect(redirectTarget, 302);
     } catch (err) {
         console.error('ml-oauth error', err);
         return respond(500, { error: (err as Error).message });
     }
 });
-
-// Helpers
-async function hmac(value: string, clientSecret: string): Promise<string> {
-    const key = await crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(clientSecret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign'],
-    );
-    return base64UrlEncode(
-        new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))),
-    );
-}
-
-function base64UrlEncode(bytes: Uint8Array): string {
-    let binary = '';
-    for (const b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function base64UrlDecode(value: string): Uint8Array {
-    const padded =
-        value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
-    const binary = atob(padded);
-    return Uint8Array.from(binary, (c) => c.charCodeAt(0));
-}
-
-async function sha256(value: string): Promise<Uint8Array> {
-    return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
-}
-
-interface OauthState {
-    nonce: string;
-    admin: string;
-    exp: number;
-}
-
-function base64UrlEncode(bytes: Uint8Array): string {
-    let binary = '';
-    for (const b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function base64UrlDecode(value: string): Uint8Array {
-    const padded =
-        value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
-    const binary = atob(padded);
-    return Uint8Array.from(binary, (c) => c.charCodeAt(0));
-}
-
-async function sha256(value: string): Promise<Uint8Array> {
-    return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
-}
-
-interface OauthState {
-    nonce: string;
-    admin: string;
-    exp: number;
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-    const ba = new TextEncoder().encode(a);
-    const bb = new TextEncoder().encode(b);
-    if (ba.length !== bb.length) return false;
-    let diff = 0;
-    for (let i = 0; i < ba.length; i++) diff |= ba[i] ^ bb[i];
-    return diff === 0;
-}
-
-function isInternalUrl(url: string): boolean {
-    const adminBaseUrl = Deno.env.get('ADMIN_BASE_URL');
-    if (adminBaseUrl && url.startsWith(adminBaseUrl)) return true;
-    const bienenhausAdminRegex = /^https?:\/\/([a-z0-9-]+\.)?bienenhaus\.com\.ar\/admin/;
-    if (bienenhausAdminRegex.test(url)) return true;
-    if (url.startsWith('/admin')) return true;
-    return false;
-}

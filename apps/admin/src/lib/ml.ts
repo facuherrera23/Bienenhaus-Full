@@ -7,6 +7,7 @@ import {
     type MlAutoReplyTemplate,
     type MlCategory,
     type MlConnectionInfo,
+    type MlDeadLetterRow,
     type MlItemMetrics,
     type MlListingType,
     type MlMetaRow,
@@ -39,6 +40,7 @@ export type {
     MlMetrics,
     MlItemMetrics,
     MlAutoReplyTemplate,
+    MlDeadLetterRow,
 };
 
 export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
@@ -121,7 +123,7 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
     max_attempts: number;
     last_error: string | null;
     payload: Record<string, unknown>;
-    ml_item_id: number | null;
+    ml_item_id: string | null;
     created_at: string | null;
     moved_at: string | null;
     resolved_at: string | null;
@@ -247,26 +249,117 @@ export async function fetchMlSettings(): Promise<MlSettings> {
     return settings;
 }
 
-export function buildAuthorizeUrl(appId: string): string {
+export function buildAuthorizeUrl(appId: string, state: string, codeChallenge: string): string {
     const redirectUri = `${supabaseUrl}/functions/v1/ml-oauth`;
-    const state = btoa(JSON.stringify({ admin: window.location.origin }));
     return (
         'https://auth.mercadolibre.com.ar/authorization' +
         `?response_type=code&client_id=${encodeURIComponent(appId)}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&state=${encodeURIComponent(state)}`
+        `&state=${encodeURIComponent(state)}` +
+        `&code_challenge=${encodeURIComponent(codeChallenge)}` +
+        `&code_challenge_method=S256`
     );
 }
 
 export const ML_REDIRECT_URI = `${supabaseUrl}/functions/v1/ml-oauth`;
 
-export async function disconnectMl(): Promise<void> {
-    const { error } = await supabase
-        .from('ml_connection')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
+export async function testMlCredentials(appId: string): Promise<{ ok: boolean; name?: string; message: string }> {
+    try {
+        const res = await fetch(`https://api.mercadolibre.com/applications/${encodeURIComponent(appId)}`, {
+            headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+            const data = (await res.json()) as { name?: string };
+            return { ok: true, name: data.name, message: `App válida: ${data.name ?? appId}` };
+        }
+        const text = await res.text().catch(() => '');
+        if (res.status === 404) return { ok: false, message: `No existe la app ${appId} en ML` };
+        return { ok: false, message: `ML respondió ${res.status}: ${text.slice(0, 200)}` };
+    } catch (err) {
+        return { ok: false, message: err instanceof Error ? err.message : 'Error de red' };
+    }
+}
 
+export async function startMlOAuth(): Promise<{ state: string; code_challenge: string }> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesion iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-oauth`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify({
+            action: 'start',
+            admin: window.location.origin + '/admin',
+        }),
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo iniciar OAuth: ${res.status} ${text}`);
+    }
+    const data = (await res.json()) as { state?: string; code_challenge?: string };
+    if (!data.state || !data.code_challenge) {
+        throw new Error('Respuesta OAuth invalida del servidor');
+    }
+    return { state: data.state, code_challenge: data.code_challenge };
+}
+
+export async function disconnectMl(): Promise<void> {
+    const { data: conn } = await supabase
+        .from('ml_connection')
+        .select('id')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (!conn) return;
+
+    const { error } = await supabase.from('ml_connection').delete().eq('id', conn.id);
     if (error) throw new Error(error.message);
+}
+
+export async function bulkEnqueueMl(
+    propertyIds: string[],
+    operation: 'publish' | 'update' | 'delete',
+): Promise<{ enqueued: number; skipped: number }> {
+    if (propertyIds.length === 0) throw new Error('No hay propiedades seleccionadas');
+
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesion iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-bulk-enqueue`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify({ property_ids: propertyIds, operation }),
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo encolar en Mercado Libre: ${res.status} ${text}`);
+    }
+    const data = (await res.json()) as { enqueued?: number; skipped?: number };
+    return { enqueued: data.enqueued ?? 0, skipped: data.skipped ?? 0 };
 }
 
 export async function revokeMlTokens(): Promise<void> {
@@ -325,7 +418,7 @@ export async function fetchMlQueue(filters?: {
         .select(ML_QUEUE_SELECT)
         .match(apiFilters)
         .order('created_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
+        .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<QueueApiRow[]>();
 
     if (error) throw new Error(error.message);
@@ -357,6 +450,30 @@ export async function fetchMlQueueInfinite(
     };
 }
 
+export async function fetchMlQueueStats(): Promise<{
+    pending: number;
+    processing: number;
+    success: number;
+    failed: number;
+}> {
+    const countBy = async (status: MlSyncStatus): Promise<number> => {
+        const { count, error } = await supabase
+            .from('ml_sync_queue')
+            .select('*', { count: 'exact', head: true })
+            .is('deleted_at', null)
+            .eq('status', status);
+        if (error) throw new Error(error.message);
+        return count ?? 0;
+    };
+    const [pending, processing, success, failed] = await Promise.all([
+        countBy('pending'),
+        countBy('processing'),
+        countBy('success'),
+        countBy('failed'),
+    ]);
+    return { pending, processing, success, failed };
+}
+
 // ============================================================
 // API Functions - Meta
 // ============================================================
@@ -379,7 +496,7 @@ export async function fetchMlMeta(filters?: {
         .select(ML_META_SELECT)
         .match(apiFilters)
         .order('last_sync_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
+        .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<MetaApiRow[]>();
 
     if (error) throw new Error(error.message);
@@ -415,12 +532,14 @@ export async function fetchMlMetaInfinite(
 // API Functions - Categories & Listing Types
 // ============================================================
 
-export async function fetchMlCategories(): Promise<MlCategory[]> {
+export async function fetchMlCategories(parentId?: string): Promise<MlCategory[]> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error('Sin sesión activa');
 
-    const res = await fetch(`${supabaseUrl}/functions/v1/ml-categories`, {
+    const url = new URL(`${supabaseUrl}/functions/v1/ml-categories`);
+    if (parentId) url.searchParams.set('parent_id', parentId);
+    const res = await fetch(url, {
         method: 'GET',
         headers: { authorization: `Bearer ${token}` },
     });
@@ -463,7 +582,7 @@ export async function fetchMlQuestions(filters?: {
         .select('*')
         .match(apiFilters)
         .order('received_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
+        .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<Database['public']['Tables']['ml_questions']['Row'][]>();
 
     if (error) throw new Error(error.message);
@@ -510,7 +629,7 @@ export async function fetchMlOrders(filters?: {
         .select('*')
         .match(apiFilters)
         .order('received_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize + pageSize - 1)
+        .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<Database['public']['Tables']['ml_orders']['Row'][]>();
 
     if (error) throw new Error(error.message);
@@ -624,7 +743,7 @@ export async function fetchMlDeadLetter(filters?: {
         max_attempts: number;
         last_error: string | null;
         payload: Record<string, unknown>;
-        ml_item_id: number | null;
+        ml_item_id: string | null;
         created_at: string | null;
         moved_at: string | null;
         resolved_at: string | null;

@@ -5,15 +5,15 @@ import {
     sendOrderMessage,
     sendQuestionAnswer,
 } from '../_shared/auto_reply.ts';
-import { ML_API } from '../_shared/ml.ts';
+import { ML_API, getMlCredentials } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
 import {
-    MlQuestionSchema,
     MlOrderSchema,
     MlWebhookPayloadSchema,
     parseMlResponse,
 } from '../_shared/ml.schemas.ts';
+import type { MlWebhookPayload, MlOrder } from '../_shared/ml.schemas.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
@@ -40,7 +40,7 @@ interface LogEntry {
     topic?: string;
     resource?: string;
     user_id?: number;
-    status?:
+    status:
         | 'received'
         | 'processed'
         | 'failed'
@@ -66,22 +66,8 @@ function logError(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
     console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: 'error', ...entry }));
 }
 
-async function getMlWebhookSecret(): Promise<string> {
-    const { data: settings } = await supabase
-        .from('site_settings')
-        .select('key, value')
-        .eq('key', 'ml_webhook_secret')
-        .maybeSingle();
-
-    const secret = (settings?.value?.value as string) ?? '';
-    if (secret) return secret;
-
-    // Fallback a env vars (legacy)
-    return Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
-}
-
 async function verifySignature(req: Request): Promise<boolean> {
-    const secret = await getMlWebhookSecret();
+    const secret = (await getMlCredentials(supabase)).webhookSecret;
     if (!secret) return false;
     const signature = req.headers.get('x-meli-signature');
     if (!signature) return false;
@@ -128,21 +114,8 @@ async function logWebhookEvent(
     }
 }
 
-async function getMlClientId(): Promise<string | null> {
-    const { data: settings } = await supabase
-        .from('site_settings')
-        .select('key, value')
-        .in('key', ['ml_app_id']);
-
-    const clientId = (settings?.find((s) => s.key === 'ml_app_id')?.value?.value as string) ?? '';
-    if (clientId) return clientId;
-
-    // Fallback a env vars (legacy)
-    return Deno.env.get('ML_CLIENT_ID') ?? null;
-}
-
 async function validateNotificationBinding(payload: MlWebhookPayload): Promise<boolean> {
-    const clientId = await getMlClientId();
+    const clientId = (await getMlCredentials(supabase)).clientId;
     if (clientId && String(payload.application_id) !== clientId) return false;
     const { data: connection } = await supabase
         .from('ml_connection')
@@ -160,107 +133,117 @@ async function handleQuestions(payload: MlWebhookPayload): Promise<void> {
 
     const template = await getActiveTemplate(supabase, 'new_question');
 
-    if (template) {
-        let token: string | null = null;
-        try {
-            token = await getMlAccessToken(supabase);
-        } catch (err) {
-            logWarn({ function: 'ml-webhook', topic: 'questions', error: (err as Error).message });
-        }
+    // Resolver item_id (string) y datos de la pregunta desde ML.
+    // El resource del webhook es el ID de la pregunta, NO el del item.
+    let token: string | null = null;
+    try {
+        token = await getMlAccessToken(supabase);
+    } catch (err) {
+        logWarn({ function: 'ml-webhook', topic: 'questions', error: (err as Error).message });
+        return;
+    }
 
-        if (token) {
-            const res = await fetch(\\/questions/\?api_version=4\, {
-                headers: { authorization: \Bearer \\ },
+    if (!token) return;
+
+    let q: { item_id?: unknown; text?: unknown; from?: { user_id?: unknown; nickname?: unknown }; date_created?: unknown } | null = null;
+    try {
+        const res = await fetch(`${ML_API}/questions/${questionId}?api_version=4`, {
+            headers: { authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+            logWarn({
+                function: 'ml-webhook',
+                topic: 'questions',
+                question_id: questionId,
+                status: res.status,
             });
+            return;
+        }
+        q = await res.json();
+    } catch (err) {
+        logWarn({
+            function: 'ml-webhook',
+            topic: 'questions',
+            question_id: questionId,
+            error: (err as Error).message,
+        });
+        return;
+    }
 
-            if (res.ok) {
-                const q = await res.json();
-                const itemId: unknown = q?.item_id;
-                let propertyId: string | null = null;
-                let mlItemId: number | null = typeof itemId === 'number' ? itemId : null;
+    const itemId: unknown = q?.item_id;
+    let propertyId: string | null = null;
+    const mlItemId: string | null = typeof itemId === 'string' ? itemId : null;
 
-                if (itemId != null) {
-                    const { data: meta } = await supabase
-                        .from('property_ml_meta')
-                        .select('property_id, ml_item_id')
-                        .eq('ml_item_id', Number(itemId))
-                        .maybeSingle();
-                    if (meta) {
-                        propertyId = meta.property_id;
-                        mlItemId = meta.ml_item_id;
-                    }
-                }
-
-                await supabase.from('ml_questions').upsert(
-                    {
-                        question_id: questionId,
-                        property_id: propertyId,
-                        ml_item_id: mlItemId ?? 0,
-                        question_text: typeof q?.text === 'string' ? q.text : null,
-                        from_user_id: typeof q?.from?.user_id === 'number' ? q.from.user_id : null,
-                        from_user_nickname:
-                            typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
-                        date_created: typeof q?.date_created === 'string' ? q.date_created : null,
-                        status: 'answered',
-                        answer_text: template.message,
-                        date_updated: new Date().toISOString(),
-                    },
-                    { onConflict: 'question_id' },
-                );
-
-                try {
-                    await sendQuestionAnswer(
-                        supabase,
-                        questionId,
-                        template.message,
-                        token,
-                        \nswer:\\,
-                    );
-                } catch (err) {
-                    await supabase
-                        .from('ml_questions')
-                        .update({ status: 'unanswered', answer_text: null })
-                        .eq('question_id', questionId);
-                    logWarn({
-                        function: 'ml-webhook',
-                        topic: 'questions',
-                        question_id: questionId,
-                        error: (err as Error).message,
-                    });
-                }
-                return;
-            }
+    if (itemId != null) {
+        const { data: meta } = await supabase
+            .from('property_ml_meta')
+            .select('property_id, ml_item_id')
+            .eq('ml_item_id', itemId)
+            .maybeSingle();
+        if (meta) {
+            propertyId = meta.property_id;
         }
     }
 
-    // Sin plantilla activa: solo registrar
-    const { data: item } = await supabase
-        .from('property_ml_meta')
-        .select('property_id, ml_item_id')
-        .eq('ml_item_id', Number(questionId))
-        .maybeSingle();
+    if (!template) {
+        // Sin plantilla activa: solo registrar como no respondida
+        if (propertyId) {
+            await supabase.from('ml_questions').upsert(
+                {
+                    question_id: questionId,
+                    property_id: propertyId,
+                    ml_item_id: mlItemId,
+                    status: 'unanswered',
+                    received_at: new Date().toISOString(),
+                },
+                { onConflict: 'question_id' },
+            );
+        }
+        return;
+    }
 
-    if (item) {
-        await supabase.from('ml_questions').upsert({
+    await supabase.from('ml_questions').upsert(
+        {
             question_id: questionId,
-            property_id: item.property_id,
-            ml_item_id: item.ml_item_id,
-            status: 'unanswered',
-            received_at: new Date().toISOString(),
+            property_id: propertyId,
+            ml_item_id: mlItemId,
+            question_text: typeof q?.text === 'string' ? q.text : null,
+            from_user_id: typeof q?.from?.user_id === 'number' ? q.from.user_id : null,
+            from_user_nickname: typeof q?.from?.nickname === 'string' ? q.from.nickname : null,
+            date_created: typeof q?.date_created === 'string' ? q.date_created : null,
+            status: 'answered',
+            answer_text: template.message,
+            date_updated: new Date().toISOString(),
+        },
+        { onConflict: 'question_id' },
+    );
+
+    try {
+        await sendQuestionAnswer(supabase, questionId, template.message, token);
+    } catch (err) {
+        await supabase
+            .from('ml_questions')
+            .update({ status: 'unanswered', answer_text: null })
+            .eq('question_id', questionId);
+        logWarn({
+            function: 'ml-webhook',
+            topic: 'questions',
+            question_id: questionId,
+            error: (err as Error).message,
         });
     }
 }
 
 const ORDER_STATUS_TRIGGER: Record<string, string> = {
-    confirmed: 'new_order',
     paid: 'order_paid',
     shipped: 'order_shipped',
     delivered: 'order_delivered',
+    confirmed: 'new_order',
 };
 
 function deriveOrderStatus(order: MlOrderSchema | null): string {
     if (!order || order.status === 'cancelled') return 'cancelled';
-    if (order.status === 'payment_required') return 'new';
+    if (order.status === 'payment_in_process') return 'new';
 
     const shippingStatus = order.shipping?.status;
     if (shippingStatus === 'delivered') return 'delivered';
@@ -269,7 +252,10 @@ function deriveOrderStatus(order: MlOrderSchema | null): string {
     const approved = (order.payments ?? []).some((p) => p?.status === 'approved');
     if (approved) return 'paid';
 
-    if (order.status === 'confirmed') return 'confirmed';
+    const pending = (order.payments ?? []).some((p) => p?.status === 'pending');
+    if (pending) return 'new';
+
+    if (order.status === 'confirmed' || order.status === 'paid') return 'confirmed';
     return 'new';
 }
 
@@ -284,24 +270,33 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
         logWarn({ function: 'ml-webhook', topic: 'orders', error: (err as Error).message });
     }
 
-    let order: MlOrderSchema | null = null;
+    let order: MlOrder | null = null;
     if (token) {
-        const res = await fetch(\\/orders/\\, {
-            headers: { authorization: \Bearer \\ },
-        });
-        if (res.ok) {
-            try {
-                const data = await res.json();
-                order = parseMlResponse(MlOrderSchema, data, 'mlOrder');
-            } catch {
-                order = null;
+        try {
+            const res = await fetch(`${ML_API}/orders/${orderId}`, {
+                headers: { authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                try {
+                    const data = await res.json();
+                    order = parseMlResponse(MlOrderSchema, data, 'mlOrder');
+                } catch {
+                    order = null;
+                }
+            } else {
+                logWarn({
+                    function: 'ml-webhook',
+                    topic: 'orders',
+                    order_id: orderId,
+                    status: res.status,
+                });
             }
-        } else {
+        } catch (err) {
             logWarn({
                 function: 'ml-webhook',
                 topic: 'orders',
                 order_id: orderId,
-                status: res.status,
+                error: (err as Error).message,
             });
         }
     }
@@ -310,16 +305,15 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
 
     const itemId: unknown = order?.order_items?.[0]?.item?.id;
     let propertyId: string | null = null;
-    let mlItemId: number | null = typeof itemId === 'number' ? itemId : null;
+    const mlItemId: string | null = typeof itemId === 'string' ? itemId : null;
     if (itemId != null) {
         const { data: meta } = await supabase
             .from('property_ml_meta')
             .select('property_id, ml_item_id')
-            .eq('ml_item_id', Number(itemId))
+            .eq('ml_item_id', itemId)
             .maybeSingle();
         if (meta) {
             propertyId = meta.property_id;
-            mlItemId = meta.ml_item_id;
         }
     }
 
@@ -332,7 +326,7 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
 
     const orderPayload: Record<string, unknown> = {
         order_id: orderId,
-        ml_item_id: mlItemId ?? 0,
+        ml_item_id: mlItemId,
         status,
         received_at: new Date().toISOString(),
     };
@@ -354,13 +348,7 @@ async function handleOrders(payload: MlWebhookPayload): Promise<void> {
         const template = await getActiveTemplate(supabase, trigger);
         if (template) {
             try {
-                await sendOrderMessage(
-                    supabase,
-                    orderId,
-                    template.message,
-                    token,
-                    \order:\:\\,
-                );
+                await sendOrderMessage(supabase, orderId, template.message, token);
                 log({
                     function: 'ml-webhook',
                     topic: 'orders',
@@ -388,7 +376,7 @@ async function handleItems(payload: MlWebhookPayload): Promise<void> {
     const { data: meta } = await supabase
         .from('property_ml_meta')
         .select('property_id, ml_item_id')
-        .eq('ml_item_id', Number(itemId))
+        .eq('ml_item_id', itemId)
         .maybeSingle();
 
     if (meta) {
@@ -441,7 +429,7 @@ Deno.serve(async (req) => {
         return respond(429, { error: 'Rate limited', retry_after: rlResult.retryAfter });
     }
 
-    // Verify signature (secret se lee dinámicamente en verifySignature)
+    // Verify signature (secret se lee dinamicamente en verifySignature)
     const verified = await verifySignature(req);
     if (!verified) return respond(401, { error: 'Invalid signature' });
 
@@ -457,7 +445,7 @@ Deno.serve(async (req) => {
 
     if (!(await validateNotificationBinding(payload))) {
         return respond(401, {
-            error: 'Notificación no perteneciente a la aplicación/cuenta conectada',
+            error: 'Notificacion no perteneciente a la aplicacion/cuenta conectada',
         });
     }
 

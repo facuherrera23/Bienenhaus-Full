@@ -36,7 +36,7 @@ export interface MlQueueRow {
     attempts: number;
     max_attempts: number;
     next_attempt_at: string;
-    ml_item_id: number | null;
+    ml_item_id: string | null;
     last_error: string | null;
     created_at: string;
     property_title: string | null;
@@ -45,7 +45,7 @@ export interface MlQueueRow {
 
 export interface MlMetaRow {
     property_id: string;
-    ml_item_id: number | null;
+    ml_item_id: string | null;
     status: string | null;
     permalink: string | null;
     price: number | null;
@@ -69,7 +69,7 @@ export interface MlQuestion {
     id: number;
     question_id: string;
     property_id: string | null;
-    ml_item_id: number;
+    ml_item_id: string | null;
     question_text: string | null;
     answer_text: string | null;
     status: 'unanswered' | 'answered' | 'deleted';
@@ -84,7 +84,7 @@ export interface MlOrder {
     id: number;
     order_id: string;
     property_id: string | null;
-    ml_item_id: number;
+    ml_item_id: string | null;
     buyer_id: number | null;
     buyer_nickname: string | null;
     status: 'new' | 'confirmed' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
@@ -137,8 +137,8 @@ export const ML_OPERATION_LABEL: Record<MlOperation, string> = {
 export const ML_SYNC_STATUS_LABEL: Record<MlSyncStatus, string> = {
     pending: 'Pendiente',
     processing: 'Procesando',
-    success: 'Éxito',
-    failed: 'Falló',
+    success: 'ï¿½xito',
+    failed: 'Fallï¿½',
     cancelled: 'Cancelada',
 };
 
@@ -153,7 +153,7 @@ export type MlDeadLetterStatus = 'pending' | 'resolved' | 'ignored';
 
 // Fila de la cola de fallos definitivos de sync con ML.
 // Mismo shape que ml_sync_queue (de donde "caen" los items tras agotar max_attempts),
-// más los campos propios de resolución manual.
+// mï¿½s los campos propios de resoluciï¿½n manual.
 export interface MlDeadLetterRow {
     id: number;
     property_id: string;
@@ -161,7 +161,7 @@ export interface MlDeadLetterRow {
     payload: Record<string, unknown>;
     attempts: number;
     max_attempts: number;
-    ml_item_id: number | null;
+    ml_item_id: string | null;
     last_error: string | null;
     status: MlDeadLetterStatus;
     resolved_at: string | null;
