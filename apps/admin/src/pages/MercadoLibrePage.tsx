@@ -38,10 +38,12 @@ import {
     fetchMlQueue,
     fetchMlQueueStats,
     fetchMlSettings,
+    getMlWebhookStatus,
     ML_OPERATION_LABEL,
     ML_REDIRECT_URI,
     ML_SYNC_STATUS_LABEL,
     ML_SYNC_STATUS_TONE,
+    registerMlWebhooks,
     retryDeadLetter,
     type MlAutoReplyTemplate,
     type MlCategory,
@@ -170,6 +172,61 @@ export function MercadoLibrePage() {
     const connected = !!overview?.connection;
     const connection = overview?.connection ?? null;
     const mlEnabled = !!overview?.ml_enabled;
+
+    // Webhook status
+    const [webhookStatus, setWebhookStatus] = useState<Record<string, boolean> | null>(null);
+    const [checkingWebhook, setCheckingWebhook] = useState(false);
+    const [registeringWebhook, setRegisteringWebhook] = useState(false);
+
+    const refetchWebhookStatus = async () => {
+        if (!connection?.user_id) return;
+        setCheckingWebhook(true);
+        try {
+            const status = await getMlWebhookStatus();
+            setWebhookStatus(status);
+        } catch (err) {
+            pushToast({
+                type: 'error',
+                title: 'No se pudo obtener estado de webhooks',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        } finally {
+            setCheckingWebhook(false);
+        }
+    };
+
+    useEffect(() => {
+        if (connected && connection?.user_id) {
+            refetchWebhookStatus();
+        }
+    }, [connected, connection?.user_id]);
+
+    const handleRegisterWebhooks = async () => {
+        if (!connection?.user_id) return;
+        setRegisteringWebhook(true);
+        try {
+            const results = await registerMlWebhooks();
+            const failed = results.filter((r) => !r.ok);
+            if (failed.length > 0) {
+                pushToast({
+                    type: 'error',
+                    title: 'Algunos webhooks fallaron',
+                    description: failed.map((f) => `${f.topic}: ${f.error}`).join('; '),
+                });
+            } else {
+                pushToast({ type: 'success', title: 'Webhooks registrados correctamente' });
+            }
+            await refetchWebhookStatus();
+        } catch (err) {
+            pushToast({
+                type: 'error',
+                title: 'Error al registrar webhooks',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        } finally {
+            setRegisteringWebhook(false);
+        }
+    };
 
     const queueRows = queueQ.data ?? [];
 
@@ -974,6 +1031,67 @@ export function MercadoLibrePage() {
         </div>
     ) : null;
 
+    // Webhook Status Card Component
+    function WebhookStatusCard({ connectionUserId, onRefresh }: { connectionUserId: number; onRefresh: () => void }) {
+        if (!connectionUserId || !webhookStatus) return null;
+
+        const topics = ['questions', 'orders', 'items', 'payments', 'shipments'] as const;
+        const allRegistered = topics.every((t) => webhookStatus[t] === true);
+
+        return (
+            <div className={styles['ml-webhook-status']}>
+                <div className="webhook-status-header">
+                    <h4>
+                        <Link2 size={16} /> Webhook de notificaciones
+                    </h4>
+                    <Badge variant={allRegistered ? 'success' : 'warning'}>
+                        {allRegistered ? 'Todos registrados' : 'Pendientes'}
+                    </Badge>
+                </div>
+                <dl className="webhook-topics">
+                    {topics.map((topic) => (
+                        <div key={topic} className="webhook-topic-row">
+                            <dt>{topic}</dt>
+                            <dd>
+                                {webhookStatus[topic] ? (
+                                    <Badge variant="success" size="sm"><CheckCircle2 size={12} /> Registrado</Badge>
+                                ) : (
+                                    <Badge variant="danger" size="sm"><X size={12} /> No registrado</Badge>
+                                )}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+                <div className="webhook-actions">
+                    <Button
+                        size="sm"
+                        variant={checkingWebhook ? 'ghost' : 'secondary'}
+                        onClick={onRefresh}
+                        disabled={checkingWebhook || registeringWebhook}
+                    >
+                        {checkingWebhook ? (
+                            <> <Spinner size="sm" inline /> <span>Verificando...</span> </>
+                        ) : (
+                            <span>Verificar estado</span>
+                        )}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant={registeringWebhook ? 'ghost' : 'primary'}
+                        onClick={handleRegisterWebhooks}
+                        disabled={registeringWebhook || checkingWebhook}
+                    >
+                        {registeringWebhook ? (
+                            <> <Spinner size="sm" inline /> <span>Registrando...</span> </>
+                        ) : (
+                            <span>Registrar webhooks</span>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="page">
             <div className="page-head">
@@ -1114,6 +1232,11 @@ export function MercadoLibrePage() {
                                             <dd>{formatDate(connection.created_at)}</dd>
                                         </div>
                                     </dl>
+
+                                    {/* Estado del Webhook */}
+                                    {connection.user_id != null && (
+                                        <WebhookStatusCard connectionUserId={connection.user_id} onRefresh={refetchWebhookStatus} />
+                                    )}
 
                                     <div className={styles['ml-connection-actions']}>
                                         <Button

@@ -5,6 +5,9 @@ import {
     getMe,
     runMlApiCallWithRetry,
     getMlCredentials,
+    registerMlWebhooks,
+    getRegisteredMlWebhookTopics,
+    ML_WEBHOOK_TOPICS,
 } from '../_shared/ml.ts';
 import { jsonResponse, optionsResponse } from '../_shared/http.ts';
 import { requireAdmin } from '../_shared/auth.ts';
@@ -86,6 +89,40 @@ Deno.serve(async (req) => {
         } catch {
             return respond(400, { error: 'JSON inválido' });
         }
+        if (body.action === 'register_webhooks') {
+            const token = await requireAdmin(req, supabase);
+            if (!token) return respond(401, { error: 'No autorizado' });
+            const { data: userData } = await supabase.auth.getUser(token);
+            const adminId = userData?.user?.id;
+            if (!adminId) return respond(401, { error: 'No autorizado' });
+
+            // Obtener conexión activa para tokens
+            const { data: conn } = await supabase
+                .from('ml_connection')
+                .select('id, access_token_encrypted, access_token_iv')
+                .eq('is_active', true)
+                .eq('provider', 'mercadolibre')
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (!conn) return respond(400, { error: 'No hay conexión ML activa' });
+
+            // Importar decrypt dinámicamente
+            const { decrypt } = await import('../_shared/crypto.ts');
+            const accessToken = await decrypt(conn.access_token_encrypted, conn.access_token_iv);
+
+            const callbackUrl = `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-webhook`;
+            const { webhookSecret } = await getMlCredentials(supabase);
+            if (!webhookSecret) return respond(400, { error: 'ML_WEBHOOK_SECRET no configurado' });
+
+            // Obtener user_id de ML
+            const userResult = await runMlApiCallWithRetry(accessToken, () => getMe(accessToken), 'getMe');
+            if (!userResult.ok) return respond(429, { error: userResult.error, retry_after: 60 });
+            const user = userResult.data;
+
+            const results = await registerMlWebhooks(accessToken, user.id, `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-webhook`, webhookSecret);
+            return respond(200, results);
+        }
         if (body.action !== 'start') return respond(400, { error: 'Acción inválida' });
         const token = await requireAdmin(req, supabase);
         if (!token) return respond(401, { error: 'No autorizado' });
@@ -127,6 +164,32 @@ Deno.serve(async (req) => {
     }
 
     const url = new URL(req.url);
+
+    // Handler para webhook_status (GET ?action=webhook_status)
+    if (url.searchParams.get('action') === 'webhook_status') {
+        const token = await requireAdmin(req, supabase);
+        if (!token) return respond(401, { error: 'No autorizado' });
+
+        const { data: conn } = await supabase
+            .from('ml_connection')
+            .select('id, access_token_encrypted, access_token_iv')
+            .eq('is_active', true)
+            .eq('provider', 'mercadolibre')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (!conn) return respond(400, { error: 'No hay conexión ML activa' });
+
+        const { decrypt } = await import('../_shared/crypto.ts');
+        const accessToken = await decrypt(conn.access_token_encrypted, conn.access_token_iv);
+
+        const userResult = await runMlApiCallWithRetry(accessToken, () => getMe(accessToken), 'getMe');
+        if (!userResult.ok) return respond(429, { error: userResult.error, retry_after: 60 });
+        const user = userResult.data;
+
+        const status = await getRegisteredMlWebhookTopics(accessToken, user.id);
+        return respond(200, status);
+    }
 
     // Purga no bloqueante de estados OAuth expirados (>10 min pasados su expiry)
     await supabase
@@ -239,6 +302,35 @@ Deno.serve(async (req) => {
             entity_type: 'ml_connection',
             metadata: { event: 'oauth_connect', ml_user_id: user.id, nickname: user.nickname },
         });
+
+        // Auto-register webhook topics for the connected user
+        const webhookSecret = (await getMlCredentials(supabase)).webhookSecret;
+        if (webhookSecret) {
+            const callbackUrl = `${Deno.env.get('SUPABASE_URL') ?? ''}/functions/v1/ml-webhook`;
+            const webhookResults = await registerMlWebhooks(tokens.access_token, user.id, callbackUrl, webhookSecret);
+            const failed = webhookResults.filter((r) => !r.ok);
+            if (failed.length > 0) {
+                console.warn('ml-oauth: algunos webhooks fallaron al registrar', failed);
+                await supabase.from('activity_log').insert({
+                    action: 'ml_sync',
+                    entity_type: 'ml_connection',
+                    metadata: {
+                        event: 'oauth_webhook_partial',
+                        ml_user_id: user.id,
+                        failed_topics: failed.map((f) => f.topic),
+                        errors: failed.map((f) => f.error),
+                    },
+                });
+            } else {
+                await supabase.from('activity_log').insert({
+                    action: 'ml_sync',
+                    entity_type: 'ml_connection',
+                    metadata: { event: 'oauth_webhook_registered', ml_user_id: user.id, topics: ML_WEBHOOK_TOPICS },
+                });
+            }
+        } else {
+            console.warn('ml-oauth: ML_WEBHOOK_SECRET no configurado, saltando registro de webhooks');
+        }
 
         const redirectTarget = validatedAdminUrl.endsWith('/admin')
             ? `${validatedAdminUrl}#/mercadolibre?ml=connected=1`

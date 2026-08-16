@@ -267,3 +267,73 @@
     color: var(--bh-text-tertiary);
     line-height: 1.4;
 }
+
+/* ==========================================================================
+   Webhook Status Card
+   ========================================================================== */
+
+.ml-webhook-status {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bh-bg-secondary);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+}
+
+.webhook-status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.webhook-status-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bh-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.webhook-topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.webhook-topic-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--bh-bg-card);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-sm);
+}
+
+.webhook-topic-row dt {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--bh-text-secondary);
+    text-transform: capitalize;
+}
+
+.webhook-topic-row dd {
+    margin: 0;
+}
+
+.webhook-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .webhook-topics {
+        grid-template-columns: 1fr;
+    }
+}

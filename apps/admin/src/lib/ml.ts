@@ -808,6 +808,78 @@ export async function deleteDeadLetter(id: number): Promise<void> {
 }
 
 // ============================================================
+// API Functions - Webhook Topics Registration
+// ============================================================
+
+export type MlWebhookTopic = 'questions' | 'orders' | 'items' | 'payments' | 'shipments';
+
+export interface RegisterWebhookResult {
+    ok: boolean;
+    topic: string;
+    error?: string;
+}
+
+/**
+ * Registra todos los tópicos de webhook para el usuario ML conectado.
+ * Llama a la edge function ml-oauth (que internamente usa registerMlWebhooks).
+ */
+export async function registerMlWebhooks(): Promise<RegisterWebhookResult[]> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-oauth`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify({ action: 'register_webhooks' }),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudieron registrar webhooks: ${res.status} ${text}`);
+    }
+    return (await res.json()) as RegisterWebhookResult[];
+}
+
+/**
+ * Verifica qué tópicos de webhook están registrados para el usuario ML conectado.
+ */
+export async function getMlWebhookStatus(): Promise<Record<string, boolean>> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-oauth`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(`${url}?action=webhook_status`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo obtener estado de webhooks: ${res.status} ${text}`);
+    }
+    return (await res.json()) as Record<string, boolean>;
+}
+
+// ============================================================
 // API Functions - Client Secret (for edge functions)
 // ============================================================
 

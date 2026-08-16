@@ -681,6 +681,108 @@ export async function runMlApiCallWithRetry<T>(
     return result;
 }
 
+export async function fetchMlListingTypes(accessToken: string): Promise<MlListingType[]> {
+    const res = await fetchWithTimeout(`${ML_API}/sites/MLA/listing_types`, {
+        headers: { authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error(`ML listing_types falló (${res.status})`);
+    const data = await res.json();
+    return data?.map((lt: { id: string; name: string }) => ({ id: lt.id, name: lt.name })) ?? [];
+}
+
+// ============================================================
+// Webhook Topics Registration (auto-register on OAuth)
+// ============================================================
+
+export const ML_WEBHOOK_TOPICS = [
+    'questions',
+    'orders',
+    'items',
+    'payments',
+    'shipments',
+] as const;
+
+export type MlWebhookTopic = (typeof ML_WEBHOOK_TOPICS)[number];
+
+export interface RegisterWebhookResult {
+    ok: boolean;
+    topic: string;
+    error?: string;
+}
+
+/**
+ * Registra un tópico de webhook para un usuario específico.
+ * API: POST /users/{user_id}/topics/{topic}
+ * Body: { callback_url, auth_token }
+ */
+export async function registerMlWebhookTopic(
+    accessToken: string,
+    userId: number,
+    topic: MlWebhookTopic,
+    callbackUrl: string,
+    authToken: string,
+): Promise<RegisterWebhookResult> {
+    try {
+        const res = await fetchWithTimeout(`${ML_API}/users/${userId}/topics/${topic}`, {
+            method: 'POST',
+            headers: {
+                authorization: `Bearer ${accessToken}`,
+                'content-type': 'application/json',
+                accept: 'application/json',
+            },
+            body: JSON.stringify({ callback_url: callbackUrl, auth_token: authToken }),
+        });
+        const text = await res.text();
+        if (!res.ok) {
+            return { ok: false, topic, error: `ML ${topic} webhook falló (${res.status}): ${text.slice(0, 300)}` };
+        }
+        return { ok: true, topic };
+    } catch (err) {
+        return { ok: false, topic, error: err instanceof Error ? err.message : 'Error de red' };
+    }
+}
+
+/**
+ * Registra todos los tópicos necesarios para la integración.
+ * Devuelve array de resultados por tópico.
+ */
+export async function registerMlWebhooks(
+    accessToken: string,
+    userId: number,
+    callbackUrl: string,
+    authToken: string,
+): Promise<RegisterWebhookResult[]> {
+    const results = await Promise.all(
+        ML_WEBHOOK_TOPICS.map((topic) =>
+            registerMlWebhookTopic(accessToken, userId, topic, callbackUrl, authToken),
+        ),
+    );
+    return results;
+}
+
+/**
+ * Verifica qué tópicos están registrados para un usuario.
+ * GET /users/{user_id}/topics/{topic}
+ */
+export async function getRegisteredMlWebhookTopics(
+    accessToken: string,
+    userId: number,
+): Promise<Record<MlWebhookTopic, boolean>> {
+    const results = await Promise.all(
+        ML_WEBHOOK_TOPICS.map(async (topic) => {
+            try {
+                const res = await fetchWithTimeout(`${ML_API}/users/${userId}/topics/${topic}`, {
+                    headers: { authorization: `Bearer ${accessToken}` },
+                });
+                return [topic, res.ok] as const;
+            } catch {
+                return [topic, false] as const;
+            }
+        }),
+    );
+    return Object.fromEntries(results) as Record<MlWebhookTopic, boolean>;
+}
+
 // ============================================================
 // Categories and Listing Types
 // ============================================================
