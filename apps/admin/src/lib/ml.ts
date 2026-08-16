@@ -781,37 +781,25 @@ export async function fetchMlDeadLetter(filters?: {
 }
 
 export async function retryDeadLetter(id: number): Promise<void> {
-    // Get dead letter item
-    const { data: item, error } = await supabase
-        .from('ml_sync_dead_letter')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-    if (error || !item) throw new Error('Dead letter item not found');
-
-    // Re-insert into queue
-    const { error: insertError } = await supabase.from('ml_sync_queue').insert({
-        property_id: item.property_id,
-        operation: item.operation,
-        status: 'pending',
-        attempts: 0,
-        max_attempts: item.max_attempts,
-        next_attempt_at: new Date().toISOString(),
-        ml_item_id: item.ml_item_id,
-        payload: item.payload,
+    // RPC atómico (0066): re-inserta en ml_sync_queue y resuelve la dead letter
+    // en una sola transacción; evita reintentos duplicados si ya hay un job activo.
+    const { data, error } = await supabase.rpc('ml_retry_dead_letter', {
+        p_dead_letter_id: id,
     });
 
-    if (insertError) throw new Error(insertError.message);
+    if (error) throw new Error(error.message);
 
-    // Mark as resolved
-    await supabase
-        .from('ml_sync_dead_letter')
-        .update({
-            resolved_at: new Date().toISOString(),
-            resolved_by: (await supabase.auth.getUser()).data.user?.id ?? null,
-        })
-        .eq('id', id);
+    const result = data as { retried: boolean; reason?: string } | null;
+    if (!result?.retried) {
+        const reason = result?.reason ?? 'unknown';
+        if (reason === 'active_job_exists') {
+            throw new Error('Ya existe una operación activa para esta propiedad');
+        }
+        if (reason === 'already_resolved') {
+            throw new Error('La dead letter ya fue resuelta');
+        }
+        throw new Error('No se pudo reintentar la dead letter');
+    }
 }
 
 export async function deleteDeadLetter(id: number): Promise<void> {

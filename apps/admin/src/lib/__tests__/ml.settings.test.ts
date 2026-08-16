@@ -190,7 +190,7 @@ describe('ml settings', () => {
 
     describe('buildAuthorizeUrl', () => {
         it('builds the ML OAuth URL with appId and supabase redirect', () => {
-            const url = new URL(buildAuthorizeUrl('app-123'));
+            const url = new URL(buildAuthorizeUrl('app-123', 'state-abc', 'challenge-xyz'));
             expect(url.origin + url.pathname).toBe(
                 'https://auth.mercadolibre.com.ar/authorization',
             );
@@ -201,10 +201,18 @@ describe('ml settings', () => {
             );
         });
 
-        it('encodes admin origin in the state param', () => {
-            const url = new URL(buildAuthorizeUrl('app-123'));
-            const state = JSON.parse(atob(url.searchParams.get('state') ?? ''));
-            expect(state).toEqual({ admin: window.location.origin });
+        it('builds a correct authorization URL with state and code_challenge', () => {
+            const url = new URL(buildAuthorizeUrl('app-123', 'state-abc', 'challenge-xyz'));
+            expect(url.hostname).toBe('auth.mercadolibre.com.ar');
+            expect(url.pathname).toBe('/authorization');
+            expect(url.searchParams.get('response_type')).toBe('code');
+            expect(url.searchParams.get('client_id')).toBe('app-123');
+            expect(url.searchParams.get('state')).toBe('state-abc');
+            expect(url.searchParams.get('code_challenge')).toBe('challenge-xyz');
+            expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+            expect(url.searchParams.get('redirect_uri')).toBe(
+                'https://test.supabase.co/functions/v1/ml-oauth',
+            );
         });
     });
 

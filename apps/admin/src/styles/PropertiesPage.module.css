@@ -116,6 +116,73 @@
 }
 
 /* ============================================================
+   BULK BAR — Barra de acciones masivas (Mercado Libre)
+   ============================================================ */
+
+.bulkBar {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-space-3);
+    margin: var(--bh-space-4) 0;
+    padding: var(--bh-space-3) var(--bh-space-4);
+    background: var(--bh-bg-secondary);
+    border: 1px solid var(--bh-border);
+    border-radius: var(--bh-radius-md);
+    flex-wrap: wrap;
+}
+
+.bulkCount {
+    font-size: var(--bh-text-sm);
+    font-weight: var(--bh-weight-semibold);
+    color: var(--bh-text-secondary);
+    margin-right: var(--bh-space-2);
+}
+
+.bulkClear {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--bh-text-tertiary);
+    font-size: var(--bh-text-sm);
+    font-family: var(--bh-font-sans);
+    cursor: pointer;
+    padding: var(--bh-space-2);
+    border-radius: var(--bh-radius-sm);
+}
+
+.bulkClear:hover {
+    color: var(--bh-text-primary);
+    background: var(--bh-bg-hover);
+}
+
+.bulkClear:focus-visible {
+    outline: 2px solid var(--bh-accent);
+    outline-offset: 2px;
+}
+
+.bulkClear:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   CHECK CELL — Columna de selección múltiple
+   ============================================================ */
+
+.checkCell {
+    width: 40px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.checkCell input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--bh-accent);
+    cursor: pointer;
+}
+
+/* ============================================================
    TABLE — Tabla premium properties
    ============================================================ */
 

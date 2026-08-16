@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Download, Plus, Search } from 'lucide-preact';
+import { Download, Plus, RefreshCw, Search, Send, Trash2 } from 'lucide-preact';
 import { Link, useLocation } from 'wouter-preact';
 import { Badge , type BadgeVariant, Button  } from '@bienenhaus/ui';
 import {
@@ -11,6 +11,9 @@ import {
     useMLMeta,
     useProperties,
 } from '../lib/properties.api';
+import { bulkEnqueueMl } from '../lib/ml';
+import { queryClient } from '../lib/query/client';
+import { pushToast } from '../store/app';
 import { downloadCsv, getListData as getListDataUtil, toCsv, todayStamp } from '../lib/utils';
 import styles from '../styles/PropertiesPage.module.css';
 
@@ -37,6 +40,8 @@ export function PropertiesPage() {
     const [, setLocation] = useLocation();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<'todos' | PropertyStatus>('todos');
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [bulkBusy, setBulkBusy] = useState<'publish' | 'update' | 'delete' | null>(null);
 
     const { data, isPending, isError } = useProperties({
         search,
@@ -68,6 +73,55 @@ export function PropertiesPage() {
             return matchesSearch && matchesStatus;
         });
     }, [properties, search, statusFilter]);
+
+    const allSelected =
+        filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+
+    const toggleAll = () => {
+        setSelected(allSelected ? new Set() : new Set(filtered.map((p) => p.id)));
+    };
+
+    const toggleOne = (id: string) => {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const handleBulkMl = async (operation: 'publish' | 'update' | 'delete') => {
+        const ids = [...selected];
+        if (ids.length === 0 || bulkBusy) return;
+        setBulkBusy(operation);
+        try {
+            const { enqueued, skipped } = await bulkEnqueueMl(ids, operation);
+            pushToast({
+                type: enqueued > 0 ? 'success' : 'info',
+                title: 'Mercado Libre',
+                description:
+                    enqueued > 0
+                        ? `${enqueued} propiedad${enqueued === 1 ? '' : 'es'} encolada${enqueued === 1 ? '' : 's'} para ${operation === 'publish' ? 'publicar' : operation === 'update' ? 'actualizar' : 'eliminar'}.${skipped > 0 ? ` ${skipped} omitida${skipped === 1 ? '' : 's'} (ya en cola).` : ''}`
+                        : 'No se pudo encolar. Verificá la conexión con Mercado Libre.',
+            });
+            if (enqueued > 0) {
+                setSelected(new Set());
+                await queryClient.invalidateQueries({ queryKey: ['ml-queue'] });
+                await queryClient.invalidateQueries({ queryKey: ['ml-queue-infinite'] });
+            }
+        } catch (err) {
+            pushToast({
+                type: 'error',
+                title: 'Mercado Libre',
+                description: err instanceof Error ? err.message : 'Error desconocido',
+            });
+        } finally {
+            setBulkBusy(null);
+        }
+    };
 
     const handleExport = () => {
         if (properties.length === 0) return;
@@ -175,6 +229,49 @@ export function PropertiesPage() {
                 </select>
             </div>
 
+            {selected.size > 0 && (
+                <div className={styles.bulkBar}>
+                    <span className={styles.bulkCount}>
+                        {selected.size} seleccionada{selected.size === 1 ? '' : 's'}
+                    </span>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        iconLeft={<Send size={14} />}
+                        disabled={bulkBusy !== null}
+                        onClick={() => handleBulkMl('publish')}
+                    >
+                        Publicar en ML
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        iconLeft={<RefreshCw size={14} />}
+                        disabled={bulkBusy !== null}
+                        onClick={() => handleBulkMl('update')}
+                    >
+                        Actualizar en ML
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        iconLeft={<Trash2 size={14} />}
+                        disabled={bulkBusy !== null}
+                        onClick={() => handleBulkMl('delete')}
+                    >
+                        Eliminar en ML
+                    </Button>
+                    <button
+                        type="button"
+                        className={styles.bulkClear}
+                        onClick={() => setSelected(new Set())}
+                        disabled={bulkBusy !== null}
+                    >
+                        Limpiar
+                    </button>
+                </div>
+            )}
+
             {isPending && (
                 <div className={styles.cardPlaceholder}>
                     Cargando propiedades…
@@ -192,6 +289,14 @@ export function PropertiesPage() {
                     <table className="table">
                         <thead>
                             <tr>
+                                <th className={styles.checkCell}>
+                                    <input
+                                        type="checkbox"
+                                        aria-label="Seleccionar todas las propiedades"
+                                        checked={allSelected}
+                                        onChange={toggleAll}
+                                    />
+                                </th>
                                 <th>Propiedad</th>
                                 <th>Estado</th>
                                 <th>Operación</th>
@@ -218,7 +323,14 @@ export function PropertiesPage() {
                                             setLocation(`/propiedades/${p.id}`);
                                         }}
                                     >
-                                        <td>
+                                        <td className={styles.checkCell}>
+                                            <input
+                                                type="checkbox"
+                                                aria-label={`Seleccionar ${p.title}`}
+                                                checked={selected.has(p.id)}
+                                                onChange={() => toggleOne(p.id)}
+                                            />
+                                        </td>                                        <td>
                                             <div className={styles.cellProperty}>
                                                 {p.cover_url ? (
                                                     <img
@@ -263,7 +375,7 @@ export function PropertiesPage() {
                             })}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className={styles.emptyCell}>
+                                    <td colSpan={8} className={styles.emptyCell}>
                                         No hay propiedades que coincidan con la búsqueda.
                                     </td>
                                 </tr>

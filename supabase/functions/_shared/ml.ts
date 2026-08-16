@@ -68,9 +68,9 @@ export async function getMlCredentials(
     const getSetting = (key: string): string =>
         (settings?.find((s) => s.key === key)?.value?.value as string) ?? '';
 
-    const clientId = getSetting('ml_app_id') || Deno.env.get('ML_CLIENT_ID') ?? '';
-    const clientSecret = getSetting('ml_client_secret') || Deno.env.get('ML_CLIENT_SECRET') ?? '';
-    const webhookSecret = getSetting('ml_webhook_secret') || Deno.env.get('ML_WEBHOOK_SECRET') ?? '';
+    const clientId = getSetting('ml_app_id') || (Deno.env.get('ML_CLIENT_ID') ?? '');
+    const clientSecret = getSetting('ml_client_secret') || (Deno.env.get('ML_CLIENT_SECRET') ?? '');
+    const webhookSecret = getSetting('ml_webhook_secret') || (Deno.env.get('ML_WEBHOOK_SECRET') ?? '');
 
     if (!clientId || !clientSecret) {
         throw new Error('ML_CLIENT_ID / ML_CLIENT_SECRET no configurados (ni en BD ni en env)');
@@ -164,36 +164,162 @@ export interface MlConnectionRow {
     token_expires_at: string;
 }
 
+const REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // token válido si expira en > 5 min
+const SENTINEL_MS = 60 * 1000; // lock de refresh (autocaduca en 60 s)
+const POLL_INTERVAL_MS = 500; // poll de los perdedores
+const POLL_TIMEOUT_MS = 20 * 1000; // los perdedores esperan hasta 20 s
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Devuelve el access token de la conexión, refrescándolo si está por expirar.
+ *
+ * F0.1 — CAS + sentinel: ante refresh concurrente (múltiples edge functions),
+ * solo un proceso refresca el token; los demás hacen poll hasta ver el nuevo.
+ * - El ganador escribe `token_expires_at = sentinel` (CAS sobre el valor leído).
+ * - Si el ganador muere, el sentinel expira en 60 s y otro proceso puede ganar.
+ * - Si el refresh del ganador falla, restaura el valor stale para reintentar.
+ */
 export async function getAccessToken(
     supabase: SupabaseClient,
     conn: MlConnectionRow,
 ): Promise<string> {
     const expiresIn = new Date(conn.token_expires_at).getTime() - Date.now();
-    if (expiresIn > 5 * 60 * 1000) {
+    if (expiresIn > REFRESH_THRESHOLD_MS) {
         return await decrypt(conn.access_token_encrypted, conn.access_token_iv);
     }
 
-    const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
+    const staleExpiresAt = conn.token_expires_at;
 
-    // Obtener credenciales de la app (BD o env vars)
-    const { clientId, clientSecret } = await getMlAppCredentialsLegacy(supabase);
-
-    const tokens = await refreshToken(refresh, clientId, clientSecret);
-    const access = await encrypt(tokens.access_token);
-    const refreshEnc = await encrypt(tokens.refresh_token);
-
-    await supabase
+    // 1) Intentar tomar el lock (CAS sobre token_expires_at).
+    const sentinel = new Date(Date.now() + SENTINEL_MS).toISOString();
+    const { data: claimed, error: claimError } = await supabase
         .from('ml_connection')
-        .update({
-            access_token_encrypted: access.data,
-            access_token_iv: access.iv,
-            refresh_token_encrypted: refreshEnc.data,
-            refresh_token_iv: refreshEnc.iv,
-            token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-        })
-        .eq('id', conn.id);
+        .update({ token_expires_at: sentinel })
+        .eq('id', conn.id)
+        .eq('token_expires_at', staleExpiresAt)
+        .select('id');
 
-    return tokens.access_token;
+    if (claimError) {
+        throw new Error(`No se pudo tomar el lock de refresh ML: ${claimError.message}`);
+    }
+
+    if ((claimed ?? []).length > 0) {
+        // Ganador: refrescar y persistir tokens nuevos.
+        try {
+            const refresh = await decrypt(conn.refresh_token_encrypted, conn.refresh_token_iv);
+
+            // Obtener credenciales de la app (BD o env vars)
+            const { clientId, clientSecret } = await getMlAppCredentialsLegacy(supabase);
+
+            const tokens = await refreshToken(refresh, clientId, clientSecret);
+            const access = await encrypt(tokens.access_token);
+            const refreshEnc = await encrypt(tokens.refresh_token);
+
+            await supabase
+                .from('ml_connection')
+                .update({
+                    access_token_encrypted: access.data,
+                    access_token_iv: access.iv,
+                    refresh_token_encrypted: refreshEnc.data,
+                    refresh_token_iv: refreshEnc.iv,
+                    token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+                })
+                .eq('id', conn.id);
+
+            return tokens.access_token;
+        } catch (err) {
+            // Falló el refresh: restaurar el valor stale para que otro proceso
+            // pueda reintentar (si esto falla, el sentinel expira solo en 60 s).
+            await supabase
+                .from('ml_connection')
+                .update({ token_expires_at: staleExpiresAt })
+                .eq('id', conn.id)
+                .eq('token_expires_at', sentinel);
+            throw err;
+        }
+    }
+
+    // 2) Perdedor: poll hasta que el ganador persista el token nuevo
+    //    (o el sentinel expire y otro proceso lo reemplace).
+    const deadline = Date.now() + POLL_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+        await sleep(POLL_INTERVAL_MS);
+        const { data: fresh } = await supabase
+            .from('ml_connection')
+            .select('access_token_encrypted, access_token_iv, token_expires_at')
+            .eq('id', conn.id)
+            .maybeSingle();
+
+        if (!fresh) continue;
+
+        const freshExpiresIn = new Date(fresh.token_expires_at).getTime() - Date.now();
+        if (freshExpiresIn > REFRESH_THRESHOLD_MS) {
+            return await decrypt(fresh.access_token_encrypted, fresh.access_token_iv);
+        }
+    }
+
+    throw new Error('Timeout esperando refresh de token ML (lock mantenido por otro proceso)');
+}
+
+// ============================================================
+// Cooldown (circuit breaker) — F0.3
+// ============================================================
+
+export const ML_COOLDOWN_DEFAULT_MS = 60 * 1000;
+
+/**
+ * Devuelve hasta cuándo la conexión está en cooldown, o null si no lo está
+ * (o el cooldown ya expiró).
+ */
+export async function getMlCooldown(
+    supabase: SupabaseClient,
+    connectionId: string,
+): Promise<Date | null> {
+    const { data, error } = await supabase
+        .from('ml_sync_cooldown')
+        .select('cooldown_until')
+        .eq('connection_id', connectionId)
+        .maybeSingle();
+
+    if (error) {
+        console.error(`[ml] getMlCooldown failed:`, error.message);
+        return null;
+    }
+
+    if (!data?.cooldown_until) return null;
+
+    const until = new Date(data.cooldown_until);
+    return until.getTime() > Date.now() ? until : null;
+}
+
+/**
+ * Activa el cooldown de una conexión por `durationMs` (default 60 s).
+ * La escribe el service_role (edge functions) — RLS lo permite.
+ */
+export async function setMlCooldown(
+    supabase: SupabaseClient,
+    connectionId: string,
+    reason: string,
+    durationMs: number = ML_COOLDOWN_DEFAULT_MS,
+): Promise<void> {
+    const { error } = await supabase
+        .from('ml_sync_cooldown')
+        .upsert(
+            {
+                connection_id: connectionId,
+                cooldown_until: new Date(Date.now() + durationMs).toISOString(),
+                reason,
+                updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'connection_id' },
+        );
+
+    if (error) {
+        console.error(`[ml] setMlCooldown failed:`, error.message);
+    }
 }
 
 export interface MlUser {
@@ -532,11 +658,14 @@ export async function runMlApiCall<T>(
 /**
  * Ejecuta una llamada a la API de ML con reintento automático en caso de rate limit.
  * Versión de conveniencia que hace el wait + retry internamente.
+ * Si se provee `onRateLimit`, se invoca antes del wait (permite activar un
+ * cooldown global / circuit breaker).
  */
 export async function runMlApiCallWithRetry<T>(
     accessToken: string,
     fn: () => Promise<T>,
     operationName: string,
+    onRateLimit?: (retryAfter: number) => void | Promise<void>,
 ): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
     const result = await runMlApiCall(accessToken, fn, operationName);
 
@@ -544,6 +673,7 @@ export async function runMlApiCallWithRetry<T>(
         console.log(
             `[ml-api] Rate limited on ${operationName}, waiting ${result.retryAfter}s before retry...`,
         );
+        await onRateLimit?.(result.retryAfter);
         await new Promise((resolve) => setTimeout(resolve, result.retryAfter * 1000));
         return await runMlApiCall(accessToken, fn, `${operationName} (retry)`);
     }

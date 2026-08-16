@@ -3,12 +3,14 @@ import {
     ML_API,
     fetchWithTimeout,
     getAccessToken,
+    getMlCooldown,
     mlCloseItem,
     mlCreateItem,
     mlGetItem,
     mlSetDescription,
     mlUpdateItem,
     mlUploadPictures,
+    setMlCooldown,
     type MlConnectionRow,
     type MlItem,
 } from '../_shared/ml.ts';
@@ -40,7 +42,17 @@ interface LogEntry {
     operation?: string;
     duration_ms?: number;
     ml_api_latency_ms?: number;
-    status?: 'success' | 'failed' | 'rate_limited' | 'retry' | 'dead_letter';
+    status?:
+        | 'success'
+        | 'failed'
+        | 'rate_limited'
+        | 'retry'
+        | 'dead_letter'
+        | 'cooldown_active'
+        | 'claim_failed'
+        | 'requeue_failed'
+        | 'requeued_stuck_jobs'
+        | 'batch_aborted_rate_limited';
     error?: string;
     metadata?: Record<string, unknown>;
     property_image?: string;
@@ -119,6 +131,8 @@ interface QueueJob {
     property_id: string;
     operation: string;
     ml_item_id: string | null;
+    attempts: number;
+    max_attempts: number;
 }
 
 // ============================================================
@@ -128,6 +142,7 @@ interface QueueJob {
 const BATCH_SIZE = Number(Deno.env.get('ML_SYNC_BATCH_SIZE') ?? '10');
 const MAX_CONCURRENT_JOBS = Number(Deno.env.get('ML_SYNC_MAX_CONCURRENT') ?? '3');
 const RATE_LIMIT_FN = 'ml-sync';
+const ML_COOLDOWN_MS = Number(Deno.env.get('ML_SYNC_COOLDOWN_MS') ?? '60000');
 
 // ============================================================
 // Helpers
@@ -473,6 +488,7 @@ async function runJob(
     mlStatus?: string;
     price?: number | null;
     error?: string;
+    rateLimited?: boolean;
 }> {
     const property = await fetchProperty(propertyId);
     if (!property) return { ok: false, error: 'Propiedad no encontrada' };
@@ -576,7 +592,8 @@ async function runJob(
                 queueId,
                 propertyId,
             );
-            if ('error' in result) return { ok: false, error: result.error };
+            if ('error' in result)
+                return { ok: false, error: result.error, rateLimited: result.rateLimited };
 
             const item = result.data;
 
@@ -645,7 +662,8 @@ async function runJob(
                 queueId,
                 propertyId,
             );
-            if ('error' in result) return { ok: false, error: result.error };
+            if ('error' in result)
+                return { ok: false, error: result.error, rateLimited: result.rateLimited };
 
             if (property.description) {
                 const descResult = await runWithRetry(
@@ -681,7 +699,8 @@ async function runJob(
                 queueId,
                 propertyId,
             );
-            if ('error' in itemResult) return { ok: false, error: itemResult.error };
+            if ('error' in itemResult)
+                return { ok: false, error: itemResult.error, rateLimited: itemResult.rateLimited };
             const item = parseMlResponse(MlItemSchema, itemResult.data, 'mlGetItem');
 
             return {
@@ -714,7 +733,8 @@ async function runJob(
                 queueId,
                 propertyId,
             );
-            if ('error' in result) return { ok: false, error: result.error };
+            if ('error' in result)
+                return { ok: false, error: result.error, rateLimited: result.rateLimited };
 
             return { ok: true, itemId, mlStatus: 'closed' };
         }
@@ -760,24 +780,54 @@ Deno.serve(async (req) => {
     const conn = conns?.[0] ?? null;
     if (!conn) return respond(400, { error: 'No hay una cuenta de Mercado Libre conectada' });
 
-    // Requeue stuck jobs
-    await supabase
+    // F0.6: Requeue stuck jobs — locked hace >15 min, o 'processing' sin lock desde hace >15 min
+    const staleCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: requeued, error: requeueError } = await supabase
         .from('ml_sync_queue')
         .update({ status: 'pending', locked_by: null, locked_at: null })
         .eq('status', 'processing')
-        .lt('locked_at', new Date(Date.now() - 15 * 60 * 1000).toISOString());
+        .or(`locked_at.lt.${staleCutoff},and(locked_at.is.null,updated_at.lt.${staleCutoff})`)
+        .select('id');
+    if (requeueError) {
+        logger.warn({
+            function: 'ml-sync',
+            status: 'requeue_failed',
+            error: requeueError.message,
+        });
+    } else if (requeued && requeued.length > 0) {
+        logger.info({
+            function: 'ml-sync',
+            status: 'requeued_stuck_jobs',
+            metadata: { count: requeued.length },
+        });
+    }
 
-    // Fetch jobs to process
-    const { data: jobs } = await supabase
-        .from('ml_sync_queue')
-        .select('id, property_id, operation, ml_item_id')
-        .eq('status', 'pending')
-        .is('locked_by', null)
-        .lte('next_attempt_at', new Date().toISOString())
-        .order('created_at', { ascending: true })
-        .limit(BATCH_SIZE);
+    // F0.3: Circuit breaker — si la API ML está en cooldown, abortar temprano
+    const cooldown = await getMlCooldown(supabase, conn.id);
+    if (cooldown) {
+        const retryAfter = Math.max(1, Math.ceil((cooldown.getTime() - Date.now()) / 1000));
+        logger.warn({
+            function: 'ml-sync',
+            status: 'cooldown_active',
+            retry_after: retryAfter,
+        });
+        return respond(429, { error: 'ML en cooldown por rate limit', retry_after: retryAfter });
+    }
 
-    if (!jobs || jobs.length === 0) return respond(200, { processed: 0, results: [] });
+    // F0.2: Claim atómico vía RPC (FOR UPDATE SKIP LOCKED, incrementa attempts)
+    const { data: claimData, error: claimError } = await supabase.rpc('ml_claim_jobs', {
+        p_batch_size: BATCH_SIZE,
+    });
+    if (claimError) {
+        logger.error({
+            function: 'ml-sync',
+            status: 'claim_failed',
+            error: claimError.message,
+        });
+        return respond(500, { error: `No se pudo reclamar jobs: ${claimError.message}` });
+    }
+    const jobs = (claimData ?? []) as QueueJob[];
+    if (jobs.length === 0) return respond(200, { processed: 0, results: [] });
 
     // Get access token
     let accessToken: string;
@@ -794,27 +844,9 @@ Deno.serve(async (req) => {
         const batch = jobs.slice(i, i + MAX_CONCURRENT_JOBS);
         const batchResults = await Promise.allSettled(
             batch.map(async (job: QueueJob) => {
-                const lockId = crypto.randomUUID();
-
-                const { data: attemptsRow } = await supabase
-                    .from('ml_sync_queue')
-                    .select('attempts, max_attempts')
-                    .eq('id', job.id)
-                    .maybeSingle();
-
-                const attempts = (attemptsRow?.attempts ?? 0) + 1;
-                const maxAttempts = attemptsRow?.max_attempts ?? 5;
-
-                await supabase
-                    .from('ml_sync_queue')
-                    .update({
-                        status: 'processing',
-                        attempts,
-                        locked_by: lockId,
-                        locked_at: new Date().toISOString(),
-                        last_error: null,
-                    })
-                    .eq('id', job.id);
+                // El claim atómico (ml_claim_jobs) ya incrementó attempts y fijó el lock.
+                const attempts = job.attempts;
+                const maxAttempts = job.max_attempts;
 
                 const outcome = await runJob(
                     job.id,
@@ -863,6 +895,27 @@ Deno.serve(async (req) => {
                         property_id: job.property_id,
                         operation: job.operation,
                         status: 'success',
+                    };
+                } else if (outcome.rateLimited) {
+                    // F0.3: 429 → cooldown global + liberar el job SIN consumir el intento ya incrementado por el claim
+                    await setMlCooldown(supabase, conn.id, 'ML rate limit (429)', ML_COOLDOWN_MS);
+                    await supabase
+                        .from('ml_sync_queue')
+                        .update({
+                            status: 'pending',
+                            attempts: Math.max(0, attempts - 1),
+                            locked_by: null,
+                            locked_at: null,
+                            next_attempt_at: new Date().toISOString(),
+                            last_error: outcome.error ?? 'Rate limit',
+                        })
+                        .eq('id', job.id);
+                    return {
+                        queue_id: job.id,
+                        property_id: job.property_id,
+                        operation: job.operation,
+                        status: 'rate_limited',
+                        error: outcome.error ?? 'Rate limit',
                     };
                 } else {
                     const finalFailed = attempts >= maxAttempts;
@@ -925,6 +978,32 @@ Deno.serve(async (req) => {
         results.push(
             ...batchResults.map((r) => (r.status === 'fulfilled' ? r.value : { error: r.reason })),
         );
+
+        // F0.3: si algún job del batch fue rate limited, liberar el resto del batch y abortar
+        const wasRateLimited = batchResults.some(
+            (r) => r.status === 'fulfilled' && r.value?.status === 'rate_limited',
+        );
+        if (wasRateLimited) {
+            logger.warn({
+                function: 'ml-sync',
+                status: 'batch_aborted_rate_limited',
+                metadata: { released: jobs.length - (i + MAX_CONCURRENT_JOBS) },
+            });
+            for (const job of jobs.slice(i + MAX_CONCURRENT_JOBS)) {
+                await supabase
+                    .from('ml_sync_queue')
+                    .update({
+                        status: 'pending',
+                        attempts: Math.max(0, job.attempts - 1),
+                        locked_by: null,
+                        locked_at: null,
+                        next_attempt_at: new Date().toISOString(),
+                        last_error: null,
+                    })
+                    .eq('id', job.id);
+            }
+            break;
+        }
     }
 
     return respond(200, { processed: results.length, results });

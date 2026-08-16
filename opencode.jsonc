@@ -3,11 +3,44 @@
     "plugin": ["oh-my-openagent@latest"],
 
     // ============================================================
+    // SKILLS — Bienenhaus Design System Stack
+    // 6 layered design skills (project-scoped under .opencode/skills/):
+    //   bienenhaus-design-system     PRIORITY OVERRIDE (tokens/colors/components)
+    //   frontend-design              Visual principles (Awwwards-level)
+    //   frontend-design-systems      Atomic design + token architecture
+    //   designing-frontend-interfaces BEFORE/IMPLEMENT/ITERATE methodology
+    //   building-accessible-interfaces WCAG AA+ practical rules
+    //   reviewing-interface-quality   7-dimension visual audit gate
+    // The `frontend` agent auto-loads all 6 (see .opencode/agents/frontend.md).
+    // ============================================================
+    "skill": {
+        "bienenhaus-design-system": {
+            "description": "Authoritative Bienenhaus design system — tokens, colors, components, layout, branding. PRIORITY OVERRIDE over all generic design skills."
+        },
+        "frontend-design": {
+            "description": "Visual design principles (hierarchy, rhythm, typography, color, motion, fidelity) for senior frontend designers."
+        },
+        "frontend-design-systems": {
+            "description": "Atomic design methodology, token architecture, component API design, and design system evolution."
+        },
+        "designing-frontend-interfaces": {
+            "description": "BEFORE/IMPLEMENT/ITERATE process for designing new interfaces and redesigns."
+        },
+        "building-accessible-interfaces": {
+            "description": "WCAG AA+ practical accessibility: contrast, focus, keyboard, ARIA, reduced motion, screen reader."
+        },
+        "reviewing-interface-quality": {
+            "description": "7-dimension visual audit gate — design system compliance, responsive, states, a11y, motion, hierarchy, fidelity."
+        },
+    },
+
+    // ============================================================
     // AGENTS — Built-in agents + Bienenhaus specialized agents
     // Bienenhaus agents are defined as markdown files in
     // .opencode/agents/ (architect, qa, debugger, database,
     // frontend, backend) and override the bare model config here.
     // Built-in agents keep their oh-my-openagent prompts.
+    // The `frontend` agent auto-loads all 6 design skills above.
     // ============================================================
     "agent": {
         "build": { "model": "opencode/nemotron-3-ultra-free" },
