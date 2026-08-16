@@ -170,3 +170,14 @@ export interface MlDeadLetterRow {
     property_title: string | null;
     property_code: number | null;
 }
+
+export interface ImportMlListingsResult {
+    total_fetched: number;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors: Array<{ ml_item_id: string; error: string }>;
+    has_more: boolean;
+    total_available: number;
+    next_offset: number;
+}

@@ -3,6 +3,7 @@ import {
     BarChart2,
     CheckCircle2,
     Copy,
+    Download,
     Edit2,
     ExternalLink,
     Eye,
@@ -39,6 +40,8 @@ import {
     fetchMlQueueStats,
     fetchMlSettings,
     getMlWebhookStatus,
+    importMlListings,
+    type ImportMlListingsResult,
     ML_OPERATION_LABEL,
     ML_REDIRECT_URI,
     ML_SYNC_STATUS_LABEL,
@@ -177,6 +180,75 @@ export function MercadoLibrePage() {
     const [webhookStatus, setWebhookStatus] = useState<Record<string, boolean> | null>(null);
     const [checkingWebhook, setCheckingWebhook] = useState(false);
     const [registeringWebhook, setRegisteringWebhook] = useState(false);
+
+    // Import from ML
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importOffset, setImportOffset] = useState(0);
+    const [importTotal, setImportTotal] = useState(0);
+    const [importBatchSize, setImportBatchSize] = useState(20);
+    const [importing, setImporting] = useState(false);
+
+    const importMutation = useMutation({
+        mutationFn: (params: { limit: number; offset: number }) => importMlListings(params),
+        onSuccess: async (result: ImportMlListingsResult) => {
+            pushToast({
+                type: 'success',
+                title: `Importación completada: ${result.imported} nuevas, ${result.updated} actualizadas`,
+                description: `${result.skipped} omitidas, ${result.errors.length} errores. Total disponible: ${result.total_available}`,
+            });
+            setImportOffset((prev) => prev + result.total_fetched);
+            setImportTotal(result.total_available);
+            if (!result.has_more) {
+                setShowImportModal(false);
+                setImportOffset(0);
+            }
+            queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
+            queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
+        },
+        onError: (err) => {
+            pushToast({
+                type: 'error',
+                title: 'Error en importación',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+            setImporting(false);
+        },
+    });
+
+    const handleImportNext = () => {
+        if (importing) return;
+        setImporting(true);
+        importMutation.mutate({ limit: importBatchSize, offset: importOffset });
+    };
+
+    const handleImportAll = async () => {
+        if (importing) return;
+        setImporting(true);
+        let currentOffset = 0;
+        while (true) {
+            try {
+                const result = await importMlListings({ limit: importBatchSize, offset: currentOffset });
+                currentOffset += result.total_fetched;
+                if (!result.has_more || result.total_fetched === 0) break;
+                // Small delay to avoid rate limits
+                await new Promise((r) => setTimeout(r, 500));
+            } catch (err) {
+                pushToast({
+                    type: 'error',
+                    title: 'Error en importación completa',
+                    description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+                });
+                break;
+            }
+        }
+        setImporting(false);
+        setShowImportModal(false);
+        setImportOffset(0);
+        queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
+        queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
+        queryClient.invalidateQueries({ queryKey: ['properties'] });
+    };
 
     const refetchWebhookStatus = async () => {
         if (!connection?.user_id) return;
@@ -1614,6 +1686,21 @@ export function MercadoLibrePage() {
                                         Conectar cuenta
                                     </Button>
                                 )}
+                                {connected && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setShowImportModal(true)}
+                                        disabled={importing}
+                                    >
+                                        {importing ? (
+                                            <Spinner size="sm" inline color="inherit" />
+                                        ) : (
+                                            <Download size={14} />
+                                        )}
+                                        Importar de ML
+                                    </Button>
+                                )}
                             </div>
                         </section>
 
@@ -1974,6 +2061,89 @@ export function MercadoLibrePage() {
                 }}
                 onCancel={() => setDeleteTemplateId(null)}
             />
+
+            {/* Import from ML Modal */}
+            {showImportModal && (
+                <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+                        <div className="modal-header">
+                            <h3>Importar propiedades de Mercado Libre</h3>
+                            <button className="modal-close" onClick={() => setShowImportModal(false)} aria-label="Cerrar">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="muted" style={{ marginBottom: '16px' }}>
+                                Trae tus publicaciones activas y archivadas de Mercado Libre y crea/actualiza propiedades en Bienenhaus.
+                                Cada publicación se vincula por <code>ml_item_id</code> para evitar duplicados.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                                    Lote:
+                                    <select
+                                        className="select"
+                                        value={importBatchSize}
+                                        onChange={(e) => setImportBatchSize(Number((e.target as HTMLSelectElement).value))}
+                                        style={{ width: '100px' }}
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                    </select>
+                                    por request
+                                </label>
+                                <span className="muted">({importTotal > 0 ? `Total disponible: ${importTotal}` : 'Calculando...'})</span>
+                            </div>
+
+                            {importOffset > 0 && (
+                                <div className="import-progress" style={{ marginBottom: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span>Progreso: {importOffset} / {importTotal || '?'}</span>
+                                    </div>
+                                    <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <div
+                                            style={{
+                                                height: '100%',
+                                                background: 'var(--accent)',
+                                                width: importTotal > 0 ? `${Math.min(100, (importOffset / importTotal) * 100)}%` : '0%',
+                                                transition: 'width 0.3s ease',
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {importMutation.isError && (
+                                <div className="ml-error" style={{ marginBottom: '16px' }}>
+                                    <p>Error: {importMutation.error instanceof Error ? importMutation.error.message : 'Error desconocido'}</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="modal-footer" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <Button variant="ghost" onClick={() => setShowImportModal(false)} disabled={importing}>
+                                Cerrar
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={handleImportNext}
+                                disabled={importing}
+                            >
+                                {importing ? <Spinner size="sm" inline /> : <Download size={14} />}
+                                Importar siguiente lote ({importBatchSize})
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleImportAll}
+                                disabled={importing}
+                            >
+                                {importing ? <Spinner size="sm" inline /> : <Download size={14} />}
+                                Importar todo
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

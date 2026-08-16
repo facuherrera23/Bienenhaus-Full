@@ -880,6 +880,57 @@ export async function getMlWebhookStatus(): Promise<Record<string, boolean>> {
 }
 
 // ============================================================
+// API Functions - Import Listings from ML
+// ============================================================
+
+export interface ImportMlListingsResult {
+    total_fetched: number;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors: Array<{ ml_item_id: string; error: string }>;
+    has_more: boolean;
+    total_available: number;
+    next_offset: number;
+}
+
+/**
+ * Importa listings de Mercado Libre al sistema.
+ * Llama a la edge function ml-import-listings que hace fetch paginado de /users/{user_id}/items/search
+ * y mapea cada item a property + property_ml_meta.
+ */
+export async function importMlListings(params?: {
+    limit?: number;
+    offset?: number;
+}): Promise<ImportMlListingsResult> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-import-listings`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify(params ?? {}),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo importar de ML: ${res.status} ${text}`);
+    }
+    return (await res.json()) as ImportMlListingsResult;
+}
+
+// ============================================================
 // API Functions - Client Secret (for edge functions)
 // ============================================================
 
