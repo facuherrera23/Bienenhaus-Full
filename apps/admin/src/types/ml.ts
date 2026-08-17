@@ -181,3 +181,46 @@ export interface ImportMlListingsResult {
     total_available: number;
     next_offset: number;
 }
+
+// ============================================================
+// Preview / Import with Filters
+// ============================================================
+
+export type MlItemStatus = 'active' | 'paused' | 'closed' | 'under_review' | 'payment_required';
+
+export interface ImportFilters {
+    status?: MlItemStatus | MlItemStatus[];
+    category_id?: string;
+    date_from?: string; // ISO date
+    date_to?: string;   // ISO date
+    limit?: number;
+    offset?: number;
+}
+
+export interface PreviewItem {
+    ml_item_id: string;
+    title: string;
+    price: number;
+    currency_id: string;
+    status: string;
+    permalink: string;
+    thumbnail: string | null;
+    category_id: string | null;
+    listing_type_id: string;
+    date_created: string;
+    pictures_count: number;
+    has_video: boolean;
+}
+
+export interface PreviewResult {
+    mode: 'preview';
+    items: PreviewItem[];
+    total_previewed: number;
+    total_available: number;
+    has_more: boolean;
+    filters_applied: ImportFilters;
+}
+
+export interface ImportSelectedParams {
+    ml_item_ids: string[];
+}

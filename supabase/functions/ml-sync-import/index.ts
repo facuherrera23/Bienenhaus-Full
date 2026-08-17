@@ -22,38 +22,40 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 // ============================================================
 // Config
 // ============================================================
-const IMPORT_BATCH_SIZE = Number(Deno.env.get('ML_IMPORT_BATCH_SIZE') ?? '20');
-const FETCH_PAGE_SIZE = 50; // ML API max page size
-
-// ML Status values accepted by /users/{user_id}/items/search
-const VALID_STATUSES = ['active', 'paused', 'closed', 'under_review', 'payment_required'] as const;
-type MlItemStatus = (typeof VALID_STATUSES)[number];
+const IMPORT_BATCH_SIZE = Number(Deno.env.get('ML_SYNC_IMPORT_BATCH_SIZE') ?? '50');
+const FETCH_PAGE_SIZE = 50;
 
 // ============================================================
 // Auth
 // ============================================================
 async function isAuthorized(req: Request): Promise<boolean> {
+    // Allow cron job (service role) or admin
+    const secret = Deno.env.get('ML_SYNC_SECRET');
+    if (secret) {
+        const headerSecret = req.headers.get('x-sync-secret');
+        if (headerSecret) {
+            // Timing safe comparison
+            const a = new TextEncoder().encode(secret);
+            const b = new TextEncoder().encode(headerSecret);
+            if (a.length === b.length) {
+                let diff = 0;
+                for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+                if (diff === 0) return true;
+            }
+        }
+    }
     return (await requireAdmin(req, supabase)) !== null;
 }
 
 // ============================================================
 // Types
 // ============================================================
-interface ImportFilters {
-    status?: MlItemStatus | MlItemStatus[];
-    category_id?: string;
-    date_from?: string; // ISO date
-    date_to?: string;   // ISO date
-    limit?: number;
-    offset?: number;
-}
-
-interface ImportResult {
-    total_fetched: number;
+interface SyncResult {
     imported: number;
     updated: number;
     skipped: number;
     errors: Array<{ ml_item_id: string; error: string }>;
+    total_processed: number;
 }
 
 interface PropertyInsertData {
@@ -82,7 +84,7 @@ interface PropertyInsertData {
 }
 
 // ============================================================
-// Helpers
+// Helpers (same as ml-import-listings)
 // ============================================================
 function slugify(text: string): string {
     return text
@@ -112,7 +114,6 @@ function mapMlStatusToProperty(status: string): string {
 }
 
 function mapMlListingType(listingTypeId: string): string {
-    // ML listing types: gold_pro, gold_special, gold_premium, free
     switch (listingTypeId) {
         case 'gold_pro':
         case 'gold_premium':
@@ -179,7 +180,6 @@ function extractLocationData(item: MlItem): { latitude: number | null; longitude
     const address = addressParts.length > 0 ? addressParts.join(', ') : null;
 
     let location_id: string | null = null;
-    // TODO: Match with locations table using city/state
     return { latitude, longitude, address, location_id };
 }
 
@@ -229,51 +229,13 @@ function extractVideoUrl(item: MlItem): string | null {
 // ============================================================
 // ML API Calls
 // ============================================================
-function buildSearchUrl(
-    userId: number,
-    offset: number,
-    limit: number,
-    filters: ImportFilters
-): string {
-    const params = new URLSearchParams({
-        offset: String(offset),
-        limit: String(limit),
-        order_by: 'date_created',
-        order_dir: 'desc',
-    });
-
-    // Status filter
-    if (filters.status) {
-        const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
-        params.set('status', statuses.join(','));
-    } else {
-        params.set('status', 'active,paused,closed,under_review');
-    }
-
-    // Category filter
-    if (filters.category_id) {
-        params.set('category', filters.category_id);
-    }
-
-    // Date filters (ML uses date_created_from / date_created_to)
-    if (filters.date_from) {
-        params.set('date_created_from', filters.date_from);
-    }
-    if (filters.date_to) {
-        params.set('date_created_to', filters.date_to);
-    }
-
-    return `${ML_API}/users/${userId}/items/search?${params.toString()}`;
-}
-
 async function fetchUserItems(
     accessToken: string,
     userId: number,
     offset = 0,
-    limit = FETCH_PAGE_SIZE,
-    filters: ImportFilters = {}
+    limit = 50,
 ): Promise<{ results: string[]; paging: { total: number; offset: number; limit: number } }> {
-    const url = buildSearchUrl(userId, offset, limit, filters);
+    const url = `${ML_API}/users/${userId}/items/search?status=active,paused,closed,under_review&offset=${offset}&limit=${limit}&order_by=date_created&order_dir=desc`;
     const res = await fetchWithTimeout(url, {
         headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
     });
@@ -319,8 +281,7 @@ function mapMlItemToProperty(item: MlItem, description: string | null): Property
     const pictures = extractPictures(item);
     const videoUrl = extractVideoUrl(item);
 
-    // Advanced attribute extraction
-    const antiquity = extractIntegerFromAttributes(attrs, 'ANTIQUITY'); // years
+    const antiquity = extractIntegerFromAttributes(attrs, 'ANTIQUITY');
     const totalArea = extractAreaFromAttributes(attrs, 'TOTAL_AREA');
     const coveredArea = extractAreaFromAttributes(attrs, 'COVERED_AREA');
     const floors = extractIntegerFromAttributes(attrs, 'FLOORS');
@@ -355,41 +316,6 @@ function mapMlItemToProperty(item: MlItem, description: string | null): Property
 }
 
 // ============================================================
-// Preview Data (lighter than full import)
-// ============================================================
-interface PreviewItem {
-    ml_item_id: string;
-    title: string;
-    price: number;
-    currency_id: string;
-    status: string;
-    permalink: string;
-    thumbnail: string | null;
-    category_id: string | null;
-    listing_type_id: string;
-    date_created: string;
-    pictures_count: number;
-    has_video: boolean;
-}
-
-function mapMlItemToPreview(item: MlItem): PreviewItem {
-    return {
-        ml_item_id: item.id,
-        title: item.title,
-        price: item.price,
-        currency_id: item.currency_id ?? 'ARS',
-        status: item.status,
-        permalink: item.permalink,
-        thumbnail: item.pictures?.[0]?.secure_url ?? item.pictures?.[0]?.url ?? null,
-        category_id: (item as Record<string, unknown>).category_id as string | null,
-        listing_type_id: item.listing_type_id,
-        date_created: (item as Record<string, unknown>).date_created as string ?? new Date().toISOString(),
-        pictures_count: item.pictures?.length ?? 0,
-        has_video: !!((item as Record<string, unknown>).video),
-    };
-}
-
-// ============================================================
 // Database Operations
 // ============================================================
 async function upsertPropertyAndMeta(
@@ -397,8 +323,7 @@ async function upsertPropertyAndMeta(
     mlItemId: string,
     mlItemData: MlItem,
     createdBy: string,
-): Promise<{ propertyId: string; action: 'inserted' | 'updated' }> {
-    // Check if property_ml_meta already exists for this ml_item_id
+): Promise<{ action: 'inserted' | 'updated' }> {
     const { data: existingMeta } = await supabase
         .from('property_ml_meta')
         .select('property_id')
@@ -406,7 +331,6 @@ async function upsertPropertyAndMeta(
         .maybeSingle();
 
     if (existingMeta) {
-        // Update existing property
         const { error: updateError } = await supabase
             .from('properties')
             .update({
@@ -418,7 +342,6 @@ async function upsertPropertyAndMeta(
 
         if (updateError) throw new Error(`Error actualizando property: ${updateError.message}`);
 
-        // Update property_ml_meta
         const { error: metaError } = await supabase
             .from('property_ml_meta')
             .update({
@@ -436,10 +359,9 @@ async function upsertPropertyAndMeta(
 
         if (metaError) throw new Error(`Error actualizando property_ml_meta: ${metaError.message}`);
 
-        return { propertyId: existingMeta.property_id, action: 'updated' };
+        return { action: 'updated' };
     }
 
-    // Create new property
     const propertyCode = generatePropertyCode();
     const slug = `${slugify(propertyData.title)}-${propertyCode}`;
 
@@ -459,7 +381,6 @@ async function upsertPropertyAndMeta(
 
     if (propError) throw new Error(`Error insertando property: ${propError.message}`);
 
-    // Insert property_ml_meta
     const { error: metaError } = await supabase
         .from('property_ml_meta')
         .insert({
@@ -477,171 +398,51 @@ async function upsertPropertyAndMeta(
 
     if (metaError) throw new Error(`Error insertando property_ml_meta: ${metaError.message}`);
 
-    return { propertyId: property.id, action: 'inserted' };
+    return { action: 'inserted' };
 }
 
 // ============================================================
-// Main Handler
+// Main Sync Logic
 // ============================================================
-Deno.serve(async (req: Request) => {
-    if (req.method === 'OPTIONS') return optionsResponse();
+async function runFullSync(): Promise<SyncResult> {
+    // Get active ML connection
+    const { data: conn, error: connError } = await supabase
+        .from('ml_connection')
+        .select('*')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (!await isAuthorized(req)) {
-        return jsonResponse({ error: 'No autorizado' }, 401);
-    }
+    if (connError) throw new Error(`Error leyendo conexión ML: ${connError.message}`);
+    if (!conn) throw new Error('No hay conexión ML activa');
 
-    // Rate limit
-    const rateLimit = await checkRateLimit(req, 'ml-import-listings', 10, 60000);
-    if (!rateLimit.allowed) {
-        return jsonResponse({ error: 'Rate limit excedido', retry_after: rateLimit.retryAfter }, 429);
-    }
+    const connection = conn as MlConnectionRow;
+    const accessToken = await getAccessToken(supabase, connection);
 
-    const body = await req.json().catch(() => ({}));
-    const {
-        limit = IMPORT_BATCH_SIZE,
-        offset = 0,
-        status,
-        category_id,
-        date_from,
-        date_to,
-        preview_only = false,
-        preview_limit = 100,
-        selected_ids,
-    } = body;
+    const userRes = await fetchWithTimeout(`${ML_API}/users/me`, {
+        headers: { authorization: `Bearer ${accessToken}` },
+    });
+    if (!userRes.ok) throw new Error('No se pudo obtener usuario ML');
+    const userData = await userRes.json();
+    const mlUserId = userData.id as number;
 
-    const filters: ImportFilters = {
-        status: status as ImportFilters['status'],
-        category_id,
-        date_from,
-        date_to,
-        limit,
-        offset,
+    const result: SyncResult = {
+        imported: 0,
+        updated: 0,
+        skipped: 0,
+        errors: [],
+        total_processed: 0,
     };
 
-    try {
-        // Get active ML connection
-        const { data: conn, error: connError } = await supabase
-            .from('ml_connection')
-            .select('*')
-            .eq('is_active', true)
-            .order('updated_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+    let offset = 0;
+    let hasMore = true;
 
-        if (connError) throw new Error(`Error leyendo conexión ML: ${connError.message}`);
-        if (!conn) return jsonResponse({ error: 'No hay conexión ML activa. Conectá la cuenta primero.' }, 400);
-
-        const connection = conn as MlConnectionRow;
-        const accessToken = await getAccessToken(supabase, connection);
-
-        // Get ML user info to get user_id
-        const userRes = await fetchWithTimeout(`${ML_API}/users/me`, {
-            headers: { authorization: `Bearer ${accessToken}` },
-        });
-        if (!userRes.ok) throw new Error('No se pudo obtener usuario ML');
-        const userData = await userRes.json();
-        const mlUserId = userData.id as number;
-
-        // Selected IDs mode: import specific items by ml_item_id
-        if (selected_ids && Array.isArray(selected_ids) && selected_ids.length > 0) {
-            const result: ImportResult = {
-                total_fetched: selected_ids.length,
-                imported: 0,
-                updated: 0,
-                skipped: 0,
-                errors: [],
-            };
-
-            for (const itemId of selected_ids) {
-                try {
-                    const [itemDetails, description] = await Promise.all([
-                        fetchItemDetails(accessToken, itemId),
-                        fetchItemDescription(accessToken, itemId),
-                    ]);
-
-                    const propertyData = mapMlItemToProperty(itemDetails, description);
-                    const { action } = await upsertPropertyAndMeta(propertyData, itemId, itemDetails, connection.id);
-
-                    if (action === 'inserted') result.imported++;
-                    else result.updated++;
-                } catch (err) {
-                    result.errors.push({ ml_item_id: itemId, error: err instanceof Error ? err.message : 'Error desconocido' });
-                    result.skipped++;
-                }
-            }
-
-            return jsonResponse({
-                ...result,
-                has_more: false,
-                total_available: selected_ids.length,
-                next_offset: 0,
-            });
-        }
-
-        // Preview mode: fetch items and return light preview data without importing
-        if (preview_only) {
-            let totalFetched = 0;
-            const previews: PreviewItem[] = [];
-            let currentOffset = offset;
-            const maxPreview = Math.min(preview_limit, 500); // Cap preview at 500
-
-            while (totalFetched < maxPreview) {
-                const searchResult = await fetchUserItems(accessToken, mlUserId, currentOffset, Math.min(FETCH_PAGE_SIZE, maxPreview - totalFetched), filters);
-                const itemIds = searchResult.results ?? [];
-
-                if (itemIds.length === 0) break;
-
-                // Fetch details for preview (batched)
-                for (const itemId of itemIds) {
-                    if (previews.length >= maxPreview) break;
-                    try {
-                        const itemDetails = await fetchItemDetails(accessToken, itemId);
-                        previews.push(mapMlItemToPreview(itemDetails));
-                    } catch {
-                        // Skip failed items in preview
-                    }
-                }
-
-                totalFetched += itemIds.length;
-                currentOffset += itemIds.length;
-
-                if (!searchResult.paging || itemIds.length < FETCH_PAGE_SIZE) break;
-            }
-
-            return jsonResponse({
-                mode: 'preview',
-                items: previews,
-                total_previewed: previews.length,
-                total_available: previews.length, // Approximate; real total needs separate count call
-                has_more: previews.length >= maxPreview,
-                filters_applied: filters,
-            });
-        }
-
-        // Full import mode
-        const searchResult = await fetchUserItems(accessToken, mlUserId, offset, limit, filters);
+    while (hasMore) {
+        const searchResult = await fetchUserItems(accessToken, mlUserId, offset, FETCH_PAGE_SIZE);
         const itemIds = searchResult.results ?? [];
 
-        if (itemIds.length === 0) {
-            return jsonResponse({
-                total_fetched: 0,
-                imported: 0,
-                updated: 0,
-                skipped: 0,
-                errors: [],
-                has_more: false,
-                total_available: searchResult.paging?.total ?? 0,
-            });
-        }
-
-        // Process each item
-        const result: ImportResult = {
-            total_fetched: itemIds.length,
-            imported: 0,
-            updated: 0,
-            skipped: 0,
-            errors: [],
-        };
+        if (itemIds.length === 0) break;
 
         for (const itemId of itemIds) {
             try {
@@ -655,20 +456,56 @@ Deno.serve(async (req: Request) => {
 
                 if (action === 'inserted') result.imported++;
                 else result.updated++;
+                result.total_processed++;
             } catch (err) {
                 result.errors.push({ ml_item_id: itemId, error: err instanceof Error ? err.message : 'Error desconocido' });
                 result.skipped++;
             }
         }
 
+        offset += itemIds.length;
+        hasMore = itemIds.length === 50; // FETCH_PAGE_SIZE
+    }
+
+    return result;
+}
+
+// ============================================================
+// Main Handler
+// ============================================================
+Deno.serve(async (req: Request) => {
+    if (req.method === 'OPTIONS') return optionsResponse();
+
+    if (!await isAuthorized(req)) {
+        return jsonResponse({ error: 'No autorizado' }, 401);
+    }
+
+    // Rate limit (more generous for cron)
+    const rateLimit = await checkRateLimit(req, 'ml-sync-import', 2, 60000);
+    if (!rateLimit.allowed) {
+        return jsonResponse({ error: 'Rate limit excedido', retry_after: rateLimit.retryAfter }, 429);
+    }
+
+    try {
+        console.log('[ml-sync-import] Iniciando sincronización completa ML → Bienenhaus');
+
+        const result = await runFullSync();
+
+        console.log('[ml-sync-import] Sincronización completada:', {
+            imported: result.imported,
+            updated: result.updated,
+            skipped: result.skipped,
+            errors: result.errors.length,
+            total_processed: result.total_processed,
+        });
+
         return jsonResponse({
+            success: true,
+            message: `Sincronización completada: ${result.imported} nuevas, ${result.updated} actualizadas`,
             ...result,
-            has_more: (offset + itemIds.length) < (searchResult.paging?.total ?? 0),
-            total_available: searchResult.paging?.total ?? 0,
-            next_offset: offset + itemIds.length,
         });
     } catch (err) {
-        console.error('[ml-import-listings] Error:', err);
+        console.error('[ml-sync-import] Error:', err);
         return jsonResponse({ error: err instanceof Error ? err.message : 'Error interno' }, 500);
     }
 });

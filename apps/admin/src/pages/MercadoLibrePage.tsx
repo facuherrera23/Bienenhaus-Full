@@ -2,6 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import {
     BarChart2,
     CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
     Copy,
     Download,
     Edit2,
@@ -30,6 +32,7 @@ import {
     fetchMlAutoReplyTemplates,
     fetchMlCategories,
     fetchMlDeadLetter,
+    fetchMlImportPreview,
     fetchMlListingTypes,
     fetchMlMeta,
     fetchMlMetrics,
@@ -41,7 +44,11 @@ import {
     fetchMlSettings,
     getMlWebhookStatus,
     importMlListings,
+    importSelectedMlListings,
     type ImportMlListingsResult,
+    type ImportFilters,
+    type MlItemStatus,
+    type PreviewItem,
     ML_OPERATION_LABEL,
     ML_REDIRECT_URI,
     ML_SYNC_STATUS_LABEL,
@@ -188,6 +195,20 @@ export function MercadoLibrePage() {
     const [importBatchSize, setImportBatchSize] = useState(20);
     const [importing, setImporting] = useState(false);
 
+    // Preview modal state
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [previewItems, setPreviewItems] = useState<PreviewItem[]>([]);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [previewError, setPreviewError] = useState<string | null>(null);
+    const [previewFilters, setPreviewFilters] = useState<ImportFilters>({
+        status: ['active', 'paused', 'closed'],
+        limit: 50,
+        offset: 0,
+    });
+    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+    const [previewPage, setPreviewPage] = useState(0);
+    const PREVIEW_PAGE_SIZE = 50;
+
     const importMutation = useMutation({
         mutationFn: (params: { limit: number; offset: number }) => importMlListings(params),
         onSuccess: async (result: ImportMlListingsResult) => {
@@ -248,6 +269,96 @@ export function MercadoLibrePage() {
         queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
         queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
         queryClient.invalidateQueries({ queryKey: ['properties'] });
+    };
+
+    // Preview modal handlers
+    const handleOpenPreview = async () => {
+        setSelectedItems(new Set());
+        setPreviewPage(0);
+        setPreviewFilters({ ...previewFilters, offset: 0 });
+        setShowPreviewModal(true);
+        await loadPreview();
+    };
+
+    const loadPreview = async () => {
+        setPreviewLoading(true);
+        setPreviewError(null);
+        try {
+            const result = await fetchMlImportPreview({
+                ...previewFilters,
+                offset: previewPage * PREVIEW_PAGE_SIZE,
+                limit: PREVIEW_PAGE_SIZE,
+            });
+            if (previewPage === 0) {
+                setPreviewItems(result.items);
+            } else {
+                setPreviewItems((prev) => [...prev, ...result.items]);
+            }
+        } catch (err) {
+            setPreviewError(err instanceof Error ? err.message : 'Error cargando preview');
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
+    const handleFilterChange = (key: keyof ImportFilters, value: ImportFilters[keyof ImportFilters]) => {
+        setPreviewFilters((prev) => ({ ...prev, [key]: value, offset: 0 }));
+        setPreviewPage(0);
+    };
+
+    const handleStatusChange = (status: MlItemStatus, checked: boolean) => {
+        const current = previewFilters.status as MlItemStatus[];
+        const next = checked
+            ? [...current, status]
+            : current.filter((s) => s !== status);
+        handleFilterChange('status', next);
+    };
+
+    const handleLoadMorePreview = () => {
+        setPreviewPage((p) => p + 1);
+    };
+
+    const handleSelectItem = (mlItemId: string) => {
+        setSelectedItems((prev) => {
+            const next = new Set(prev);
+            if (next.has(mlItemId)) next.delete(mlItemId);
+            else next.add(mlItemId);
+            return next;
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedItems.size === previewItems.length) {
+            setSelectedItems(new Set());
+        } else {
+            setSelectedItems(new Set(previewItems.map((i) => i.ml_item_id)));
+        }
+    };
+
+    const handleImportSelected = async () => {
+        if (selectedItems.size === 0) return;
+        setImporting(true);
+        try {
+            const result = await importSelectedMlListings({ ml_item_ids: Array.from(selectedItems) });
+            pushToast({
+                type: 'success',
+                title: `Importación completada: ${result.imported} nuevas, ${result.updated} actualizadas`,
+                description: `${result.skipped} omitidas, ${result.errors.length} errores`,
+            });
+            setSelectedItems(new Set());
+            setShowPreviewModal(false);
+            queryClient.invalidateQueries({ queryKey: ['ml-meta'] });
+            queryClient.invalidateQueries({ queryKey: ['ml-overview'] });
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
+        } catch (err) {
+            pushToast({
+                type: 'error',
+                title: 'Error en importación',
+                description: err instanceof Error ? err.message : 'Intenta de nuevo.',
+            });
+        } finally {
+            setImporting(false);
+        }
     };
 
     const refetchWebhookStatus = async () => {
@@ -1690,10 +1801,10 @@ export function MercadoLibrePage() {
                                     <Button
                                         variant="secondary"
                                         size="sm"
-                                        onClick={() => setShowImportModal(true)}
-                                        disabled={importing}
+                                        onClick={handleOpenPreview}
+                                        disabled={importing || previewLoading}
                                     >
-                                        {importing ? (
+                                        {importing || previewLoading ? (
                                             <Spinner size="sm" inline color="inherit" />
                                         ) : (
                                             <Download size={14} />
@@ -2139,6 +2250,221 @@ export function MercadoLibrePage() {
                             >
                                 {importing ? <Spinner size="sm" inline /> : <Download size={14} />}
                                 Importar todo
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Preview Modal */}
+            {showPreviewModal && (
+                <div className="modal-overlay" onClick={() => setShowPreviewModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', width: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                            <h3 style={{ margin: 0 }}>Importar de Mercado Libre - Preview</h3>
+                            <button className="modal-close" onClick={() => setShowPreviewModal(false)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="modal-body" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            {/* Filters */}
+                            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '12px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '150px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Estado</label>
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            {(['active', 'paused', 'closed', 'under_review'] as MlItemStatus[]).map((status) => (
+                                                <label key={status} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={(previewFilters.status as MlItemStatus[]).includes(status)}
+                                                        onChange={(e: any) => handleStatusChange(status, e.target.checked)}
+                                                    />
+                                                    <span style={{ textTransform: 'capitalize' }}>{status}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '150px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Categoría</label>
+                                        <input
+                                            type="text"
+                                            className="input"
+                                            placeholder="ID categoría (ej: MLA1459)"
+                                            value={previewFilters.category_id ?? ''}
+                                            onChange={(e: any) => handleFilterChange('category_id', e.target.value)}
+                                            style={{ width: '180px' }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '150px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fecha desde</label>
+                                        <input
+                                            type="date"
+                                            className="input"
+                                            value={previewFilters.date_from ?? ''}
+                                            onChange={(e: any) => handleFilterChange('date_from', e.target.value || undefined)}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '150px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fecha hasta</label>
+                                        <input
+                                            type="date"
+                                            className="input"
+                                            value={previewFilters.date_to ?? ''}
+                                            onChange={(e: any) => handleFilterChange('date_to', e.target.value || undefined)}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <Button variant="secondary" size="sm" onClick={() => { setPreviewPage(0); loadPreview(); }} disabled={previewLoading}>
+                                        {previewLoading ? <Spinner size="sm" inline /> : <Search size={14} />} Filtrar
+                                    </Button>
+                                    <span className="muted" style={{ fontSize: '13px' }}>
+                                        {previewItems.length} publicaciones {previewFilters.status && ` (${(previewFilters.status as MlItemStatus[]).join(', ')})`}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Items Table */}
+                            <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
+                                {previewError && (
+                                    <div className="ml-error" style={{ marginBottom: '16px', padding: '12px', background: 'var(--bg-danger)', borderRadius: '8px', color: 'var(--text-on-danger)' }}>
+                                        {previewError}
+                                    </div>
+                                )}
+
+                                {previewItems.length === 0 && !previewLoading && (
+                                    <div className="placeholder-card" style={{ textAlign: 'center', padding: '48px' }}>
+                                        <p>No se encontraron publicaciones con los filtros actuales.</p>
+                                        <p className="muted" style={{ marginTop: '8px' }}>Ajusta los filtros o verifica la conexión ML.</p>
+                                    </div>
+                                )}
+
+                                {previewItems.length > 0 && (
+                                    <>
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table className="table" style={{ width: '100%' }}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: '48px', textAlign: 'center' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedItems.size === previewItems.length && previewItems.length > 0}
+                                                            indeterminate={selectedItems.size > 0 && selectedItems.size < previewItems.length}
+                                                            onChange={handleSelectAll}
+                                                            aria-label="Seleccionar todas"
+                                                        />
+                                                    </th>
+                                                    <th>Publicación</th>
+                                                    <th style={{ width: '100px' }}>Precio</th>
+                                                    <th style={{ width: '100px' }}>Estado</th>
+                                                    <th style={{ width: '120px' }}>Categoría</th>
+                                                    <th style={{ width: '100px' }}>Tipo</th>
+                                                    <th style={{ width: '140px' }}>Fecha</th>
+                                                    <th style={{ width: '80px' }}>Fotos</th>
+                                                    <th style={{ width: '60px' }}>Video</th>
+                                                    <th style={{ width: '60px' }}>Link</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {previewItems.map((item) => (
+                                                    <tr key={item.ml_item_id}>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedItems.has(item.ml_item_id)}
+                                                                onChange={() => handleSelectItem(item.ml_item_id)}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                {item.thumbnail && (
+                                                                    <img
+                                                                        src={item.thumbnail}
+                                                                        alt=""
+                                                                        style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px' }}
+                                                                    />
+                                                                )}
+                                                                <div>
+                                                                    <strong style={{ display: 'block', maxWidth: '300px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                                        {item.title}
+                                                                    </strong>
+                                                                    <span className="muted" style={{ fontSize: '12px' }}>{item.ml_item_id}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="num">
+                                                            {item.price.toLocaleString('es-AR', { style: 'currency', currency: item.currency_id })}
+                                                        </td>
+                                                        <td>
+                                                            <Badge
+                                                                variant={item.status === 'active' ? 'success' : item.status === 'paused' ? 'warning' : item.status === 'closed' ? 'neutral' : 'info'}
+                                                                size="sm"
+                                                            >
+                                                                {item.status}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="muted" style={{ fontSize: '12px' }}>
+                                                            {item.category_id ?? '-'}
+                                                        </td>
+                                                        <td className="muted" style={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                                                            {item.listing_type_id}
+                                                        </td>
+                                                        <td className="muted" style={{ fontSize: '12px' }}>
+                                                            {formatDate(item.date_created)}
+                                                        </td>
+                                                        <td className="num" style={{ textAlign: 'center' }}>
+                                                            {item.pictures_count}
+                                                        </td>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            {item.has_video ? <CheckCircle2 size={16} style={{ color: 'var(--accent)' }} /> : <span className="muted">-</span>}
+                                                        </td>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            <a href={item.permalink} target="_blank" rel="noopener noreferrer" title="Ver en ML">
+                                                                <ExternalLink size={16} />
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                                        <span className="muted" style={{ fontSize: '13px' }}>
+                                            Seleccionados: <strong>{selectedItems.size}</strong> de {previewItems.length}
+                                        </span>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <Button variant="ghost" size="sm" onClick={handleLoadMorePreview} disabled={previewLoading}>
+                                                <ChevronLeft size={14} /> Anterior
+                                            </Button>
+                                            <Button variant="secondary" size="sm" onClick={() => { setPreviewPage(p => p + 1); loadPreview(); }} disabled={previewLoading || previewItems.length < PREVIEW_PAGE_SIZE}>
+                                                Siguiente <ChevronRight size={14} />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </>)}
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+                            <Button variant="ghost" onClick={() => setShowPreviewModal(false)} disabled={importing}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={handleImportSelected}
+                                disabled={importing || selectedItems.size === 0}
+                            >
+                                {importing ? <Spinner size="sm" inline /> : <Download size={14} />}
+                                Importar seleccionados ({selectedItems.size})
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleImportAll}
+                                disabled={importing}
+                            >
+                                {importing ? <Spinner size="sm" inline /> : <Download size={14} />}
+                                Importar todo (sin filtro)
                             </Button>
                         </div>
                     </div>

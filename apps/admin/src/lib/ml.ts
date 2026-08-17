@@ -19,6 +19,12 @@ import {
     type MlQueueRow,
     type MlSettings,
     type MlSyncStatus,
+    type ImportMlListingsResult,
+    type MlItemStatus,
+    type ImportFilters,
+    type PreviewItem,
+    type PreviewResult,
+    type ImportSelectedParams,
 } from '../types/ml';
 
 // ============================================================
@@ -41,6 +47,12 @@ export type {
     MlItemMetrics,
     MlAutoReplyTemplate,
     MlDeadLetterRow,
+    ImportMlListingsResult,
+    MlItemStatus,
+    ImportFilters,
+    PreviewItem,
+    PreviewResult,
+    ImportSelectedParams,
 };
 
 export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
@@ -883,26 +895,77 @@ export async function getMlWebhookStatus(): Promise<Record<string, boolean>> {
 // API Functions - Import Listings from ML
 // ============================================================
 
-export interface ImportMlListingsResult {
-    total_fetched: number;
-    imported: number;
-    updated: number;
-    skipped: number;
-    errors: Array<{ ml_item_id: string; error: string }>;
-    has_more: boolean;
-    total_available: number;
-    next_offset: number;
+/**
+ * Obtiene preview de listings de ML con filtros (sin importar).
+ * Útil para mostrar lista con checkboxes antes de importar.
+ */
+export async function fetchMlImportPreview(params: ImportFilters & { preview_limit?: number } = {}): Promise<PreviewResult> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-import-listings`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify({ ...params, preview_only: true }),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo obtener preview: ${res.status} ${text}`);
+    }
+    return (await res.json()) as PreviewResult;
 }
 
 /**
- * Importa listings de Mercado Libre al sistema.
+ * Importa listings seleccionados de Mercado Libre al sistema.
+ * Llama a la edge function ml-import-listings con lista de ml_item_ids.
+ */
+export async function importSelectedMlListings(params: ImportSelectedParams): Promise<ImportMlListingsResult> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('No hay sesión iniciada');
+
+    const url = `${supabaseUrl}/functions/v1/ml-import-listings`;
+    const apikey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!apikey) throw new Error('VITE_SUPABASE_ANON_KEY no configurada');
+
+    // The edge function expects specific ml_item_ids; we'll pass them as a special param
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey,
+        },
+        body: JSON.stringify({ selected_ids: params.ml_item_ids }),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`No se pudo importar selección: ${res.status} ${text}`);
+    }
+    return (await res.json()) as ImportMlListingsResult;
+}
+
+/**
+ * Importa listings de Mercado Libre al sistema (con filtros opcionales).
  * Llama a la edge function ml-import-listings que hace fetch paginado de /users/{user_id}/items/search
  * y mapea cada item a property + property_ml_meta.
  */
-export async function importMlListings(params?: {
-    limit?: number;
-    offset?: number;
-}): Promise<ImportMlListingsResult> {
+export async function importMlListings(params?: ImportFilters): Promise<ImportMlListingsResult> {
     const {
         data: { session },
     } = await supabase.auth.getSession();
