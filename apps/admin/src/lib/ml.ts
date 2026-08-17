@@ -416,20 +416,17 @@ export async function fetchMlQueue(filters?: {
     page?: number;
     pageSize?: number;
 }): Promise<MlQueueRow[]> {
-    const apiFilters: Record<string, string | number | boolean | undefined> = {
-        deleted_at: 'is.null',
-    };
+    let query = supabase
+        .from('ml_sync_queue')
+        .select(ML_QUEUE_SELECT)
+        .order('created_at', { ascending: false });
 
-    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
-    if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.operation) query = query.eq('operation', filters.operation);
 
     const page = filters?.page ?? 1;
     const pageSize = filters?.pageSize ?? 50;
-    const { data, error } = await supabase
-        .from('ml_sync_queue')
-        .select(ML_QUEUE_SELECT)
-        .match(apiFilters)
-        .order('created_at', { ascending: false })
+    const { data, error } = await query
         .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<QueueApiRow[]>();
 
@@ -448,7 +445,6 @@ export async function fetchMlQueueInfinite(
     const { data, error } = await supabase
         .from('ml_sync_queue')
         .select(ML_QUEUE_SELECT)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .range((pageParam - 1) * pageSize, pageParam * pageSize - 1)
         .returns<QueueApiRow[]>();
@@ -472,7 +468,6 @@ export async function fetchMlQueueStats(): Promise<{
         const { count, error } = await supabase
             .from('ml_sync_queue')
             .select('*', { count: 'exact', head: true })
-            .is('deleted_at', null)
             .eq('status', status);
         if (error) throw new Error(error.message);
         return count ?? 0;
@@ -495,19 +490,16 @@ export async function fetchMlMeta(filters?: {
     page?: number;
     pageSize?: number;
 }): Promise<MlMetaRow[]> {
-    const apiFilters: Record<string, string | number | boolean | undefined> = {
-        deleted_at: 'is.null',
-    };
+    let query = supabase
+        .from('property_ml_meta')
+        .select(ML_META_SELECT)
+        .order('last_sync_at', { ascending: false });
 
-    if (filters?.property_id) apiFilters.property_id = `eq.${filters.property_id}`;
+    if (filters?.property_id) query = query.eq('property_id', filters.property_id);
 
     const page = filters?.page ?? 1;
     const pageSize = filters?.pageSize ?? 100;
-    const { data, error } = await supabase
-        .from('property_ml_meta')
-        .select(ML_META_SELECT)
-        .match(apiFilters)
-        .order('last_sync_at', { ascending: false })
+    const { data, error } = await query
         .range((page - 1) * pageSize, page * pageSize - 1)
         .returns<MetaApiRow[]>();
 
@@ -526,7 +518,6 @@ export async function fetchMlMetaInfinite(
     const { data, error } = await supabase
         .from('property_ml_meta')
         .select(ML_META_SELECT)
-        .is('deleted_at', null)
         .order('last_sync_at', { ascending: false })
         .range((pageParam - 1) * pageSize, pageParam * pageSize - 1)
         .returns<MetaApiRow[]>();
