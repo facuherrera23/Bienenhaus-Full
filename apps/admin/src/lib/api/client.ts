@@ -171,6 +171,8 @@ export async function rpcCall<T>(
 export const queryKeys = {
     properties: (filters?: unknown) => ['properties', filters] as const,
     property: (id: string) => ['property', id] as const,
+    adminUsers: () => ['admin-users'] as const,
+    adminUser: (id: string) => ['admin-users', id] as const,
     leads: (filters?: unknown) => ['leads', filters] as const,
     lead: (id: string) => ['lead', id] as const,
     owners: (filters?: unknown) => ['owners', filters] as const,

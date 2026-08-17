@@ -8,6 +8,15 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
 const ADMIN_EMAIL = 'admin@bienenhaus.com';
 const FROM_EMAIL = 'no-reply@bienenhaus.com.ar';
 
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 interface ContactPayload {
     name: string;
     email: string;
@@ -126,14 +135,14 @@ Deno.serve(async (req) => {
 
     const adminHtml = `
     <h2>Nueva consulta desde la web</h2>
-    <p><strong>Nombre:</strong> ${payload.name}</p>
-    <p><strong>Email:</strong> ${payload.email}</p>
-    <p><strong>Teléfono:</strong> ${payload.phone || '—'}</p>
-    <p><strong>Asunto:</strong> ${payload.subject}</p>
+    <p><strong>Nombre:</strong> ${escapeHtml(payload.name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
+    <p><strong>Teléfono:</strong> ${escapeHtml(payload.phone || '—')}</p>
+    <p><strong>Asunto:</strong> ${escapeHtml(payload.subject)}</p>
     <p><strong>Mensaje:</strong></p>
-    <p>${payload.message.replace(/\n/g, '<br>')}</p>
+    <p>${escapeHtml(payload.message).replace(/\n/g, '<br>')}</p>
     <hr>
-    <p><small>IP: ${ip}</small></p>
+    <p><small>IP: ${escapeHtml(ip)}</small></p>
   `;
     try {
         await sendEmail(ADMIN_EMAIL, `[BIENENHAUS] ${payload.subject}`, adminHtml);
@@ -142,8 +151,8 @@ Deno.serve(async (req) => {
     }
 
     const userHtml = `
-    <h2>Gracias por contactarnos, ${payload.name}</h2>
-    <p>Recibimos tu consulta: <strong>${payload.subject}</strong></p>
+    <h2>Gracias por contactarnos, ${escapeHtml(payload.name)}</h2>
+    <p>Recibimos tu consulta: <strong>${escapeHtml(payload.subject)}</strong></p>
     <p>Te responderemos a la brevedad.</p>
     <hr>
     <p><small>BIENENHAUS PROPIEDADES</small></p>

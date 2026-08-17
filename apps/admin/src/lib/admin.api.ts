@@ -1,4 +1,5 @@
 import { queryKeys, useCreate, useDelete, useItem, useList, useMutation, useUpdate } from './api';
+import { useQuery } from './query/hooks';
 import { type AdminRole, type AdminUserRow, ROLE_LABEL, ROLE_TONE } from '../types/admin';
 import {
     deleteAdminUser,
@@ -27,7 +28,7 @@ const ADMIN_USERS_PATH = 'admin_users';
 
 export function useAdminUsers() {
     return useList<AdminUserRow>({
-        queryKey: queryKeys.leads([{ admin: true }]),
+        queryKey: queryKeys.adminUsers(),
         path: ADMIN_USERS_PATH,
         select: '*',
         filters: {},
@@ -39,22 +40,20 @@ export function useAdminUsers() {
 }
 
 export function useAdminUser(id: string | null) {
-    return useItem<AdminUserRow>(queryKeys.leads([{ admin: id }]), ADMIN_USERS_PATH, id, !!id);
+    return useItem<AdminUserRow>(queryKeys.adminUser(id ?? ''), ADMIN_USERS_PATH, id, !!id);
 }
 
 export function useMyAdminUser() {
-    return useMutation({
-        mutationFn: async () => {
-            return fetchMyAdminUser();
-        },
+    return useQuery<AdminUserRow | null>({
+        queryKey: queryKeys.adminUsers(),
+        queryFn: () => fetchMyAdminUser(),
     });
 }
 
 export function useMyUserId() {
-    return useMutation({
-        mutationFn: async () => {
-            return fetchMyUserId();
-        },
+    return useQuery<string | null>({
+        queryKey: [...queryKeys.adminUsers(), 'my-user-id'],
+        queryFn: () => fetchMyUserId(),
     });
 }
 
@@ -64,27 +63,27 @@ export function useMyUserId() {
 
 export function useCreateAdminUser() {
     return useCreate<AdminUserRow, Partial<AdminUserRow>>(
-        queryKeys.leads([{ admin: true }]),
+        queryKeys.adminUsers(),
         ADMIN_USERS_PATH,
         {
-            invalidateKeys: [queryKeys.leads([{ admin: true }])],
+            invalidateKeys: [queryKeys.adminUsers()],
         },
     );
 }
 
 export function useUpdateAdminUser() {
     return useUpdate<AdminUserRow, Partial<AdminUserRow>>(
-        queryKeys.leads([{ admin: true }]),
+        queryKeys.adminUsers(),
         ADMIN_USERS_PATH,
         {
-            invalidateKeys: [queryKeys.leads([{ admin: true }])],
+            invalidateKeys: [queryKeys.adminUsers()],
         },
     );
 }
 
 export function useDeleteAdminUser() {
-    return useDelete(queryKeys.leads([{ admin: true }]), ADMIN_USERS_PATH, {
-        invalidateKeys: [queryKeys.leads([{ admin: true }])],
+    return useDelete(queryKeys.adminUsers(), ADMIN_USERS_PATH, {
+        invalidateKeys: [queryKeys.adminUsers()],
     });
 }
 

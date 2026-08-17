@@ -437,7 +437,7 @@ export function AuditLogPage() {
                             </tr>
                         ) : (
                             logs.map((log) => (
-                                <AuditLogRow log={log} onClick={() => openDetail(log)} />
+                                <AuditLogRow key={log.id} log={log} onClick={() => openDetail(log)} />
                             ))
                         )}
                     </tbody>

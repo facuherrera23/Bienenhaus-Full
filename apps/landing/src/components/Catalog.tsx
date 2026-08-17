@@ -102,9 +102,21 @@ export function Catalog() {
                 selectedOperation === 'Todos' || prop.operation === selectedOperation;
             const matchesType = selectedType === 'Todos' || prop.type === selectedType;
             const matchesBedrooms = selectedBedrooms === null || prop.bedrooms >= selectedBedrooms;
-            return matchesSearch && matchesOperation && matchesType && matchesBedrooms;
+
+            const numericPrice = Number(prop.price.replace(/[^0-9]/g, ''));
+            let matchesPrice = true;
+            if (priceRange !== 'Todos') {
+                if (priceRange === '1000000+') {
+                    matchesPrice = numericPrice >= 1_000_000;
+                } else {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    matchesPrice = numericPrice >= min && numericPrice <= max;
+                }
+            }
+
+            return matchesSearch && matchesOperation && matchesType && matchesBedrooms && matchesPrice;
         });
-    }, [searchTerm, selectedOperation, selectedType, selectedBedrooms]);
+    }, [searchTerm, selectedOperation, selectedType, selectedBedrooms, priceRange]);
 
     const visibleProperties = filteredProperties.slice(0, visibleCount);
     const hasMore = visibleCount < filteredProperties.length;
@@ -239,9 +251,9 @@ export function Catalog() {
                                 </button>
                             ))}
                             <button
-                                className={`${styles.pill} ${selectedBedrooms === 5 ? styles.active : ''}`}
+                                className={`${styles.pill} ${selectedBedrooms === 4 ? styles.active : ''}`}
                                 onClick={() =>
-                                    setSelectedBedrooms(selectedBedrooms === 5 ? null : 5)
+                                    setSelectedBedrooms(selectedBedrooms === 4 ? null : 4)
                                 }
                             >
                                 4+
