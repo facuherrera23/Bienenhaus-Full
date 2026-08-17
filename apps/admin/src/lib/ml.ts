@@ -51,6 +51,7 @@ export type {
     ImportMlListingsResult,
     MlItemStatus,
     ImportFilters,
+    MlWebhookTopic,
     PreviewItem,
     PreviewResult,
     ImportSelectedParams,
@@ -811,12 +812,6 @@ export async function deleteDeadLetter(id: number): Promise<void> {
     const { error } = await supabase.from('ml_sync_dead_letter').delete().eq('id', id);
     if (error) throw new Error(error.message);
 }
-
-// ============================================================
-// API Functions - Webhook Topics Registration
-// ============================================================
-
-export type MlWebhookTopic = 'questions' | 'orders' | 'items' | 'payments' | 'shipments';
 
 export interface RegisterWebhookResult {
     ok: boolean;

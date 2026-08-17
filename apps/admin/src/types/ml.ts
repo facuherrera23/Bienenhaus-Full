@@ -224,3 +224,9 @@ export interface PreviewResult {
 export interface ImportSelectedParams {
     ml_item_ids: string[];
 }
+
+// ============================================================
+// Webhook Topics
+// ============================================================
+
+export type MlWebhookTopic = 'questions' | 'orders' | 'items' | 'payments' | 'shipments';
