@@ -27,7 +27,7 @@ const ADMIN_CSP = [
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://http2.mlstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://api.mercadolibre.com https://auth.mercadolibre.com.ar",
     "frame-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
