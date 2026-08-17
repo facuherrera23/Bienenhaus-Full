@@ -152,7 +152,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
                                     onClick={() => setCurrentImageIndex(index)}
                                     aria-label={`Ver imagen ${index + 1}`}
                                 >
-                                    <img src={img} alt="" />
+                                    <img src={img} alt={`Imagen ${index + 1} de la propiedad`} />
                                     <div className={styles.thumbIndicator} />
                                 </button>
                             ))}

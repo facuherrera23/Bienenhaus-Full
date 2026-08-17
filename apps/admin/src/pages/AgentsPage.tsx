@@ -78,7 +78,7 @@ export function AgentsPage() {
                             <div className={styles['agent-card-head']}>
                                 <span className={styles['agent-photo']} aria-hidden="true">
                                     {a.photo_url ? (
-                                        <img src={a.photo_url} alt="" />
+                                        <img src={a.photo_url} alt={a.name} />
                                     ) : (
                                         (a.name[0] ?? '').toUpperCase()
                                     )}

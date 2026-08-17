@@ -851,7 +851,9 @@ function UsersTab() {
     useEffect(() => {
         void fetchMyUserId()
             .then(setMyId)
-            .catch(() => {});
+            .catch((err) => {
+                console.error('[ConfigPage] Failed to fetch current user ID:', err);
+            });
     }, []);
 
     const invalidateUsers = () => {

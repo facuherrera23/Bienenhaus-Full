@@ -335,7 +335,7 @@ export function PropertiesPage() {
                                                 {p.cover_url ? (
                                                     <img
                                                         src={p.cover_url}
-                                                        alt=""
+                                                        alt={p.title || 'Portada de propiedad'}
                                                         loading="lazy"
                                                     />
                                                 ) : (

@@ -2382,7 +2382,7 @@ export function MercadoLibrePage() {
                                                                 {item.thumbnail && (
                                                                     <img
                                                                         src={item.thumbnail}
-                                                                        alt=""
+                                                                        alt={item.title || 'Miniatura ML'}
                                                                         style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px' }}
                                                                     />
                                                                 )}

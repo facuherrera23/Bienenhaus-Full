@@ -67,7 +67,7 @@ export function QuickPropertyActions({ properties }: QuickPropertyActionsProps) 
                                 <img
                                     className={styles['quick-thumb']}
                                     src={p.cover_url}
-                                    alt=""
+                                    alt={p.title || 'Portada de propiedad'}
                                     loading="lazy"
                                 />
                             ) : (

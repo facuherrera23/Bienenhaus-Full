@@ -605,7 +605,9 @@ export function subscribeToChannelMessages(
             (payload) => {
                 fetchMessage(payload.new.id)
                     .then(onMessage)
-                    .catch(() => {});
+                    .catch((err) => {
+                        logChatError({ action: 'realtime_insert', message_id: payload.new.id, error: String(err) });
+                    });
             },
         )
         .on(
@@ -619,7 +621,9 @@ export function subscribeToChannelMessages(
             (payload) => {
                 fetchMessage(payload.new.id)
                     .then(onUpdate)
-                    .catch(() => {});
+                    .catch((err) => {
+                        logChatError({ action: 'realtime_update', message_id: payload.new.id, error: String(err) });
+                    });
             },
         )
         .on(

@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type Json } from 'npm:@supabase/supabase-js@2';
 import {
     ML_API,
     fetchWithTimeout,
@@ -126,10 +126,12 @@ interface PropertyRow {
     images: { url: string; storage_path?: string }[];
 }
 
+type MlOperation = 'publish' | 'update' | 'delete';
+
 interface QueueJob {
     id: number;
     property_id: string;
-    operation: string;
+    operation: MlOperation;
     ml_item_id: string | null;
     attempts: number;
     max_attempts: number;
@@ -440,11 +442,11 @@ async function moveToDeadLetter(
     await supabase.from('ml_sync_dead_letter').insert({
         original_queue_id: job.id,
         property_id: job.property_id,
-        operation: job.operation as any,
+        operation: job.operation,
         attempts,
         max_attempts: maxAttempts,
         last_error: error,
-        payload: payload as any,
+        payload: payload as Json,
         ml_item_id: job.ml_item_id ?? null,
     });
 
@@ -477,7 +479,7 @@ async function moveToDeadLetter(
 
 async function runJob(
     queueId: number,
-    operation: string,
+    operation: MlOperation,
     propertyId: string,
     mlItemId: string | null,
     accessToken: string,

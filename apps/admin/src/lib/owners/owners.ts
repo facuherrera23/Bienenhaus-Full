@@ -86,6 +86,27 @@ interface ReportApiRow extends ReportDbRow {
 }
 
 // ============================================================
+// PostgREST Cast Helpers
+// ============================================================
+
+function castRows<T>(rows: unknown): T[] {
+    return rows as T[];
+}
+
+function castRow<T>(row: unknown): T {
+    return row as T;
+}
+
+type PropertyOwnerEmbedded = PropertyOwnerDbRow & {
+    properties?: { title: string };
+    owners?: { full_name: string };
+}
+
+function toJson(value: unknown): Json {
+    return value as Json;
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -180,7 +201,7 @@ function toPriceAnalysisRow(pa: PriceAnalysisApiRow): PriceAnalysisRow {
         price_status: pa.price_status ?? 'fair',
         market_trend: pa.market_trend ?? 'stable',
         comparable_properties: Array.isArray(comps)
-            ? (comps as unknown as ComparableProperty[])
+            ? castRows<ComparableProperty>(comps)
             : [],
         recommendation: pa.recommendation ?? null,
         notes: pa.notes ?? null,
@@ -353,7 +374,7 @@ export async function fetchOwners(search?: string): Promise<OwnerRow[]> {
     if (search) q = q.ilike('full_name', `%${search}%`);
     const { data, error } = await q;
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as OwnerApiRow[]).map(toOwnerRow);
+    return castRows<OwnerApiRow>(data ?? []).map(toOwnerRow);
 }
 
 export async function fetchOwnersPaginated(filters: {
@@ -393,7 +414,7 @@ export async function fetchOwnersPaginated(filters: {
     const { data, error, count } = await q;
     if (error) throw new Error(error.message);
 
-    let rows = ((data ?? []) as unknown as OwnerApiRow[]).map(toOwnerRow);
+    let rows = castRows<OwnerApiRow>(data ?? []).map(toOwnerRow);
 
     if (filters.has_properties !== undefined) {
         // For has_properties filter, we'd need a separate count query or post-filter
@@ -421,7 +442,7 @@ export async function fetchOwnerById(id: string): Promise<OwnerDetail> {
         .eq('id', id)
         .single();
     if (error) throw new Error(error.message);
-    return toOwnerDetail(data as unknown as OwnerApiRow);
+    return toOwnerDetail(castRow<OwnerApiRow>(data));
 }
 
 export async function createOwner(owner: Omit<OwnerFormValues, 'id'>): Promise<OwnerRow> {
@@ -431,7 +452,7 @@ export async function createOwner(owner: Omit<OwnerFormValues, 'id'>): Promise<O
         .select(OWNERS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toOwnerRow(data as unknown as OwnerApiRow);
+    return toOwnerRow(castRow<OwnerApiRow>(data));
 }
 
 export async function updateOwner(id: string, owner: Partial<OwnerFormValues>): Promise<OwnerRow> {
@@ -442,7 +463,7 @@ export async function updateOwner(id: string, owner: Partial<OwnerFormValues>): 
         .select(OWNERS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toOwnerRow(data as unknown as OwnerApiRow);
+    return toOwnerRow(castRow<OwnerApiRow>(data));
 }
 
 export async function softDeleteOwner(id: string): Promise<void> {
@@ -470,7 +491,7 @@ export async function fetchDeletedOwners(): Promise<OwnerRow[]> {
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false });
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as OwnerApiRow[]).map(toOwnerRow);
+    return castRows<OwnerApiRow>(data ?? []).map(toOwnerRow);
 }
 
 // ============================================================
@@ -484,11 +505,7 @@ export async function fetchPropertyOwners(propertyId: string): Promise<PropertyO
         .eq('property_id', propertyId)
         .order('is_primary_contact', { ascending: false });
     if (error) throw new Error(error.message);
-    return (
-        (data ?? []) as unknown as Array<
-            PropertyOwnerDbRow & { properties?: { title: string }; owners?: { full_name: string } }
-        >
-    ).map(toPropertyOwnerLinkRow);
+    return castRows<PropertyOwnerEmbedded>(data ?? []).map(toPropertyOwnerLinkRow);
 }
 
 export async function fetchOwnerProperties(ownerId: string): Promise<PropertyOwnerLinkRow[]> {
@@ -498,11 +515,7 @@ export async function fetchOwnerProperties(ownerId: string): Promise<PropertyOwn
         .eq('owner_id', ownerId)
         .order('is_primary_contact', { ascending: false });
     if (error) throw new Error(error.message);
-    return (
-        (data ?? []) as unknown as Array<
-            PropertyOwnerDbRow & { properties?: { title: string }; owners?: { full_name: string } }
-        >
-    ).map(toPropertyOwnerLinkRow);
+    return castRows<PropertyOwnerEmbedded>(data ?? []).map(toPropertyOwnerLinkRow);
 }
 
 export async function linkOwnerToProperty(link: PropertyOwnerLink): Promise<PropertyOwnerLinkRow> {
@@ -512,12 +525,7 @@ export async function linkOwnerToProperty(link: PropertyOwnerLink): Promise<Prop
         .select(PROPERTY_OWNERS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toPropertyOwnerLinkRow(
-        data as unknown as PropertyOwnerDbRow & {
-            properties?: { title: string };
-            owners?: { full_name: string };
-        },
-    );
+    return toPropertyOwnerLinkRow(castRow<PropertyOwnerEmbedded>(data));
 }
 
 export async function unlinkOwnerFromProperty(propertyId: string, ownerId: string): Promise<void> {
@@ -542,12 +550,7 @@ export async function updatePropertyOwnerLink(
         .select(PROPERTY_OWNERS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toPropertyOwnerLinkRow(
-        data as unknown as PropertyOwnerDbRow & {
-            properties?: { title: string };
-            owners?: { full_name: string };
-        },
-    );
+    return toPropertyOwnerLinkRow(castRow<PropertyOwnerEmbedded>(data));
 }
 
 export async function setPrimaryContact(propertyId: string, ownerId: string): Promise<void> {
@@ -580,7 +583,7 @@ export async function fetchPriceAnalysis(propertyId: string): Promise<PriceAnaly
         .limit(1)
         .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toPriceAnalysisRow(data as unknown as PriceAnalysisApiRow) : null;
+    return data ? toPriceAnalysisRow(castRow<PriceAnalysisApiRow>(data)) : null;
 }
 
 export async function fetchPriceAnalysisHistory(propertyId: string): Promise<PriceAnalysisRow[]> {
@@ -590,7 +593,7 @@ export async function fetchPriceAnalysisHistory(propertyId: string): Promise<Pri
         .eq('property_id', propertyId)
         .order('analysis_date', { ascending: false });
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as PriceAnalysisApiRow[]).map(toPriceAnalysisRow);
+    return castRows<PriceAnalysisApiRow>(data ?? []).map(toPriceAnalysisRow);
 }
 
 export async function createPriceAnalysis(
@@ -605,7 +608,7 @@ export async function createPriceAnalysis(
     const payload: Database['public']['Tables']['property_price_analyses']['Insert'] = {
         ...analysis,
         price_status,
-        comparable_properties: analysis.comparable_properties as unknown as Json,
+        comparable_properties: toJson(analysis.comparable_properties),
     };
 
     const { data, error } = await supabase
@@ -614,7 +617,7 @@ export async function createPriceAnalysis(
         .select(PRICE_ANALYSIS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toPriceAnalysisRow(data as unknown as PriceAnalysisApiRow);
+    return toPriceAnalysisRow(castRow<PriceAnalysisApiRow>(data));
 }
 
 export async function updatePriceAnalysis(
@@ -623,7 +626,7 @@ export async function updatePriceAnalysis(
 ): Promise<PriceAnalysisRow> {
     const payload: Database['public']['Tables']['property_price_analyses']['Update'] = {
         ...analysis,
-        comparable_properties: analysis.comparable_properties as unknown as Json | undefined,
+        comparable_properties: toJson(analysis.comparable_properties),
     };
 
     // Recalculate price_status if prices changed
@@ -636,7 +639,7 @@ export async function updatePriceAnalysis(
     }
 
     if (analysis.comparable_properties !== undefined) {
-        payload.comparable_properties = analysis.comparable_properties as unknown as Json;
+        payload.comparable_properties = toJson(analysis.comparable_properties);
     }
 
     const { data, error } = await supabase
@@ -646,7 +649,7 @@ export async function updatePriceAnalysis(
         .select(PRICE_ANALYSIS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toPriceAnalysisRow(data as unknown as PriceAnalysisApiRow);
+    return toPriceAnalysisRow(castRow<PriceAnalysisApiRow>(data));
 }
 
 export async function deletePriceAnalysis(id: string): Promise<void> {
@@ -715,7 +718,7 @@ export async function fetchActionPlans(filters?: {
     const { data, error, count } = await q;
     if (error) throw new Error(error.message);
 
-    const rows = ((data ?? []) as unknown as ActionPlanApiRow[]).map(toActionPlanRow);
+    const rows = castRows<ActionPlanApiRow>(data ?? []).map(toActionPlanRow);
 
     return {
         data: rows,
@@ -745,11 +748,11 @@ export async function fetchActionPlanById(id: string): Promise<ActionPlanDetail 
 
     if (tasksRes.error) throw new Error(tasksRes.error.message);
 
-    const tasks = ((tasksRes.data ?? []) as unknown as ActionPlanTaskApiRow[]).map(
+    const tasks = castRows<ActionPlanTaskApiRow>((tasksRes.data ?? [])).map(
         toActionPlanTaskRow,
     );
 
-    return toActionPlanDetail(planRes.data as unknown as ActionPlanApiRow, tasks);
+    return toActionPlanDetail(castRow<ActionPlanApiRow>(planRes.data), tasks);
 }
 
 export async function createActionPlan(plan: ActionPlanFormValues): Promise<ActionPlanRow> {
@@ -759,7 +762,7 @@ export async function createActionPlan(plan: ActionPlanFormValues): Promise<Acti
         .select(ACTION_PLANS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toActionPlanRow(data as unknown as ActionPlanApiRow);
+    return toActionPlanRow(castRow<ActionPlanApiRow>(data));
 }
 
 export async function updateActionPlan(
@@ -773,7 +776,7 @@ export async function updateActionPlan(
         .select(ACTION_PLANS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toActionPlanRow(data as unknown as ActionPlanApiRow);
+    return toActionPlanRow(castRow<ActionPlanApiRow>(data));
 }
 
 export async function completeActionPlan(id: string): Promise<void> {
@@ -812,7 +815,7 @@ export async function fetchDeletedActionPlans(): Promise<ActionPlanRow[]> {
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false });
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as ActionPlanApiRow[]).map(toActionPlanRow);
+    return castRows<ActionPlanApiRow>(data ?? []).map(toActionPlanRow);
 }
 
 // ============================================================
@@ -826,7 +829,7 @@ export async function fetchTasksByPlan(planId: string): Promise<ActionPlanTaskRo
         .eq('plan_id', planId)
         .order('due_date');
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as ActionPlanTaskApiRow[]).map(toActionPlanTaskRow);
+    return castRows<ActionPlanTaskApiRow>(data ?? []).map(toActionPlanTaskRow);
 }
 
 export async function createActionPlanTask(
@@ -838,7 +841,7 @@ export async function createActionPlanTask(
         .select(ACTION_PLAN_TASKS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toActionPlanTaskRow(data as unknown as ActionPlanTaskApiRow);
+    return toActionPlanTaskRow(castRow<ActionPlanTaskApiRow>(data));
 }
 
 export async function updateActionPlanTask(
@@ -856,7 +859,7 @@ export async function updateActionPlanTask(
         .select(ACTION_PLAN_TASKS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toActionPlanTaskRow(data as unknown as ActionPlanTaskApiRow);
+    return toActionPlanTaskRow(castRow<ActionPlanTaskApiRow>(data));
 }
 
 export async function completeActionPlanTask(id: string): Promise<void> {
@@ -916,7 +919,7 @@ export async function fetchCommunications(filters?: {
     if (error) throw new Error(error.message);
 
     return {
-        data: ((data ?? []) as unknown as CommunicationApiRow[]).map(toCommunicationRow),
+        data: castRows<CommunicationApiRow>(data ?? []).map(toCommunicationRow),
         count: count ?? 0,
         page,
         pageSize,
@@ -939,7 +942,7 @@ export async function createCommunication(
         .select(COMMUNICATIONS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toCommunicationRow(data as unknown as CommunicationApiRow);
+    return toCommunicationRow(castRow<CommunicationApiRow>(data));
 }
 
 export async function createDraftCommunication(
@@ -951,7 +954,7 @@ export async function createDraftCommunication(
         .select(COMMUNICATIONS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toCommunicationRow(data as unknown as CommunicationApiRow);
+    return toCommunicationRow(castRow<CommunicationApiRow>(data));
 }
 
 export async function sendCommunication(id: string): Promise<CommunicationRow> {
@@ -962,7 +965,7 @@ export async function sendCommunication(id: string): Promise<CommunicationRow> {
         .select(COMMUNICATIONS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toCommunicationRow(data as unknown as CommunicationApiRow);
+    return toCommunicationRow(castRow<CommunicationApiRow>(data));
 }
 
 export async function deleteCommunication(id: string): Promise<void> {
@@ -1010,7 +1013,7 @@ export async function fetchReports(filters?: {
     if (error) throw new Error(error.message);
 
     return {
-        data: ((data ?? []) as unknown as ReportApiRow[]).map(toReportRow),
+        data: castRows<ReportApiRow>(data ?? []).map(toReportRow),
         count: count ?? 0,
         page,
         pageSize,
@@ -1025,7 +1028,7 @@ export async function fetchReportById(id: string): Promise<ReportRow | null> {
         .eq('id', id)
         .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toReportRow(data as unknown as ReportApiRow) : null;
+    return data ? toReportRow(castRow<ReportApiRow>(data)) : null;
 }
 
 export async function createReport(report: ReportFormValues): Promise<ReportRow> {
@@ -1034,12 +1037,12 @@ export async function createReport(report: ReportFormValues): Promise<ReportRow>
         .insert({
             ...report,
             generated_at: new Date().toISOString(),
-            content_json: report.content_json as unknown as Json,
+            content_json: toJson(report.content_json),
         })
         .select(REPORTS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toReportRow(data as unknown as ReportApiRow);
+    return toReportRow(castRow<ReportApiRow>(data));
 }
 
 export async function sendReport(id: string): Promise<ReportRow> {
@@ -1050,7 +1053,7 @@ export async function sendReport(id: string): Promise<ReportRow> {
         .select(REPORTS_SELECT)
         .single();
     if (error) throw new Error(error.message);
-    return toReportRow(data as unknown as ReportApiRow);
+    return toReportRow(castRow<ReportApiRow>(data));
 }
 
 export async function deleteReport(id: string): Promise<void> {

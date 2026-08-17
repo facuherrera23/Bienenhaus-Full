@@ -350,7 +350,7 @@ async function upsertPropertyAndMeta(
                 permalink: mlItemData.permalink,
                 category_id: (mlItemData as Record<string, unknown>).category_id as string | null,
                 listing_type_id: parseInt(mlItemData.listing_type_id.replace(/\D/g, ''), 10) || null,
-                raw: mlItemData as unknown as Record<string, unknown>,
+                raw: mlItemData as Record<string, unknown>,
                 last_sync_at: new Date().toISOString(),
                 last_sync_status: 'success',
                 updated_at: new Date().toISOString(),
@@ -391,7 +391,7 @@ async function upsertPropertyAndMeta(
             permalink: mlItemData.permalink,
             category_id: (mlItemData as Record<string, unknown>).category_id as string | null,
             listing_type_id: parseInt(mlItemData.listing_type_id.replace(/\D/g, ''), 10) || null,
-            raw: mlItemData as unknown as Record<string, unknown>,
+            raw: mlItemData as Record<string, unknown>,
             last_sync_at: new Date().toISOString(),
             last_sync_status: 'success',
         });

@@ -273,9 +273,9 @@ export function TrashPage() {
                 <td>
                     <div className="cell-property">
                         {type === 'property' && item.cover_url ? (
-                            <img src={item.cover_url} alt="" loading="lazy" />
+                            <img src={item.cover_url} alt={item.title || 'Portada'} loading="lazy" />
                         ) : type === 'agent' && item.photo_url ? (
-                            <img src={item.photo_url} alt="" loading="lazy" />
+                            <img src={item.photo_url} alt={item.name || item.full_name || 'Foto'} loading="lazy" />
                         ) : type === 'owner' ? (
                             <span className="cell-thumb" aria-hidden="true">
                                 {(item.full_name ?? '').charAt(0).toUpperCase()}

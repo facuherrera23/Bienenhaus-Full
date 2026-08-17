@@ -119,7 +119,7 @@ export type VisitReminder = z.infer<typeof VisitReminderSchema>;
 export type AgentAvailability = z.infer<typeof AgentAvailabilitySchema>;
 
 // Validation helpers
-export function validateVisitForm(data: unknown): { valid: boolean; error?: string; data?: any } {
+export function validateVisitForm(data: unknown): { valid: boolean; error?: string; data?: VisitFormValues } {
     const result = VisitFormSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -128,7 +128,7 @@ export function validateVisitForm(data: unknown): { valid: boolean; error?: stri
     return { valid: true, data: result.data };
 }
 
-export function validateVisitPatch(data: unknown): { valid: boolean; error?: string; data?: any } {
+export function validateVisitPatch(data: unknown): { valid: boolean; error?: string; data?: VisitPatch } {
     const result = VisitPatchSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];
@@ -137,7 +137,7 @@ export function validateVisitPatch(data: unknown): { valid: boolean; error?: str
     return { valid: true, data: result.data };
 }
 
-export function validateQrCheckin(data: unknown): { valid: boolean; error?: string; data?: any } {
+export function validateQrCheckin(data: unknown): { valid: boolean; error?: string; data?: QrCheckinPayload } {
     const result = QrCheckinPayloadSchema.safeParse(data);
     if (!result.success) {
         const firstError = result.error.errors[0];

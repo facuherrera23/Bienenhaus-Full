@@ -388,7 +388,7 @@ export function ChatPage() {
                                             channel.participants[0].agent_photo_url ? (
                                                 <img
                                                     src={channel.participants[0].agent_photo_url}
-                                                    alt=""
+                                                    alt={channel.participants[0].agent_name || ''}
                                                 />
                                             ) : (
                                                 <span>
@@ -482,7 +482,7 @@ export function ChatPage() {
                                                         activeChannel.participants[0]
                                                             .agent_photo_url
                                                     }
-                                                    alt=""
+                                                    alt={activeChannel.participants[0].agent_name || ''}
                                                 />
                                             ) : (
                                                 <span>
@@ -588,7 +588,7 @@ export function ChatPage() {
                                                                 {msg.sender_photo_url ? (
                                                                     <img
                                                                         src={msg.sender_photo_url}
-                                                                        alt=""
+                                                                        alt={msg.sender_name || ''}
                                                                     />
                                                                 ) : (
                                                                     <span>
@@ -977,7 +977,7 @@ export function ChatPage() {
                                                     />
                                                     <span className={styles['agent-avatar-small']}>
                                                         {agent.photo_url ? (
-                                                            <img src={agent.photo_url} alt="" />
+                                                            <img src={agent.photo_url} alt={agent.name || ''} />
                                                         ) : (
                                                             agent.name?.[0]?.toUpperCase()
                                                         )}
@@ -1022,7 +1022,7 @@ export function ChatPage() {
                                                             className={styles['agent-avatar-small']}
                                                         >
                                                             {agent.photo_url ? (
-                                                                <img src={agent.photo_url} alt="" />
+                                                                <img src={agent.photo_url} alt={agent.name || ''} />
                                                             ) : (
                                                                 agent.name?.[0]?.toUpperCase()
                                                             )}
@@ -1075,7 +1075,7 @@ export function ChatPage() {
                                                             className={styles['agent-avatar-small']}
                                                         >
                                                             {agent.photo_url ? (
-                                                                <img src={agent.photo_url} alt="" />
+                                                                <img src={agent.photo_url} alt={agent.name || ''} />
                                                             ) : (
                                                                 agent.name?.[0]?.toUpperCase()
                                                             )}
@@ -1128,7 +1128,7 @@ export function ChatPage() {
                                                             className={styles['agent-avatar-small']}
                                                         >
                                                             {agent.photo_url ? (
-                                                                <img src={agent.photo_url} alt="" />
+                                                                <img src={agent.photo_url} alt={agent.name || ''} />
                                                             ) : (
                                                                 agent.name?.[0]?.toUpperCase()
                                                             )}
