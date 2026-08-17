@@ -118,71 +118,94 @@ $function$;
 -- ----------------------------------------------------------------------------
 -- 2) Bucket 'property-images' (público — la landing lee las URLs sin auth)
 -- ----------------------------------------------------------------------------
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'property-images',
-  'property-images',
-  true,
-  15728640,
-  array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
-)
-on conflict (id) do nothing;
+-- Las tablas storage.buckets y storage.objects se crean automáticamente al
+-- iniciar el servicio storage-api. Usamos DO blocks para evitar errores si
+-- las tablas aún no existen durante la ejecución de migraciones.
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'buckets') then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values (
+      'property-images',
+      'property-images',
+      true,
+      15728640,
+      array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+    )
+    on conflict (id) do nothing;
+  end if;
+end $$;
 
--- Lectura pública
-drop policy if exists property_images_public_read on storage.objects;
-create policy property_images_public_read on storage.objects
-  for select using (bucket_id = 'property-images');
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'objects') then
+    -- Lectura pública
+    drop policy if exists property_images_public_read on storage.objects;
+    create policy property_images_public_read on storage.objects
+      for select using (bucket_id = 'property-images');
 
--- Escritura/borrado solo para staff
-drop policy if exists property_images_staff_insert on storage.objects;
-create policy property_images_staff_insert on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'property-images' and public.is_staff());
+    -- Escritura/borrado solo para staff
+    drop policy if exists property_images_staff_insert on storage.objects;
+    create policy property_images_staff_insert on storage.objects
+      for insert to authenticated
+      with check (bucket_id = 'property-images' and public.is_staff());
 
-drop policy if exists property_images_staff_update on storage.objects;
-create policy property_images_staff_update on storage.objects
-  for update to authenticated
-  using (bucket_id = 'property-images' and public.is_staff());
+    drop policy if exists property_images_staff_update on storage.objects;
+    create policy property_images_staff_update on storage.objects
+      for update to authenticated
+      using (bucket_id = 'property-images' and public.is_staff());
 
-drop policy if exists property_images_staff_delete on storage.objects;
-create policy property_images_staff_delete on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'property-images' and public.is_staff());
+    drop policy if exists property_images_staff_delete on storage.objects;
+    create policy property_images_staff_delete on storage.objects
+      for delete to authenticated
+      using (bucket_id = 'property-images' and public.is_staff());
+  end if;
+end $$;
 
 -- ----------------------------------------------------------------------------
 -- 3) Bucket 'chat-files' (privado — adjuntos del chat interno, solo staff)
 -- ----------------------------------------------------------------------------
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'chat-files',
-  'chat-files',
-  false,
-  10485760,
-  array['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf', 'text/plain']
-)
-on conflict (id) do nothing;
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'buckets') then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values (
+      'chat-files',
+      'chat-files',
+      false,
+      10485760,
+      array['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf', 'text/plain']
+    )
+    on conflict (id) do nothing;
+  end if;
+end $$;
 
--- Acceso exclusivo staff (select para lectura futura vía signed URLs)
-drop policy if exists chat_files_staff_select on storage.objects;
-create policy chat_files_staff_select on storage.objects
-  for select to authenticated
-  using (bucket_id = 'chat-files' and public.is_staff());
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'objects') then
+    -- Acceso exclusivo staff (select para lectura futura vía signed URLs)
+    drop policy if exists chat_files_staff_select on storage.objects;
+    create policy chat_files_staff_select on storage.objects
+      for select to authenticated
+      using (bucket_id = 'chat-files' and public.is_staff());
 
-drop policy if exists chat_files_staff_insert on storage.objects;
-create policy chat_files_staff_insert on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'chat-files' and public.is_staff());
+    drop policy if exists chat_files_staff_insert on storage.objects;
+    create policy chat_files_staff_insert on storage.objects
+      for insert to authenticated
+      with check (bucket_id = 'chat-files' and public.is_staff());
 
-drop policy if exists chat_files_staff_update on storage.objects;
-create policy chat_files_staff_update on storage.objects
-  for update to authenticated
-  using (bucket_id = 'chat-files' and public.is_staff());
+    drop policy if exists chat_files_staff_update on storage.objects;
+    create policy chat_files_staff_update on storage.objects
+      for update to authenticated
+      using (bucket_id = 'chat-files' and public.is_staff());
 
-drop policy if exists chat_files_staff_delete on storage.objects;
-create policy chat_files_staff_delete on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'chat-files' and public.is_staff());
+    drop policy if exists chat_files_staff_delete on storage.objects;
+    create policy chat_files_staff_delete on storage.objects
+      for delete to authenticated
+      using (bucket_id = 'chat-files' and public.is_staff());
 
--- Grants para storage.objects
-grant select on storage.objects to anon, authenticated;
-grant insert, update, delete on storage.objects to authenticated;
+    -- Grants para storage.objects
+    grant select on storage.objects to anon, authenticated;
+    grant insert, update, delete on storage.objects to authenticated;
+  end if;
+end $$;

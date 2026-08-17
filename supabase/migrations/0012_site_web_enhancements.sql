@@ -10,33 +10,46 @@
 -- ----------------------------------------------------------------------------
 -- Storage 'site-images'
 -- ----------------------------------------------------------------------------
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'site-images',
-  'site-images',
-  true,
-  5242880,
-  array['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
-)
-on conflict (id) do nothing;
+-- Las tablas storage.buckets y storage.objects se crean automáticamente al
+-- iniciar el servicio storage-api. Usamos DO blocks para evitar errores si
+-- las tablas aún no existen durante la ejecución de migraciones.
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'buckets') then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values (
+      'site-images',
+      'site-images',
+      true,
+      5242880,
+      array['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
+    )
+    on conflict (id) do nothing;
+  end if;
+end $$;
 
-create policy site_images_public_read on storage.objects
-  for select using (bucket_id = 'site-images');
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'objects') then
+    create policy site_images_public_read on storage.objects
+      for select using (bucket_id = 'site-images');
 
-create policy site_images_staff_insert on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'site-images' and public.is_staff());
+    create policy site_images_staff_insert on storage.objects
+      for insert to authenticated
+      with check (bucket_id = 'site-images' and public.is_staff());
 
-create policy site_images_staff_update on storage.objects
-  for update to authenticated
-  using (bucket_id = 'site-images' and public.is_staff());
+    create policy site_images_staff_update on storage.objects
+      for update to authenticated
+      using (bucket_id = 'site-images' and public.is_staff());
 
-create policy site_images_staff_delete on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'site-images' and public.is_staff());
+    create policy site_images_staff_delete on storage.objects
+      for delete to authenticated
+      using (bucket_id = 'site-images' and public.is_staff());
 
-grant select on storage.objects to anon, authenticated;
-grant insert, update, delete on storage.objects to authenticated;
+    grant select on storage.objects to anon, authenticated;
+    grant insert, update, delete on storage.objects to authenticated;
+  end if;
+end $$;
 
 -- ----------------------------------------------------------------------------
 -- Seeds — settings de imágenes
