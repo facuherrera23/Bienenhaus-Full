@@ -524,7 +524,7 @@ export function SitePage() {
         if (!iframe?.contentWindow) return;
         iframe.contentWindow.postMessage(
             { type: 'bh-site-preview', payload: buildPreviewPayload() },
-            '*',
+            window.location.origin,
         );
     };
 

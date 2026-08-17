@@ -156,7 +156,7 @@ export async function deleteAgentPhoto(url: string): Promise<void> {
         const path = url.split('/agent-photos/')[1]?.split('?')[0];
         if (path) await supabase.storage.from('agent-photos').remove([path]);
     } catch {
-        // no op
+        console.warn('[Agents] No se pudo eliminar foto del storage:', url);
     }
 }
 

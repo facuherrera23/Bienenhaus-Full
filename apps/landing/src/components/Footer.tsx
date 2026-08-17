@@ -1,6 +1,7 @@
 // apps/landing/src/components/Footer.tsx
 import { useState } from 'preact/hooks';
 import { useScrollAnimation } from '@/lib/motion';
+import { subscribeNewsletter } from '@/lib/newsletter';
 import styles from '../styles/modules/Footer.module.css';
 
 interface FooterLink {
@@ -62,15 +63,22 @@ export function Footer() {
         }
 
         setIsSubmitting(true);
-        // Simular envío
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-
-        setFeedback({
-            type: 'success',
-            message: '¡Te suscribiste correctamente!',
-        });
-        setEmail('');
+        try {
+            await subscribeNewsletter(email);
+            setFeedback({
+                type: 'success',
+                message: '¡Te suscribiste correctamente!',
+            });
+            setEmail('');
+        } catch (err) {
+            console.warn('[Newsletter] Error al suscribir:', err);
+            setFeedback({
+                type: 'error',
+                message: 'No se pudo completar la suscripción. Intentá de nuevo.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
 
         setTimeout(() => {
             setFeedback({ type: null, message: '' });

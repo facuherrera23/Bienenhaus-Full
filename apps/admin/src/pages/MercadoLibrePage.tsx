@@ -433,8 +433,8 @@ export function MercadoLibrePage() {
                     }
                 }
             } catch {
-            // ignore
-        }
+                console.warn('[ML] No se pudieron cargar ajustes ML:', fetchMlSettings.name);
+            }
         })();
         return () => {
             cancelled = true;

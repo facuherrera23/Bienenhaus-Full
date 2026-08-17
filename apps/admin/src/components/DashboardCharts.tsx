@@ -216,8 +216,8 @@ export function DashboardCharts() {
                         <p className="kpi-delta">{wonLeads} cerrados ganados</p>
                     </div>
                 </div>
-                <div className="kpi-card">
-                    <span className="kpi-icon">
+                <div className="kpi-card" role="region" aria-label="KPI: Valor Pipeline (USD)">
+                    <span className="kpi-icon" aria-hidden="true">
                         <DollarSign size={20} strokeWidth={1.8} />
                     </span>
                     <div>
