@@ -239,7 +239,7 @@ export function Catalog() {
                     <div className={styles.searchGroup}>
                         <label>Dormitorios</label>
                         <div className={styles.bedroomPills}>
-                            {[1, 2, 3, 4].map((num) => (
+                            {[1, 2, 3].map((num) => (
                                 <button
                                     key={num}
                                     className={`${styles.pill} ${selectedBedrooms === num ? styles.active : ''}`}

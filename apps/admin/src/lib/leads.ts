@@ -752,6 +752,18 @@ export async function parseLeadsCsv(csvText: string): Promise<{
             continue;
         }
 
+        // Deduplicación por email (case-insensitive)
+        const existingEmail = valid.findIndex(
+            (v) => (v.email ?? '').toLowerCase() === (row.email ?? '').toLowerCase(),
+        );
+        if (existingEmail >= 0) {
+            errors.push({
+                row: i,
+                message: `Lead duplicado: el email ${row.email} ya fue ingresado`,
+            });
+            continue;
+        }
+
         valid.push({
             name: row.name,
             last_name: row.last_name,
@@ -761,19 +773,6 @@ export async function parseLeadsCsv(csvText: string): Promise<{
             source: row.source as LeadSource,
             status: (row.status as LeadStatus) || 'nuevo',
         });
-
-        // Deduplicación por email (case-insensitive)
-        const existingEmail = valid.findIndex(
-            (v) => (v.email ?? '').toLowerCase() === (row.email ?? '').toLowerCase(),
-        );
-        if (existingEmail >= 0 && existingEmail !== valid.length - 1) {
-            errors.push({
-                row: i,
-                message: `Lead duplicado: el email ${row.email} ya fue ingresado`,
-            });
-            valid.pop();
-            continue;
-        }
     }
 
     return { valid, errors };

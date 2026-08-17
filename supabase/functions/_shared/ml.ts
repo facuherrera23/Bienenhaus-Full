@@ -681,15 +681,6 @@ export async function runMlApiCallWithRetry<T>(
     return result;
 }
 
-export async function fetchMlListingTypes(accessToken: string): Promise<MlListingType[]> {
-    const res = await fetchWithTimeout(`${ML_API}/sites/MLA/listing_types`, {
-        headers: { authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) throw new Error(`ML listing_types falló (${res.status})`);
-    const data = await res.json();
-    return data?.map((lt: { id: string; name: string }) => ({ id: lt.id, name: lt.name })) ?? [];
-}
-
 // ============================================================
 // Webhook Topics Registration (auto-register on OAuth)
 // ============================================================

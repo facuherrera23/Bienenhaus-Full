@@ -389,7 +389,12 @@ export async function permanentDeleteProperty(id: string): Promise<void> {
             .filter(Boolean);
 
         if (paths.length) {
-            await supabase.storage.from('property-images').remove(paths);
+            const { error: storageError } = await supabase.storage
+                .from('property-images')
+                .remove(paths);
+            if (storageError) {
+                console.warn('Storage cleanup failed for property', id, storageError.message);
+            }
         }
     }
 
@@ -580,8 +585,12 @@ async function convertToWebP(file: File, quality = 0.85): Promise<File> {
         formData.append('file', file);
         formData.append('quality', String(quality * 100));
 
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+
         const res = await fetch(`${supabaseUrl}/functions/v1/convert-image`, {
             method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
             body: formData,
         });
 
