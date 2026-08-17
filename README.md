@@ -1,6 +1,6 @@
 # 🏠 BIENENHAUS PROPIEDADES
 
-Landing pública + Panel administrativo integral para inmobiliaria. Una solución full-stack moderna que combina una landing page de alto rendimiento con un CRM completo, integración Mercado Libre, agenda de visitas, chat interno, módulo de propietarios, **tasaciones profesionales** y sistema de papelera con recuperación.
+Landing pública + Panel administrativo integral para inmobiliaria. Una solución full-stack moderna que combina una landing page de alto rendimiento con un CRM completo, integración Mercado Libre, agenda de visitas, módulo de propietarios, **tasaciones profesionales** y sistema de papelera con recuperación.
 
 ---
 

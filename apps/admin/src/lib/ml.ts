@@ -62,15 +62,15 @@ export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
 // ============================================================
 
 export type QueueApiRow = Database['public']['Tables']['ml_sync_queue']['Row'] & {
-    property: { title: string; code: number } | { title: string; code: number }[] | null;
+    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 export type MetaApiRow = Database['public']['Tables']['property_ml_meta']['Row'] & {
-    property: { title: string; code: number } | { title: string; code: number }[] | null;
+    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 export type DeadLetterApiRow = Database['public']['Tables']['ml_sync_dead_letter']['Row'] & {
-    property: { title: string; code: number } | { title: string; code: number }[] | null;
+    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 // ============================================================
@@ -94,7 +94,7 @@ export function embedProperty(
 // ============================================================
 
 export function toMlQueueRow(q: QueueApiRow): MlQueueRow {
-    const prop = embedProperty(q.property);
+    const prop = embedProperty(q.property_id);
     return {
         id: q.id,
         property_id: q.property_id,
@@ -112,7 +112,7 @@ export function toMlQueueRow(q: QueueApiRow): MlQueueRow {
 }
 
 export function toMlMetaRow(m: MetaApiRow): MlMetaRow {
-    const prop = embedProperty(m.property);
+    const prop = embedProperty(m.property_id);
     return {
         property_id: m.property_id,
         ml_item_id: m.ml_item_id,
@@ -144,7 +144,7 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
     property_title: string | null;
     property_code: number | null;
 } {
-    const prop = embedProperty(d.property);
+    const prop = embedProperty(d.property_id);
     return {
         id: d.id,
         original_queue_id: d.original_queue_id,
@@ -170,15 +170,15 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
 // ============================================================
 
 const ML_QUEUE_SELECT = `
-  id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property:properties(title, code)
+  id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property_id:properties(title, code)
 `.trim();
 
 const ML_META_SELECT = `
-  property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property:properties(title, code)
+  property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property_id:properties(title, code)
 `.trim();
 
 const ML_DEAD_LETTER_SELECT = `
-  id, original_queue_id, property_id, operation, attempts, max_attempts, last_error, payload, ml_item_id, created_at, moved_at, resolved_at, resolved_by, resolution_notes, property:properties(title, code)
+  id, original_queue_id, property_id, operation, attempts, max_attempts, last_error, payload, ml_item_id, created_at, moved_at, resolved_at, resolved_by, resolution_notes, property_id:properties(title, code)
 `.trim();
 
 // ============================================================
