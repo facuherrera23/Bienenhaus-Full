@@ -62,15 +62,15 @@ export { ML_OPERATION_LABEL, ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE };
 // ============================================================
 
 export type QueueApiRow = Database['public']['Tables']['ml_sync_queue']['Row'] & {
-    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
+    property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 export type MetaApiRow = Database['public']['Tables']['property_ml_meta']['Row'] & {
-    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
+    property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 export type DeadLetterApiRow = Database['public']['Tables']['ml_sync_dead_letter']['Row'] & {
-    property_id: { title: string; code: number } | { title: string; code: number }[] | null;
+    property: { title: string; code: number } | { title: string; code: number }[] | null;
 };
 
 // ============================================================
@@ -94,7 +94,7 @@ export function embedProperty(
 // ============================================================
 
 export function toMlQueueRow(q: QueueApiRow): MlQueueRow {
-    const prop = embedProperty(q.property_id);
+    const prop = embedProperty(q.property);
     return {
         id: q.id,
         property_id: q.property_id,
@@ -112,7 +112,7 @@ export function toMlQueueRow(q: QueueApiRow): MlQueueRow {
 }
 
 export function toMlMetaRow(m: MetaApiRow): MlMetaRow {
-    const prop = embedProperty(m.property_id);
+    const prop = embedProperty(m.property);
     return {
         property_id: m.property_id,
         ml_item_id: m.ml_item_id,
@@ -144,7 +144,7 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
     property_title: string | null;
     property_code: number | null;
 } {
-    const prop = embedProperty(d.property_id);
+    const prop = embedProperty(d.property);
     return {
         id: d.id,
         original_queue_id: d.original_queue_id,

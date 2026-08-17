@@ -98,7 +98,7 @@ function toPropertyRow(p: PropertyApiRow): PropertyRow {
 }
 
 function toMLQueueRow(q: QueueApiRow): MlQueueRow {
-    const prop = embedProperty(q.property_id);
+    const prop = embedProperty(q.property);
     return {
         id: q.id,
         property_id: q.property_id,
@@ -116,7 +116,7 @@ function toMLQueueRow(q: QueueApiRow): MlQueueRow {
 }
 
 function toMLMetaRow(m: MetaApiRow): MlMetaRow {
-    const prop = embedProperty(m.property_id);
+    const prop = embedProperty(m.property);
     return {
         property_id: m.property_id,
         ml_item_id: m.ml_item_id,
