@@ -319,10 +319,10 @@ export function useSoftDeleteProperty() {
             return softDeleteProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['properties'] });
-            queryClient.invalidateQueries({ queryKey: ['leads'] });
-            queryClient.invalidateQueries({ queryKey: ['owners'] });
-            queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+            void queryClient.invalidateQueries({ queryKey: ['properties'] });
+            void queryClient.invalidateQueries({ queryKey: ['leads'] });
+            void queryClient.invalidateQueries({ queryKey: ['owners'] });
+            void queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });
 }
@@ -334,10 +334,10 @@ export function useRestoreProperty() {
             return restoreProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['properties'] });
-            queryClient.invalidateQueries({ queryKey: ['leads'] });
-            queryClient.invalidateQueries({ queryKey: ['owners'] });
-            queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+            void queryClient.invalidateQueries({ queryKey: ['properties'] });
+            void queryClient.invalidateQueries({ queryKey: ['leads'] });
+            void queryClient.invalidateQueries({ queryKey: ['owners'] });
+            void queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });
 }
@@ -349,10 +349,10 @@ export function usePermanentDeleteProperty() {
             return permanentDeleteProperty(id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['properties'] });
-            queryClient.invalidateQueries({ queryKey: ['leads'] });
-            queryClient.invalidateQueries({ queryKey: ['owners'] });
-            queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+            void queryClient.invalidateQueries({ queryKey: ['properties'] });
+            void queryClient.invalidateQueries({ queryKey: ['leads'] });
+            void queryClient.invalidateQueries({ queryKey: ['owners'] });
+            void queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
         },
     });
 }

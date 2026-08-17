@@ -26,8 +26,8 @@ import {
     answerMlQuestion,
     buildAuthorizeUrl,
     createMlAutoReplyTemplate,
-    deleteMlAutoReplyTemplate,
     deleteDeadLetter,
+    deleteMlAutoReplyTemplate,
     disconnectMl,
     fetchMlAutoReplyTemplates,
     fetchMlCategories,
@@ -45,8 +45,8 @@ import {
     getMlWebhookStatus,
     importMlListings,
     importSelectedMlListings,
-    type ImportMlListingsResult,
     type ImportFilters,
+    type ImportMlListingsResult,
     type MlItemStatus,
     type PreviewItem,
     ML_OPERATION_LABEL,
@@ -433,7 +433,8 @@ export function MercadoLibrePage() {
                     }
                 }
             } catch {
-            }
+            // ignore
+        }
         })();
         return () => {
             cancelled = true;
@@ -2278,7 +2279,7 @@ export function MercadoLibrePage() {
                                                     <input
                                                         type="checkbox"
                                                         checked={(previewFilters.status as MlItemStatus[]).includes(status)}
-                                                        onChange={(e: any) => handleStatusChange(status, e.target.checked)}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleStatusChange(status, (e.target as HTMLInputElement).checked)}
                                                     />
                                                     <span style={{ textTransform: 'capitalize' }}>{status}</span>
                                                 </label>
@@ -2292,7 +2293,7 @@ export function MercadoLibrePage() {
                                             className="input"
                                             placeholder="ID categoría (ej: MLA1459)"
                                             value={previewFilters.category_id ?? ''}
-                                            onChange={(e: any) => handleFilterChange('category_id', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('category_id', (e.target as HTMLInputElement).value)}
                                             style={{ width: '180px' }}
                                         />
                                     </div>
@@ -2302,7 +2303,7 @@ export function MercadoLibrePage() {
                                             type="date"
                                             className="input"
                                             value={previewFilters.date_from ?? ''}
-                                            onChange={(e: any) => handleFilterChange('date_from', e.target.value || undefined)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('date_from', (e.target as HTMLInputElement).value || undefined)}
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '150px' }}>
@@ -2311,7 +2312,7 @@ export function MercadoLibrePage() {
                                             type="date"
                                             className="input"
                                             value={previewFilters.date_to ?? ''}
-                                            onChange={(e: any) => handleFilterChange('date_to', e.target.value || undefined)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('date_to', (e.target as HTMLInputElement).value || undefined)}
                                         />
                                     </div>
                                 </div>
