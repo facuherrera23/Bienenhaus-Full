@@ -1,6 +1,5 @@
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/http.ts';
+import { corsHeaders, jsonResponse, optionsResponse } from '../_shared/http.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY')!;
@@ -15,7 +14,7 @@ interface ContactPayload {
     phone?: string;
     subject: string;
     message: string;
-    website?: string; // honeypot
+    website?: string;
 }
 
 function getClientIP(req: Request): string {
@@ -28,7 +27,7 @@ function getClientIP(req: Request): string {
 
 async function checkRateLimit(supabase: SupabaseClient, ip: string): Promise<boolean> {
     const now = new Date();
-    const windowStart = new Date(now.getTime() - 60 * 60 * 1000); // 1 hora
+    const windowStart = new Date(now.getTime() - 60 * 60 * 1000);
 
     const { data, error } = await supabase
         .from('rate_limit')
@@ -40,14 +39,13 @@ async function checkRateLimit(supabase: SupabaseClient, ip: string): Promise<boo
 
     if (error) {
         console.error('Rate limit check error:', error);
-        return true; // fail open
+        return true;
     }
 
     if (data && data.count >= 5) {
-        return false; // rate limited
+        return false;
     }
 
-    // Increment or insert
     if (data) {
         await supabase
             .from('rate_limit')
@@ -83,53 +81,33 @@ async function sendEmail(to: string, subject: string, html: string) {
     return res.json();
 }
 
-serve(async (req) => {
-    const headers = corsHeaders(req);
-
-    if (req.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers });
-    }
-
-    if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-            status: 405,
-            headers,
-        });
-    }
+Deno.serve(async (req) => {
+    if (req.method === 'OPTIONS') return optionsResponse(req);
+    if (req.method !== 'POST') return jsonResponse(405, { error: 'Method not allowed' }, req);
 
     const ip = getClientIP(req);
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Rate limit
     const allowed = await checkRateLimit(supabase, ip);
     if (!allowed) {
-        return new Response(JSON.stringify({ error: 'Demasiados intentos. Intente en 1 hora.' }), {
-            status: 429,
-            headers,
-        });
+        return jsonResponse(429, { error: 'Demasiados intentos. Intente en 1 hora.' }, req);
     }
 
     let payload: ContactPayload;
     try {
         payload = await req.json();
     } catch {
-        return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers });
+        return jsonResponse(400, { error: 'JSON inválido' }, req);
     }
 
-    // Honeypot
     if (payload.website && payload.website.trim() !== '') {
-        return new Response(JSON.stringify({ ok: true }), { status: 200, headers }); // silencioso
+        return jsonResponse(200, { ok: true }, req);
     }
 
-    // Validación básica
     if (!payload.name?.trim() || !payload.email?.trim() || !payload.message?.trim()) {
-        return new Response(JSON.stringify({ error: 'Faltan campos requeridos' }), {
-            status: 400,
-            headers,
-        });
+        return jsonResponse(400, { error: 'Faltan campos requeridos' }, req);
     }
 
-    // Guardar lead en BD
     const { error: leadError } = await supabase.from('leads').insert({
         name: payload.name.trim(),
         email: payload.email.trim(),
@@ -143,13 +121,9 @@ serve(async (req) => {
     if (leadError) {
         console.error('Lead insert error:', leadError);
         const errorMsg = leadError.detail || leadError.message || 'Error guardando consulta';
-        return new Response(JSON.stringify({ error: errorMsg }), {
-            status: 500,
-            headers,
-        });
+        return jsonResponse(500, { error: errorMsg }, req);
     }
 
-    // Email a admin
     const adminHtml = `
     <h2>Nueva consulta desde la web</h2>
     <p><strong>Nombre:</strong> ${payload.name}</p>
@@ -167,7 +141,6 @@ serve(async (req) => {
         console.error('Admin email error:', e);
     }
 
-    // Auto-reply al usuario
     const userHtml = `
     <h2>Gracias por contactarnos, ${payload.name}</h2>
     <p>Recibimos tu consulta: <strong>${payload.subject}</strong></p>
@@ -181,5 +154,5 @@ serve(async (req) => {
         console.error('User email error:', e);
     }
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
+    return jsonResponse(200, { ok: true }, req);
 });

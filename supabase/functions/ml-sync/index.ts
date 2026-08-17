@@ -495,15 +495,42 @@ async function runJob(
     const property = await fetchProperty(propertyId);
     if (!property) return { ok: false, error: 'Propiedad no encontrada' };
 
+    if (operation === 'delete') {
+        let itemId = mlItemId;
+        if (!itemId) {
+            const { data: meta } = await supabase
+                .from('property_ml_meta')
+                .select('ml_item_id')
+                .eq('property_id', propertyId)
+                .maybeSingle();
+            itemId = meta?.ml_item_id ?? null;
+        }
+        if (!itemId) return { ok: false, error: 'La propiedad no tiene item en Mercado Libre' };
+
+        const idempotencyKey = `${queueId}:${propertyId}:delete`;
+
+        const result = await runWithRetry(
+            accessToken,
+            () => mlCloseItemValidated(accessToken, String(itemId), idempotencyKey),
+            'mlCloseItem',
+            queueId,
+            propertyId,
+        );
+        if ('error' in result)
+            return { ok: false, error: result.error, rateLimited: result.rateLimited };
+
+        return { ok: true, itemId, mlStatus: 'closed' };
+    }
+
     const defaults = await fetchDefaults();
-    if (operation === 'publish' && !defaults.category_id)
-        return { ok: false, error: 'Falta configurar la categoría de Mercado Libre.' };
-    if (operation === 'publish' && !defaults.listing_type_id)
-        return { ok: false, error: 'Falta configurar el tipo de publicación de Mercado Libre.' };
     const mlImageUrls = await prepareImagesForML(accessToken, property.images);
 
     try {
         if (operation === 'publish') {
+            if (!defaults.category_id)
+                return { ok: false, error: 'Falta configurar la categoría de Mercado Libre.' };
+            if (!defaults.listing_type_id)
+                return { ok: false, error: 'Falta configurar el tipo de publicación de Mercado Libre.' };
             if (property.price === null || property.price <= 0) {
                 return { ok: false, error: 'La propiedad debe tener precio para publicarse' };
             }

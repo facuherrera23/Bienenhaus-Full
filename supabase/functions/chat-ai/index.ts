@@ -300,9 +300,12 @@ Deno.serve(async (req) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
-        geminiResponse = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+        geminiResponse = await fetch(GEMINI_ENDPOINT, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': GEMINI_API_KEY,
+            },
             body: JSON.stringify({
                 system_instruction: { parts: [{ text: buildSystemPrompt() }] },
                 contents: [{ role: 'user', parts: [{ text: userContent }] }],

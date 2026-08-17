@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import styles from '../styles/modules/PropertyModal.module.css';
 
+const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
+
 interface PropertyModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -61,6 +63,29 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
 
     const prevImage = () => {
         setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    const handleShare = async () => {
+        const url = window.location.href;
+        const title = property?.title ?? 'Propiedad BIENENHAUS';
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, url });
+            } catch {
+                // User cancelled share — silent
+            }
+        } else {
+            await navigator.clipboard.writeText(url);
+        }
+    };
+
+    const scrollToContact = () => {
+        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const isValidYouTubeId = (url: string): boolean => {
+        const match = url.match(/(?:youtu\.be\/|v=|\/v\/)([a-zA-Z0-9_-]{11})/);
+        return match !== null && YOUTUBE_ID_RE.test(match[1]);
     };
 
     return (
@@ -179,7 +204,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
                                 </svg>
                                 PRO-{String(property.id).padStart(4, '0')}
                             </span>
-                            <button className={styles.shareBtn} aria-label="Compartir">
+                            <button className={styles.shareBtn} aria-label="Compartir" onClick={handleShare}>
                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                                     <circle
                                         cx="4"
@@ -380,7 +405,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
                                         </div>
                                     </button>
                                 </div>
-                                {isVideoPlaying && (
+                                {isVideoPlaying && property.videoUrl && isValidYouTubeId(property.videoUrl) && (
                                     <iframe
                                         src={`https://www.youtube.com/embed/${property.videoUrl}?autoplay=1&rel=0`}
                                         allow="autoplay; encrypted-media"
@@ -400,7 +425,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
 
                     {/* Actions */}
                     <div className={styles.modalActions}>
-                        <button className={styles.modalCta}>
+                        <button className={styles.modalCta} onClick={scrollToContact}>
                             Contactar
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <path
@@ -422,7 +447,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
 
                 {/* Sticky CTA para mobile */}
                 <div className={styles.modalStickyCta}>
-                    <button className={styles.modalCta}>
+                    <button className={styles.modalCta} onClick={scrollToContact}>
                         Contactar
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path

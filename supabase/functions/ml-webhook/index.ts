@@ -68,7 +68,20 @@ function logError(entry: Omit<LogEntry, 'timestamp' | 'level'>): void {
 
 async function verifySignature(req: Request): Promise<boolean> {
     const secret = (await getMlCredentials(supabase)).webhookSecret;
-    if (!secret) return false;
+    if (!secret) {
+        // Sin secret configurado: aceptar en modo degradado (con warning).
+        // En producción se DEBE setear ML_WEBHOOK_SECRET.
+        console.warn(
+            JSON.stringify({
+                timestamp: new Date().toISOString(),
+                level: 'warn',
+                function: 'ml-webhook',
+                status: 'no_webhook_secret',
+                message: 'ML_WEBHOOK_SECRET no configurado — webhook aceptado sin verificación de firma',
+            }),
+        );
+        return true;
+    }
     const signature = req.headers.get('x-meli-signature');
     if (!signature) return false;
     return timingSafeEqual(signature, secret);
