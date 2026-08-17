@@ -170,15 +170,15 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
 // ============================================================
 
 const ML_QUEUE_SELECT = `
-  id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property_id:properties(title, code)
+  id, property_id, operation, status, attempts, max_attempts, next_attempt_at, ml_item_id, last_error, created_at, property:properties(title, code)
 `.trim();
 
 const ML_META_SELECT = `
-  property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property_id:properties(title, code)
+  property_id, ml_item_id, status, permalink, price, last_sync_at, last_sync_status, property:properties(title, code)
 `.trim();
 
 const ML_DEAD_LETTER_SELECT = `
-  id, original_queue_id, property_id, operation, attempts, max_attempts, last_error, payload, ml_item_id, created_at, moved_at, resolved_at, resolved_by, resolution_notes, property_id:properties(title, code)
+  id, original_queue_id, property_id, operation, attempts, max_attempts, last_error, payload, ml_item_id, created_at, moved_at, resolved_at, resolved_by, resolution_notes, property:properties(title, code)
 `.trim();
 
 // ============================================================
