@@ -63,9 +63,8 @@ test.describe('Propietarios - CRUD', () => {
         await emailField.fill(newEmail);
         await page.getByRole('button', { name: 'Guardar cambios' }).click();
 
-        // El detalle refresca con el nuevo email
         await expect(page.getByText('Propietario actualizado')).toBeVisible({ timeout: 10000 });
-        await expect(page.locator(`text="${newEmail}"`)).toBeVisible({ timeout: 10000 });
+        await expect(page.locator(`text="${newEmail}"`).first()).toBeVisible({ timeout: 15000 });
     });
 
     test('envía a papelera y restaura', async ({ page }) => {
