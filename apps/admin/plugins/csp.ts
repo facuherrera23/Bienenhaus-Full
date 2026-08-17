@@ -23,11 +23,11 @@ import type { Plugin } from 'vite';
 
 const ADMIN_CSP = [
     "default-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://static.cloudflareinsights.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://http2.mlstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://api.mercadolibre.com https://auth.mercadolibre.com.ar",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://api.mercadolibre.com https://auth.mercadolibre.com.ar",
     "frame-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
