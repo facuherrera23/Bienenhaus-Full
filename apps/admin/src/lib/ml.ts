@@ -544,13 +544,14 @@ export async function fetchMlMetaInfinite(
 // API Functions - Categories & Listing Types
 // ============================================================
 
-export async function fetchMlCategories(parentId?: string): Promise<MlCategory[]> {
+export async function fetchMlCategories(parentId?: string | unknown): Promise<MlCategory[]> {
+    const effectiveParentId = typeof parentId === 'string' ? parentId : undefined;
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error('Sin sesión activa');
 
     const url = new URL(`${supabaseUrl}/functions/v1/ml-categories`);
-    if (parentId) url.searchParams.set('parent_id', parentId);
+    if (effectiveParentId) url.searchParams.set('parent_id', effectiveParentId);
     const res = await fetch(url, {
         method: 'GET',
         headers: { authorization: `Bearer ${token}` },
