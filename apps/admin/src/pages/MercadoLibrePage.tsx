@@ -10,6 +10,7 @@ import {
     ExternalLink,
     Eye,
     EyeOff,
+    History,
     Link2,
     MessageSquare,
     Plus,
@@ -42,12 +43,17 @@ import {
     fetchMlQueue,
     fetchMlQueueStats,
     fetchMlSettings,
+    fetchMlSyncHistory,
     getMlWebhookStatus,
     importMlListings,
     importSelectedMlListings,
     type ImportFilters,
     type ImportMlListingsResult,
     type MlItemStatus,
+    type MlOrder,
+    type MlQuestion,
+    type MlQueueRow,
+    type MlSyncStatus,
     type PreviewItem,
     ML_OPERATION_LABEL,
     ML_REDIRECT_URI,
@@ -58,10 +64,6 @@ import {
     type MlAutoReplyTemplate,
     type MlCategory,
     type MlListingType,
-    type MlOrder,
-    type MlQuestion,
-    type MlQueueRow,
-    type MlSyncStatus,
     setMlAppId,
     setMlDefaults,
     setMlEnabled,
@@ -131,6 +133,14 @@ export function MercadoLibrePage() {
         queryKey: ['ml-auto-reply'],
         queryFn: fetchMlAutoReplyTemplates,
     });
+
+    // Sync History / Timeline
+    const syncHistoryQ = useQuery({
+        queryKey: ['ml-sync-history'],
+        queryFn: () => fetchMlSyncHistory(1, 50),
+    });
+
+    const [showSyncHistory, setShowSyncHistory] = useState(false);
 
     const [appIdDraft, setAppIdDraft] = useState('');
     const [savingAppId, setSavingAppId] = useState(false);
@@ -1053,6 +1063,93 @@ export function MercadoLibrePage() {
             </section>
         ) : null;
 
+    const syncHistorySection =
+        showSyncHistory && connected ? (
+            <section className="card">
+                <div className="site-section-head">
+                    <div>
+                        <h3>Historial de sincronización</h3>
+                        <p>Detalle de cada intento de publicación, actualización o eliminación en Mercado Libre.</p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowSyncHistory(false)}
+                    >
+                        <X size={16} /> Cerrar
+                    </Button>
+                </div>
+                {syncHistoryQ.isPending && (
+                    <div className="ml-skeleton">
+                        <div className="skeleton-table">
+                            <div className="skeleton-row header"></div>
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="skeleton-row"></div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {syncHistoryQ.isError && (
+                    <div className="ml-error">
+                        <p>No se pudo cargar el historial.</p>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => syncHistoryQ.refetch()}
+                        >
+                            Reintentar
+                        </Button>
+                    </div>
+                )}
+                {syncHistoryQ.data && !syncHistoryQ.isPending && !syncHistoryQ.isError && (
+                    <div className="card table-card">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Propiedad</th>
+                                    <th>Operación</th>
+                                    <th>Estado</th>
+                                    <th>Intento</th>
+                                    <th>Error</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(syncHistoryQ.data.data ?? []).map((h) => (
+                                    <tr key={h.id}>
+                                        <td>
+                                            <strong>{h.property_id ?? 'Propiedad eliminada'}</strong>
+                                        </td>
+                                        <td className="cap">{ML_OPERATION_LABEL[h.operation]}</td>
+                                        <td>
+                                            <Badge variant={ML_SYNC_STATUS_TONE[h.status] as 'success' | 'warning' | 'danger' | 'neutral' | 'info'}>
+                                                {ML_SYNC_STATUS_LABEL[h.status]}
+                                            </Badge>
+                                        </td>
+                                        <td className="num">{h.attempt}</td>
+                                        <td
+                                            className={`muted ${styles['cell-error']}`}
+                                            title={h.error ?? undefined}
+                                        >
+                                            {h.error ?? '-'}
+                                        </td>
+                                        <td className="muted">{formatDate(h.created_at)}</td>
+                                    </tr>
+                                ))}
+                                {(syncHistoryQ.data.data ?? []).length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="empty-cell">
+                                            No hay historial de sincronización.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+        ) : null;
+
     const replyModal = selectedQuestion ? (
         <div className="modal-backdrop" onClick={() => setSelectedQuestion(null)}>
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1344,12 +1441,23 @@ export function MercadoLibrePage() {
                             >
                                 <Zap size={14} /> Respuestas automaticas
                             </Button>
+                            <Button
+                                size="sm"
+                                variant={showSyncHistory ? 'primary' : 'ghost'}
+                                onClick={() => setShowSyncHistory((v) => !v)}
+                            >
+                                <History size={14} /> Historial de sync{' '}
+                                {syncHistoryQ.data?.data
+                                    ? `(${syncHistoryQ.data.data.length})`
+                                    : ''}
+                            </Button>
                         </div>
                     )}
 
                     {metricsSection}
                     {questionsSection}
                     {autoReplySection}
+                    {syncHistorySection}
 
                     <div className={styles['ml-grid']}>
                         <section className="card">

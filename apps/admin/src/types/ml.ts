@@ -2,6 +2,7 @@ import type { Database } from './database';
 
 export type MlOperation = Database['public']['Enums']['ml_operation'];
 export type MlSyncStatus = Database['public']['Enums']['ml_sync_status'];
+export type Json = Record<string, unknown>;
 
 export interface MlConnectionInfo {
     id: string;
@@ -219,6 +220,18 @@ export interface PreviewResult {
     total_available: number;
     has_more: boolean;
     filters_applied: ImportFilters;
+}
+
+export interface MlSyncHistoryRow {
+    id: number;
+    queue_id: number;
+    operation: MlOperation;
+    status: MlSyncStatus;
+    attempt: number;
+    response: unknown | null;
+    error: string | null;
+    created_at: string;
+    property_id: string;
 }
 
 export interface ImportSelectedParams {

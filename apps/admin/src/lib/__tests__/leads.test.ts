@@ -106,6 +106,7 @@ describe('LeadStatus / LeadIntent / LeadSource arrays', () => {
             'contactado',
             'calificado',
             'en_proceso',
+            'visita_programada',
             'cerrado_ganado',
             'cerrado_perdido',
         ]);
@@ -121,6 +122,7 @@ describe('LEAD_STATUS_LABEL', () => {
         expect(LEAD_STATUS_LABEL.nuevo).toBe('Nuevo');
         expect(LEAD_STATUS_LABEL.cerrado_ganado).toBe('Ganado');
         expect(LEAD_STATUS_LABEL.cerrado_perdido).toBe('Perdido');
+        expect(LEAD_STATUS_LABEL.visita_programada).toBe('Visita programada');
         expect(Object.keys(LEAD_STATUS_LABEL).length).toBe(LeadStatusSchema.options.length);
     });
 });
@@ -129,6 +131,7 @@ describe('LEAD_STATUS_TONE', () => {
     it('assigns tones to all statuses', () => {
         expect(LEAD_STATUS_TONE.cerrado_ganado).toBe('success');
         expect(LEAD_STATUS_TONE.cerrado_perdido).toBe('danger');
+        expect(LEAD_STATUS_TONE.visita_programada).toBe('warning');
         expect(Object.keys(LEAD_STATUS_TONE).length).toBe(LeadStatusSchema.options.length);
     });
 });
@@ -137,7 +140,8 @@ describe('LEAD_STATUS_ORDER', () => {
     it('orders statuses from nuevo to cerrado_perdido', () => {
         expect(LEAD_STATUS_ORDER.nuevo).toBeLessThan(LEAD_STATUS_ORDER.en_proceso);
         expect(LEAD_STATUS_ORDER.en_proceso).toBeLessThan(LEAD_STATUS_ORDER.cerrado_ganado);
-        expect(LEAD_STATUS_ORDER.cerrado_perdido).toBe(5);
+        expect(LEAD_STATUS_ORDER.visita_programada).toBe(4);
+        expect(LEAD_STATUS_ORDER.cerrado_ganado).toBe(5);
     });
 });
 

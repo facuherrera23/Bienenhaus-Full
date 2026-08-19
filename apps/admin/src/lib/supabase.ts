@@ -1,5 +1,6 @@
 import type { Database } from '../types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createTypedClient } from '@bienenhaus/supabase';
 
 export type { SupabaseClient, User, AuthChangeEvent, Session } from '@bienenhaus/supabase';
 export type { Database } from '../types/database';
@@ -15,7 +16,6 @@ let _adminSupabase: AdminSupabaseClient | null = null;
 
 export async function getAdminSupabase(): Promise<AdminSupabaseClient> {
     if (!_adminSupabase) {
-        const { createTypedClient } = await import('@bienenhaus/supabase');
         _adminSupabase = createTypedClient<Database>({ schema: 'public' });
     }
     return _adminSupabase!;

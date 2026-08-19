@@ -3,6 +3,16 @@ import { expect, type Page } from '@playwright/test';
 export const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-test@bienenhaus.local';
 export const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'E2eTestPass2026x';
 
+/**
+ * Originally intercepted cloud Supabase requests and redirected them to local.
+ * No longer needed — the root cause was CSP `connect-src` in index.html blocking
+ * `http://127.0.0.1:54321`. Now that CSP allows it, the browser uses the local
+ * URL from `.env` directly. Kept as a no-op for call-site compatibility.
+ */
+export function routeSupabaseLocal(_page: Page): void {
+    // intentionally empty — CSP fix in index.html resolved the issue
+}
+
 const LOGIN_RACE_TIMEOUT = 15_000;
 
 /**
@@ -18,6 +28,7 @@ const LOGIN_RACE_TIMEOUT = 15_000;
  * Dashboard O el formulario de login, y se actúa según el resultado.
  */
 export async function login(page: Page): Promise<void> {
+    routeSupabaseLocal(page);
     await page.goto('/admin/#/');
 
     const dashboard = page.getByRole('heading', { name: 'Dashboard', level: 2 });
@@ -43,6 +54,7 @@ export async function login(page: Page): Promise<void> {
 
     // Fallback: la sesión restaurada no era válida → login real (la app ya nos
     // redirigió al formulario, no hace falta otra navegación).
+    await page.evaluate(() => localStorage.clear());
     await emailInput.fill(TEST_EMAIL);
     await page.getByLabel('Contraseña').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: /entrar/i }).click();

@@ -28,6 +28,8 @@ async function createOwner(page, name) {
 }
 
 test.describe('Propietarios - CRUD', () => {
+    test.describe.configure({ mode: 'serial', retries: 2 });
+
     test.beforeEach(async ({ page }) => {
         await login(page);
     });

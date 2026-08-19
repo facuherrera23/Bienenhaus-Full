@@ -227,7 +227,6 @@ describe('properties-validation Zod schemas', () => {
                 video_url: 'https://youtube.com/watch?v=test',
                 cover_url: 'https://img.com/cover.jpg',
                 location: 'Villa Belgrano',
-                location_id: '123e4567-e89b-12d3-a456-426614174000',
                 images: [],
                 ml_meta: null,
             };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { ArrowLeft, MessageSquare, Save } from 'lucide-preact';
+import { ArrowLeft, Calendar, MessageSquare, Save } from 'lucide-preact';
 import { Link, useRoute } from 'wouter-preact';
 import {
     type AgentOption,
@@ -12,6 +12,7 @@ import {
     type LeadDetail,
     type LeadStatus,
     updateLead,
+    updateLeadStatus,
 } from '../lib/leads';
 import { queryClient } from '../lib/query/client';
 import { useQuery } from '../lib/query/hooks';
@@ -31,6 +32,10 @@ export function LeadDetailPage() {
     const [city, setCity] = useState('');
     const [loadError, setLoadError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showVisitForm, setShowVisitForm] = useState(false);
+    const [visitDate, setVisitDate] = useState('');
+    const [visitTime, setVisitTime] = useState('10:00');
+    const [schedulingVisit, setSchedulingVisit] = useState(false);
 
     const { data: agents } = useQuery<AgentOption[]>({
         queryKey: ['agents'],
@@ -107,6 +112,33 @@ export function LeadDetailPage() {
         );
     };
 
+    const handleScheduleVisit = async () => {
+        if (!visitDate) {
+            pushToast({ type: 'error', title: 'Seleccioná una fecha para la visita' });
+            return;
+        }
+        setSchedulingVisit(true);
+        try {
+            const dateTime = new Date(`${visitDate}T${visitTime}:00`);
+            await updateLeadStatus(id, 'visita_programada');
+            setStatus('visita_programada');
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['leads'] }),
+                queryClient.invalidateQueries({ queryKey: ['visits'] }),
+            ]);
+            pushToast({
+                type: 'success',
+                title: 'Visita programada',
+                description: `Visita creada para el ${dateTime.toLocaleDateString('es-AR')} a las ${visitTime}`,
+            });
+            setShowVisitForm(false);
+        } catch {
+            pushToast({ type: 'error', title: 'No se pudo programar la visita' });
+        } finally {
+            setSchedulingVisit(false);
+        }
+    };
+
     return (
         <div className="page">
             <div className="page-head">
@@ -117,6 +149,16 @@ export function LeadDetailPage() {
                     </p>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
+                    {status !== 'cerrado_ganado' && status !== 'cerrado_perdido' && (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setShowVisitForm(!showVisitForm)}
+                            disabled={schedulingVisit}
+                        >
+                            <Calendar size={16} /> Programar Visita
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="secondary"
@@ -133,6 +175,36 @@ export function LeadDetailPage() {
                     </Link>
                 </div>
             </div>
+
+            {showVisitForm && (
+                <div className="card" style="padding:16px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+                    <label className="field" style="flex:1; min-width:150px;">
+                        <span>Fecha</span>
+                        <input
+                            type="date"
+                            className="input"
+                            value={visitDate}
+                            onInput={(e) => setVisitDate((e.currentTarget as HTMLInputElement).value)}
+                            min={new Date().toISOString().split('T')[0]}
+                        />
+                    </label>
+                    <label className="field" style="flex:0 0 120px;">
+                        <span>Hora</span>
+                        <input
+                            type="time"
+                            className="input"
+                            value={visitTime}
+                            onInput={(e) => setVisitTime((e.currentTarget as HTMLInputElement).value)}
+                        />
+                    </label>
+                    <Button onClick={handleScheduleVisit} disabled={schedulingVisit || !visitDate}>
+                        <Calendar size={16} /> {schedulingVisit ? 'Programando…' : 'Confirmar'}
+                    </Button>
+                    <Button variant="ghost" onClick={() => setShowVisitForm(false)}>
+                        Cancelar
+                    </Button>
+                </div>
+            )}
 
             {loadError && (
                 <div className="card placeholder-card">

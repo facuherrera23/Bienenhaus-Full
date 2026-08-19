@@ -1062,6 +1062,117 @@ export async function deleteReport(id: string): Promise<void> {
 }
 
 // ============================================================
+// WhatsApp Templates (G6)
+// ============================================================
+
+export type WhatsAppTemplateKey =
+    | 'initial_contact'
+    | 'property_proposal'
+    | 'visit_confirmation'
+    | 'visit_reminder'
+    | 'offer_update'
+    | 'closing_followup'
+    | 'post_sale'
+    | 'valuation_request'
+    | 'custom';
+
+export interface WhatsAppTemplate {
+    key: WhatsAppTemplateKey;
+    label: string;
+    template: string;
+    variables: string[];
+}
+
+export const WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
+    {
+        key: 'initial_contact',
+        label: 'Primer contacto',
+        template:
+            'Hola {nombre}, soy {agente} de BIENENHAUS Propiedades. Te contacto por tu interés en {tipo_operacion} de {tipo_propiedad} en {zona}. ¿Te gustaría agendar una charla para conocer tus necesidades?',
+        variables: ['nombre', 'agente', 'tipo_operacion', 'tipo_propiedad', 'zona'],
+    },
+    {
+        key: 'property_proposal',
+        label: 'Propuesta de propiedad',
+        template:
+            'Hola {nombre}, te envío una propuesta que encaja con tu búsqueda: {titulo_propiedad} en {zona}, {operacion} {precio}. {link_propiedad} ¿Te interesa coordinar una visita?',
+        variables: ['nombre', 'titulo_propiedad', 'zona', 'operacion', 'precio', 'link_propiedad'],
+    },
+    {
+        key: 'visit_confirmation',
+        label: 'Confirmación de visita',
+        template:
+            'Hola {nombre}, confirmamos tu visita a {titulo_propiedad} el {fecha} a las {hora}. Dirección: {direccion}. {agente} te espera. ¿Alguna duda? Respondé a este mensaje.',
+        variables: ['nombre', 'titulo_propiedad', 'fecha', 'hora', 'direccion', 'agente'],
+    },
+    {
+        key: 'visit_reminder',
+        label: 'Recordatorio de visita',
+        template:
+            'Hola {nombre}, te recordamos tu visita a {titulo_propiedad} mañana {fecha} a las {hora}. Dirección: {direccion}. ¡Te esperamos!',
+        variables: ['nombre', 'titulo_propiedad', 'fecha', 'hora', 'direccion'],
+    },
+    {
+        key: 'offer_update',
+        label: 'Actualización de oferta',
+        template:
+            'Hola {nombre}, hay novedades sobre {titulo_propiedad}: {mensaje_oferta}. ¿Querés que hablemos? Estoy a disposición.',
+        variables: ['nombre', 'titulo_propiedad', 'mensaje_oferta'],
+    },
+    {
+        key: 'closing_followup',
+        label: 'Seguimiento de cierre',
+        template:
+            'Hola {nombre}, ¿cómo va todo con {titulo_propiedad}? Si necesitás algo más (documentación, notaría, etc.), avísame. Estoy para ayudarte.',
+        variables: ['nombre', 'titulo_propiedad'],
+    },
+    {
+        key: 'post_sale',
+        label: 'Post-venta',
+        template:
+            'Hola {nombre}, espero que estés disfrutando de {titulo_propiedad}. Por cualquier consulta futura, no dudes en escribirme. ¡Saludos!',
+        variables: ['nombre', 'titulo_propiedad'],
+    },
+    {
+        key: 'valuation_request',
+        label: 'Solicitud de tasación',
+        template:
+            'Hola {nombre}, recibimos tu solicitud de tasación para {direccion_propiedad}. {agente} se pondrá en contacto en las próximas 24hs para coordinar la visita técnica.',
+        variables: ['nombre', 'direccion_propiedad', 'agente'],
+    },
+    {
+        key: 'custom',
+        label: 'Mensaje personalizado',
+        template: '{mensaje}',
+        variables: ['mensaje'],
+    },
+];
+
+export function getWhatsAppTemplate(key: WhatsAppTemplateKey): WhatsAppTemplate | undefined {
+    return WHATSAPP_TEMPLATES.find((t) => t.key === key);
+}
+
+export function buildWhatsAppUrl(phone: string, templateKey: WhatsAppTemplateKey, vars: Record<string, string>): string {
+    const template = getWhatsAppTemplate(templateKey);
+    if (!template) return `https://wa.me/${phone.replace(/\D/g, '')}`;
+
+    let message = template.template;
+    for (const [key, value] of Object.entries(vars)) {
+        message = message.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+    }
+
+    const encoded = encodeURIComponent(message);
+    const cleanPhone = phone.replace(/\D/g, '');
+    return `https://wa.me/${cleanPhone}?text=${encoded}`;
+}
+
+export function buildCustomWhatsAppUrl(phone: string, message: string): string {
+    const encoded = encodeURIComponent(message);
+    const cleanPhone = phone.replace(/\D/g, '');
+    return `https://wa.me/${cleanPhone}?text=${encoded}`;
+}
+
+// ============================================================
 // Re-export types for components that need direct access
 // ============================================================
 export type {

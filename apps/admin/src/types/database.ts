@@ -3234,6 +3234,7 @@ export type Database = {
                 | 'contactado'
                 | 'calificado'
                 | 'en_proceso'
+                | 'visita_programada'
                 | 'cerrado_ganado'
                 | 'cerrado_perdido';
             listing_type: 'venta' | 'alquiler' | 'venta_alquiler' | 'emprendimiento';
@@ -3442,6 +3443,7 @@ export const Constants = {
                 'contactado',
                 'calificado',
                 'en_proceso',
+                'visita_programada',
                 'cerrado_ganado',
                 'cerrado_perdido',
             ],

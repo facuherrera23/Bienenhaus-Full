@@ -14,8 +14,8 @@ import {
     type ActivityAction,
     type ActivityRow,
     fetchRecentActivity,
-    PROPERTY_STATUS_LABEL,
 } from '../lib/activity';
+import { STATUS_LABEL as PROPERTY_STATUS_LABEL } from '../types/properties';
 import type { PropertyStatus } from '../types/properties';
 import { useQuery } from '../lib/query/hooks';
 import styles from './RecentActivity.module.css';

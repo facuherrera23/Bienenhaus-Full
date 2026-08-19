@@ -19,6 +19,9 @@ import { RecentActivity } from '../components/RecentActivity';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { useProperties } from '../lib/properties.api';
 import { useLeads } from '../lib/leads.api';
+import { useVisits } from '../lib/visits.api';
+import { useMlMeta, type MlSyncStatus } from '../lib/ml.api';
+import { useValuations } from '../lib/valuationApi';
 import { useActionPlans, useOwners } from '../lib/owners/api';
 
 import styles from '../styles/Dashboard.module.css';
@@ -100,13 +103,19 @@ export function Dashboard() {
     const [, setLocation] = useLocation();
     const { data: leadsResult, isPending: leadsPending } = useLeads({ pageSize: 1000 });
     const { data: propertiesResult, isPending: propsPending } = useProperties({ pageSize: 1000 });
+    const { data: visitsResult, isPending: visitsPending } = useVisits({ pageSize: 1000 });
+    const { data: mlMetaResult, isPending: mlMetaPending } = useMlMeta({ pageSize: 1000 });
+    const { data: valuationsResult, isPending: valuationsPending } = useValuations({ pageSize: 1000 });
     const { data: actionPlansResult, isPending: plansPending } = useActionPlans({ pageSize: 1000 });
     const { data: ownersResult, isPending: ownersPending } = useOwners({ pageSize: 1000 });
 
-    const loading = leadsPending || propsPending || plansPending || ownersPending;
+    const loading = leadsPending || propsPending || visitsPending || mlMetaPending || valuationsPending || plansPending || ownersPending;
 
     const leads = leadsResult?.data ?? [];
     const properties = propertiesResult?.data ?? [];
+    const visits = visitsResult?.data ?? [];
+    const mlMeta = mlMetaResult?.data ?? [];
+    const valuations = valuationsResult?.data ?? [];
     const actionPlans = actionPlansResult?.data ?? [];
     const owners = ownersResult?.data ?? [];
 
@@ -148,6 +157,20 @@ export function Dashboard() {
     const pendingPlans =
         actionPlans?.filter((p) => ['pending', 'in_progress'].includes(p.status)).length ?? 0;
 
+    // Visits KPIs
+    const completedVisits = visits?.filter((v) => v.status === 'completada').length ?? 0;
+
+    // ML KPIs (using last_sync_status from MlMetaRow)
+    const mlSynced = mlMeta?.filter((m: { last_sync_status: MlSyncStatus | null }) => m.last_sync_status === 'success').length ?? 0;
+    const mlPendingKpi = mlMeta?.filter((m: { last_sync_status: MlSyncStatus | null }) => m.last_sync_status === 'pending' || m.last_sync_status === 'processing').length ?? 0;
+    const mlFailed = mlMeta?.filter((m: { last_sync_status: MlSyncStatus | null }) => m.last_sync_status === 'failed' || m.last_sync_status === 'cancelled').length ?? 0;
+
+    // Valuations KPIs (derive from locked and finalizedAt)
+    const totalValuations = valuations?.length ?? 0;
+    const completedValuations = valuations?.filter((v: any) => v.finalizedAt !== null).length ?? 0;
+    const pendingValuations = valuations?.filter((v: any) => v.locked && v.finalizedAt === null).length ?? 0;
+    const draftValuations = valuations?.filter((v: any) => !v.locked).length ?? 0;
+
     // Scroll reveal para el dashboard
     const { ref: sectionRef, isVisible: sectionVisible } = useScrollReveal(0.05);
 
@@ -158,6 +181,11 @@ export function Dashboard() {
     const conversionRateCount = useCountUp(conversionRate, 1500, !loading && sectionVisible);
     const totalOwnersCount = useCountUp(totalOwners, 1500, !loading && sectionVisible);
     const pendingPlansCount = useCountUp(pendingPlans, 1500, !loading && sectionVisible);
+    const completedVisitsCount = useCountUp(completedVisits, 1500, !loading && sectionVisible);
+    const mlSyncedCount = useCountUp(mlSynced, 1500, !loading && sectionVisible);
+    const totalValuationsCount = useCountUp(totalValuations, 1500, !loading && sectionVisible);
+    const completedValuationsCount = useCountUp(completedValuations, 1500, !loading && sectionVisible);
+    const pendingValuationsCount = useCountUp(pendingValuations, 1500, !loading && sectionVisible);
 
     const kpis = [
         {
@@ -207,6 +235,30 @@ export function Dashboard() {
             icon: FileText,
             tone: 'warning',
             delay: 500,
+        },
+        {
+            label: 'Visitas Completadas',
+            value: completedVisitsCount.value,
+            delta: 'Últimas 30 días',
+            icon: Activity,
+            tone: 'info',
+            delay: 600,
+        },
+        {
+            label: 'ML Sincronizadas',
+            value: mlSyncedCount.value,
+            delta: `${mlPendingKpi} pendientes · ${mlFailed} errores`,
+            icon: Home,
+            tone: 'success',
+            delay: 700,
+        },
+        {
+            label: 'Tasaciones Totales',
+            value: totalValuationsCount.value,
+            delta: `${completedValuationsCount.value} finalizadas · ${pendingValuationsCount.value} en proceso · ${draftValuations} borradores`,
+            icon: FileText,
+            tone: 'info',
+            delay: 800,
         },
     ];
 

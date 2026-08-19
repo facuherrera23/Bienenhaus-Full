@@ -4,11 +4,13 @@ import {
     Building2,
     Copy,
     Eye,
+    Globe,
     Home,
     List,
     MapPin,
     Save,
     Trash2,
+    User,
     Users,
     X,
 } from 'lucide-preact';
@@ -41,6 +43,13 @@ import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
 import { getListData } from '../lib/utils';
 import { Badge, Button, IconButton, Spinner } from '@bienenhaus/ui';
+import { useAgents } from '../lib/agents.api';
+import { MLPanel } from './MLPanel';
+import {
+    useAgentsForProperty,
+    useAssignAgentToProperty,
+    useUnassignAgentFromProperty,
+} from '../lib/agentPropertyAssignments.api';
 import styles from './PropertyFormPage.module.css';
 
 const STORAGE_KEY = 'property-form-draft';
@@ -116,6 +125,96 @@ function NumField({
     );
 }
 
+function AgentAssignment({ propertyId }: { propertyId: string }) {
+    const { data: agentsData } = useAgents({ is_active: true, pageSize: 100 });
+    const { data: assigned } = useAgentsForProperty(propertyId);
+    const assignMut = useAssignAgentToProperty();
+    const unassignMut = useUnassignAgentFromProperty();
+
+    const agents = getListData<{ id: string; name: string }>(agentsData);
+    const assignedAgents = (assigned ?? []) as { agent_id: string; agent_name: string }[];
+    const assignedIds = new Set(assignedAgents.map((a) => a.agent_id));
+
+    const onChange = (e: Event) => {
+        const select = e.currentTarget as HTMLSelectElement;
+        const agentId = select.value;
+        if (!agentId) return;
+        if (assignedIds.has(agentId)) {
+            unassignMut.mutate({ agentId, propertyId });
+            select.value = '';
+        } else {
+            assignMut.mutate({ agentId, propertyId });
+            select.value = '';
+        }
+    };
+
+    const unassign = (agentId: string) => {
+        unassignMut.mutate({ agentId, propertyId });
+    };
+
+    return (
+        <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <User size={16} />
+                <strong>Agente responsable</strong>
+            </div>
+            {assignedAgents.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                    {assignedAgents.map((a) => (
+                        <span
+                            key={a.agent_id}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '4px 10px',
+                                borderRadius: 12,
+                                background: 'rgba(31, 200, 195, 0.12)',
+                                fontSize: 13,
+                            }}
+                        >
+                            {a.agent_name}
+                            <button
+                                type="button"
+                                onClick={() => unassign(a.agent_id)}
+                                aria-label={`Quitar ${a.agent_name}`}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: 0,
+                                    color: 'inherit',
+                                    opacity: 0.6,
+                                    fontSize: 16,
+                                    lineHeight: 1,
+                                }}
+                            >
+                                ×
+                            </button>
+                        </span>
+                    ))}
+                </div>
+            ) : (
+                <p style={{ color: 'var(--text-tertiary)', fontSize: 13, marginBottom: 8 }}>
+                    Sin agente asignado.
+                </p>
+            )}
+            <select onChange={onChange} defaultValue="" style={{ minWidth: 200 }}>
+                <option value="" disabled>
+                    Agregar agente…
+                </option>
+                {agents
+                    .filter((a) => !assignedIds.has(a.id))
+                    .map((a) => (
+                        <option key={a.id} value={a.id}>
+                            {a.name}
+                        </option>
+                    ))}
+            </select>
+        </div>
+    );
+}
+
 export function PropertyFormPage() {
     const [, setLocation] = useLocation();
     const [, params] = useRoute('/propiedades/:id');
@@ -132,7 +231,7 @@ export function PropertyFormPage() {
     const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [showMap, setShowMap] = useState(false);
     const [activeTab, setActiveTab] = useState<
-        'basic' | 'location' | 'details' | 'publish' | 'owners'
+        'basic' | 'location' | 'details' | 'publish' | 'ml' | 'owners'
     >('basic');
     const mapRef = useRef<HTMLDivElement>(null);
     const leafletMapRef = useRef<LeafletMap | null>(null);
@@ -446,6 +545,15 @@ export function PropertyFormPage() {
                         onClick={() => setActiveTab('publish')}
                     >
                         <Building2 size={16} /> Publicación
+                    </button>
+                    <button
+                        role="tab"
+                        aria-selected={activeTab === 'ml'}
+                        data-tab="ml"
+                        className={`${styles['form-tab']}${activeTab === 'ml' ? ' active' : ''}`}
+                        onClick={() => setActiveTab('ml')}
+                    >
+                        <Globe size={16} /> Mercado Libre
                     </button>
                     <button
                         role="tab"
@@ -972,6 +1080,17 @@ export function PropertyFormPage() {
                                         />
                                         <span>Propiedad destacada</span>
                                     </label>
+                                    {editId && <AgentAssignment propertyId={editId} />}
+                                </section>
+                            )}
+
+                            {activeTab === 'ml' && (
+                                <section className="form-section">
+                                    <div className="form-section-head">
+                                        <h3>Mercado Libre</h3>
+                                        <p>Configuración de publicación y sincronización.</p>
+                                    </div>
+                                    <MLPanel propertyId={editId!} />
                                 </section>
                             )}
 

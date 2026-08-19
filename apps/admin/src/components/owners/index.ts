@@ -10,3 +10,4 @@ export { ActionPlanTaskList } from './ActionPlanTaskList';
 export { CommunicationTimeline } from './CommunicationTimeline';
 export { OwnerReportGenerator } from './OwnerReportGenerator';
 export { OwnerReportPreview } from './OwnerReportPreview';
+export { WhatsAppButton } from './WhatsAppButton';

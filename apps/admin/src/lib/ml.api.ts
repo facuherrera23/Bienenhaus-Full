@@ -26,6 +26,7 @@ import {
     type MlQueueRow,
     type MlSettings,
     type MlSyncStatus,
+    type MlSyncHistoryRow,
 } from '../types/ml';
 import {
     answerMlQuestion,
@@ -49,8 +50,10 @@ import {
     fetchMlQueue,
     fetchMlQueueInfinite,
     fetchMlSettings,
+    fetchMlSyncHistory,
     type MetaApiRow,
     type QueueApiRow,
+    type SyncHistoryApiRow,
     retryDeadLetter,
     revokeMlTokens,
     setMlAppId,
@@ -59,6 +62,7 @@ import {
     startMlOAuth,
     toMlMetaRow,
     toMlQueueRow,
+    toMlSyncHistoryRow,
     updateMlAutoReplyTemplate,
 } from './ml';
 
@@ -327,6 +331,45 @@ export function useDeleteDeadLetter() {
         mutationFn: async (id: number) => {
             return deleteDeadLetter(id);
         },
+    });
+}
+
+// ============================================================
+// Query Hooks - Sync History
+// ============================================================
+
+export function useMlSyncHistory(filters?: {
+    queue_id?: number;
+    operation?: MlOperation;
+    status?: MlSyncStatus;
+    page?: number;
+    pageSize?: number;
+}) {
+    const apiFilters: Record<string, string | number | boolean | undefined> = {};
+
+    if (filters?.queue_id) apiFilters.queue_id = `eq.${filters.queue_id}`;
+    if (filters?.operation) apiFilters.operation = `eq.${filters.operation}`;
+    if (filters?.status) apiFilters.status = `eq.${filters.status}`;
+
+    return useListHook<MlSyncHistoryRow, SyncHistoryApiRow>({
+        queryKey: ['ml-sync-history', filters],
+        path: 'ml_sync_history',
+        select: 'id,queue_id,operation,status,attempt,response,error,created_at,queue:ml_sync_queue(property_id,operation)',
+        filters: apiFilters,
+        page: filters?.page ?? 1,
+        pageSize: filters?.pageSize ?? 50,
+        orderBy: 'created_at',
+        ascending: false,
+        transform: toMlSyncHistoryRow,
+    });
+}
+
+export function useMlSyncHistoryInfinite(filters?: { queue_id?: number; pageSize?: number }) {
+    return useInfiniteQuery({
+        queryKey: ['ml-sync-history-infinite', filters],
+        queryFn: ({ pageParam = 1 }) => fetchMlSyncHistory(pageParam, filters?.pageSize ?? 50, filters?.queue_id),
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
+        initialPageParam: 1,
     });
 }
 

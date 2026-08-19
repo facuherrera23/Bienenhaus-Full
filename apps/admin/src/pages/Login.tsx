@@ -53,7 +53,7 @@ function formatCountdown(ms: number): string {
 }
 
 export function Login() {
-    const [, setLocation] = useLocation();
+    useLocation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -61,12 +61,6 @@ export function Login() {
     const [lockout, setLockout] = useState(false);
     const [lockoutRemaining, setLockoutRemaining] = useState(0);
     const [lockoutProgress, setLockoutProgress] = useState(100);
-
-    useEffect(() => {
-        if (authSession.value) {
-            setLocation('/', { replace: true });
-        }
-    }, [authSession.value]);
 
     // Check lockout on mount
     useEffect(() => {

@@ -15,8 +15,18 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), 'VITE_');
     const base = env.VITE_BASE_PATH ?? '/admin/';
 
+    const isE2E = process.env.PLAYWRIGHT_TESTING === '1';
+
     return {
         plugins: [preact(), csp()],
+        ...(isE2E && {
+            define: {
+                'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('http://127.0.0.1:54321'),
+                'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.A0iDk8e3hXRU9SgwiVvtJRbIbSlj0QHIHIACFTDjHXU',
+                ),
+            },
+        }),
         base,
         resolve: {
             alias: {

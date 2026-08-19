@@ -347,6 +347,49 @@ function toComparableInsert(valuationId: string, comp: ComparableData): Comparab
 }
 
 // ============================================================================
+// Helpers: Subida de imágenes a Storage
+// ============================================================================
+
+export async function uploadValuationImage(
+    file: File,
+    valuationId: string,
+    tipo: "fachada" | "comparable",
+    orden: number,
+): Promise<string> {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${valuationId}/${tipo}_${orden}_${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+        .from("valuation-images")
+        .upload(path, file, { upsert: false });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from("valuation-images").getPublicUrl(path);
+    return data.publicUrl;
+}
+
+export async function uploadValuationImageFromBase64(
+    base64: string,
+    valuationId: string,
+    tipo: "fachada" | "comparable",
+    orden: number,
+): Promise<string> {
+    const match = base64.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+    if (!match) throw new Error("Invalid base64 format");
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const binary = atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const ext = mimeType.split("/")[1] || "jpg";
+    const path = `${valuationId}/${tipo}_${orden}_${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+        .from("valuation-images")
+        .upload(path, bytes, { contentType: mimeType, upsert: false });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from("valuation-images").getPublicUrl(path);
+    return data.publicUrl;
+}
+
+// ============================================================================
 // API Functions — Lectura
 // ============================================================================
 
@@ -384,7 +427,7 @@ export async function fetchAll(filters: ValuacionFilters = {}): Promise<Valuacio
     query = query.order(SORT_MAP[sortBy], { ascending: sortOrder === 'asc' });
 
     if (page !== undefined && pageSize !== undefined && pageSize > 0) {
-        const from = page * pageSize;
+        const from = (page - 1) * pageSize; // page es 1-based
         query = query.range(from, from + pageSize - 1);
     }
 
@@ -505,6 +548,7 @@ async function replaceComparables(
 /**
  * Regenera valuation_images como espejo de foto_fachada_url + fotoUrl.
  * Idempotente: borra las filas de la tasación y re-inserta las actuales.
+ * Si las URLs son base64, las sube a Storage y guarda la URL pública.
  */
 async function syncImages(
     valuationId: string,
@@ -518,28 +562,38 @@ async function syncImages(
     if (delError) throw new Error(delError.message);
 
     const rows: ImageInsert[] = [];
+
     if (fachadaUrl) {
+        let url = fachadaUrl;
+        if (fachadaUrl.startsWith("data:image/")) {
+            url = await uploadValuationImageFromBase64(fachadaUrl, valuationId, "fachada", 0);
+        }
         rows.push({
             valuation_id: valuationId,
-            comparable_id: null, // null = fachada
-            url: fachadaUrl,
-            tipo: 'fachada',
+            comparable_id: null,
+            url,
+            tipo: "fachada",
             orden: 0,
         });
     }
+
     for (const comp of comparables) {
         if (!comp.fotoUrl) continue;
+        let url = comp.fotoUrl;
+        if (comp.fotoUrl.startsWith("data:image/")) {
+            url = await uploadValuationImageFromBase64(comp.fotoUrl, valuationId, "comparable", comp.orden);
+        }
         rows.push({
             valuation_id: valuationId,
             comparable_id: comp.id ?? null,
-            url: comp.fotoUrl,
-            tipo: 'comparable',
+            url,
+            tipo: "comparable",
             orden: comp.orden,
         });
     }
 
     if (rows.length > 0) {
-        const { error } = await supabase.from('valuation_images').insert(rows);
+        const { error } = await supabase.from("valuation_images").insert(rows);
         if (error) throw new Error(error.message);
     }
 }

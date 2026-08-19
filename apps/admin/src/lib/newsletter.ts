@@ -266,25 +266,34 @@ export async function restoreSubscriber(id: string): Promise<NewsletterSubscribe
 }
 
 // ============================================================
-// API Functions - Bulk Operations
+// API Functions - Bulk Operations (Batch Optimized)
 // ============================================================
 
 export async function bulkCreateSubscribers(
     emails: string[],
     source: NewsletterSource = 'manual',
 ): Promise<{ created: number; skipped: number }> {
-    let created = 0;
-    let skipped = 0;
+    if (emails.length === 0) return { created: 0, skipped: 0 };
 
-    for (const email of emails) {
-        try {
-            await createSubscriber({ email, source });
-            created++;
-        } catch {
-            skipped++;
-        }
-    }
+    // Deduplicar emails de entrada
+    const uniqueEmails = [...new Set(emails.map((e) => e.trim().toLowerCase()))];
 
+    // Usar upsert con onConflict para insertar en batch
+    const rows = uniqueEmails.map((email) => ({
+        email,
+        source,
+        status: 'active' as const,
+    }));
+
+    const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .upsert(rows, { onConflict: 'email', ignoreDuplicates: false })
+        .select('id');
+
+    if (error) throw new Error(error.message);
+
+    const created = data?.length ?? 0;
+    const skipped = uniqueEmails.length - created;
     return { created, skipped };
 }
 
@@ -292,38 +301,57 @@ export async function bulkUpdateSubscribers(
     ids: string[],
     params: { status?: NewsletterStatus; source?: NewsletterSource },
 ): Promise<number> {
-    let updated = 0;
+    if (ids.length === 0) return 0;
 
-    for (const id of ids) {
-        try {
-            await updateSubscriber(id, params);
-            updated++;
-        } catch {
-            // Ignorar errores individuales
-        }
-    }
+    // Filtrar params vacíos
+    const updateData: Record<string, unknown> = {};
+    if (params.status) updateData.status = params.status;
+    if (params.source) updateData.source = params.source;
 
-    return updated;
+    if (Object.keys(updateData).length === 0) return 0;
+
+    const { error } = await supabase
+        .from('newsletter_subscribers')
+        .update(updateData)
+        .in('id', ids);
+
+    if (error) throw new Error(error.message);
+
+    return ids.length;
 }
 
 export async function bulkDeleteSubscribers(ids: string[], permanent = false): Promise<number> {
-    let deleted = 0;
+    if (ids.length === 0) return 0;
 
-    for (const id of ids) {
-        try {
-            await deleteSubscriber(id, permanent);
-            deleted++;
-        } catch {
-            // Ignorar errores individuales
-        }
+    if (permanent) {
+        const { error } = await supabase
+            .from('newsletter_subscribers')
+            .delete()
+            .in('id', ids);
+
+        if (error) throw new Error(error.message);
+        return ids.length;
     }
 
-    return deleted;
+    const { error } = await supabase
+        .from('newsletter_subscribers')
+        .update({ deleted_at: new Date().toISOString() })
+        .in('id', ids);
+
+    if (error) throw new Error(error.message);
+    return ids.length;
 }
 
 // ============================================================
 // API Functions - Export
 // ============================================================
+
+function csvEscape(value: string): string {
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+}
 
 export async function exportSubscribersToCSV(options?: {
     status?: NewsletterStatus;
@@ -341,10 +369,10 @@ export async function exportSubscribersToCSV(options?: {
 
     const headers = ['Email', 'Estado', 'Fuente', 'Fecha de suscripción'];
     const rows = subscribers.map((s) => [
-        s.email,
-        NEWSLETTER_STATUS_LABEL[s.status] ?? s.status,
-        NEWSLETTER_SOURCE_LABEL[s.source] ?? s.source,
-        new Date(s.created_at).toLocaleDateString('es-AR'),
+        csvEscape(s.email),
+        csvEscape(NEWSLETTER_STATUS_LABEL[s.status] ?? s.status),
+        csvEscape(NEWSLETTER_SOURCE_LABEL[s.source] ?? s.source),
+        csvEscape(new Date(s.created_at).toLocaleDateString('es-AR')),
     ]);
 
     const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');

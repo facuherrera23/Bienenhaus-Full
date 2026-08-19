@@ -77,6 +77,7 @@ export const LEAD_STATUS_LABEL: Record<LeadStatus, string> = {
     contactado: 'Contactado',
     calificado: 'Calificado',
     en_proceso: 'En proceso',
+    visita_programada: 'Visita programada',
     cerrado_ganado: 'Ganado',
     cerrado_perdido: 'Perdido',
 };
@@ -86,6 +87,7 @@ export const LEAD_STATUS_TONE: Record<LeadStatus, string> = {
     contactado: 'warning',
     calificado: 'warning',
     en_proceso: 'neutral',
+    visita_programada: 'warning',
     cerrado_ganado: 'success',
     cerrado_perdido: 'danger',
 };

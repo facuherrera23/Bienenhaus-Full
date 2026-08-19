@@ -98,7 +98,6 @@ describe.skip('properties helpers', () => {
             video_url: 'https://youtube.com/watch?v=test',
             cover_url: 'https://img.com/cover.jpg',
             location: 'Villa Belgrano',
-            location_id: 'loc-1',
             images: [],
             ml_meta: null,
         };

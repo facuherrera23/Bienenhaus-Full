@@ -94,7 +94,6 @@ describe.skip('properties CRUD', () => {
         video_url: '',
         cover_url: 'https://img.com/cover.jpg',
         location: 'Villa Belgrano',
-        location_id: 'loc-1',
         images: [],
         ml_meta: null,
     };

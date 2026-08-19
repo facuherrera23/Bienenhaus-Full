@@ -525,10 +525,15 @@ export async function uploadSiteImage(file: File): Promise<string> {
 
 export async function deleteSiteImage(url: string): Promise<void> {
     try {
-        const path = url.split('/').pop();
-        if (path) await supabase.storage.from('site-images').remove([path]);
-    } catch {
-        // no op: si el archivo no existe en storage, seguimos
+        // La URL pública tiene formato:
+        // https://xxx.supabase.co/storage/v1/object/public/site-images/<path>
+        // El path es todo lo que está después de '/site-images/' y antes de '?'
+        const match = url.match(/\/site-images\/([^?]+)/);
+        if (match) {
+            await supabase.storage.from('site-images').remove([decodeURIComponent(match[1])]);
+        }
+    } catch (err) {
+        console.warn('[Site] No se pudo eliminar imagen del storage:', url, err);
     }
 }
 

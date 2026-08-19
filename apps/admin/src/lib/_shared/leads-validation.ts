@@ -11,6 +11,7 @@ export const LeadStatusSchema = z.enum([
     'contactado',
     'calificado',
     'en_proceso',
+    'visita_programada',
     'cerrado_ganado',
     'cerrado_perdido',
 ]);

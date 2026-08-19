@@ -153,10 +153,12 @@ export async function uploadAgentPhoto(file: File): Promise<string> {
 
 export async function deleteAgentPhoto(url: string): Promise<void> {
     try {
-        const path = url.split('/agent-photos/')[1]?.split('?')[0];
-        if (path) await supabase.storage.from('agent-photos').remove([path]);
-    } catch {
-        console.warn('[Agents] No se pudo eliminar foto del storage:', url);
+        const match = url.match(/\/agent-photos\/([^?]+)/);
+        if (match) {
+            await supabase.storage.from('agent-photos').remove([decodeURIComponent(match[1])]);
+        }
+    } catch (err) {
+        console.warn('[Agents] No se pudo eliminar foto del storage:', url, err);
     }
 }
 
@@ -270,8 +272,8 @@ export async function permanentDeleteAgent(id: string): Promise<void> {
 
     if (agent?.photo_url && agent.photo_url.includes('/agent-photos/')) {
         try {
-            const path = agent.photo_url.split('/agent-photos/')[1];
-            if (path) await supabase.storage.from('agent-photos').remove([path]);
+            const match = agent.photo_url.match(/\/agent-photos\/([^?]+)/);
+            if (match) await supabase.storage.from('agent-photos').remove([decodeURIComponent(match[1])]);
         } catch {
             // ignore
         }
@@ -394,4 +396,64 @@ export function getAgentAvailabilityStatus(agent: AgentRow): 'available' | 'brea
         return 'break';
     }
     return 'available';
+}
+
+// ============================================================
+// Smart Agent Assignment (G2)
+// ============================================================
+
+export interface AgentAssignmentScore {
+    agent_id: string;
+    name: string;
+    score: number;
+}
+
+export async function findBestAgent(options?: {
+    intent?: string;
+    visitDate?: Date;
+}): Promise<AgentAssignmentScore | null> {
+    const { data, error } = await supabase
+        .from('agents')
+        .select('id, name, specialties, schedule, leads:leads(id)')
+        .eq('is_active', true)
+        .is('deleted_at', null)
+        .order('sort_order', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) return null;
+
+    const scores: AgentAssignmentScore[] = data.map((agent) => {
+        let score = 0;
+
+        if (options?.intent && Array.isArray(agent.specialties)) {
+            const specialties = agent.specialties as string[];
+            if (specialties.includes(options.intent)) score += 30;
+        }
+
+        const leadCount = Array.isArray(agent.leads) ? agent.leads.length : 0;
+        score += Math.max(0, 30 - leadCount * 5);
+
+        if (options?.visitDate && Array.isArray(agent.schedule)) {
+            const schedule = agent.schedule as AgentSchedule[];
+            const dayOfWeek = options.visitDate.getDay();
+            const currentTime = options.visitDate.toTimeString().slice(0, 5);
+            const daySchedule = schedule.find((s) => s.day_of_week === dayOfWeek);
+            if (
+                daySchedule &&
+                daySchedule.is_available &&
+                currentTime >= daySchedule.start_time &&
+                currentTime <= daySchedule.end_time
+            ) {
+                score += 20;
+            }
+        }
+
+        // Desempate determinístico: menor carga (lead_count) y luego sort_order
+        score -= leadCount * 0.1;
+
+        return { agent_id: agent.id, name: agent.name, score };
+    });
+
+    scores.sort((a, b) => b.score - a.score);
+    return scores[0] ?? null;
 }

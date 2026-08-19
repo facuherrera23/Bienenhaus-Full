@@ -16,6 +16,7 @@ import {
     STATUS_TONE,
 } from '../types/properties';
 import { validatePropertyForm, validatePropertyImage } from './_shared/properties-validation';
+import { bulkEnqueueMl } from './ml';
 
 // ============================================================
 // Re-export types and constants
@@ -291,7 +292,16 @@ export async function createProperty(values: PropertyFormValues): Promise<Proper
         throw new Error(error.message);
     }
 
-    return fetchProperty(data.id);
+    const property = await fetchProperty(data.id);
+
+    if (property.status === 'publicada' || property.listing_type !== 'venta') {
+        try {
+            await bulkEnqueueMl([property.id], 'publish');
+        } catch {
+        }
+    }
+
+    return property;
 }
 
 export async function updateProperty(id: string, values: PropertyFormValues): Promise<void> {
@@ -334,6 +344,14 @@ export async function updateProperty(id: string, values: PropertyFormValues): Pr
     const { error } = await supabase.from('properties').update(payload).eq('id', id);
 
     if (error) throw new Error(error.message);
+
+    const updated = await fetchProperty(id);
+    if (updated.status === 'publicada') {
+        try {
+            await bulkEnqueueMl([id], 'update');
+        } catch {
+        }
+    }
 }
 
 export async function updatePropertyStatus(id: string, status: PropertyStatus): Promise<void> {

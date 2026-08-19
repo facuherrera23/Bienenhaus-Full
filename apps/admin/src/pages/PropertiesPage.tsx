@@ -8,13 +8,16 @@ import {
     type PropertyStatus,
     STATUS_LABEL,
     STATUS_TONE,
-    useMLMeta,
     useProperties,
 } from '../lib/properties.api';
+import { ML_SYNC_STATUS_LABEL, ML_SYNC_STATUS_TONE } from '../lib/ml';
+import { useMlMeta } from '../lib/ml.api';
+import { useAgents } from '../lib/agents.api';
+import { fetchPropertiesForAgent } from '../lib/agentPropertyAssignments';
 import { bulkEnqueueMl } from '../lib/ml';
 import { queryClient } from '../lib/query/client';
 import { pushToast } from '../store/app';
-import { downloadCsv, getListData as getListDataUtil, toCsv, todayStamp } from '../lib/utils';
+import { downloadCsv, getListData, toCsv, todayStamp } from '../lib/utils';
 import styles from '../styles/PropertiesPage.module.css';
 
 
@@ -27,19 +30,12 @@ function formatPrice(row: PropertyRow): string {
     return `${row.currency} ${row.price.toLocaleString('es-AR')}`;
 }
 
-function getListData<T>(data: unknown): T[] {
-    if (!data) return [];
-    if (Array.isArray(data)) return data as T[];
-    if (typeof data === 'object' && data !== null && 'data' in data) {
-        return (data as { data: T[] }).data ?? [];
-    }
-    return [];
-}
-
 export function PropertiesPage() {
     const [, setLocation] = useLocation();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<'todos' | PropertyStatus>('todos');
+    const [agentFilter, setAgentFilter] = useState<string>('todos');
+    const [assignedPropIds, setAssignedPropIds] = useState<Set<string> | null>(null);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [bulkBusy, setBulkBusy] = useState<'publish' | 'update' | 'delete' | null>(null);
 
@@ -47,13 +43,33 @@ export function PropertiesPage() {
         search,
         status: statusFilter === 'todos' ? undefined : statusFilter,
     });
-    const properties = getListDataUtil<PropertyRow>(data);
+const properties = getListData<PropertyRow>(data);
 
-    const { data: mlMetaRaw } = useMLMeta();
+    const { data: mlMetaRaw } = useMlMeta();
+    const mlMeta: MlMetaRow[] = getListData<MlMetaRow>(mlMetaRaw);
+    const mlMetaByProp = useMemo(() => new Map(mlMeta.map((m: MlMetaRow) => [m.property_id, m])), [mlMeta]);
 
-    const mlMeta = getListData<MlMetaRow>(mlMetaRaw);
+    const { data: agentsData } = useAgents({ is_active: true, pageSize: 100 });
+    const agents = getListData<{ id: string; name: string }>(agentsData);
 
-    const metaByProp = useMemo(() => new Map(mlMeta.map((m) => [m.property_id, m])), [mlMeta]);
+    // Fetch assigned property IDs when agent filter is active
+    useEffect(() => {
+        if (agentFilter === 'todos') {
+            setAssignedPropIds(null);
+            return;
+        }
+        let cancelled = false;
+        fetchPropertiesForAgent(agentFilter)
+            .then((rows) => {
+                if (!cancelled) setAssignedPropIds(new Set(rows.map((r) => r.property_id)));
+            })
+            .catch(() => {
+                if (!cancelled) setAssignedPropIds(new Set());
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [agentFilter]);
 
     useEffect(() => {
         document.title = 'Propiedades · BIENENHAUS';
@@ -70,9 +86,10 @@ export function PropertiesPage() {
                 p.title.toLowerCase().includes(q) ||
                 p.location.toLowerCase().includes(q);
             const matchesStatus = statusFilter === 'todos' || p.status === statusFilter;
-            return matchesSearch && matchesStatus;
+            const matchesAgent = agentFilter === 'todos' || assignedPropIds?.has(p.id) === true;
+            return matchesSearch && matchesStatus && matchesAgent;
         });
-    }, [properties, search, statusFilter]);
+    }, [properties, search, statusFilter, agentFilter, assignedPropIds]);
 
     const allSelected =
         filtered.length > 0 && filtered.every((p) => selected.has(p.id));
@@ -147,7 +164,7 @@ export function PropertiesPage() {
             'Link ML',
         ];
         const rows = properties.map((p) => {
-            const meta = metaByProp.get(p.id);
+            const meta = mlMetaByProp.get(p.id);
             return [
                 p.title,
                 p.code,
@@ -224,6 +241,19 @@ export function PropertiesPage() {
                     {(Object.keys(STATUS_LABEL) as PropertyStatus[]).map((s) => (
                         <option key={s} value={s}>
                             {STATUS_LABEL[s]}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    className={styles.select}
+                    value={agentFilter}
+                    onChange={(e) => setAgentFilter((e.currentTarget as HTMLSelectElement).value)}
+                >
+                    <option value="todos">Todos los agentes</option>
+                    <option value="mis-propiedades">Mis propiedades</option>
+                    {agents.map((a) => (
+                        <option key={a.id} value={a.id}>
+                            {a.name}
                         </option>
                     ))}
                 </select>
@@ -304,6 +334,7 @@ export function PropertiesPage() {
                                 <th>Zona</th>
                                 <th>Dorm.</th>
                                 <th>Actualizada</th>
+                                <th>ML</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -365,17 +396,31 @@ export function PropertiesPage() {
                                         <td className={styles.num}>
                                             {p.bedrooms ?? '—'}
                                         </td>
-                                        <td className={styles.muted}>
-                                            {new Date(p.updated_at).toLocaleDateString(
-                                                'es-AR',
-                                            )}
-                                        </td>
+<td className={styles.muted}>
+                                             {new Date(p.updated_at).toLocaleDateString(
+                                                 'es-AR',
+                                             )}
+                                         </td>
+                                         <td>
+                                             {(() => {
+                                                 const meta = mlMetaByProp.get(p.id);
+                                                 if (!meta || !meta.status) return <span className={styles.muted}>—</span>;
+                                                 return (
+                                                     <Badge
+                                                         variant={ML_SYNC_STATUS_TONE[meta.status as keyof typeof ML_SYNC_STATUS_TONE] as import('@bienenhaus/ui').BadgeVariant}
+                                                         size="sm"
+                                                     >
+                                                         {ML_SYNC_STATUS_LABEL[meta.status as keyof typeof ML_SYNC_STATUS_LABEL] || meta.status}
+                                                     </Badge>
+                                                 );
+                                             })()}
+                                         </td>
                                     </tr>
                                 );
                             })}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} className={styles.emptyCell}>
+                                    <td colSpan={9} className={styles.emptyCell}>
                                         No hay propiedades que coincidan con la búsqueda.
                                     </td>
                                 </tr>

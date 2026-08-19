@@ -1,9 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { TEST_EMAIL, TEST_PASSWORD } from './helpers';
+import { routeSupabaseLocal, TEST_EMAIL, TEST_PASSWORD } from './helpers';
 
 test.describe('Login', () => {
     test('muestra error con credenciales inválidas', async ({ page }) => {
-        await page.goto('/admin/login');
+        routeSupabaseLocal(page);
+        // Clear any stale client-side lockout state from prior test runs
+        await page.goto('/admin/');
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('/admin/#/login');
         await page.getByLabel('Email').fill('noexiste@bienenhaus.local');
         await page.getByLabel('Contraseña').fill('password-incorrecta');
         await page.getByRole('button', { name: /entrar/i }).click();
@@ -13,14 +17,18 @@ test.describe('Login', () => {
 
     test('loguea correctamente y redirige al dashboard', async ({ page }) => {
         test.setTimeout(120000);
-        await page.goto('/admin/login');
+        routeSupabaseLocal(page);
+        // Clear any stale client-side lockout state from prior test runs
+        await page.goto('/admin/');
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('/admin/#/login');
 
         await page.getByLabel('Email').fill(TEST_EMAIL);
         await page.getByLabel('Contraseña').fill(TEST_PASSWORD);
         await page.getByRole('button', { name: /entrar/i }).click();
 
-        // Wait for redirect to admin dashboard
-        await page.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 60000 });
+        // Wait for redirect to admin dashboard (hash routing: /admin/#/)
+        await page.waitForURL((url) => url.pathname === '/admin/' && url.hash === '#/');
 
         // Wait for dashboard to fully load (heading + data)
         const dashboardHeading = page.getByRole('heading', { name: 'Dashboard', level: 2 });
@@ -43,13 +51,16 @@ test.describe('Login', () => {
 
     test('carga la tabla de leads con el agente asignado desplegado', async ({ page }) => {
         test.setTimeout(90000);
-        await page.goto('/admin/login');
+        routeSupabaseLocal(page);
+        await page.goto('/admin/');
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('/admin/#/login');
 
         await page.getByLabel('Email').fill(TEST_EMAIL);
         await page.getByLabel('Contraseña').fill(TEST_PASSWORD);
         await page.getByRole('button', { name: /entrar/i }).click();
 
-        await page.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 60000 });
+        await page.waitForURL((url) => url.pathname === '/admin/' && url.hash === '#/');
 
         await page.goto('/admin/#/leads');
         await page.waitForURL((url) => url.hash.includes('/leads'));

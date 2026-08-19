@@ -18,6 +18,7 @@ import {
     type VisitType,
 } from '../types/visits';
 import { validateVisitForm, validateVisitPatch } from './_shared/visits-validation';
+import { createChannelForVisit } from './chat';
 
 // ============================================================
 // Re-export types and constants
@@ -404,10 +405,125 @@ export async function fetchVisitsByStatus(status: VisitStatus): Promise<VisitRow
 }
 
 // ============================================================
+// API Functions - Create Visit from Lead (G1 integration)
+// ============================================================
+
+export type CreateVisitFromLeadParams = {
+    lead_id: string;
+    property_id?: string | null;
+    agent_id: string;
+    scheduled_date?: string | null;
+    notes?: string | null;
+    creatorAgentId?: string;
+};
+
+export async function createVisitFromLead(
+    params: CreateVisitFromLeadParams,
+): Promise<VisitRow> {
+    const { data: lead, error: leadError } = await supabase
+        .from('leads')
+        .select('name, last_name')
+        .eq('id', params.lead_id)
+        .single();
+
+    const leadName = leadError || !lead ? 'Lead' : `${lead.name} ${lead.last_name}`;
+
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 1);
+    defaultDate.setHours(10, 0, 0, 0);
+    const startsAt = params.scheduled_date || defaultDate.toISOString();
+
+    const endsDate = new Date(startsAt);
+    endsDate.setHours(endsDate.getHours() + 1);
+
+    const values: VisitFormValues = {
+        lead_id: params.lead_id,
+        property_id: params.property_id || '',
+        agent_id: params.agent_id,
+        title: `Visita - ${leadName}`,
+        description: '',
+        starts_at: startsAt,
+        ends_at: endsDate.toISOString(),
+        status: 'programada',
+        location: '',
+        meeting_type: 'presencial',
+        meeting_link: '',
+        notes: params.notes || '',
+    };
+
+    logVisitAction({ action: 'createVisitFromLead', lead_id: params.lead_id, metadata: values });
+
+    try {
+        return await createVisit(values, params.creatorAgentId);
+    } catch (err) {
+        logVisitError({
+            action: 'createVisitFromLead',
+            lead_id: params.lead_id,
+            error: err instanceof Error ? err.message : String(err),
+        });
+        throw err;
+    }
+}
+
+export async function syncLeadFromVisit(
+    visitId: string,
+): Promise<{ lead_id: string; status: string } | null> {
+    const { data: visit, error: visitError } = await supabase
+        .from('visits')
+        .select('lead_id, leads(id, status, tags)')
+        .eq('id', visitId)
+        .single();
+
+    if (visitError || !visit || !visit.lead_id) return null;
+
+    const leadRaw = visit.leads as
+        | { id: string; status: string; tags: string[] | null }[]
+        | { id: string; status: string; tags: string[] | null }
+        | null;
+    const lead = Array.isArray(leadRaw) ? (leadRaw[0] ?? null) : leadRaw;
+    if (!lead) return null;
+
+    const currentTags = (lead.tags ?? []) as string[];
+    const newTags = currentTags.includes('visitado')
+        ? currentTags
+        : [...currentTags, 'visitado'];
+
+    const { error: updateError } = await supabase
+        .from('leads')
+        .update({
+            status: 'en_proceso',
+            tags: newTags,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id', visit.lead_id);
+
+    if (updateError) {
+        logVisitError({
+            action: 'syncLeadFromVisit',
+            visit_id: visitId,
+            lead_id: visit.lead_id,
+            error: updateError.message,
+        });
+        return null;
+    }
+
+    logVisitAction({
+        action: 'syncLeadFromVisit',
+        visit_id: visitId,
+        lead_id: visit.lead_id,
+    });
+
+    return { lead_id: visit.lead_id, status: 'en_proceso' };
+}
+
+// ============================================================
 // API Functions - CRUD with Validation
 // ============================================================
 
-export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
+export async function createVisit(
+    values: VisitFormValues,
+    creatorAgentId?: string,
+): Promise<VisitRow> {
     const validation = validateVisitForm(values);
     if (!validation.valid) {
         logVisitError({ action: 'createVisit', error: validation.error, metadata: values });
@@ -444,7 +560,17 @@ export async function createVisit(values: VisitFormValues): Promise<VisitRow> {
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('No se pudo crear la visita');
-    return toVisitRow(data);
+    const visit = toVisitRow(data);
+
+    if (creatorAgentId) {
+        try {
+            await createChannelForVisit({ visitId: visit.id, creatorId: creatorAgentId });
+        } catch (err) {
+            logVisitWarn({ action: 'createChannelForVisit', visit_id: visit.id, error: String(err) });
+        }
+    }
+
+    return visit;
 }
 
 export async function updateVisit(id: string, values: Partial<VisitFormValues>): Promise<void> {
@@ -507,8 +633,19 @@ export async function updateVisitStatus(id: string, status: VisitStatus): Promis
     }
 
     const { error } = await supabase.from('visits').update(patch).eq('id', id);
-
     if (error) throw new Error(error.message);
+
+    if (status === 'completada') {
+        try {
+            await syncLeadFromVisit(id);
+        } catch {
+            logVisitWarn({
+                action: 'updateVisitStatus',
+                visit_id: id,
+                error: 'No se pudo sincronizar el lead al completar la visita',
+            });
+        }
+    }
 }
 
 // ============================================================

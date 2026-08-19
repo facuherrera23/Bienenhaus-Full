@@ -1,20 +1,15 @@
 import { supabase } from '@bienenhaus/supabase';
 import type { Database } from '../types/database';
 import { validateLeadForm, validateLeadPatch } from './_shared/leads-validation';
-// NOTA: LeadStatus, LeadIntent, LeadSource, LeadFormValues, LeadPatch y CsvLeadRow
-// se declaran localmente más abajo (son la fuente de verdad de este módulo), por eso
-// NO se importan como tipo acá: importarlos generaba "Duplicate identifier".
-// Los *Schema y LeadScoreFactors/LeadActivity/LeadTag (y sus validate*) NO se usan acá
-// (dead import) — los saqué. IMPORTANTE: parseLeadsCsv NO usa validateCsvLeadRow,
-// o sea la importación por CSV no pasa por el schema Zod, solo por los checks
-// manuales del propio parseLeadsCsv. Si eso no es intencional, hay que enchufarlo ahí.
+import { createVisitFromLead, type CreateVisitFromLeadParams } from './visits';
+import { createChannelForLead } from './chat';
 
 // ============================================================
 // Types
 // ============================================================
 
 export type LeadStatus =
-    'nuevo' | 'contactado' | 'calificado' | 'en_proceso' | 'cerrado_ganado' | 'cerrado_perdido';
+    'nuevo' | 'contactado' | 'calificado' | 'en_proceso' | 'visita_programada' | 'cerrado_ganado' | 'cerrado_perdido';
 export type LeadIntent =
     'comprar' | 'vender' | 'alquilar' | 'invertir' | 'tasar' | 'desarrollador' | 'otro';
 export type LeadSource =
@@ -25,6 +20,7 @@ export const LEAD_STATUS_LABEL: Record<string, string> = {
     contactado: 'Contactado',
     calificado: 'Calificado',
     en_proceso: 'En proceso',
+    visita_programada: 'Visita programada',
     cerrado_ganado: 'Ganado',
     cerrado_perdido: 'Perdido',
 };
@@ -34,6 +30,7 @@ export const LEAD_STATUS_TONE: Record<string, string> = {
     contactado: 'warning',
     calificado: 'warning',
     en_proceso: 'neutral',
+    visita_programada: 'warning',
     cerrado_ganado: 'success',
     cerrado_perdido: 'danger',
 };
@@ -43,8 +40,9 @@ export const LEAD_STATUS_ORDER: Record<string, number> = {
     contactado: 1,
     calificado: 2,
     en_proceso: 3,
-    cerrado_ganado: 4,
-    cerrado_perdido: 5,
+    visita_programada: 4,
+    cerrado_ganado: 5,
+    cerrado_perdido: 6,
 };
 
 export const LEAD_INTENT_LABEL: Record<string, string> = {
@@ -382,7 +380,7 @@ export async function fetchLeadsByAgent(agentId: string): Promise<LeadRow[]> {
 // API Functions - CRUD with Validation
 // ============================================================
 
-export async function createLead(values: LeadFormValues): Promise<string> {
+export async function createLead(values: LeadFormValues, creatorAgentId?: string): Promise<string> {
     const validation = validateLeadForm(values);
     if (!validation.valid) {
         logLeadError({ action: 'createLead', error: validation.error, metadata: values });
@@ -436,6 +434,15 @@ export async function createLead(values: LeadFormValues): Promise<string> {
         .single();
 
     if (error) throw new Error(error.message);
+
+    if (creatorAgentId) {
+        try {
+            await createChannelForLead({ leadId: data.id, creatorId: creatorAgentId });
+        } catch (err) {
+            logLeadWarn({ action: 'createChannelForLead', lead_id: data.id, error: String(err) });
+        }
+    }
+
     return data.id;
 }
 
@@ -455,8 +462,37 @@ export async function updateLead(id: string, patch: LeadPatch): Promise<void> {
 export async function updateLeadStatus(id: string, status: LeadStatus): Promise<void> {
     logLeadAction({ action: 'updateLeadStatus', lead_id: id, metadata: { status } });
     const { error } = await supabase.from('leads').update({ status }).eq('id', id);
-
     if (error) throw new Error(error.message);
+
+    if (status === 'visita_programada') {
+        try {
+            const { data: lead } = await supabase
+                .from('leads')
+                .select('assigned_to, property_id')
+                .eq('id', id)
+                .single();
+
+            if (lead?.assigned_to) {
+                const visitParams: CreateVisitFromLeadParams = {
+                    lead_id: id,
+                    property_id: lead.property_id,
+                    agent_id: lead.assigned_to,
+                };
+                await createVisitFromLead(visitParams);
+                logLeadAction({
+                    action: 'autoCreateVisit',
+                    lead_id: id,
+                    metadata: { agent_id: lead.assigned_to },
+                });
+            }
+        } catch (err) {
+            logLeadWarn({
+                action: 'updateLeadStatus',
+                lead_id: id,
+                error: 'No se pudo crear la visita automáticamente',
+            });
+        }
+    }
 }
 
 // ============================================================
@@ -513,7 +549,6 @@ export async function getNextAgentForAssignment(lead?: {
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-    // Filter by specialty matching lead intent
     if (lead?.intent) {
         query = query.contains('specialties', [lead.intent]);
     }
@@ -541,6 +576,13 @@ export async function autoAssignLead(
     if (!agent) return null;
 
     await updateLead(leadId, { assigned_to: agent.id });
+
+    try {
+        await createChannelForLead({ leadId, creatorId: agent.id, additionalAgentIds: [agent.id] });
+    } catch (err) {
+        logLeadWarn({ action: 'createChannelForLead', lead_id: leadId, error: String(err) });
+    }
+
     return { agentId: agent.id, agentName: agent.name };
 }
 

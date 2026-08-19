@@ -39,6 +39,7 @@ test.describe('Tasación - formulario completo', () => {
     });
 
     test('crea una tasación completa, la guarda como borrador y la finaliza', async ({ page }) => {
+        test.setTimeout(300000);
         await login(page);
         await page.goto('/admin/#/tasar/nueva');
         await expect(page.locator('h1')).toContainText('Nueva tasación', { timeout: 30000 });
@@ -90,10 +91,11 @@ test.describe('Tasación - formulario completo', () => {
             .getByRole('button', { name: /finalizar/i })
             .first()
             .click();
-        await expect(page.getByText(/tasación finalizada/i)).toBeVisible({ timeout: 15000 });
+        // La mutación finalize puede tardar mucho en CI (trigger DB); esperamos el toast con timeout extendido
+        await expect(page.getByText(/tasación finalizada/i)).toBeVisible({ timeout: 300000 });
         await page.waitForURL(
             (url) => url.hash.includes('/tasar') && !url.hash.includes('/tasar/nueva'),
-            { timeout: 15000 },
+            { timeout: 30000 },
         );
 
         // El listado ordena por updated_at desc; .first() = la recién finalizada

@@ -23,6 +23,7 @@ import {
     type MlQueueRow,
     type MlSettings,
     type MlSyncStatus,
+    type MlSyncHistoryRow,
     type MlWebhookTopic,
     type PreviewItem,
     type PreviewResult,
@@ -73,6 +74,10 @@ export type MetaApiRow = Database['public']['Tables']['property_ml_meta']['Row']
 
 export type DeadLetterApiRow = Database['public']['Tables']['ml_sync_dead_letter']['Row'] & {
     property: { title: string; code: number } | { title: string; code: number }[] | null;
+};
+
+export type SyncHistoryApiRow = Database['public']['Tables']['ml_sync_history']['Row'] & {
+    queue: { property_id: string; operation: string } | { property_id: string; operation: string }[] | null;
 };
 
 // ============================================================
@@ -164,6 +169,22 @@ export function toDeadLetterRow(d: DeadLetterApiRow): {
         resolution_notes: d.resolution_notes ?? null,
         property_title: prop.title,
         property_code: prop.code,
+    };
+}
+
+export function toMlSyncHistoryRow(h: SyncHistoryApiRow): MlSyncHistoryRow {
+    const queue = h.queue;
+    const queueObj = Array.isArray(queue) ? queue[0] : queue;
+    return {
+        id: h.id,
+        queue_id: h.queue_id,
+        operation: h.operation as MlOperation,
+        status: h.status as MlSyncStatus,
+        attempt: h.attempt,
+        response: h.response,
+        error: h.error,
+        created_at: h.created_at,
+        property_id: queueObj?.property_id ?? '',
     };
 }
 
@@ -481,6 +502,44 @@ export async function fetchMlQueueStats(): Promise<{
         countBy('failed'),
     ]);
     return { pending, processing, success, failed };
+}
+
+// ============================================================
+// API Functions - Sync History
+// ============================================================
+
+export async function fetchMlSyncHistory(
+    page = 1,
+    pageSize = 50,
+    queueId?: number,
+): Promise<{
+    data: MlSyncHistoryRow[];
+    count: number;
+    page: number;
+    hasNextPage: boolean;
+}> {
+    let query = supabase
+        .from('ml_sync_history')
+        .select('id,queue_id,operation,status,attempt,response,error,created_at,queue:ml_sync_queue(property_id,operation)', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+    if (queueId) {
+        query = query.eq('queue_id', queueId);
+    }
+
+    const p = page;
+    const { data, error, count } = await query
+        .range((p - 1) * pageSize, p * pageSize - 1)
+        .returns<SyncHistoryApiRow[]>();
+
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []).map(toMlSyncHistoryRow);
+    return {
+        data: rows,
+        count: count ?? 0,
+        page: p,
+        hasNextPage: rows.length === pageSize,
+    };
 }
 
 // ============================================================

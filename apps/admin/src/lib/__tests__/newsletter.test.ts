@@ -21,7 +21,7 @@ import {
 import { NEWSLETTER_SOURCE_LABEL, NEWSLETTER_STATUS_LABEL } from '../../types/newsletter';
 
 function buildChain(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-    return {
+    const chain = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         neq: vi.fn().mockReturnThis(),
@@ -42,10 +42,11 @@ function buildChain(overrides: Record<string, unknown> = {}): Record<string, unk
         insert: vi.fn().mockReturnThis(),
         update: vi.fn().mockReturnThis(),
         delete: vi.fn().mockReturnThis(),
-        upsert: vi.fn().mockReturnThis(),
+        upsert: vi.fn().mockImplementation(() => chain),
         returns: vi.fn().mockReturnThis(),
         ...overrides,
     };
+    return chain;
 }
 
 function mockFrom(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -387,58 +388,53 @@ describe('softDeleteSubscriber / permanentDeleteSubscriber / restoreSubscriber',
 });
 
 describe('Operaciones bulk', () => {
-    it('bulkCreateSubscribers cuenta creados y omitidos', async () => {
-        mockFrom({
-            // email 1: check null -> insert ok -> fetch row
-            // email 2: check null -> insert falla -> skip
-            maybeSingle: vi
-                .fn()
-                .mockResolvedValueOnce({ data: null, error: null })
-                .mockResolvedValueOnce({ data: apiRow(), error: null })
-                .mockResolvedValue({ data: null, error: null }),
-            single: vi
-                .fn()
-                .mockResolvedValueOnce({ data: { id: 's1' }, error: null })
-                .mockResolvedValue({ data: null, error: { message: 'dup' } }),
-        });
+    it('bulkCreateSubscribers cuenta creados y omitidos (batch upsert)', async () => {
+        const chain = mockFrom();
+        chain.select.mockResolvedValue({ data: [{ id: 's1' }, { id: 's2' }], error: null });
 
-        await expect(bulkCreateSubscribers(['a@a.com', 'b@b.com'], 'manual')).resolves.toEqual({
-            created: 1,
-            skipped: 1,
-        });
+        const result = await bulkCreateSubscribers(['a@a.com', 'b@b.com'], 'manual');
+        expect(result).toEqual({ created: 2, skipped: 0 });
     });
 
-    it('bulkUpdateSubscribers cuenta los actualizados e ignora errores', async () => {
-        const chain = mockFrom({
-            is: vi
-                .fn()
-                .mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
-                .mockResolvedValue({ data: null, error: null }),
-            maybeSingle: vi.fn().mockResolvedValue({ data: apiRow(), error: null }),
-        });
+    it('bulkCreateSubscribers maneja duplicados en batch', async () => {
+        const chain = mockFrom();
+        chain.select.mockResolvedValue({ data: [{ id: 's1' }], error: null });
 
-        await expect(bulkUpdateSubscribers(['a1', 'b1'], { status: 'active' })).resolves.toBe(1);
-
-        expect(chain.is).toHaveBeenCalledWith('deleted_at', null);
+        const result = await bulkCreateSubscribers(['a@a.com', 'a@a.com', 'b@b.com'], 'manual');
+        expect(result).toEqual({ created: 1, skipped: 1 });
     });
 
-    it('bulkDeleteSubscribers cuenta eliminados (soft) e ignora errores', async () => {
-        mockFrom({
-            eq: vi
-                .fn()
-                .mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
-                .mockResolvedValue({ data: null, error: null }),
-        });
+    it('bulkUpdateSubscribers actualiza en batch', async () => {
+        const chain = mockFrom();
+        chain.in.mockResolvedValue({ data: null, error: null });
 
-        await expect(bulkDeleteSubscribers(['a1', 'b1'])).resolves.toBe(1);
+        const result = await bulkUpdateSubscribers(['a1', 'b1'], { status: 'active' });
+        expect(result).toBe(2);
+        expect(chain.in).toHaveBeenCalledWith('id', ['a1', 'b1']);
+    });
+
+    it('bulkUpdateSubscribers ignora params vacíos', async () => {
+        const result = await bulkUpdateSubscribers(['a1', 'b1'], {});
+        expect(result).toBe(0);
+    });
+
+    it('bulkDeleteSubscribers elimina en batch (soft)', async () => {
+        const chain = mockFrom();
+        chain.in.mockResolvedValue({ data: null, error: null });
+
+        const result = await bulkDeleteSubscribers(['a1', 'b1']);
+        expect(result).toBe(2);
+        expect(chain.in).toHaveBeenCalledWith('id', ['a1', 'b1']);
     });
 
     it('bulkDeleteSubscribers con permanent elimina de verdad', async () => {
         const chain = mockFrom();
+        chain.in.mockResolvedValue({ data: null, error: null });
 
-        await expect(bulkDeleteSubscribers(['a1'], true)).resolves.toBe(1);
-
+        const result = await bulkDeleteSubscribers(['a1', 'b1'], true);
+        expect(result).toBe(2);
         expect(chain.delete).toHaveBeenCalled();
+        expect(chain.in).toHaveBeenCalledWith('id', ['a1', 'b1']);
     });
 });
 

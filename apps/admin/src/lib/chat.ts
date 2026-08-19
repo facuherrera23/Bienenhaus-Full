@@ -405,6 +405,176 @@ export async function createLeadChannel(
 }
 
 // ============================================================
+// Auto channel creation (G5)
+// ============================================================
+
+export interface CreateChannelForLeadParams {
+    leadId: string;
+    creatorId: string;
+    additionalAgentIds?: string[];
+}
+
+export async function createChannelForLead(
+    params: CreateChannelForLeadParams,
+): Promise<ChatChannel | null> {
+    const { leadId, creatorId, additionalAgentIds = [] } = params;
+
+    const { data: lead } = await supabase
+        .from('leads')
+        .select('assigned_to')
+        .eq('id', leadId)
+        .single();
+
+    const participantIds = new Set<string>(additionalAgentIds);
+    if (lead?.assigned_to) participantIds.add(lead.assigned_to);
+    participantIds.add(creatorId);
+
+    const { data: existing } = await supabase
+        .from('chat_channels')
+        .select('id')
+        .eq('type', 'lead')
+        .eq('lead_id', leadId)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+    if (existing) {
+        const { data: currentParticipants } = await supabase
+            .from('chat_channel_participants')
+            .select('agent_id')
+            .eq('channel_id', existing.id);
+
+        const currentIds = new Set(currentParticipants?.map((p) => p.agent_id) ?? []);
+        const toAdd = Array.from(participantIds).filter((id) => !currentIds.has(id));
+
+        if (toAdd.length > 0) {
+            await supabase
+                .from('chat_channel_participants')
+                .insert(toAdd.map((agentId) => ({ channel_id: existing.id, agent_id: agentId })));
+        }
+
+        return fetchChannel(existing.id);
+    }
+
+    return createLeadChannel(leadId, Array.from(participantIds), creatorId);
+}
+
+export interface CreateChannelForVisitParams {
+    visitId: string;
+    creatorId: string;
+    additionalAgentIds?: string[];
+}
+
+export async function createChannelForVisit(
+    params: CreateChannelForVisitParams,
+): Promise<ChatChannel | null> {
+    const { visitId, creatorId, additionalAgentIds = [] } = params;
+
+    const { data: visit } = await supabase
+        .from('visits')
+        .select('agent_id, property_id, lead_id')
+        .eq('id', visitId)
+        .single();
+
+    if (!visit) return null;
+
+    const participantIds = new Set<string>(additionalAgentIds);
+    participantIds.add(creatorId);
+    if (visit.agent_id) participantIds.add(visit.agent_id);
+
+    if (visit.lead_id) {
+        const { data: lead } = await supabase
+            .from('leads')
+            .select('assigned_to')
+            .eq('id', visit.lead_id)
+            .single();
+        if (lead?.assigned_to) participantIds.add(lead.assigned_to);
+    }
+
+    if (visit.property_id) {
+        const { data: assignments } = await supabase
+            .from('v_agent_properties' as never)
+            .select('agent_id')
+            .eq('property_id', visit.property_id)
+            .returns<{ agent_id: string }[]>();
+        assignments?.forEach((a) => participantIds.add(a.agent_id));
+    }
+
+    const channelType = visit.property_id ? 'property' : 'lead';
+    const refId = visit.property_id ?? visit.lead_id;
+
+    if (!refId) return null;
+
+    const { data: existing } = await supabase
+        .from('chat_channels')
+        .select('id')
+        .eq('type', channelType)
+        .eq(channelType === 'property' ? 'property_id' : 'lead_id', refId)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+    if (existing) {
+        const { data: currentParticipants } = await supabase
+            .from('chat_channel_participants')
+            .select('agent_id')
+            .eq('channel_id', existing.id);
+
+        const currentIds = new Set(currentParticipants?.map((p) => p.agent_id) ?? []);
+        const toAdd = Array.from(participantIds).filter((id) => !currentIds.has(id));
+
+        if (toAdd.length > 0) {
+            await supabase
+                .from('chat_channel_participants')
+                .insert(toAdd.map((agentId) => ({ channel_id: existing.id, agent_id: agentId })));
+        }
+
+        return fetchChannel(existing.id);
+    }
+
+    let channelName = 'Visita';
+    if (channelType === 'property') {
+        const { data: prop } = await supabase
+            .from('properties')
+            .select('title')
+            .eq('id', refId)
+            .single();
+        channelName = prop?.title ?? 'Propiedad';
+    } else if (visit.lead_id) {
+        const { data: lead } = await supabase
+            .from('leads')
+            .select('name, last_name')
+            .eq('id', visit.lead_id)
+            .single();
+        channelName = lead ? `${lead.name} ${lead.last_name}` : 'Lead';
+    }
+
+    const { data: channel, error: channelError } = await supabase
+        .from('chat_channels')
+        .insert({
+            type: channelType,
+            name: channelName,
+            [channelType === 'property' ? 'property_id' : 'lead_id']: refId,
+            created_by: creatorId,
+        })
+        .select('id')
+        .single();
+
+    if (channelError) throw new Error(channelError.message);
+
+    const participants = Array.from(participantIds).map((agentId) => ({
+        channel_id: channel.id,
+        agent_id: agentId,
+    }));
+
+    const { error: participantsError } = await supabase
+        .from('chat_channel_participants')
+        .insert(participants);
+
+    if (participantsError) throw new Error(participantsError.message);
+
+    return fetchChannel(channel.id);
+}
+
+// ============================================================
 // Message API
 // ============================================================
 

@@ -19,6 +19,10 @@ import {
     markChannelAsRead,
     sendMessage,
     softDeleteMessage,
+    createChannelForLead,
+    createChannelForVisit,
+    type CreateChannelForLeadParams,
+    type CreateChannelForVisitParams,
 } from './chat';
 
 const CHANNELS_PATH = 'chat_channels';
@@ -168,6 +172,18 @@ export function useCreateLeadChannel() {
         }) => {
             return createLeadChannel(leadId, agentIds, creatorId);
         },
+    });
+}
+
+export function useCreateChannelForLead() {
+    return useMutation({
+        mutationFn: (params: CreateChannelForLeadParams) => createChannelForLead(params),
+    });
+}
+
+export function useCreateChannelForVisit() {
+    return useMutation({
+        mutationFn: (params: CreateChannelForVisitParams) => createChannelForVisit(params),
     });
 }
 

@@ -129,10 +129,6 @@ export function getActivityEntityLabel(entityType: string): string {
     return ACTIVITY_ENTITY_LABEL[entityType] ?? entityType;
 }
 
-// ============================================================
-// Helper to convert Json to Record<string, unknown>
-// ============================================================
-
 function jsonToRecord(json: Json): Record<string, unknown> {
     if (json === null || json === undefined) {
         return {};
@@ -141,6 +137,55 @@ function jsonToRecord(json: Json): Record<string, unknown> {
         return json as Record<string, unknown>;
     }
     return { value: json };
+}
+
+async function fetchActorMap(
+    actorIds: string[],
+): Promise<Map<string, { full_name: string; email: string }>> {
+    const usersById = new Map<string, { full_name: string; email: string }>();
+
+    if (actorIds.length === 0) return usersById;
+
+    const { data: users, error } = await supabase
+        .from('admin_users')
+        .select('id, full_name, email')
+        .in('id', actorIds);
+
+    if (!error) {
+        for (const u of users ?? []) {
+            usersById.set(u.id, u);
+        }
+    }
+
+    return usersById;
+}
+
+async function enrichActivitiesWithActors(
+    rows: ActivityApiRow[],
+): Promise<ActivityRow[]> {
+    const actorIds = [
+        ...new Set(
+            rows
+                .map((a) => a.actor_id)
+                .filter((id): id is string => id !== null),
+        ),
+    ];
+
+    const usersById = await fetchActorMap(actorIds);
+
+    return rows.map((a) => {
+        const actor = a.actor_id ? usersById.get(a.actor_id) : undefined;
+        return {
+            id: a.id,
+            action: a.action,
+            entity_type: a.entity_type,
+            entity_id: a.entity_id,
+            metadata: jsonToRecord(a.metadata),
+            actor_name: actor?.full_name ?? null,
+            actor_email: actor?.email ?? null,
+            created_at: a.created_at,
+        };
+    });
 }
 
 // ============================================================
@@ -156,42 +201,7 @@ export async function fetchRecentActivity(limit = 12): Promise<ActivityRow[]> {
 
     if (actError) throw new Error(actError.message);
 
-    const actorIds = [
-        ...new Set(
-            (activities ?? [])
-                .map((a: ActivityApiRow) => a.actor_id)
-                .filter((id): id is string => id !== null),
-        ),
-    ];
-
-    const usersById = new Map<string, { full_name: string; email: string }>();
-
-    if (actorIds.length > 0) {
-        const { data: users, error: usersError } = await supabase
-            .from('admin_users')
-            .select('id, full_name, email')
-            .in('id', actorIds);
-
-        if (!usersError) {
-            for (const u of users ?? []) {
-                usersById.set(u.id, u);
-            }
-        }
-    }
-
-    return (activities ?? []).map((a: ActivityApiRow) => {
-        const actor = a.actor_id ? usersById.get(a.actor_id) : undefined;
-        return {
-            id: a.id,
-            action: a.action,
-            entity_type: a.entity_type,
-            entity_id: a.entity_id,
-            metadata: jsonToRecord(a.metadata),
-            actor_name: actor?.full_name ?? null,
-            actor_email: actor?.email ?? null,
-            created_at: a.created_at,
-        };
-    });
+    return enrichActivitiesWithActors(activities ?? []);
 }
 
 export async function fetchActivity(filters?: ActivityFilters): Promise<{
@@ -248,42 +258,7 @@ export async function fetchActivity(filters?: ActivityFilters): Promise<{
 
     if (error) throw new Error(error.message);
 
-    // Obtener nombres de actores
-    const actorIds = [
-        ...new Set(
-            (data ?? [])
-                .map((a: ActivityApiRow) => a.actor_id)
-                .filter((id): id is string => id !== null),
-        ),
-    ];
-    const usersById = new Map<string, { full_name: string; email: string }>();
-
-    if (actorIds.length > 0) {
-        const { data: users, error: usersError } = await supabase
-            .from('admin_users')
-            .select('id, full_name, email')
-            .in('id', actorIds);
-
-        if (!usersError) {
-            for (const u of users ?? []) {
-                usersById.set(u.id, u);
-            }
-        }
-    }
-
-    const rows = (data ?? []).map((a: ActivityApiRow) => {
-        const actor = a.actor_id ? usersById.get(a.actor_id) : undefined;
-        return {
-            id: a.id,
-            action: a.action,
-            entity_type: a.entity_type,
-            entity_id: a.entity_id,
-            metadata: jsonToRecord(a.metadata),
-            actor_name: actor?.full_name ?? null,
-            actor_email: actor?.email ?? null,
-            created_at: a.created_at,
-        };
-    });
+    const rows = await enrichActivitiesWithActors(data ?? []);
 
     return {
         data: rows,
@@ -309,42 +284,7 @@ export async function fetchActivityByEntity(
 
     if (error) throw new Error(error.message);
 
-    // Obtener nombres de actores
-    const actorIds = [
-        ...new Set(
-            (data ?? [])
-                .map((a: ActivityApiRow) => a.actor_id)
-                .filter((id): id is string => id !== null),
-        ),
-    ];
-    const usersById = new Map<string, { full_name: string; email: string }>();
-
-    if (actorIds.length > 0) {
-        const { data: users, error: usersError } = await supabase
-            .from('admin_users')
-            .select('id, full_name, email')
-            .in('id', actorIds);
-
-        if (!usersError) {
-            for (const u of users ?? []) {
-                usersById.set(u.id, u);
-            }
-        }
-    }
-
-    return (data ?? []).map((a: ActivityApiRow) => {
-        const actor = a.actor_id ? usersById.get(a.actor_id) : undefined;
-        return {
-            id: a.id,
-            action: a.action,
-            entity_type: a.entity_type,
-            entity_id: a.entity_id,
-            metadata: jsonToRecord(a.metadata),
-            actor_name: actor?.full_name ?? null,
-            actor_email: actor?.email ?? null,
-            created_at: a.created_at,
-        };
-    });
+    return enrichActivitiesWithActors(data ?? []);
 }
 
 // ============================================================
@@ -425,9 +365,4 @@ export async function getActivityStats(days = 7): Promise<{
     };
 }
 
-// ============================================================
-// Export Direct Functions (para compatibilidad)
-// ============================================================
 
-// Mantener compatibilidad con código existente
-export { STATUS_LABEL as PROPERTY_STATUS_LABEL } from '../types/properties';
